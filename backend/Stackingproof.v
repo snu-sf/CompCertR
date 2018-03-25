@@ -805,6 +805,28 @@ Proof.
 - rewrite <- agree_incoming0 by auto. apply H0. congruence.
 Qed.
 
+Lemma agree_callee_save_set_result:
+  forall sg v ls1 ls2,
+  agree_callee_save ls1 ls2 ->
+  agree_callee_save (Locmap.setpair (loc_result sg) v ls1) ls2.
+Proof.
+  intros; red; intros. rewrite Locmap.gpo. apply H; auto.
+  assert (X: forall r, is_callee_save r = false -> Loc.diff l (R r)).
+  { intros. destruct l; auto. simpl; congruence. simpl. auto. }
+  generalize (loc_result_caller_save sg). destruct (loc_result sg); simpl; intuition auto.
+Qed.
+
+Lemma agree_callee_save_after:
+  forall ls1 ls2,
+  agree_callee_save ls1 ls2 ->
+  agree_callee_save (LTL.undef_caller_save_regs ls1) ls2.
+Proof.
+  intros; red; intros. unfold LTL.undef_caller_save_regs.
+  destruct l; simpl in *; auto.
+  - rewrite H0. auto.
+  - destruct sl; auto. congruence.
+Qed.
+
 (** ** Properties of destroyed registers. *)
 
 Definition no_callee_saves (l: list mreg) : Prop :=
@@ -1795,6 +1817,7 @@ Inductive match_states: Linear.state -> Mach.state -> Prop :=
       forall cs ls m cs' rs m' j sg
         (STACKS: match_stacks j cs cs' sg)
         (AGREGS: agree_regs j ls rs)
+        (AGLOCS: agree_callee_save ls (parent_locset cs))
         (SEP: m' |= stack_contents j cs cs'
                  ** minjection j m
                  ** globalenv_inject ge j),
@@ -2046,6 +2069,7 @@ Proof.
   econstructor; split.
   eapply plus_right. eexact D. econstructor; eauto. traceEq.
   econstructor; eauto.
+  (* admit "easy". *)
   rewrite sep_swap; exact G.
 
 - (* internal function *)
@@ -2085,6 +2109,8 @@ Proof.
   apply agree_regs_set_pair. apply agree_regs_undef_caller_save_regs. 
   apply agree_regs_inject_incr with j; auto.
   auto.
+  apply agree_callee_save_set_result.
+  apply agree_callee_save_after; auto.
   apply stack_contents_change_meminj with j; auto.
   rewrite sep_comm, sep_assoc; auto.
 

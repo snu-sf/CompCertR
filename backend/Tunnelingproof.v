@@ -521,6 +521,7 @@ Proof.
   eapply exec_function_internal; eauto.
   simpl. econstructor; eauto using locmap_undef_regs_lessdef, call_regs_lessdef.
 - (* external function *)
+  Local Opaque Conventions1.destroyed_at_call.
   exploit external_call_mem_extends; eauto using locmap_getpairs_lessdef.
   intros (tvres & tm' & A & B & C & D).
   left; simpl; econstructor; split.

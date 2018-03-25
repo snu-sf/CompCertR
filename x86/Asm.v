@@ -1058,6 +1058,62 @@ Definition undef_caller_save_regs (rs: regset) : regset :=
     then rs r
     else Vundef.
 
+Definition to_mreg (pr: preg): option mreg :=
+  match pr with
+  | PC => None
+  | ST0 => Some FP0
+  | CR _ => None
+  | RA => None
+  | IR ir =>
+    match ir with
+    | RAX => Some AX
+    | RBX => Some BX
+    | RCX => Some CX
+    | RDX => Some DX
+    | RSI => Some SI
+    | RDI => Some DI
+    | RBP => Some BP
+    | RSP => None
+    | R8 => Some Machregs.R8
+    | R9 => Some Machregs.R9
+    | R10 => Some Machregs.R10
+    | R11 => Some Machregs.R11
+    | R12 => Some Machregs.R12
+    | R13 => Some Machregs.R13
+    | R14 => Some Machregs.R14
+    | R15 => Some Machregs.R15
+    end
+  | FR fr =>
+    match fr with
+    | XMM0 => Some X0
+    | XMM1 => Some X1
+    | XMM2 => Some X2
+    | XMM3 => Some X3
+    | XMM4 => Some X4
+    | XMM5 => Some X5
+    | XMM6 => Some X6
+    | XMM7 => Some X7
+    | XMM8 => Some X8
+    | XMM9 => Some X9
+    | XMM10 => Some X10
+    | XMM11 => Some X11
+    | XMM12 => Some X12
+    | XMM13 => Some X13
+    | XMM14 => Some X14
+    | XMM15 => Some X15
+    end
+  end
+.
+
+Definition to_preg := preg_of.
+
+Lemma to_preg_to_mreg
+      mr0
+  :
+    mr0.(to_preg).(to_mreg) = Some mr0
+.
+Proof. destruct mr0; eauto. Qed.
+
 (** Extract the values of the arguments of an external call.
     We exploit the calling conventions from module [Conventions], except that
     we use machine registers instead of locations. *)

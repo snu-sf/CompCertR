@@ -290,6 +290,13 @@ Definition parent_ra (s: list stackframe) : val :=
   | Stackframe f sp ra c :: s' => ra
   end.
 
+Definition regset_after_external (rs0: regset): regset :=
+  fun mr =>
+    if is_callee_save mr
+    then rs0 mr
+    else Vundef
+.
+
 Inductive step: state -> trace -> state -> Prop :=
   | exec_Mlabel:
       forall s f sp lbl c rs m,

@@ -25,6 +25,7 @@ Require Import Locations.
 Require Import Conventions.
 Require Import LTL.
 Require Import Linear.
+Require Import sflib.
 
 (** The rules are presented as boolean-valued functions so that we
   get an executable type-checker for free. *)
