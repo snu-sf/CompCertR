@@ -75,7 +75,7 @@ Proof. red. cbn. rewrite Ptrofs.add_zero_l. ss. Qed.
 (* Lemma store_stack_transf_ofs *)
 (*       m sp spofs ty ofs v *)
 (*   : *)
-(*     <<EQ: store_stack m (Vptr sp spofs true) ty ofs v = store_stack m (Vptr sp Ptrofs.zero true) ty (Ptrofs.add spofs ofs) v>> *)
+(*     <<EQ: store_stack m (Vptr sp spofs true) ty ofs v = store_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.add spofs ofs) v>> *)
 (* . *)
 (* Proof. red. cbn. rewrite Ptrofs.add_zero_l. ss. Qed. *)
 (* >>>>>>> 17ade0ce... Allocproof (#269) *)
@@ -1795,28 +1795,24 @@ Proof.
   auto.
 Qed.
 
-Lemma find_function_translated:
-  forall j ls rs m ros f,
+Lemma find_function_ptr_translated:
+  forall j ls rs m ros fptr,
   agree_regs j ls rs ->
   m |= globalenv_inject ge j ->
-  Linear.find_function ge ros ls = Some f ->
-  exists bf, exists tf,
-     find_function_ptr tge ros rs = Some bf
-  /\ Genv.find_funct_ptr tge bf = Some tf
-  /\ transf_fundef f = OK tf.
+  Linear.find_function_ptr ge ros ls = fptr ->
+  exists tfptr,
+     <<TFPTR: find_function_ptr tge ros rs = tfptr>>
+     /\ <<FPTR: Val.inject j fptr tfptr>>
+.
 Proof.
-  intros until f; intros AG [bound [_ [[?????] _]]] FF.
-  destruct ros; simpl in FF.
-- exploit Genv.find_funct_inv; eauto. intros [b EQ]. rewrite EQ in FF.
-  rewrite Genv.find_funct_find_funct_ptr in FF.
-  exploit function_ptr_translated; eauto. intros [tf [A B]].
-  exists b; exists tf; split; auto. simpl.
-  generalize (AG m0). rewrite EQ. intro INJ. inv INJ.
-  rewrite DOMAIN in H2. inv H2. simpl. auto. eapply FUNCTIONS; eauto.
-- destruct (Genv.find_symbol ge i) as [b|] eqn:?; try discriminate.
-  exploit function_ptr_translated; eauto. intros [tf [A B]].
-  exists b; exists tf; split; auto. simpl.
-  rewrite symbols_preserved. auto.
+  ii.
+  inv H0; des.
+  destruct ros; ss; clarify.
+  - esplits; eauto.
+  - erewrite symbols_preserved. des_ifs.
+    + esplits; eauto.
+      inv H0. exploit SYMBOLS; eauto.
+    + esplits; eauto.
 Qed.
 
 (** Preservation of the arguments to an external call. *)
@@ -2049,19 +2045,18 @@ Inductive match_states: Linear.state -> Mach.state -> SimMemInj.t' -> Prop :=
       match_states (Linear.State cs f (Vptr sp Ptrofs.zero) c ls m)
                    (Mach.State cs' fb (Vptr sp' Ptrofs.zero) (transl_code (make_env (function_bounds f)) c) rs m') sm0
   | match_states_call:
-      forall cs f ls m cs' fb rs m' j tf
+      forall cs fptr sg ls m cs' tfptr rs m' j
         sm0 (MCOMPAT: SimMemInj.mcompat sm0 m m' j)
         (MWF: SimMemInj.wf' sm0)
-        (STACKS: match_stacks j cs cs' (Linear.funsig f) sm0)
-        (TRANSL: transf_fundef f = OK tf)
-        (FIND: Genv.find_funct_ptr tge fb = Some tf)
+        (STACKS: match_stacks j cs cs' sg sm0)
         (AGREGS: agree_regs j ls rs)
         (AGCSREGS: agree_callee_save_regs ls (parent_locset cs))
+        (FPTR: Val.inject j fptr tfptr)
         (SEP: m' |= stack_contents j cs cs'
                  ** minjection j m
                  ** globalenv_inject ge j),
-      match_states (Linear.Callstate cs f ls m)
-                   (Mach.Callstate cs' fb rs m') sm0
+      match_states (Linear.Callstate cs fptr sg ls m)
+                   (Mach.Callstate cs' tfptr rs m') sm0
   | match_states_return:
       forall cs ls m cs' rs m' j sg
         sm0 (MCOMPAT: SimMemInj.mcompat sm0 m m' j)
@@ -2290,22 +2285,23 @@ Proof.
   eapply frame_undef_regs; eauto.
 
 - (* Lcall *)
-  exploit find_function_translated; eauto.
+  exploit find_function_ptr_translated; eauto.
     eapply sep_proj2. eapply sep_proj2. eapply sep_proj2. eexact SEP.
-  intros [bf [tf' [A [B C]]]].
+  i; des.
   exploit is_tail_transf_function; eauto. intros IST.
   rewrite transl_code_eq in IST. simpl in IST.
   exploit return_address_offset_exists. { rewrite Genv.find_funct_find_funct_ptr. eauto. } eexact IST. intros [ra D].
   econstructor; split.
-  apply plus_one. econstructor; eauto.
+  apply plus_one. econstructor; eauto. econs; eauto.
   SimMemInj.spl.
   econstructor; eauto.
   econstructor; eauto with coqlib.
   apply Val.Vptr_has_type.
   intros; red.
-    apply Z.le_trans with (size_arguments (Linear.funsig f')); auto. 
+    apply Z.le_trans with (size_arguments sig); auto.
     apply loc_arguments_bounded; auto.
   intro; auto.
+  { inv FPTR. eauto. }
   des_ifs.
   { ss. des_ifs; try (by (inv STACKS; clarify; inv MAINARGS)). rewrite sep_assoc. exact SEP. }
   simpl. rewrite sep_assoc. exact SEP.
@@ -2316,11 +2312,11 @@ Proof.
   assert(INJ: m'0 |= minjection j m). apply SEP.
   clear SEP. intros (rs1 & m1' & P & Q & R & S & T & U & SEP).
   rewrite sep_swap in SEP.
-  exploit find_function_translated; eauto.
+  exploit find_function_ptr_translated; eauto.
     eapply sep_proj2. eapply sep_proj2. eexact SEP.
-  intros [bf [tf' [A [B C]]]].
+  i; des.
   econstructor; split.
-  eapply plus_right. eexact S. econstructor; eauto. traceEq.
+  eapply plus_right. eexact S. econstructor; eauto. econs; eauto. traceEq.
   inv MCOMPAT.
   exploit SimMemInj.free_left; eauto. i; des.
   exploit SimMemInj.free_right; eauto.
@@ -2356,6 +2352,7 @@ Proof.
   }
   apply zero_size_arguments_tailcall_possible. eapply wt_state_tailcall; eauto.
   intro; auto.
+  { inv FPTR. eauto. }
 
 - (* Lbuiltin *)
   assert(GENVINJ: m'0 |= globalenv_inject ge j).
@@ -2522,6 +2519,10 @@ Proof.
 - (* internal function *)
   assert(GENVINJ: m'0 |= globalenv_inject ge j).
   { eapply sep_proj2. eapply sep_proj2. eexact SEP. }
+  exploit functions_translated; eauto. intros (tf & FIND & TRANSL).
+  assert(fptr = tfptr /\ exists fb, fptr = Vptr fb Ptrofs.zero).
+  { repeat apply sep_proj2 in SEP. inv SEP. des. inv H1. unfold Genv.find_funct in *. des_ifs. inv FPTR0.
+    exploit FUNCTIONS; eauto. i. exploit DOMAIN; eauto. i; des. clarify. esplits; eauto. } des. clarify.
   revert TRANSL. unfold transf_fundef, transf_partial_fundef.
   destruct (transf_function f) as [tfn|] eqn:TRANSL; simpl; try congruence.
   intros EQ; inversion EQ; clear EQ; subst tf.
@@ -2614,6 +2615,10 @@ Proof.
   assert (PRES_GLB: meminj_preserves_globals ge j).
   { eapply globalenv_inject_preserves_globals. eauto. }
   assert(INJECT: Mem.inject j m m'0). { eapply SEP. }
+  exploit functions_translated; eauto. intros (tf & FIND & TRANSL).
+  assert(fptr = tfptr /\ exists fb, fptr = Vptr fb Ptrofs.zero).
+  { repeat apply sep_proj2 in SEP. inv SEP. des. inv H1. unfold Genv.find_funct in *. des_ifs. inv FPTR0.
+    exploit FUNCTIONS; eauto. i. exploit DOMAIN; eauto. i; des. clarify. esplits; eauto. } des. clarify.
   simpl in TRANSL. inversion TRANSL; subst tf.
   exploit wt_callstate_agree; eauto. intros [AGCS AGARGS].
   exploit transl_external_arguments; eauto. apply sep_proj1 in SEP; eauto. intros [vl [ARGS VINJ]].
@@ -2713,7 +2718,6 @@ Lemma transf_initial_states:
   exists st2, Mach.initial_state tprog st2 /\ exists sm, match_states st1 st2 sm.
 Proof.
   intros. inv H.
-  exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
   econstructor; split.
   econstructor.
   eapply (Genv.init_mem_transf_partial TRANSF); eauto.
@@ -2724,9 +2728,10 @@ Proof.
   eapply match_states_call with (j := j); eauto.
   { SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }
-  constructor. ss. { unfold j. erewrite <- Genv.init_mem_genv_next; eauto. eapply (init_symbols_inject MATCH_GENV); eauto. } red; intros. rewrite H3, loc_arguments_main in H. contradiction.
+  constructor. ss. { unfold j. erewrite <- Genv.init_mem_genv_next; eauto. eapply (init_symbols_inject MATCH_GENV); eauto. } red; intros. contradiction.
   red; simpl; auto.
   red; simpl; auto.
+  { exploit Genv.find_symbol_not_fresh; eauto. intro P. unfold j, Mem.flat_inj. econs; ss; eauto; des_ifs. rewrite Ptrofs.add_zero_l; ss. }
   simpl. rewrite sep_pure. split; auto. split;[|split].
   eapply Genv.initmem_inject; eauto.
   simpl. exists (Mem.nextblock m0); splits. apply Ple_refl.
@@ -2774,17 +2779,14 @@ Proof.
 - apply senv_preserved; auto.
 - intros. exploit transf_initial_states; eauto. intros [st2 [A B]].
   exists st2; split; auto. split; auto.
-  apply wt_initial_state with (prog := prog); auto. exact wt_prog.
+  apply wt_initial_state with (prog := prog); auto.
 - intros. destruct H. eapply transf_final_states; eauto.
 - intros. destruct H0.
   des.
   exploit transf_step_correct; eauto. intros [s2' [A B]].
   exists s2'; split. exact A. split.
   eapply step_type_preservation; eauto.
-  { ii. unfold find_function in FINDF. ss. destruct ros.
-    - eapply Genv.find_funct_inversion; eauto.
-    - des_ifs. eapply Genv.find_funct_ptr_inversion; eauto.
-  }
+  { ii. ss. eapply Genv.find_funct_inversion; eauto. }
   eexact wt_prog.
   des. esplits; eauto.
 Qed.

@@ -899,20 +899,17 @@ Proof.
 Qed.
 
 Lemma find_function_translated:
-  forall ros rs fd rs',
-  find_function ge ros rs = Some fd ->
+  forall ros rs fptr rs',
+  find_function_ptr ge ros rs = fptr ->
   regs_lessdef rs rs' ->
-  exists cu tfd, find_function tge ros rs' = Some tfd
-              /\ transf_fundef (romem_for cu) fd = OK tfd
-              /\ linkorder cu prog.
+  exists tfptr, find_function_ptr tge ros rs' = tfptr
+              /\ Val.lessdef fptr tfptr.
 Proof.
-  unfold find_function; intros; destruct ros.
+  unfold find_function_ptr; intros; destruct ros.
 - specialize (H0 r). inv H0.
-  apply functions_translated; auto.
-  rewrite <- H2 in H; discriminate.
+  { eauto. } { rewrite <- H2. eauto. }
 - rewrite symbols_preserved. destruct (Genv.find_symbol ge i).
-  apply funct_ptr_translated; auto.
-  discriminate.
+  { eauto. } { eauto. }
 Qed.
 
 (** The proof of semantic preservation is a simulation argument using
@@ -960,14 +957,13 @@ Inductive match_states: state -> state -> Prop :=
       match_states (State s f sp pc rs m)
                    (State s' (transf_function' f approx) sp pc rs' m')
   | match_states_call:
-      forall s f tf args m s' args' m' cu
-             (LINK: linkorder cu prog)
+      forall s fptr sg args m s' tfptr args' m'
              (STACKS: match_stackframes s s')
-             (TFD: transf_fundef (romem_for cu) f = OK tf)
+             (FPTR: Val.lessdef fptr tfptr)
              (ARGS: Val.lessdef_list args args')
              (MEXT: Mem.extends m m'),
-      match_states (Callstate s f args m)
-                   (Callstate s' tf args' m')
+      match_states (Callstate s fptr sg args m)
+                   (Callstate s' tfptr sg args' m')
   | match_states_return:
       forall s s' v v' m m'
              (STACK: match_stackframes s s')
@@ -1095,24 +1091,26 @@ Proof.
   eapply kill_loads_after_store_holds; eauto.
 
 - (* Icall *)
-  exploit find_function_translated; eauto. intros (cu' & tf & FIND' & TRANSF' & LINK').
+  exploit find_function_translated; eauto. intros (tfptr & FIND' & TRANSL).
   econstructor; split.
   eapply exec_Icall; eauto.
-  eapply sig_preserved; eauto.
+  { econstructor; eauto. }
   econstructor; eauto.
   eapply match_stackframes_cons with (cu := cu); eauto.
   intros. eapply analysis_correct_1; eauto. simpl; auto.
   unfold transfer; rewrite H.
   exists (fun _ => Vundef); apply empty_numbering_holds.
+  { inversion FPTR. rewrite FIND'. eauto. }
   apply regs_lessdef_regs; auto.
 
 - (* Itailcall *)
-  exploit find_function_translated; eauto. intros (cu' & tf & FIND' & TRANSF' & LINK').
+  exploit find_function_translated; eauto. intros (tfptr & FIND' & TRANSL).
   exploit Mem.free_parallel_extends; eauto. intros [m'' [A B]].
   econstructor; split.
   eapply exec_Itailcall; eauto.
-  eapply sig_preserved; eauto.
+  { econstructor; eauto. }
   econstructor; eauto.
+  { inversion FPTR. rewrite FIND'. eauto. }
   apply regs_lessdef_regs; auto.
 
 - (* Ibuiltin *)
@@ -1193,17 +1191,23 @@ Proof.
   destruct or; simpl; auto.
 
 - (* internal function *)
+  exploit functions_translated; eauto. intros [cu [tf [FPTR' [TFD LINK]]]].
+  assert (fptr = tfptr).
+  { eapply find_funct_lessdef; eauto. }
   monadInv TFD. unfold transf_function in EQ. fold (analyze cu f) in EQ.
   destruct (analyze cu f) as [approx|] eqn:?; inv EQ.
   exploit Mem.alloc_extends; eauto. apply Z.le_refl. apply Z.le_refl.
   intros (m'' & A & B).
   econstructor; split.
-  eapply exec_function_internal; simpl; eauto.
+  eapply exec_function_internal; simpl. apply FPTR'. auto. eauto.
   simpl. econstructor; eauto.
   eapply analysis_correct_entry; eauto.
   apply init_regs_lessdef; auto.
 
 - (* external function *)
+  exploit functions_translated; eauto. intros [cu [tf [FPTR' [TFD LINK]]]].
+  assert (fptr = tfptr).
+  { eapply find_funct_lessdef; eauto. }
   monadInv TFD.
   exploit external_call_mem_extends; eauto.
   intros (v' & m1' & P & Q & R & S).
@@ -1235,14 +1239,12 @@ Lemma transf_initial_states:
   exists st2, initial_state tprog st2 /\ match_states ge st1 st2.
 Proof.
   intros. inversion H.
-  exploit funct_ptr_translated; eauto. intros (cu & tf & A & B & C).
-  exists (Callstate nil tf nil m0); split.
+  exists (Callstate nil (Vptr b Ptrofs.zero) signature_main nil m0); split.
   econstructor; eauto.
   eapply (Genv.init_mem_match TRANSF); eauto.
   replace (prog_main tprog) with (prog_main prog).
   erewrite symbols_preserved; eauto.
   symmetry. eapply match_program_main; eauto.
-  rewrite <- H3. eapply sig_preserved; eauto.
   econstructor. eauto. constructor. auto. auto. apply Mem.extends_refl.
 Qed.
 

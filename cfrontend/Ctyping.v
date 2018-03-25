@@ -2041,18 +2041,11 @@ Inductive wt_state: state -> Prop :=
         (WTB: wt_stmt ge te f.(fn_return) f.(fn_body))
         (WTE: wt_rvalue ge te r),
       wt_state (ExprState f r k e m)
-  | wt_call_state: forall b fd vargs k m
-        (WTK: wt_call_cont k (fundef_return fd))
-        (WTFD: wt_fundef fd)
-        (FIND: Genv.find_funct ge b = Some fd)
-        (WTKS: forall
-            (EXT: forall f, fd <> (Internal f))
-          ,
-            exists _f _e _C _k, k = Kcall _f _e _C (fundef_return fd) _k)
-        (WTARGS: Forall2 val_casted vargs fd.(fundef_args).(typelist_to_listtype))
-        (NVOID: Forall (fun ty => ty <> Tvoid) fd.(fundef_args).(typelist_to_listtype))
+  | wt_call_state: forall vf tyf tyargs tyres cc vargs k m
+        (WTK: wt_call_cont k tyres)
+        (CLASSIFY: classify_fun tyf = fun_case_f tyargs tyres cc)
     ,
-      wt_state (Callstate fd vargs k m)
+      wt_state (Callstate vf tyf vargs k m)
   | wt_return_state: forall v k m ty
         (WTK: wt_call_cont k ty)
         (VAL: wt_retval v ty)
@@ -2126,32 +2119,12 @@ Proof.
 - (* call *)
   assert (A: wt_expr_kind ge te RV a) by (eapply wt_subexpr; eauto).
   simpl in A. inv H. inv A. simpl in H9; rewrite H4 in H9; inv H9.
-  assert (fundef_return fd = ty).
-  { destruct fd; simpl in *.
-    unfold type_of_function in H3. congruence.
-    congruence. }
-  assert (fundef_args fd = tyargs0).
-  { destruct fd; simpl in *.
-    unfold type_of_function in H3. congruence.
-    congruence. }
   econstructor.
-  rewrite H. econstructor; eauto.
+  econstructor; eauto.
   intros. change (wt_expr_kind ge te RV (C (Eval v ty))).
-  eapply wt_context with (a := Ecall (Eval vf tyf) el ty); eauto.
+  eapply wt_context with (a := (Ecall (Eval fptr tyf0) el ty)); eauto.
   red; constructor; auto.
-  eapply wt_find_funct; eauto.
-  eauto.
-  { ii. subst. esplits; eauto. }
-  {
-  simpl. rewrite H5. eauto.
-  clear - H2 H10.
-  ginduction vargs; ii; ss; inv H2; inv H10; ss.
-  econs; eauto. eapply cast_val_is_casted; eauto.
-  }
-  {
-  rewrite H5. clear - H10.
-  ginduction tyargs0; ii; ss. inv H10. econs; eauto.
-  }
+  simpl. eauto.
 - (* stuck *)
   constructor.
 Qed.
@@ -2200,11 +2173,20 @@ Proof.
 - inv WTS; eauto with ty.
 - exploit wt_find_label. eexact WTB. eauto. eapply call_cont_wt'; eauto.
   intros [A B]. eauto with ty.
-- simpl in WTFD; inv WTFD. econstructor; eauto. apply wt_call_cont_stmt_cont; auto.
-- econstructor; eauto.
+
+
+
+- assert(WTFD: wt_fundef (Internal f)).
+  { eapply wt_find_funct; eauto. }
+  simpl in WTFD; inv WTFD. econstructor; eauto. apply wt_call_cont_stmt_cont; auto.
+  inv CLASSIFY. eauto.
+- assert(WTFD: wt_fundef (External ef targs tres cc)).
+  { eapply wt_find_funct; eauto. }
   unfold Genv.find_funct, Genv.find_funct_ptr in *. des_ifs. exploit GEWF; eauto. i; des. exploit GECMPT; eauto. i; des.
   exploit WT_EXTERNAL; eauto.
   { eapply PTree_Properties.in_of_list; eauto. }
+  inv CLASSIFY.
+  econstructor; eauto.
 - inv WTK. inv VAL. eauto with ty.
 Qed.
 
@@ -2215,21 +2197,10 @@ Proof.
 Qed.
 
 Theorem wt_initial_state:
-  forall fd vargs k m,
-    initial_state prog (Callstate fd vargs k m) ->
-    (exists vf, Genv.find_funct ge vf = Some fd) ->
-    (exists f, fd = Internal f) ->
-    wt_state (Callstate fd vargs k m)
-.
+  forall S, initial_state prog S -> wt_state S.
 Proof.
-  intros. des. inv H.
-  assert(PARAMS: fundef_args (Internal f) = Tnil).
-  { ss. unfold type_of_function in *. congruence. }
-  econstructor. constructor.
-  eapply wt_find_funct; eauto. eauto.
-  { ii. exfalso. des. eapply EXT; eauto. }
-  rewrite PARAMS. econstructor; eauto.
-  rewrite PARAMS. econstructor; eauto.
+  intros. inv H. econstructor. constructor.
+  econstructor; eauto.
 Qed.
 
 End PRESERVATION.

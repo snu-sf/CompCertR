@@ -68,15 +68,14 @@ Proof.
   destruct f; reflexivity.
 Qed.
 
-Lemma find_function_translated:
-  forall ros rs fd,
-  find_function ge ros rs = Some fd ->
-  find_function tge ros rs = Some (transf_fundef fd).
+Lemma find_function_ptr_translated:
+  forall ros rs fptr,
+  find_function_ptr ge ros rs m= fptr ->
+  find_function_ptr tge ros rs m= fptr.
 Proof.
-  unfold find_function; intros. destruct ros as [r|id].
-  eapply functions_translated; eauto.
+  unfold find_function_ptr; intros. destruct ros as [r|id].
+  eauto.
   rewrite symbols_preserved. destruct (Genv.find_symbol ge id); try congruence.
-  eapply function_ptr_translated; eauto.
 Qed.
 
 (** Effect of an injective renaming of nodes on a CFG. *)
@@ -154,10 +153,10 @@ Inductive match_states: RTL.state -> RTL.state -> Prop :=
         (REACH: reach f pc),
       match_states (State stk f sp pc rs m)
                    (State stk' (transf_function f) sp (renum_pc (pnum f) pc) rs m)
-  | match_callstates: forall stk f args m stk'
+  | match_callstates: forall stk fptr sg args m stk'
         (STACKS: list_forall2 match_frames stk stk'),
-      match_states (Callstate stk f args m)
-                   (Callstate stk' (transf_fundef f) args m)
+      match_states (Callstate stk fptr sg args m)
+                   (Callstate stk' fptr sg args m)
   | match_returnstates: forall stk v m stk'
         (STACKS: list_forall2 match_frames stk stk'),
       match_states (Returnstate stk v m)
@@ -191,15 +190,13 @@ Proof.
   constructor; auto. eapply reach_succ; eauto. simpl; auto.
 (* call *)
   econstructor; split.
-  eapply exec_Icall with (fd := transf_fundef fd); eauto.
-    eapply find_function_translated; eauto.
-    apply sig_preserved.
+  eapply exec_Icall; eauto.
+    eapply find_function_ptr_translated; eauto.
   constructor. constructor; auto. constructor. eapply reach_succ; eauto. simpl; auto.
 (* tailcall *)
   econstructor; split.
-  eapply exec_Itailcall with (fd := transf_fundef fd); eauto.
-    eapply find_function_translated; eauto.
-    apply sig_preserved.
+  eapply exec_Itailcall; eauto.
+    eapply find_function_ptr_translated; eauto.
   constructor. auto.
 (* builtin *)
   econstructor; split.
@@ -223,10 +220,12 @@ Proof.
   eapply exec_Ireturn; eauto.
   constructor; auto.
 (* internal function *)
+  exploit functions_translated; eauto. intro FFPTR; des.
   simpl. econstructor; split.
   eapply exec_function_internal; eauto.
   constructor; auto. unfold reach. constructor.
 (* external function *)
+  exploit functions_translated; eauto. intro FFPTR; des.
   econstructor; split.
   eapply exec_function_external; eauto.
     eapply external_call_symbols_preserved; eauto.
@@ -253,11 +252,9 @@ Lemma transf_initial_states:
   exists S2, RTL.initial_state tprog S2 /\ match_states S1 S2.
 Proof.
   intros. inv H. econstructor; split.
-  econstructor.
+  econstructor; eauto.
     eapply (Genv.init_mem_transf TRANSL); eauto.
     erewrite symbols_preserved; eauto. rewrite (match_program_main TRANSL). eauto.
-    eapply function_ptr_translated; eauto.
-    rewrite <- H3; apply sig_preserved.
   constructor. constructor.
 Qed.
 

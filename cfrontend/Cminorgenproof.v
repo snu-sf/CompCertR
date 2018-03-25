@@ -1691,17 +1691,17 @@ Inductive match_states: Csharpminor.state -> Cminor.state -> SimMemInj.t' -> Pro
       match_states (Csharpminor.State fn (Csharpminor.Sseq s1 s2) k e le m)
                    (State tfn ts1 tk (Vptr sp Ptrofs.zero) te tm) sm0
   | match_callstate:
-      forall fd args k m tfd targs tk tm f cs cenv
+      forall sg fptr args k m tfptr targs tk tm f cs cenv
       sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm f)
       (MWF: SimMemInj.wf' sm0)
-      (TR: transl_fundef fd = OK tfd)
       (MINJ: Mem.inject f m tm)
+      (FPTR: Val.inject f fptr tfptr)
       (MCS: match_callstack f m tm sm0 cs (Mem.nextblock m) (Mem.nextblock tm))
       (MK: match_cont k tk cenv nil cs)
       (ISCC: Csharpminor.is_call_cont k)
       (ARGSINJ: Val.inject_list f args targs),
-      match_states (Csharpminor.Callstate fd args k m)
-                   (Callstate tfd targs tk tm) sm0
+      match_states (Csharpminor.Callstate fptr sg args k m)
+                   (Callstate tfptr sg targs tk tm) sm0
   | match_returnstate:
       forall v k m tv tk tm f cs cenv
       sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm f)
@@ -2181,22 +2181,16 @@ Proof.
   intros. eapply Mem.perm_store_1; eauto.
 
 (* call *)
-  simpl in H1. exploit functions_translated; eauto. intros [tfd [FIND TRANS]].
+  simpl in H1.
   monadInv TR.
   exploit transl_expr_correct; eauto. intros [tvf [EVAL1 VINJ1]].
-  assert (tvf = vf).
-    exploit match_callstack_match_globalenvs; eauto. intros [bnd [MG TTT]].
-    eapply val_inject_function_pointer; eauto.
-  subst tvf.
   exploit transl_exprlist_correct; eauto.
   intros [tvargs [EVAL2 VINJ2]].
   left; econstructor; split.
   apply plus_one. eapply step_call; eauto.
-  apply sig_preserved; eauto.
   SimMemInj.spl.
   econstructor; eauto.
   eapply match_Kcall with (cenv' := cenv); eauto.
-  red; auto.
 
 (* builtin *)
   monadInv TR.
@@ -2369,6 +2363,13 @@ Opaque PTree.set.
   econstructor; eauto.
 
 (* internal call *)
+  assert(fptr = tfptr).
+  { symmetry. exploit match_callstack_match_globalenvs; eauto. i; des.
+    eapply val_inject_function_pointer; eauto. } subst tfptr.
+  assert(TMP: exists tf,
+            <<TR: transl_fundef (Internal f) = OK tf>> /\
+            <<FPTR: Genv.find_funct tge fptr = Some tf>>).
+  { exploit functions_translated; eauto. i; des. inv H5. esplits; eauto. } i; des.
   monadInv TR. generalize EQ; clear EQ; unfold transl_function.
   caseEq (build_compilenv f). intros ce sz BC.
   destruct (zle sz Ptrofs.max_unsigned); try congruence.
@@ -2413,12 +2414,20 @@ Opaque PTree.set.
   inv MK; simpl in ISCC; contradiction || econstructor; eauto.
 
 (* external call *)
+  assert(fptr = tfptr).
+  { symmetry. exploit match_callstack_match_globalenvs; eauto. i; des.
+    eapply val_inject_function_pointer; eauto. } subst tfptr.
+  assert(TMP: exists tf,
+            <<TR: transl_fundef (External ef) = OK tf>> /\
+            <<FPTR: Genv.find_funct tge fptr = Some tf>>).
+  { exploit functions_translated; eauto. i; des. inv H1. esplits; eauto. ss. } i; des.
   monadInv TR.
   exploit external_call_mem_inject_gen; eauto.
   { eapply match_callstack_symbols_inject; eauto. }
   intros [f' [vres' [tm' [EC [VINJ [MINJ' [UNMAPPED [OUTOFREACH [INCR SEPARATED]]]]]]]]].
   left; econstructor; split.
-  apply plus_one. econstructor. eauto.
+  apply plus_one. econstructor. eauto. eauto.
+  eauto.
   assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
                     (SimMemInj.mk m' tm' f' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
                                   sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
@@ -2488,22 +2497,21 @@ Lemma transl_initial_states:
   exists R, Cminor.initial_state tprog R /\ exists sm, match_states ge tge ge S R sm.
 Proof.
   induction 1.
-  exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
   econstructor; split.
-  econstructor.
+  econstructor; eauto.
   apply (Genv.init_mem_transf_partial TRANSL). eauto.
   simpl. fold tge. erewrite symbols_preserved; eauto.
   replace (prog_main tprog) with (prog_main prog). eexact H0.
   symmetry. unfold transl_program in TRANSL.
-  eapply match_program_main; eauto. 
-  eexact FIND.
-  rewrite <- H2. apply sig_preserved; auto.
+  eapply match_program_main; eauto.
   exists (SimMemInj.mk m0 m0 (Mem.flat_inj (Mem.nextblock m0)) bot2 bot2 1%positive 1%positive).
   eapply match_callstate with (f := Mem.flat_inj (Mem.nextblock m0)) (cs := @nil frame) (cenv := PTree.empty Z).
   { SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }
   auto.
   eapply Genv.initmem_inject; eauto.
+  { exploit Genv.find_symbol_not_fresh; eauto. i.
+    econs; eauto. unfold Mem.flat_inj. des_ifs; eauto. rewrite Ptrofs.add_zero; eauto. }
   apply mcs_nil with (Mem.nextblock m0); try xomega.
   { erewrite <- Genv.init_mem_genv_next; eauto. eapply (init_symbols_inject MATCH_GENV); eauto. }
   { erewrite <- Genv.init_mem_genv_next; eauto. unfold ge. ss. }

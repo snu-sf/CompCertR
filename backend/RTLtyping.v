@@ -894,11 +894,11 @@ Inductive wt_state: state -> Prop :=
         (WT_RS: wt_regset env rs),
       wt_state (State s f sp pc rs m)
   | wt_state_call:
-      forall s f args m,
-      wt_stackframes s (funsig f) ->
-      wt_fundef f ->
-      Val.has_type_list args (sig_args (funsig f)) ->
-      wt_state (Callstate s f args m)
+      forall s fptr sg args m,
+      wt_stackframes s sg ->
+      DUMMY_PROP ->
+      Val.has_type_list args (sig_args sg) ->
+      wt_state (Callstate s fptr sg args m)
   | wt_state_return:
       forall s v m sg,
       wt_stackframes s sg ->
@@ -945,22 +945,10 @@ Proof.
   (* Istore *)
   econstructor; eauto.
   (* Icall *)
-  assert (wt_fundef fd).
-    destruct ros; simpl in H0.
-    pattern fd. exploit CONTAINED; eauto. i; des. eapply wt_p. eauto.
-    caseEq (Genv.find_symbol ge i); intros; rewrite H1 in H0.
-    pattern fd. rewrite <- Genv.find_funct_find_funct_ptr in H0. exploit CONTAINED; eauto. i; des. eapply wt_p. eauto.
-    discriminate.
   econstructor; eauto.
   econstructor; eauto. inv WTI; auto.
   inv WTI. rewrite <- H8. apply wt_regset_list. auto.
   (* Itailcall *)
-  assert (wt_fundef fd).
-    destruct ros; simpl in H0.
-    pattern fd. exploit CONTAINED; eauto. i; des. eapply wt_p. eauto.
-    caseEq (Genv.find_symbol ge i); intros; rewrite H1 in H0.
-    pattern fd. rewrite <- Genv.find_funct_find_funct_ptr in H0. exploit CONTAINED; eauto. i; des. eapply wt_p. eauto.
-    discriminate.
   econstructor; eauto.
   inv WTI. apply wt_stackframes_change_sig with (fn_sig f); auto.
   inv WTI. rewrite <- H7. apply wt_regset_list. auto.
@@ -974,6 +962,7 @@ Proof.
   econstructor; eauto.
   inv WTI; simpl. auto. unfold proj_sig_res; rewrite H2. auto.
   (* internal function *)
+  assert(H5: wt_fundef (Internal f)). exploit CONTAINED; eauto. i; des. eapply wt_p; eauto.
   simpl in *. inv H5.
   econstructor; eauto.
   inv H1. apply wt_init_regs; auto. rewrite wt_params0. auto.
@@ -988,10 +977,7 @@ Qed.
 Lemma wt_initial_state:
   forall S, initial_state p S -> wt_state S.
 Proof.
-  intros. inv H. constructor. constructor. des_ifs. rewrite H3; auto.
-  pattern f. apply Genv.find_funct_ptr_prop with fundef unit p b.
-  exact wt_p. exact H2.
-  rewrite H3. constructor.
+  intros. inv H. constructor. constructor. des_ifs. auto. auto.
 Qed.
 
 Lemma wt_instr_inv:

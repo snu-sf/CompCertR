@@ -1384,14 +1384,13 @@ Inductive match_states: Clight.state -> Csharpminor.state -> Prop :=
       match_states (Clight.State f s k e le m)
                    (State tf ts' tk' te le m)
   | match_callstate:
-      forall fd args k m tfd tk targs tres cconv cu ce
-          (LINK: linkorder cu prog)
-          (TR: match_fundef cu fd tfd)
+      forall fptr ty args k m tk targs tres cconv ce
           (MK: match_cont ce Tvoid 0%nat 0%nat k tk)
           (ISCC: Clight.is_call_cont k)
-          (TY: type_of_fundef fd = Tfunction targs tres cconv),
-      match_states (Clight.Callstate fd args k m)
-                   (Callstate tfd args tk m)
+          (TYP: ty = (Tfunction targs tres cconv))
+      ,
+      match_states (Clight.Callstate fptr ty args k m)
+                   (Callstate fptr (signature_of_type targs tres cconv) args tk m)
   | match_returnstate:
       forall res k m tk ce
           (MK: match_cont ce Tvoid 0%nat 0%nat k tk),
@@ -1530,6 +1529,21 @@ Proof.
   split; auto; econstructor; eauto.
 Qed.
 
+Lemma function_type_implies_sig
+      f targs tres cconv
+      (TYP: type_of_function f = Tfunction targs tres cconv)
+  :
+    <<SIG: signature_of_function f = signature_of_type targs tres cconv>>
+.
+Proof.
+  red.
+  unfold signature_of_type, signature_of_function.
+  unfold type_of_function in *. clarify.
+  f_equal.
+  rewrite transl_params_types.
+  ss.
+Qed.
+
 (** The simulation proof *)
 
 Lemma transl_step:
@@ -1560,18 +1574,14 @@ Proof.
 - (* call *)
   revert TR. simpl. case_eq (classify_fun (typeof a)); try congruence.
   intros targs tres cc CF TR. monadInv TR. inv MTR.
-  exploit functions_translated; eauto. intros (cu' & tfd & FIND & TFD & LINK').
   rewrite H in CF. simpl in CF. inv CF.
   econstructor; split.
   apply plus_one. econstructor; eauto.
   eapply transl_expr_correct with (cunit := cu); eauto.
   eapply transl_arglist_correct with (cunit := cu); eauto.
   erewrite typlist_of_arglist_eq by eauto.
-  eapply transl_fundef_sig1; eauto.
-  rewrite H3. auto.
   econstructor; eauto.
-  eapply match_Kcall with (ce := prog_comp_env cu') (cu := cu); eauto.
-  simpl. auto.
+  eapply match_Kcall with (ce := prog_comp_env cu) (cu := cu); eauto.
 
 - (* builtin *)
   monadInv TR. inv MTR.
@@ -1733,13 +1743,23 @@ Proof.
   econstructor; eauto. constructor.
 
 - (* internal function *)
-  inv H. inv TR. monadInv H5.
+  inv H.
+  assert(exists cu (tf: function),
+            <<LINK: linkorder cu prog>> /\
+            transl_function (prog_comp_env cu) f = OK tf /\
+            <<FPTR: Genv.find_funct tge fptr = Some (AST.Internal tf)>>).
+  {
+    exploit functions_translated; eauto. i; des. inv H5. esplits; eauto.
+  } i; des.
+  monadInv H5.
   exploit match_cont_is_call_cont; eauto. intros [A B].
   exploit match_env_alloc_variables; eauto.
   apply match_env_empty.
   intros [te1 [C D]].
   econstructor; split.
   apply plus_one. eapply step_internal_function.
+  { eauto. }
+  { eapply function_type_implies_sig; eauto. }
   simpl. erewrite transl_vars_names by eauto. assumption.
   simpl. assumption.
   simpl. assumption.
@@ -1750,10 +1770,17 @@ Proof.
   constructor.
 
 - (* external function *)
-  inv TR.
+  assert(exists cu,
+            <<LINK: linkorder cu prog>> /\
+            (* transl_fundef (prog_comp_env cu) (External ef targs tres cconv) = OK tf /\ *)
+            ef_sig ef = signature_of_type targs tres cconv /\
+            <<FPTR: Genv.find_funct tge fptr = Some (AST.External ef)>>).
+  {
+    exploit functions_translated; eauto. i; des. inv H1. esplits; eauto.
+  } i; des.
   exploit match_cont_is_call_cont; eauto. intros [A B].
   econstructor; split.
-  apply plus_one. econstructor; eauto.
+  apply plus_one. econstructor; eauto. { ss. clarify. }
   eapply external_call_symbols_preserved; eauto.
   eapply match_returnstate with (ce := ce); eauto.
 
@@ -1782,14 +1809,12 @@ Lemma transl_initial_states:
   exists R, initial_state tprog R /\ match_states ge S R.
 Proof.
   intros. inv H.
-  exploit function_ptr_translated; eauto. intros (cu & tf & A & B & C).
   assert (D: Genv.find_symbol tge (AST.prog_main tprog) = Some b).
   { destruct TRANSL as (P & Q & R). rewrite Q. erewrite symbols_preserved; eauto. auto. }
-  assert (E: funsig tf = signature_of_type Tnil type_int32s cc_default).
-  { eapply transl_fundef_sig2; eauto. }
   econstructor; split.
   econstructor; eauto. apply (Genv.init_mem_match TRANSL). eauto.
-  econstructor; eauto. instantiate (1 := prog_comp_env cu). constructor; auto. exact I.
+  unshelve rpapply match_callstate; eauto.
+  econstructor; eauto. econstructor; eauto.
 Qed.
 
 Lemma transl_final_states:

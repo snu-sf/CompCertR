@@ -188,13 +188,13 @@ Combined Scheme exec_stmt_funcall_ind from exec_stmt_ind2, eval_funcall_ind2.
   trace of observable events performed during the execution. *)
 
 CoInductive execinf_stmt: env -> temp_env -> mem -> statement -> traceinf -> Prop :=
-  | execinf_Scall:   forall e le m optid a al vf tyargs tyres cconv vargs f t,
+  | execinf_Scall:   forall e le m optid a al vf tyargs tyres cconv vargs t,
       classify_fun (typeof a) = fun_case_f tyargs tyres cconv ->
       eval_expr ge e le m a vf ->
       eval_exprlist ge e le m al tyargs vargs ->
-      Genv.find_funct ge vf = Some f ->
-      type_of_fundef f = Tfunction tyargs tyres cconv ->
-      evalinf_funcall m f vargs t ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      evalinf_funcall m vf (Tfunction tyargs tyres cconv) vargs t ->
       execinf_stmt e le m (Scall optid a al) t
   | execinf_Sseq_1:   forall e le m s1 s2 t,
       execinf_stmt e le m s1 t ->
@@ -231,13 +231,15 @@ CoInductive execinf_stmt: env -> temp_env -> mem -> statement -> traceinf -> Pro
 (** [evalinf_funcall ge m fd args t] holds if the invocation of function
     [fd] on arguments [args] diverges, with observable trace [t]. *)
 
-with evalinf_funcall: mem -> fundef -> list val -> traceinf -> Prop :=
-  | evalinf_funcall_internal: forall m f vargs t e m1 m2,
+with evalinf_funcall: mem -> val -> type -> list val -> traceinf -> Prop :=
+  | evalinf_funcall_internal: forall fptr ty m f vargs t e m1 m2
+      (FPTR: Genv.find_funct ge fptr = Some (Internal f))
+      (TYF: type_of_fundef (Internal f) = ty),
       alloc_variables ge empty_env m (f.(fn_params) ++ f.(fn_vars)) e m1 ->
       list_norepet (var_names f.(fn_params) ++ var_names f.(fn_vars)) ->
       bind_parameters ge e m1 f.(fn_params) vargs m2 ->
       execinf_stmt e (create_undef_temps f.(fn_temps)) m2 f.(fn_body) t ->
-      evalinf_funcall m (Internal f) vargs t.
+      evalinf_funcall m fptr ty vargs t.
 
 End BIGSTEP.
 
@@ -254,13 +256,13 @@ Inductive bigstep_program_terminates (p: program): trace -> int -> Prop :=
       bigstep_program_terminates p t r.
 
 Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
-  | bigstep_program_diverges_intro: forall b f m0 t,
+  | bigstep_program_diverges_intro: forall b m0 t,
       let ge := globalenv p in
       Genv.init_mem p = Some m0 ->
       Genv.find_symbol ge p.(prog_main) = Some b ->
-      Genv.find_funct_ptr ge b = Some f ->
-      type_of_fundef f = Tfunction Tnil type_int32s cc_default ->
-      evalinf_funcall ge ge m0 f nil t ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      evalinf_funcall ge ge m0 (Vptr b Ptrofs.zero) (Tfunction Tnil type_int32s cc_default) nil t ->
       bigstep_program_diverges p t.
 
 Definition bigstep_semantics (p: program) :=
@@ -306,9 +308,11 @@ Lemma exec_stmt_eval_funcall_steps:
 /\
   (forall m fd args t m' res,
    eval_funcall ge ge m fd args t m' res ->
-   forall k,
+   forall fptr ty k
+   (FPTR: Genv.find_funct ge fptr = Some fd)
+   (TYF: type_of_fundef fd = ty),
    is_call_cont k ->
-   star step1 ge ge (Callstate fd args k m) t (Returnstate res k m')).
+   star step1 ge ge (Callstate fptr ty args k m) t (Returnstate res k m')).
 Proof.
   apply exec_stmt_funcall_ind; intros.
 
@@ -324,7 +328,7 @@ Proof.
 (* call *)
   econstructor; split.
   eapply star_left. econstructor; eauto.
-  eapply star_right. apply H5. simpl; auto. econstructor. reflexivity. traceEq.
+  eapply star_right. apply H5. simpl; auto. auto. econstructor. econstructor. reflexivity. traceEq.
   constructor.
 
 (* builtin *)
@@ -472,7 +476,7 @@ Proof.
   reflexivity. traceEq.
 
 (* call external *)
-  apply star_one. apply step_external_function; auto.
+  apply star_one. eapply step_external_function; eauto.
 Qed.
 
 Lemma exec_stmt_steps:
@@ -486,17 +490,19 @@ Proof (proj1 exec_stmt_eval_funcall_steps).
 Lemma eval_funcall_steps:
    forall m fd args t m' res,
    eval_funcall ge ge m fd args t m' res ->
-   forall k,
+   forall fptr ty k,
+   Genv.find_funct ge fptr = Some fd ->
+   type_of_fundef fd = ty ->
    is_call_cont k ->
-   star step1 ge ge (Callstate fd args k m) t (Returnstate res k m').
+   star step1 ge ge (Callstate fptr ty args k m) t (Returnstate res k m').
 Proof (proj2 exec_stmt_eval_funcall_steps).
 
 Definition order (x y: unit) := False.
 
 Lemma evalinf_funcall_forever:
-  forall m fd args T k,
-  evalinf_funcall ge ge m fd args T ->
-  forever_N step1 ge order ge tt (Callstate fd args k m) T.
+  forall m fptr ty args T k,
+  evalinf_funcall ge ge m fptr ty args T ->
+  forever_N step1 ge order ge tt (Callstate fptr ty args k m) T.
 Proof.
   cofix CIH_FUN.
   assert (forall e le m s T f k,
@@ -572,7 +578,7 @@ Proof.
 (* termination *)
   inv H. econstructor; econstructor.
   split. econstructor; eauto.
-  split. eapply eval_funcall_steps. eauto. red; auto.
+  split. eapply eval_funcall_steps. eauto. erewrite Genv.find_funct_find_funct_ptr; eauto. eauto. red; auto.
   econstructor.
 (* divergence *)
   inv H. econstructor.

@@ -1137,7 +1137,7 @@ Inductive sound_state_base (su: Unreach.t): state -> Prop :=
       ,
       sound_state_base su (State s f (Vptr sp Ptrofs.zero) pc e m)
   | sound_call_state:
-      forall s fd args m bc
+      forall s fptr sg args m bc
         (STK: sound_stack su bc s m (Mem.nextblock m))
         (ARGS: forall v, In v args -> vmatch bc v Vtop)
         (RO: romatch bc m rm)
@@ -1147,7 +1147,7 @@ Inductive sound_state_base (su: Unreach.t): state -> Prop :=
         (HLE: Unreach.hle su (bc2su bc ge.(Genv.genv_next) m.(Mem.nextblock)))
         (WF: Unreach.wf su)
       ,
-      sound_state_base su (Callstate s fd args m)
+      sound_state_base su (Callstate s fptr sg args m)
   | sound_return_state:
       forall s v m bc
         (STK: sound_stack su bc s m (Mem.nextblock m))
@@ -1370,8 +1370,8 @@ Proof.
     (* { rr in HLE. des. ss. ii. exploit PRIV; eauto. i. des_ifs. des_sumbool. congruence. } *)
   * intros. exploit list_in_map_inv; eauto. intros (r & P & Q). subst v.
     apply D with (areg ae r).
-    rewrite forallb_forall in H2. apply vpincl_ge.
-    apply H2. apply in_map; auto.
+    rewrite forallb_forall in H3. apply vpincl_ge.
+    apply H3. apply in_map; auto.
     auto with va.
   * { hexploit sound_stack_unreach; eauto. i; des.
       eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite C; try xomega; ss. ii. clarify. xomega. }

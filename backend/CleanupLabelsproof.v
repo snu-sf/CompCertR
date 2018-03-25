@@ -73,15 +73,13 @@ Proof.
 Qed.
 
 Lemma find_function_translated:
-  forall ros ls f,
-  find_function ge ros ls = Some f ->
-  find_function tge ros ls = Some (transf_fundef f).
+  forall ros ls fptr,
+  find_function_ptr ge ros ls = fptr ->
+  exists tfptr, find_function_ptr tge ros ls = tfptr /\ Val.lessdef fptr tfptr.
 Proof.
-  unfold find_function; intros; destruct ros; simpl.
-  apply functions_translated; auto.
-  rewrite symbols_preserved. destruct (Genv.find_symbol ge i).
-  apply function_ptr_translated; auto.
-  congruence.
+  unfold find_function_ptr; intros; destruct ros; simpl.
+- esplit; eauto.
+- rewrite symbols_preserved. destruct (Genv.find_symbol ge i); esplit; eauto.
 Qed.
 
 (** Correctness of [labels_branched_to]. *)
@@ -212,10 +210,11 @@ Inductive match_states: state -> state -> Prop :=
       match_states (State s f sp c ls m)
                    (State ts (transf_function f) sp (remove_unused_labels (labels_branched_to f.(fn_code)) c) ls m)
   | match_states_call:
-      forall s f ls m ts,
+      forall s fptr sg ls m ts tfptr,
       list_forall2 match_stackframes s ts ->
-      match_states (Callstate s f ls m)
-                   (Callstate ts (transf_fundef f) ls m)
+      Val.lessdef fptr tfptr ->
+      match_states (Callstate s fptr sg ls m)
+                   (Callstate ts tfptr sg ls m)
   | match_states_return:
       forall s ls m ts,
       list_forall2 match_stackframes s ts ->
@@ -269,16 +268,19 @@ Proof.
   econstructor; eauto.
   econstructor; eauto with coqlib.
 (* Lcall *)
+  exploit find_function_translated; eauto. intros (tfptr & FIND' & LESSDEF).
   left; econstructor; split.
-  econstructor. eapply find_function_translated; eauto.
-  symmetry; apply sig_function_translated.
+  econstructor; eauto. constructor.
   econstructor; eauto. constructor; auto. constructor; eauto with coqlib.
+  inversion FPTR. rewrite FIND'. apply LESSDEF.
 (* Ltailcall *)
+  exploit find_function_translated; eauto. intros (tfptr & FIND' & LESSDEF).
   left; econstructor; split.
-  econstructor. erewrite match_parent_locset; eauto. eapply find_function_translated; eauto.
-  symmetry; apply sig_function_translated.
+  econstructor. rewrite FIND'. constructor.
+  erewrite match_parent_locset; eauto. eauto. eauto.
   simpl. eauto.
   econstructor; eauto.
+  inversion FPTR. auto.
 (* Lbuiltin *)
   left; econstructor; split.
   econstructor.
@@ -317,12 +319,20 @@ Proof.
   erewrite <- match_parent_locset; eauto.
   econstructor; eauto with coqlib.
 (* internal function *)
+  exploit functions_translated; eauto. intros FIND'.
+  assert (fptr = tfptr).
+  { eapply find_funct_lessdef; eauto. }
   left; econstructor; split.
-  econstructor; simpl; eauto.
+  econstructor; simpl. rewrite <- H0. apply FIND'. auto. eauto. eauto.
   econstructor; eauto with coqlib.
 (* external function *)
+  exploit functions_translated; eauto. intros FIND'.
+  assert (fptr = tfptr).
+  { eapply find_funct_lessdef; eauto. }
   left; econstructor; split.
-  econstructor; eauto. eapply external_call_symbols_preserved; eauto.
+  econstructor. rewrite <- H. apply FIND'. auto. eauto.
+  eapply external_call_symbols_preserved; eauto.
+  econstructor; eauto with coqlib.
   econstructor; eauto with coqlib.
 (* return *)
   inv H3. inv H1. left; econstructor; split.
@@ -346,11 +356,11 @@ Lemma transf_initial_states:
 Proof.
   intros. inv H.
   econstructor; split.
-  eapply initial_state_intro with (f := transf_fundef f).
+  eapply initial_state_intro.
   eapply (Genv.init_mem_transf TRANSL); eauto.
   erewrite (match_program_main TRANSL), symbols_preserved; eauto.
-  eapply function_ptr_translated; eauto.
-  rewrite sig_function_translated. auto.
+  auto.
+  auto.
   constructor; auto. constructor.
 Qed.
 

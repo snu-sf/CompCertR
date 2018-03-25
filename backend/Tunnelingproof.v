@@ -241,12 +241,13 @@ Inductive match_states: state -> state -> Prop :=
       match_states (Block s f sp (Lbranch pc :: bb) ls m)
                    (State ts (tunnel_function f) sp (branch_target f pc) tls tm)
   | match_states_call:
-      forall s f ls m ts tls tm
+      forall s fptr sg ls m ts tfptr tls tm
         (STK: list_forall2 match_stackframes s ts)
         (LS: locmap_lessdef ls tls)
-        (MEM: Mem.extends m tm),
-      match_states (Callstate s f ls m)
-                   (Callstate ts (tunnel_fundef f) tls tm)
+        (MEM: Mem.extends m tm)
+        (FPTR: Val.lessdef fptr tfptr),
+      match_states (Callstate s fptr sg ls m)
+                   (Callstate ts tfptr sg tls tm)
   | match_states_return:
       forall s ls m ts tls tm
         (STK: list_forall2 match_stackframes s ts)
@@ -352,18 +353,14 @@ Proof.
 Qed.
 
 Lemma find_function_translated:
-  forall ros ls tls fd,
+  forall ros ls tls fptr,
   locmap_lessdef ls tls ->
-  find_function ge ros ls = Some fd ->
-  find_function tge ros tls = Some (tunnel_fundef fd).
+  find_function_ptr ge ros ls = fptr ->
+  exists tfptr, find_function_ptr tge ros tls = tfptr /\ Val.lessdef fptr tfptr.
 Proof.
-  intros. destruct ros; simpl in *.
-- assert (E: tls (R m) = ls (R m)).
-  { exploit Genv.find_funct_inv; eauto. intros (b & EQ). 
-    generalize (H (R m)). rewrite EQ. intros LD; inv LD. auto. }
-  rewrite E. apply functions_translated; auto.
-- rewrite symbols_preserved. destruct (Genv.find_symbol ge i); inv H0. 
-  apply function_ptr_translated; auto.
+  unfold find_function_ptr. intros. destruct ros; simpl in *.
+- rewrite <- H0. esplit; eauto.
+- rewrite symbols_preserved. destruct (Genv.find_symbol ge i); inv H0; esplit; eauto.
 Qed.
 
 Lemma call_regs_lessdef:
@@ -393,7 +390,7 @@ Definition measure (st: state) : nat :=
   | State s f sp pc ls m => (count_gotos f pc * 2)%nat
   | Block s f sp (Lbranch pc :: _) ls m => (count_gotos f pc * 2 + 1)%nat
   | Block s f sp bb ls m => 0%nat
-  | Callstate s f ls m => 0%nat
+  | Callstate s fptr sg ls m => 0%nat
   | Returnstate s ls m => 0%nat
   end.
 
@@ -467,20 +464,22 @@ Proof.
   eauto. eauto.
   econstructor; eauto using locmap_undef_regs_lessdef.
 - (* Lcall *)
+  exploit find_function_translated; eauto. intros (tfptr & FPTR' & LESSDEF).
   left; simpl; econstructor; split.
-  eapply exec_Lcall with (fd := tunnel_fundef fd); eauto.
-  eapply find_function_translated; eauto.
-  rewrite sig_preserved. auto.
+  eapply exec_Lcall; eauto. rewrite FPTR'. constructor.
   econstructor; eauto.
   constructor; auto.
   constructor; auto.
+  inversion FPTR. eauto.
 - (* Ltailcall *)
+  inversion FPTR.
+  exploit find_function_translated; swap 1 2; eauto using return_regs_lessdef, match_parent_locset.
+  intros (tfptr & A & B).
   exploit Mem.free_parallel_extends. eauto. eauto. intros (tm' & FREE & MEM'). 
   left; simpl; econstructor; split.
-  eapply exec_Ltailcall with (fd := tunnel_fundef fd); eauto.
-  eapply find_function_translated; eauto using return_regs_lessdef, match_parent_locset.
-  apply sig_preserved.
+  eapply exec_Ltailcall; eauto. rewrite A. constructor.
   econstructor; eauto using return_regs_lessdef, match_parent_locset.
+  rewrite H. eauto.
 - (* Lbuiltin *)
   exploit eval_builtin_args_lessdef. eexact LS. eauto. eauto. intros (tvargs & EVA & LDA).
   exploit external_call_mem_extends; eauto. intros (tvres & tm' & A & B & C & D).
@@ -522,18 +521,25 @@ Proof.
   eapply exec_Lreturn; eauto.
   constructor; eauto using return_regs_lessdef, match_parent_locset.
 - (* internal function *)
+  exploit functions_translated; eauto. intros FPTR'.
+  assert (fptr = tfptr).
+  { eapply find_funct_lessdef; eauto. }
   exploit Mem.alloc_extends. eauto. eauto. apply Z.le_refl. apply Z.le_refl.
   intros (tm' & ALLOC & MEM'). 
   left; simpl; econstructor; split.
-  eapply exec_function_internal; eauto.
+  eapply exec_function_internal. rewrite <- H0. apply FPTR'. auto. eauto. eauto.
   simpl. econstructor; eauto using locmap_undef_regs_lessdef, call_regs_lessdef.
 - (* external function *)
+  exploit functions_translated; eauto. intros FPTR'.
+  assert (fptr = tfptr).
+  { eapply find_funct_lessdef; eauto. }
   Local Opaque Conventions1.destroyed_at_call.
   exploit external_call_mem_extends; eauto using locmap_getpairs_lessdef.
   intros (tvres & tm' & A & B & C & D).
   left; simpl; econstructor; split.
-  eapply exec_function_external; eauto.
+  eapply exec_function_external. rewrite <- H. apply FPTR'. auto. eauto.
   eapply external_call_symbols_preserved; eauto.
+  eauto.
   simpl. econstructor; eauto using locmap_setpair_lessdef, locmap_undef_caller_save_regs_lessdef.
 - (* return *)
   inv STK. inv H1.
@@ -557,14 +563,13 @@ Lemma transf_initial_states:
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
 Proof.
   intros. inversion H.
-  exists (Callstate nil (tunnel_fundef f) (Locmap.init Vundef) m0); split.
+  exists (Callstate nil (Vptr b Integers.Ptrofs.zero) signature_main (Locmap.init Vundef) m0); split.
   econstructor; eauto.
   apply (Genv.init_mem_transf TRANSL); auto.
   rewrite (match_program_main TRANSL).
   erewrite symbols_preserved; eauto.
-  eapply function_ptr_translated; eauto.
-  rewrite <- H3. apply sig_preserved.
   constructor. constructor. red; simpl; auto. apply Mem.extends_refl.
+  auto.
 Qed.
 
 Lemma transf_final_states:

@@ -367,15 +367,15 @@ Inductive estep: state -> trace -> state -> Prop :=
       estep (ExprState f (C (Eparen r tycast ty)) k e m)
          E0 (ExprState f (C (Eval v ty)) k e m)
 
-  | step_call: forall f C rf rargs ty k e m targs tres cconv vf vargs fd,
+  | step_call: forall f C rf rargs ty k e m targs tres cconv vf vargs,
       leftcontext RV RV C ->
       classify_fun (typeof rf) = fun_case_f targs tres cconv ->
       eval_simple_rvalue e m rf vf ->
       eval_simple_list e m rargs targs vargs ->
-      Genv.find_funct ge vf = Some fd ->
-      type_of_fundef fd = Tfunction targs tres cconv ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
       estep (ExprState f (C (Ecall rf rargs ty)) k e m)
-         E0 (Callstate fd vargs (Kcall f e C ty k) m)
+         E0 (Callstate vf (Tfunction targs tres cconv) vargs (Kcall f e C ty k) m)
 
   | step_builtin: forall f C ef tyargs rargs ty k e m vargs t vres m',
       leftcontext RV RV C ->
@@ -480,7 +480,7 @@ Proof.
 Qed.
 
 Lemma callred_kind:
-  forall a m fd args ty, callred ge a m fd args ty -> expr_kind a = RV.
+  forall a m fptr tyf args tyret, callred a m fptr tyf args tyret -> expr_kind a = RV.
 Proof.
   induction 1; auto.
 Qed.
@@ -572,11 +572,11 @@ Definition invert_expr_prop (a: expr) (m: mem) : Prop :=
       exists v, sem_cast v1 ty1 ty2 m = Some v
   | Ecall (Eval vf tyf) rargs ty =>
       exprlist_all_values rargs ->
-      exists tyargs tyres cconv fd vl,
+      exists tyargs tyres cconv vl,
          classify_fun tyf = fun_case_f tyargs tyres cconv
-      /\ Genv.find_funct ge vf = Some fd
+      /\ DUMMY_PROP
       /\ cast_arguments m rargs tyargs vl
-      /\ type_of_fundef fd = Tfunction tyargs tyres cconv
+      /\ DUMMY_PROP
   | Ebuiltin ef tyargs rargs ty =>
       exprlist_all_values rargs ->
       exists vargs, exists t, exists vres, exists m',
@@ -615,12 +615,12 @@ Proof.
 Qed.
 
 Lemma callred_invert:
-  forall r fd args ty m,
-  callred ge r m fd args ty ->
+  forall r fptr tyf args tyret m,
+  callred r m fptr tyf args tyret ->
   invert_expr_prop r m.
 Proof.
   intros. inv H. simpl.
-  intros. exists tyargs, tyres, cconv, fd, args; auto.
+  intros. exists tyargs, tyres, cconv, args; auto.
 Qed.
 
 Scheme context_ind2 := Minimality for context Sort Prop
@@ -1379,7 +1379,7 @@ Proof.
   eapply safe_steps. eexact S1.
   apply (eval_simple_list_steps f k e m rargs vl E2 C'); auto.
   simpl. intros X. exploit X. eapply rval_list_all_values.
-  intros [tyargs [tyres [cconv [fd [vargs [P [Q [U V]]]]]]]].
+  intros [tyargs [tyres [cconv [vargs [P [Q [U V]]]]]]].
   econstructor; econstructor; eapply step_call; eauto. eapply can_eval_simple_list; eauto.
 (* builtin *)
   pose (C' := fun x => C(Ebuiltin ef tyargs x ty)).
@@ -2222,9 +2222,10 @@ Lemma bigstep_to_steps:
    star step se ge (State f s k e m) t S /\ outcome_state_match e m' f k out S)
 /\(forall m fd args t m' res,
    eval_funcall m fd args t m' res ->
-   forall k,
+   forall vf k
+   (FPTR: Genv.find_funct ge vf = Some fd),
    is_call_cont k ->
-   star step se ge (Callstate fd args k m) t (Returnstate res k m')).
+   star step se ge (Callstate vf (type_of_fundef fd) args k m) t (Returnstate res k m')).
 Proof.
   apply bigstep_induction; intros.
 (* expression, general *)
@@ -2360,14 +2361,15 @@ Proof.
   eexact G.
   reflexivity. traceEq.
 (* call *)
+  unfold Genv.find_funct in *. des_ifs.
   exploit (H0 (fun x => C(Ecall x rargs ty))).
     eapply leftcontext_compose; eauto. repeat constructor. intros [A [B D]].
   exploit (H2 rf' Enil ty C); eauto. intros [E F].
   simpl; intuition.
   eapply star_trans. eexact D.
   eapply star_trans. eexact F.
-  eapply star_left. left; eapply step_call; eauto. congruence.
-  eapply star_right. eapply H9. red; auto.
+  eapply star_left. left; eapply step_call; eauto. rewrite B. eauto.
+  eapply star_right. rewrite <- H7. eapply H9. eauto. red; auto.
   right; constructor.
   reflexivity. reflexivity. reflexivity. traceEq.
 (* nil *)
@@ -2630,7 +2632,7 @@ Proof.
   reflexivity. traceEq.
 
 (* call external *)
-  apply star_one. right; apply step_external_function; auto.
+  apply star_one. simpl in *. subst. right; eapply step_external_function; eauto.
 Qed.
 
 Lemma eval_expression_to_steps:
@@ -2668,9 +2670,10 @@ Proof (proj1 (proj2 (proj2 (proj2 bigstep_to_steps)))).
 Lemma eval_funcall_to_steps:
   forall m fd args t m' res,
   eval_funcall m fd args t m' res ->
-  forall k,
+  forall vf k
+  (FPTR: Genv.find_funct ge vf = Some fd),
   is_call_cont k ->
-  star step se ge (Callstate fd args k m) t (Returnstate res k m').
+  star step se ge (Callstate vf (type_of_fundef fd) args k m) t (Returnstate res k m').
 Proof (proj2 (proj2 (proj2 (proj2 bigstep_to_steps)))).
 
 Fixpoint esize (a: expr) : nat :=
@@ -2728,7 +2731,9 @@ Qed.
 Lemma evalinf_funcall_steps:
   forall m fd args t k,
   evalinf_funcall m fd args t ->
-  forever_N step se lt ge O (Callstate fd args k m) t.
+  forall vf
+  (FPTR: Genv.find_funct ge vf = Some fd),
+  forever_N step se lt ge O (Callstate vf (type_of_fundef fd) args k m) t.
 Proof.
   cofix COF.
 
@@ -2900,10 +2905,11 @@ Proof.
   eapply leftcontext_compose; eauto. repeat constructor.
   destruct (eval_exprlist_to_steps _ _ _ _ _ _ H2 rf' Enil ty C f k)
   as [S T]. auto. auto. simpl; auto.
+  unfold Genv.find_funct in *. des_ifs.
   eapply forever_N_plus. eapply plus_right.
   eapply star_trans. eexact R. eexact T. reflexivity.
-  simpl. left; eapply step_call; eauto. congruence. reflexivity.
-  apply COF. eauto. traceEq.
+  simpl. left; eapply step_call; eauto. rewrite Q. eauto. reflexivity. rewrite <- H7.
+  apply COF; eauto. traceEq.
 
 (* statements *)
   intros. inv H.
@@ -3071,12 +3077,12 @@ Proof.
 (* termination *)
   inv H. econstructor; econstructor.
   split. econstructor; eauto.
-  split. apply eval_funcall_to_steps. eauto. red; auto.
+  split. rewrite <- H3. apply eval_funcall_to_steps; eauto. red; auto.
   econstructor.
 (* divergence *)
   inv H. econstructor.
   split. econstructor; eauto.
   eapply forever_N_forever with (order := lt).
   apply lt_wf.
-  eapply evalinf_funcall_steps; eauto.
+  rewrite <- H3. eapply evalinf_funcall_steps; eauto.
 Qed.

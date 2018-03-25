@@ -1052,11 +1052,11 @@ Inductive match_states: Csem.state -> state -> Prop :=
       match_cont k tk ->
       match_states (Csem.State f s k e m)
                    (State tf ts tk e le m)
-  | match_callstates: forall fd args k m tfd tk,
-      tr_fundef fd tfd ->
+  | match_callstates: forall fptr ty args k m tk,
+      DUMMY_PROP ->
       match_cont k tk ->
-      match_states (Csem.Callstate fd args k m)
-                   (Callstate tfd args tk m)
+      match_states (Csem.Callstate fptr ty args k m)
+                   (Callstate fptr ty args tk m)
   | match_returnstates: forall res k m tk,
       match_cont k tk ->
       match_states (Csem.Returnstate res k m)
@@ -1913,11 +1913,9 @@ Proof.
   exploit tr_simple_rvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit tr_simple_exprlist; eauto. intros [SL2 EV2].
   subst. simpl Kseqlist.
-  exploit functions_translated; eauto. intros [tfd [J K]].
   econstructor; split.
   left. eapply plus_left. constructor.  apply star_one.
   econstructor; eauto. rewrite <- TY1; eauto.
-  exploit type_of_fundef_preserved; eauto. congruence.
   traceEq.
   constructor; auto. econstructor; eauto.
   intros. change sl2 with (nil ++ sl2). apply S.
@@ -1926,11 +1924,9 @@ Proof.
   exploit tr_simple_rvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit tr_simple_exprlist; eauto. intros [SL2 EV2].
   subst. simpl Kseqlist.
-  exploit functions_translated; eauto. intros [tfd [J K]].
   econstructor; split.
   left. eapply plus_left. constructor.  apply star_one.
   econstructor; eauto. rewrite <- TY1; eauto.
-  exploit type_of_fundef_preserved; eauto. congruence.
   traceEq.
   constructor; auto. econstructor; eauto.
   intros. apply S.
@@ -2255,9 +2251,11 @@ Proof.
   econstructor; eauto.
 
 (* internal function *)
-  inv H7. inversion H3; subst.
+  exploit functions_translated; eauto. intros [tfd [J K]].
+  inv K. inversion H3; subst.
   econstructor; split.
-  left; apply plus_one. eapply step_internal_function. econstructor.
+  left; apply plus_one. eapply step_internal_function; eauto.
+  erewrite type_of_fundef_preserved; eauto. econstructor. econstructor; eauto. econstructor.
   rewrite H6; rewrite H7; auto.
   rewrite H6; rewrite H7. eapply alloc_variables_preserved; eauto.
   rewrite H6. eapply bind_parameters_preserved; eauto.
@@ -2265,7 +2263,8 @@ Proof.
   constructor; auto.
 
 (* external function *)
-  inv H5.
+  exploit functions_translated; eauto. intros [tfd [J K]].
+  inv K.
   econstructor; split.
   left; apply plus_one. econstructor; eauto.
   eapply external_call_symbols_preserved; eauto.
@@ -2316,7 +2315,7 @@ Lemma transl_initial_states:
   exists S', Clight.initial_state tprog S' /\ match_states tge S S'.
 Proof.
   intros. inv H.
-  exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
+  (* exploit function_ptr_translated; eauto. intros [tf [FIND TR]]. *)
   econstructor; split.
   econstructor.
   eapply (Genv.init_mem_match (proj1 TRANSL)); eauto.
@@ -2324,8 +2323,7 @@ Proof.
   assert (Genv.globalenv tprog = tge.(genv_genv)) by auto. rewrite H.
   erewrite symbols_preserved; eauto.
   destruct TRANSL. destruct H as (A & B & C). simpl in B. auto. 
-  eexact FIND.
-  rewrite <- H3. apply type_of_fundef_preserved. auto.
+  eauto. eauto.
   constructor. auto. constructor.
 Qed.
 

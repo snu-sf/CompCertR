@@ -770,15 +770,15 @@ Inductive match_states: state -> state -> SimMemInj.t' -> Prop :=
          (MEMINJ: Mem.inject j m tm),
       match_states (State s f (Vptr sp Ptrofs.zero) pc rs m)
                    (State ts f (Vptr tsp Ptrofs.zero) pc trs tm) sm0
-  | match_states_call: forall s fd args m ts targs tm j
+  | match_states_call: forall s fptr sg args m ts tfptr targs tm j
          sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm j)
          (MWF: SimMemInj.wf' sm0)
          (STACKS: match_stacks j s ts (Mem.nextblock m) (Mem.nextblock tm))
-         (KEPT: forall id, ref_fundef fd id -> kept id)
+         (FPTR: Val.inject j fptr tfptr)
          (ARGINJ: Val.inject_list j args targs)
          (MEMINJ: Mem.inject j m tm),
-      match_states (Callstate s fd args m)
-                   (Callstate ts fd targs tm) sm0
+      match_states (Callstate s fptr sg args m)
+                   (Callstate ts tfptr sg targs tm) sm0
   | match_states_return: forall s res m ts tres tm j
          sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm j)
          (MWF: SimMemInj.wf' sm0)
@@ -806,26 +806,17 @@ Proof.
 Qed.
 
 Lemma find_function_inject:
-  forall j ros rs fd trs,
+  forall j ros rs fptr trs,
   meminj_preserves_globals j ->
-  find_function ge ros rs = Some fd ->
+  find_function_ptr ge ros rs = fptr ->
   match ros with inl r => regset_inject j rs trs | inr id => kept id end ->
-  find_function tge ros trs = Some fd /\ (forall id, ref_fundef fd id -> kept id).
+  exists tfptr, find_function_ptr tge ros trs = tfptr /\ Val.inject j fptr tfptr.
 Proof.
-  intros. destruct ros as [r|id]; simpl in *.
-- exploit Genv.find_funct_inv; eauto. intros (b & R). rewrite R in H0.
-  rewrite Genv.find_funct_find_funct_ptr in H0.
-  specialize (H1 r). rewrite R in H1. inv H1.
-  rewrite Genv.find_funct_ptr_iff in H0.
-  exploit defs_inject; eauto. intros (A & B & C).
-  rewrite <- Genv.find_funct_ptr_iff in A.
-  rewrite B; auto.
-- destruct (Genv.find_symbol ge id) as [b|] eqn:FS; try discriminate.
-  exploit symbols_inject_2; eauto. intros (tb & P & Q). rewrite P.
-  rewrite Genv.find_funct_ptr_iff in H0.
-  exploit defs_inject; eauto. intros (A & B & C).
-  rewrite <- Genv.find_funct_ptr_iff in A.
-  auto.
+  intros. inv H0. destruct ros as [r|id]; simpl in *.
+- esplit; eauto.
+- destruct (Genv.find_symbol ge id) as [b|] eqn:FS.
+  + exploit symbols_inject_2; eauto. intros (tb & P & Q). rewrite P. eauto.
+  + destruct (Genv.find_symbol tge id); eauto.
 Qed.
 
 Lemma eval_builtin_arg_inject:
@@ -958,26 +949,29 @@ Proof.
   { SimMemInj.compat_tac. }
 
 - (* call *)
-  exploit find_function_inject.
+  inversion FPTR.
+  exploit find_function_inject. 
   eapply match_stacks_preserves_globals; eauto. eauto.
   destruct ros as [r|id]. eauto. apply KEPT. red. econstructor; econstructor; split; eauto. simpl; auto.
-  intros (A & B).
-  econstructor; split. eapply exec_Icall; eauto.
+  intros (tfptr & A & B).
+  econstructor; split. eapply exec_Icall; eauto. constructor.
   SimMemInj.spl.
   econstructor; eauto.
   econstructor; eauto.
   change (Mem.valid_block m sp0). eapply Mem.valid_block_inject_1; eauto.
   change (Mem.valid_block tm tsp). eapply Mem.valid_block_inject_2; eauto.
+  { rewrite H2. rewrite A. apply B. }
   apply regs_inject; auto.
 
 - (* tailcall *)
+  inversion FPTR.
   exploit find_function_inject.
   eapply match_stacks_preserves_globals; eauto. eauto.
   destruct ros as [r|id]. eauto. apply KEPT. red. econstructor; econstructor; split; eauto. simpl; auto.
-  intros (A & B).
+  intros (tfptr & A & B).
   exploit Mem.free_parallel_inject; eauto. rewrite ! Z.add_0_r. intros (tm' & C & D).
   econstructor; split.
-  eapply exec_Itailcall; eauto.
+  eapply exec_Itailcall; eauto. constructor.
   inv MCOMPAT.
   exploit SimMemInj.free_parallel; eauto. i; des.
   SimMemInj.spl_exact sm1.
@@ -1070,8 +1064,16 @@ Proof.
     intros. destruct (eq_block b1 stk).
     subst b1. rewrite F in H1; inv H1. split; apply Ple_refl.
     rewrite G in H1 by auto. congruence. }
+  exploit Genv.find_funct_inv; eauto. i; des. clarify. ss. des_ifs. clear_tac.
+  inv FPTR0. exploit defs_inject; swap 2 3.
+  { eapply match_stacks_preserves_globals. apply STACKS. }
+  { apply Genv.find_funct_ptr_iff. eauto. } { eauto. }
+  intros (I & J & K). clarify.
+  assert (L: Ptrofs.add Ptrofs.zero (Ptrofs.repr 0) = Ptrofs.zero) by eauto.
   econstructor; split.
   eapply exec_function_internal; eauto.
+  { rewrite L. rewrite Genv.find_funct_find_funct_ptr. rewrite Genv.find_funct_ptr_iff. eauto. }
+  { eauto. }
   exploit SimMemInj.alloc_parallel; eauto; try apply Z.le_refl. { inv MCOMPAT; eauto. }
   intro SM. desH SM. SimMemInj.spl_exact sm1.
   eapply match_states_regular with (j := j'); eauto.
@@ -1083,8 +1085,16 @@ Proof.
   exploit external_call_inject; eauto.
   eapply match_stacks_symbols_inject; eauto.
   intros (j' & tres & tm' & A & B & C & D & E & F & G).
+  exploit Genv.find_funct_inv; eauto. i; des. clarify. ss. des_ifs. clear_tac.
+  inv FPTR0. exploit defs_inject; swap 2 3.
+  { eapply match_stacks_preserves_globals. apply STACKS. }
+  { apply Genv.find_funct_ptr_iff. eauto. } { eauto. }
+  intros (I & J & K). clarify.
+  assert (L: Ptrofs.add Ptrofs.zero (Ptrofs.repr 0) = Ptrofs.zero) by eauto.
   econstructor; split.
   eapply exec_function_external; eauto.
+  { rewrite L. rewrite Genv.find_funct_find_funct_ptr. rewrite Genv.find_funct_ptr_iff. eauto. }
+  { eauto. }
   assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
                     (SimMemInj.mk m' tm' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
                                   sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
@@ -1404,11 +1414,7 @@ Lemma transf_initial_states:
 Proof.
   intros. inv H. exploit init_mem_inject; eauto. intros (j & tm & A & B & C).
   exploit symbols_inject_2. eauto. eapply kept_main. eexact H1. intros (tb & P & Q).
-  rewrite Genv.find_funct_ptr_iff in H2.
-  exploit defs_inject. eauto. eexact Q. exact H2.
-  intros (R & S & T).
-  rewrite <- Genv.find_funct_ptr_iff in R.
-  exists (Callstate nil f nil tm); split.
+  exists (Callstate nil (Vptr tb Ptrofs.zero) signature_main nil tm); split.
   econstructor; eauto.
   fold tge. erewrite match_prog_main by eauto. auto.
   exists (SimMemInj.mk m0 tm j bot2 bot2 1%positive 1%positive).

@@ -470,20 +470,18 @@ Proof.
 Qed.
 
 Lemma find_function_translated:
-  forall ros rs fd trs ne,
-  find_function ge ros rs = Some fd ->
+  forall ros rs fptr trs ne,
+  find_function_ptr ge ros rs = fptr ->
   eagree rs trs (add_ros_need_all ros ne) ->
-  exists cu tfd,
-     find_function tge ros trs = Some tfd
-  /\ transf_fundef (romem_for cu) fd = OK tfd
-  /\ linkorder cu prog.
+  exists tfptr,
+    find_function_ptr tge ros trs = tfptr
+    /\ Val.lessdef fptr tfptr.
 Proof.
   intros. destruct ros as [r|id]; simpl in *.
 - assert (LD: Val.lessdef rs#r trs#r) by eauto with na. inv LD.
-  apply functions_translated; auto.
-  rewrite <- H2 in H; discriminate.
+  { eauto. } { rewrite <- H2. eauto. }
 - rewrite symbols_preserved. destruct (Genv.find_symbol ge id); try discriminate.
-  apply function_ptr_translated; auto.
+  { eauto. } { rewrite <- H. eauto. }
 Qed.
 
 (** * Semantic invariant *)
@@ -513,14 +511,13 @@ Inductive match_states: state -> state -> Prop :=
       match_states (State s f (Vptr sp Ptrofs.zero) pc e m)
                    (State ts tf (Vptr sp Ptrofs.zero) pc te tm)
   | match_call_states:
-      forall s f args m ts tf targs tm cu
+      forall s fptr args m ts tfptr targs tm sg
         (STACKS: list_forall2 match_stackframes s ts)
-        (LINK: linkorder cu prog)
-        (FUN: transf_fundef (romem_for cu) f = OK tf)
+        (FPTR: Val.lessdef fptr tfptr)
         (ARGS: Val.lessdef_list args targs)
         (MEM: Mem.extends m tm),
-      match_states (Callstate s f args m)
-                   (Callstate ts tf targs tm)
+      match_states (Callstate s fptr sg args m)
+                   (Callstate ts tfptr sg targs tm)
   | match_return_states:
       forall s v m ts tv tm
         (STACKS: list_forall2 match_stackframes s ts)
@@ -868,28 +865,30 @@ Ltac UseTransfer :=
 
 - (* call *)
   TransfInstr; UseTransfer.
-  exploit find_function_translated; eauto 2 with na. intros (cu' & tfd & A & B & C).
+  exploit find_function_translated; eauto 2 with na. intros (tfptr & A & B).
   econstructor; split.
-  eapply exec_Icall; eauto. eapply sig_function_translated; eauto.
-  eapply match_call_states with (cu := cu'); eauto.
+  eapply exec_Icall; eauto. econstructor.
+  eapply match_call_states; eauto.
   constructor; auto. eapply match_stackframes_intro with (cu := cu); eauto.
   intros.
   edestruct analyze_successors; eauto. simpl; eauto.
   eapply eagree_ge; eauto. rewrite ANPC. simpl.
   apply eagree_update; eauto with na.
+  { inversion FPTR. rewrite A. apply B. }
   eauto 2 with na.
   eapply magree_extends; eauto. apply nlive_all.
 
 - (* tailcall *)
   TransfInstr; UseTransfer.
-  exploit find_function_translated; eauto 2 with na. intros (cu' & tfd & A & B & L).
+  exploit find_function_translated; eauto 2 with na. intros (tfptr & A & B).
   exploit magree_free. eauto. eauto. instantiate (1 := nlive ge stk nmem_all).
   intros; eapply nlive_dead_stack; eauto.
   intros (tm' & C & D).
   econstructor; split.
-  eapply exec_Itailcall; eauto. eapply sig_function_translated; eauto.
+  eapply exec_Itailcall; eauto. econstructor.
   erewrite stacksize_translated by eauto. eexact C.
-  eapply match_call_states with (cu := cu'); eauto 2 with na.
+  eapply match_call_states; eauto 2 with na.
+  { inversion FPTR. rewrite A. apply B. }
   eapply magree_extends; eauto. apply nlive_all.
 
 - (* builtin *)
@@ -1088,6 +1087,9 @@ Ltac UseTransfer :=
   eapply magree_extends; eauto. apply nlive_all.
 
 - (* internal function *)
+  exploit functions_translated; eauto. intros [cu [tf [FPTR' [FUN LINK]]]].
+  assert (fptr = tfptr).
+  { eapply find_funct_lessdef; eauto. }
   monadInv FUN. generalize EQ. unfold transf_function. fold (vanalyze cu f). intros EQ'.
   destruct (analyze (vanalyze cu f) f) as [an|] eqn:AN; inv EQ'.
   exploit Mem.alloc_extends; eauto. apply Z.le_refl. apply Z.le_refl.
@@ -1099,6 +1101,9 @@ Ltac UseTransfer :=
   apply mextends_agree; auto.
 
 - (* external function *)
+  exploit functions_translated; eauto. intros [cu [tf [FPTR' [FUN LINK]]]].
+  assert (fptr = tfptr).
+  { eapply find_funct_lessdef; eauto. }
   exploit external_call_mem_extends; eauto.
   intros (res' & tm' & A & B & C & D).
   simpl in FUN. inv FUN.
@@ -1129,14 +1134,12 @@ Lemma transf_initial_states:
   exists st2, initial_state tprog st2 /\ match_states ge st1 st2.
 Proof.
   intros. inversion H.
-  exploit function_ptr_translated; eauto. intros (cu & tf & A & B & C).
-  exists (Callstate nil tf nil m0); split.
+  exists (Callstate nil (Vptr b Ptrofs.zero) signature_main nil m0); split.
   econstructor; eauto.
   eapply (Genv.init_mem_match TRANSF); eauto.
   replace (prog_main tprog) with (prog_main prog).
   erewrite symbols_preserved; eauto.
   symmetry; eapply match_program_main; eauto.
-  rewrite <- H3. eapply sig_function_translated; eauto.
   econstructor; eauto. constructor. apply Mem.extends_refl.
 Qed.
 

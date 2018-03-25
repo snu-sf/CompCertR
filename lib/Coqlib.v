@@ -1433,3 +1433,12 @@ Lemma nlist_forall2_imply:
 Proof.
   induction 1; simpl; intros; constructor; auto.
 Qed.
+
+Definition DUMMY_PROP := True.
+Hint Unfold DUMMY_PROP.
+
+(* To prevent "subst" *)
+Inductive my_eq {A: Type} (x: A): A -> Prop :=
+| my_eq_refl: my_eq x x.
+
+Notation "a m= b" := (my_eq a b) (at level 10).

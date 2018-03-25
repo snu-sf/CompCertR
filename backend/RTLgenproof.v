@@ -16,6 +16,7 @@ Require Import Wellfounded Coqlib Maps AST Linking.
 Require Import Integers Values Memory Events Smallstep Globalenvs.
 Require Import Switch Registers Cminor Op CminorSel RTL.
 Require Import RTLgen RTLgenspec.
+Require Import sflib.
 
 (** * Correspondence between Cminor environments and RTL register sets *)
 
@@ -396,21 +397,6 @@ Lemma functions_translated:
 Proof
   (Genv.find_funct_transf_partial_genv MATCH_GENV).
 
-Lemma sig_transl_function:
-  forall (f: CminorSel.fundef) (tf: RTL.fundef),
-  transl_fundef f = OK tf ->
-  RTL.funsig tf = CminorSel.funsig f.
-Proof.
-  intros until tf. unfold transl_fundef, transf_partial_fundef.
-  case f; intro.
-  unfold transl_function.
-  destruct (reserve_labels (fn_body f0) (PTree.empty node, init_state)) as [ngoto s0].
-  case (transl_fun f0 ngoto s0); simpl; intros.
-  discriminate.
-  destruct p. simpl in H. inversion H. reflexivity.
-  intro. inversion H. reflexivity.
-Qed.
-
 Lemma senv_preserved:
   Senv.equiv (Genv.to_senv ge) (Genv.to_senv tge).
 Proof
@@ -749,9 +735,9 @@ Proof.
   exists (rs1#rd <- v'); exists tm2.
 (* Exec *)
   split. eapply star_trans. eexact EX1.
-  eapply star_left. eapply exec_Icall; eauto.
+  eapply star_left. eapply exec_Icall; eauto. econs; eauto.
   simpl. rewrite symbols_preserved. rewrite H. eauto. auto.
-  eapply star_left. eapply exec_function_external.
+  eapply star_left. eapply exec_function_external. erewrite Genv.find_funct_find_funct_ptr; eauto. auto.
   eapply external_call_symbols_preserved; eauto.
   apply star_one. apply exec_return.
   reflexivity. reflexivity. reflexivity.
@@ -1236,13 +1222,13 @@ Inductive match_states: CminorSel.state -> RTL.state -> Prop :=
       match_states (CminorSel.State f s k sp e m)
                    (RTL.State cs tf sp ns rs tm)
   | match_callstate:
-      forall f args targs k m tm cs tf
-        (TF: transl_fundef f = OK tf)
+      forall sg fptr args targs k m tm cs tfptr
         (MS: match_stacks k cs)
+        (FPTR: Val.lessdef fptr tfptr)
         (LD: Val.lessdef_list args targs)
         (MEXT: Mem.extends m tm),
-      match_states (CminorSel.Callstate f args k m)
-                   (RTL.Callstate cs tf targs tm)
+      match_states (CminorSel.Callstate fptr sg args k m)
+                   (RTL.Callstate cs tfptr sg targs tm)
   | match_returnstate:
       forall v tv k m tm cs
         (MS: match_stacks k cs)
@@ -1362,61 +1348,57 @@ Proof.
   econstructor; eauto. constructor.
 
   (* call *)
+  clear H2.
   inv TS; inv H.
   (* indirect *)
   exploit transl_expr_correct; eauto.
   intros [rs' [tm' [A [B [C [D X]]]]]].
   exploit transl_exprlist_correct; eauto.
   intros [rs'' [tm'' [E [F [G [J Y]]]]]].
-  exploit functions_translated; eauto. intros [tf' [P Q]].
   econstructor; split.
   left; eapply plus_right. eapply star_trans. eexact A. eexact E. reflexivity.
-  eapply exec_Icall; eauto. simpl. rewrite J. destruct C. eauto. discriminate P. simpl; auto.
-  apply sig_transl_function; auto.
+  eapply exec_Icall; eauto. ss.
   traceEq.
   constructor; auto. econstructor; eauto.
+  { rewrite J; eauto. simpl; eauto. }
   (* direct *)
   exploit transl_exprlist_correct; eauto.
   intros [rs'' [tm'' [E [F [G [J Y]]]]]].
-  exploit functions_translated; eauto. intros [tf' [P Q]].
   econstructor; split.
   left; eapply plus_right. eexact E.
   eapply exec_Icall; eauto. simpl. rewrite symbols_preserved. rewrite H4.
-    rewrite Genv.find_funct_find_funct_ptr in P. eauto.
-  apply sig_transl_function; auto.
+  econs; eauto.
   traceEq.
   constructor; auto. econstructor; eauto.
 
   (* tailcall *)
+  clear H2.
   inv TS; inv H.
   (* indirect *)
   exploit transl_expr_correct; eauto.
   intros [rs' [tm' [A [B [C [D X]]]]]].
   exploit transl_exprlist_correct; eauto.
   intros [rs'' [tm'' [E [F [G [J Y]]]]]].
-  exploit functions_translated; eauto. intros [tf' [P Q]].
   exploit match_stacks_call_cont; eauto. intros [U V].
   assert (fn_stacksize tf = fn_stackspace f). inv TF; auto.
   edestruct Mem.free_parallel_extends as [tm''' []]; eauto.
   econstructor; split.
   left; eapply plus_right. eapply star_trans. eexact A. eexact E. reflexivity.
-  eapply exec_Itailcall; eauto. simpl. rewrite J. destruct C. eauto. discriminate P. simpl; auto.
-  apply sig_transl_function; auto.
+  eapply exec_Itailcall; eauto. simpl. ss.
   rewrite H; eauto.
   traceEq.
   constructor; auto.
+  { ss. rewrite J; eauto. }
   (* direct *)
   exploit transl_exprlist_correct; eauto.
   intros [rs'' [tm'' [E [F [G [J Y]]]]]].
-  exploit functions_translated; eauto. intros [tf' [P Q]].
   exploit match_stacks_call_cont; eauto. intros [U V].
   assert (fn_stacksize tf = fn_stackspace f). inv TF; auto.
   edestruct Mem.free_parallel_extends as [tm''' []]; eauto.
   econstructor; split.
   left; eapply plus_right. eexact E.
   eapply exec_Itailcall; eauto. simpl. rewrite symbols_preserved. rewrite H5.
-  rewrite Genv.find_funct_find_funct_ptr in P. eauto.
-  apply sig_transl_function; auto.
+  { econs; eauto. }
   rewrite H; eauto.
   traceEq.
   constructor; auto.
@@ -1502,7 +1484,7 @@ Proof.
   econstructor; split.
   left; apply plus_one. eapply exec_Ireturn; eauto.
   rewrite H2; eauto.
-  constructor; auto.
+  econstructor; auto.
 
   (* return some *)
   inv TS.
@@ -1514,7 +1496,7 @@ Proof.
   econstructor; split.
   left; eapply plus_right. eexact A. eapply exec_Ireturn; eauto.
   rewrite H4; eauto. traceEq.
-  simpl. constructor; auto.
+  constructor; auto.
 
   (* label *)
   inv TS.
@@ -1531,6 +1513,11 @@ Proof.
   econstructor; eauto.
 
   (* internal call *)
+  assert(exists tf, <<TF: transl_fundef (Internal f) = OK tf>> /\
+                          <<FPTR: Genv.find_funct tge tfptr = Some tf>>).
+  { exploit functions_translated; eauto. i; des. esplits; eauto.
+    exploit Genv.find_funct_inv; eauto. i; des. clarify. inv FPTR0. ss. }
+  des.
   monadInv TF. exploit transl_function_charact; eauto. intro TRF.
   inversion TRF. subst f0.
   pose (e := set_locals (fn_vars f) (set_params vargs (CminorSel.fn_params f))).
@@ -1542,6 +1529,7 @@ Proof.
     exploit (add_vars_valid (CminorSel.fn_params f)); eauto. intros [A B].
     eapply add_vars_wf; eauto. eapply add_vars_wf; eauto. apply init_mapping_wf.
   edestruct Mem.alloc_extends as [tm' []]; eauto; try apply Z.le_refl.
+  clarify. simpl.
   econstructor; split.
   left; apply plus_one. eapply exec_function_internal; simpl; eauto.
   simpl. econstructor; eauto.
@@ -1549,6 +1537,11 @@ Proof.
   inversion MS; subst; econstructor; eauto.
 
   (* external call *)
+  assert(exists tf, <<TF: transl_fundef (External ef) = OK tf>> /\
+                          <<FPTR: Genv.find_funct tge tfptr = Some tf>>).
+  { exploit functions_translated; eauto. i; des. esplits; eauto.
+    exploit Genv.find_funct_inv; eauto. i; des. clarify. inv FPTR0. ss. }
+  des.
   monadInv TF.
   edestruct external_call_mem_extends as [tvres [tm' [A [B [C D]]]]]; eauto.
   econstructor; split.
@@ -1579,15 +1572,13 @@ Lemma transl_initial_states:
   exists R, RTL.initial_state tprog R /\ match_states S R.
 Proof.
   induction 1.
-  exploit function_ptr_translated; eauto. intros [tf [A B]].
   econstructor; split.
   econstructor. apply (Genv.init_mem_transf_partial TRANSL); eauto.
   replace (prog_main tprog) with (prog_main prog). erewrite symbols_preserved; eauto.
   symmetry; eapply match_program_main; eauto.
-  eexact A.
-  rewrite <- H2. apply sig_transl_function; auto.
+  auto. auto.
   constructor. auto. constructor.
-  constructor. apply Mem.extends_refl.
+  constructor. constructor. apply Mem.extends_refl.
 Qed.
 
 Lemma transl_final_states:

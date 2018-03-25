@@ -169,7 +169,8 @@ Inductive state : Type :=
       state
   | Callstate:
       forall (stack: list stackframe) (**r call stack *)
-             (f: fundef)              (**r function to call *)
+             (fptr: val)
+             (sg: signature)
              (args: list val)         (**r arguments to the call *)
              (m: mem),                (**r memory state *)
       state
@@ -184,16 +185,16 @@ Section RELSEM.
 Variable se: Senv.t.
 Variable ge: genv.
 
-Definition find_function
-      (ros: reg + ident) (rs: regset) : option fundef :=
+Definition find_function_ptr (ros: reg + ident) (rs: regset) : val :=
   match ros with
-  | inl r => Genv.find_funct ge rs#r
+  | inl r => (rs#r)
   | inr symb =>
-      match Genv.find_symbol ge symb with
-      | None => None
-      | Some b => Genv.find_funct_ptr ge b
-      end
-  end.
+    match Genv.find_symbol ge symb with
+    | Some b => (Vptr b Ptrofs.zero)
+    | None => Vundef
+    end
+  end
+.
 
 (** The transitions are presented as an inductive predicate
   [step ge st1 t st2], where [ge] is the global environment,
@@ -227,20 +228,26 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State s f sp pc rs m)
         E0 (State s f sp pc' rs m')
   | exec_Icall:
-      forall s f sp pc rs m sig ros args res pc' fd,
+      forall s f sp pc rs m sig ros args res pc' (* fd *) fptr,
       (fn_code f)!pc = Some(Icall sig ros args res pc') ->
-      find_function ros rs = Some fd ->
-      funsig fd = sig ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      forall
+      (FPTR: find_function_ptr ros rs m= fptr)
+      ,
       step (State s f sp pc rs m)
-        E0 (Callstate (Stackframe res f sp pc' rs :: s) fd rs##args m)
+        E0 (Callstate (Stackframe res f sp pc' rs :: s) fptr sig rs##args m)
   | exec_Itailcall:
-      forall s f stk pc rs m sig ros args fd m',
+      forall s f stk pc rs m sig ros args (* fd *) fptr m',
       (fn_code f)!pc = Some(Itailcall sig ros args) ->
-      find_function ros rs = Some fd ->
-      funsig fd = sig ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      forall
+      (FPTR: find_function_ptr ros rs m= fptr)
+      ,
       Mem.free m stk 0 f.(fn_stacksize) = Some m' ->
       step (State s f (Vptr stk Ptrofs.zero) pc rs m)
-        E0 (Callstate s fd rs##args m')
+        E0 (Callstate s fptr sig rs##args m')
   | exec_Ibuiltin:
       forall s f sp pc rs m ef args res pc' vargs t vres m',
       (fn_code f)!pc = Some(Ibuiltin ef args res pc') ->
@@ -269,9 +276,12 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State s f (Vptr stk Ptrofs.zero) pc rs m)
         E0 (Returnstate s (regmap_optget or Vundef rs) m')
   | exec_function_internal:
-      forall s f args m m' stk,
+      forall s f fptr sg args m m' stk
+      (FPTR: Genv.find_funct ge fptr = Some (Internal f))
+      (SIG: funsig (Internal f) = sg)
+      ,
       Mem.alloc m 0 f.(fn_stacksize) = (m', stk) ->
-      step (Callstate s (Internal f) args m)
+      step (Callstate s fptr sg args m)
         E0 (State s
                   f
                   (Vptr stk Ptrofs.zero)
@@ -279,9 +289,12 @@ Inductive step: state -> trace -> state -> Prop :=
                   (init_regs args f.(fn_params))
                   m')
   | exec_function_external:
-      forall s ef args res t m m',
+      forall s ef fptr sg args res t m m'
+      (FPTR: Genv.find_funct ge fptr = Some (External ef))
+      (SIG: funsig (External ef) = sg)
+      ,
       external_call ef se args m t res m' ->
-      step (Callstate s (External ef) args m)
+      step (Callstate s fptr sg args m)
          t (Returnstate s res m')
   | exec_return:
       forall res f sp pc rs s vres m,
@@ -319,13 +332,13 @@ End RELSEM.
   without arguments and with an empty call stack. *)
 
 Inductive initial_state (p: program): state -> Prop :=
-  | initial_state_intro: forall b f m0,
+  | initial_state_intro: forall b (* f *) m0,
       let ge := Genv.globalenv p in
       Genv.init_mem p = Some m0 ->
       Genv.find_symbol ge p.(prog_main) = Some b ->
-      Genv.find_funct_ptr ge b = Some f ->
-      funsig f = signature_main ->
-      initial_state p (Callstate nil f nil m0).
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      initial_state p (Callstate nil (Vptr b Ptrofs.zero) signature_main nil m0).
 
 (** A final state is a [Returnstate] with an empty call stack. *)
 
@@ -577,7 +590,7 @@ Qed.
 Definition get_mem (st: state): mem :=
   match st with
   | State _ _ _ _ _ m0 => m0
-  | Callstate _ _ _ m0 => m0
+  | Callstate _ _ _ _ m0 => m0
   | Returnstate _ _ m0 => m0
   end
 .
