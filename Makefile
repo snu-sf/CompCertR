@@ -58,7 +58,8 @@ FLOCQ=\
 VLIB=Axioms.v Coqlib.v Intv.v Maps.v Heaps.v Lattice.v Ordered.v \
   Iteration.v Integers.v Archi.v Fappli_IEEE_extra.v Floats.v \
   Parmov.v UnionFind.v Wfsimpl.v \
-  Postorder.v FSetAVLplus.v IntvSets.v Decidableplus.v BoolEqual.v
+  Postorder.v FSetAVLplus.v IntvSets.v Decidableplus.v BoolEqual.v \
+  sflib.v
 
 # Parts common to the front-ends and the back-end (in common/)
 
@@ -133,7 +134,8 @@ GENERATED=\
   cparser/Parser.v
 
 all:
-	@test -f .depend || $(MAKE) depend
+	rm -f .depend
+	$(MAKE) depend
 	$(MAKE) proof
 	$(MAKE) extraction
 	$(MAKE) ccomp
@@ -146,6 +148,13 @@ endif
 
 
 proof: $(FILES:.v=.vo)
+
+proof-quick-aux: $(FILES:.v=.vio)
+
+proof-quick:
+	rm -f .depend
+	$(MAKE) depend
+	$(MAKE) proof-quick-aux
 
 # Turn off some warnings for compiling Flocq
 flocq/%.vo: COQCOPTS+=-w -compatibility-notation
@@ -195,6 +204,11 @@ latexdoc:
 	@rm -f doc/$(*F).glob
 	@echo "COQC $*.v"
 	@$(COQC) -dump-glob doc/$(*F).glob $*.v
+
+%.vio: %.v
+	@rm -f doc/$(*F).glob
+	@echo "COQC $*.v"
+	@$(COQC) -quick -dump-glob doc/$(*F).glob $*.v
 
 %.v: %.vp tools/ndfun
 	@rm -f $*.v
@@ -258,6 +272,22 @@ ifeq ($(INSTALL_COQDEV),true)
 	@(echo "To use, pass the following to coq_makefile or add the following to _CoqProject:"; echo "-R $(COQDEVDIR) compcert") > $(COQDEVDIR)/README
 endif
 
+
+NORMAL_BULID_DIR=.normal_build
+
+all-rsync:
+	rsync -av --copy-links --delete \
+	--exclude "$(NORMAL_BULID_DIR)" --exclude '.git/*' \
+	--include '*/' \
+	--filter=':- .gitignore' \
+	'./' "$(NORMAL_BULID_DIR)/"
+	cp Makefile.config "$(NORMAL_BULID_DIR)/Makefile.config"
+	$(MAKE) -C $(NORMAL_BULID_DIR)
+	$(MAKE) -C $(NORMAL_BULID_DIR)/compcomp-linking proof
+	rsync -av \
+	--include '*/' --include "ccomp" --include "compcert.ini" --include "*.ml" --include "*.mli" \
+	--exclude '*' \
+ "$(NORMAL_BULID_DIR)/" './'
 
 clean:
 	rm -f $(patsubst %, %/*.vo, $(DIRS))

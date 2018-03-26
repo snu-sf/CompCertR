@@ -1,5 +1,9 @@
+.normal_build
+graph.dot
+graph.png
 # Object files, in general
 *.vo
+*.vio
 *.glob
 *.o
 *.a
