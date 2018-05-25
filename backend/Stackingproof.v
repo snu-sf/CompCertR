@@ -74,20 +74,20 @@ Qed.
 
 Section PRESERVATION.
 
-Variable return_address_offset: Mach.function -> Mach.code -> ptrofs -> Prop.
-
-Hypothesis return_address_offset_exists:
-  forall f sg ros c,
-  is_tail (Mcall sg ros :: c) (fn_code f) ->
-  exists ofs, return_address_offset f c ofs.
-
-Let step := Mach.step return_address_offset.
-
 Variable prog: Linear.program.
 Variable tprog: Mach.program.
 Hypothesis TRANSF: match_prog prog tprog.
 Let ge := Genv.globalenv prog.
 Let tge := Genv.globalenv tprog.
+
+Variable return_address_offset: Mach.function -> Mach.code -> ptrofs -> Prop.
+
+Hypothesis return_address_offset_exists:
+  forall f sg ros c v (FUNCT: Genv.find_funct (Genv.globalenv tprog) v = Some (Internal f)),
+  is_tail (Mcall sg ros :: c) (fn_code f) ->
+  exists ofs, return_address_offset f c ofs.
+
+Let step := Mach.step return_address_offset.
 
 Section FRAME_PROPERTIES.
 
@@ -1968,7 +1968,7 @@ Proof.
   intros [bf [tf' [A [B C]]]].
   exploit is_tail_transf_function; eauto. intros IST.
   rewrite transl_code_eq in IST. simpl in IST.
-  exploit return_address_offset_exists. eexact IST. intros [ra D].
+  exploit return_address_offset_exists. { rewrite Genv.find_funct_find_funct_ptr. fold tge. eauto. } eexact IST. intros [ra D].
   econstructor; split.
   apply plus_one. econstructor; eauto.
   econstructor; eauto.

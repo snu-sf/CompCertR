@@ -28,6 +28,7 @@ Require Import Mach.
 Require Import Asm.
 Require Import Asmgen.
 Require Import Conventions.
+Require Import sflib.
 
 (** * Processor registers and register states *)
 
@@ -596,11 +597,13 @@ Qed.
 >>
 *)
 
-Definition return_address_offset (f: Mach.function) (c: Mach.code) (ofs: ptrofs) : Prop :=
-  forall tf tc,
-  transf_function f = OK tf ->
-  transl_code f c false = OK tc ->
-  code_tail (Ptrofs.unsigned ofs) (fn_code tf) tc.
+Inductive return_address_offset (f: Mach.function) (c: Mach.code) (ofs: ptrofs) : Prop :=
+| return_address_offset_intro
+    tf tc
+    (TF: transf_function f = OK tf)
+    (TC: transl_code f c false = OK tc)
+    (TL: code_tail (Ptrofs.unsigned ofs) (fn_code tf) tc)
+.
 
 (** We now show that such an offset always exists if the Mach code [c]
   is a suffix of [f.(fn_code)].  This holds because the translation
@@ -617,16 +620,18 @@ Qed.
 
 Section RETADDR_EXISTS.
 
+Variable f: Mach.function.
+Variable tf: Asm.function.
+Hypothesis transf_function_success: transf_function f = OK tf.
 Hypothesis transl_instr_tail:
-  forall f i ep k c, transl_instr f i ep k = OK c -> is_tail k c.
+  forall i ep k c, transl_instr f i ep k = OK c -> is_tail k c.
 Hypothesis transf_function_inv:
-  forall f tf, transf_function f = OK tf ->
   exists tc, exists ep, transl_code f (Mach.fn_code f) ep = OK tc /\ is_tail tc (fn_code tf).
 Hypothesis transf_function_len:
-  forall f tf, transf_function f = OK tf -> list_length_z (fn_code tf) <= Ptrofs.max_unsigned.
+  list_length_z (fn_code tf) <= Ptrofs.max_unsigned.
 
 Lemma transl_code_tail:
-  forall f c1 c2, is_tail c1 c2 ->
+  forall c1 c2, is_tail c1 c2 ->
   forall tc2 ep2, transl_code f c2 ep2 = OK tc2 ->
   exists tc1, exists ep1, transl_code f c1 ep1 = OK tc1 /\ is_tail tc1 tc2.
 Proof.
@@ -638,11 +643,11 @@ Proof.
 Qed.
 
 Lemma return_address_exists:
-  forall f sg ros c, is_tail (Mcall sg ros :: c) f.(Mach.fn_code) ->
+  forall sg ros c, is_tail (Mcall sg ros :: c) f.(Mach.fn_code) ->
   exists ra, return_address_offset f c ra.
 Proof.
-  intros. destruct (transf_function f) as [tf|] eqn:TF.
-+ exploit transf_function_inv; eauto. intros (tc1 & ep1 & TR1 & TL1).
+  intros.
++ hexploit transf_function_inv; eauto. intros (tc1 & ep1 & TR1 & TL1).
   exploit transl_code_tail; eauto. intros (tc2 & ep2 & TR2 & TL2).
 Opaque transl_instr.
   monadInv TR2.
@@ -651,11 +656,10 @@ Opaque transl_instr.
     apply is_tail_trans with tc2; auto.
     eapply transl_instr_tail; eauto. }
   exploit is_tail_code_tail. eexact TL3. intros [ofs CT].
-  exists (Ptrofs.repr ofs). red; intros.
-  rewrite Ptrofs.unsigned_repr. congruence.
+  exists (Ptrofs.repr ofs). econs; eauto.
+  rewrite Ptrofs.unsigned_repr. esplits; eauto.
   exploit code_tail_bounds_1; eauto.
-  apply transf_function_len in TF. omega.
-+ exists Ptrofs.zero; red; intros. congruence.
+  omega.
 Qed.
 
 End RETADDR_EXISTS.
@@ -682,8 +686,8 @@ Lemma return_address_offset_correct:
   return_address_offset f c ofs' ->
   ofs' = ofs.
 Proof.
-  intros. inv H. red in H0.
-  exploit code_tail_unique. eexact H12. eapply H0; eauto. intro.
+  intros. inv H. inv H0. rewrite TF in *. clarify. rewrite TC in *. clarify...
+  exploit code_tail_unique. eexact H12. eexact TL. intro.
   rewrite <- (Ptrofs.repr_unsigned ofs).
   rewrite <- (Ptrofs.repr_unsigned ofs').
   congruence.

@@ -17,6 +17,7 @@ Require Import Integers Floats AST Linking.
 Require Import Values Memory Events Globalenvs Smallstep.
 Require Import Op Locations Mach Conventions Asm.
 Require Import Asmgen Asmgenproof0 Asmgenproof1.
+Require Import sflib.
 
 Definition match_prog (p: Mach.program) (tp: Asm.program) :=
   match_program (fun _ f tf => transf_fundef f = OK tf) eq p tp.
@@ -329,17 +330,24 @@ Qed.
 (** Existence of return addresses *)
 
 Lemma return_address_exists:
-  forall f sg ros c, is_tail (Mcall sg ros :: c) f.(Mach.fn_code) ->
+  forall f sg ros c v (FUNCT: Genv.find_funct (Genv.globalenv prog) v = Some (Internal f)), is_tail (Mcall sg ros :: c) f.(Mach.fn_code) ->
   exists ra, return_address_offset f c ra.
 Proof.
-  intros. eapply Asmgenproof0.return_address_exists; eauto.
+  intros.
+  assert(TF: exists tf, transf_function f = OK tf).
+  { inv TRANSF.
+    exploit Genv.find_funct_inversion; eauto. i; des.
+    eapply list_forall2_in_left in H0; eauto.
+    des. inv H4. ss. clarify. inv H6. ss. monadInv H8. esplits; eauto.
+  } des.
+  eapply Asmgenproof0.return_address_exists; eauto.
 - intros. exploit transl_instr_label; eauto.
   destruct i; try (intros [A B]; apply A). intros. subst c0. repeat constructor.
-- intros. monadInv H0.
+- intros. monadInv TF.
   destruct (zlt Ptrofs.max_unsigned (list_length_z (fn_code x))); inv EQ0.
   monadInv EQ. rewrite transl_code'_transl_code in EQ0.
   exists x; exists true; split; auto. unfold fn_code. repeat constructor.
-- exact transf_function_no_overflow.
+- eapply transf_function_no_overflow; eauto.
 Qed.
 
 (** * Proof of semantic preservation *)
