@@ -1341,3 +1341,34 @@ Ltac rev_all TAC :=
   try TAC
 .
 
+Require Import Coqlib.
+
+
+Lemma proj_sumbool_false: forall (P Q : Prop) (a : {P} + {Q}),
+    proj_sumbool a = false -> Q.
+Proof. intros. destruct a; auto. inv H. Qed.
+
+Lemma proj_sumbool_is_false
+      P
+      (a: {P} + {~ P})
+      (FALSE: ~ P)
+  :
+    proj_sumbool a = false
+.
+Proof. unfold proj_sumbool. case a; tauto. Qed.
+
+Ltac des_sumbool :=
+  repeat
+    (unfold Datatypes.is_true, is_true in *;
+     match goal with
+     | [ H: proj_sumbool ?x = true |- _ ] => apply proj_sumbool_true in H
+     | [ H: proj_sumbool ?x = false |- _ ] => apply proj_sumbool_false in H
+     | [ H: true = proj_sumbool ?x |- _ ] => symmetry in H; apply proj_sumbool_true in H
+     | [ H: false = proj_sumbool ?x |- _ ] => symmetry in H; apply proj_sumbool_false in H
+
+     | [ |- proj_sumbool ?x = true ] => apply proj_sumbool_is_true
+     | [ |- proj_sumbool ?x = false ] => apply proj_sumbool_is_false
+     | [ |- true = proj_sumbool ?x ] => symmetry; apply proj_sumbool_is_true
+     | [ |- false = proj_sumbool ?x ] => symmetry; apply proj_sumbool_is_false
+     end)
+.

@@ -22,6 +22,7 @@ Require Import AST.
 Require Import Integers.
 Require Import Floats.
 Require Import Values.
+Require Import sflib.
 
 (** * Properties of memory chunks *)
 
@@ -753,6 +754,8 @@ Inductive memval_inject (f: meminj): memval -> memval -> Prop :=
       forall v1 v2 q n,
       Val.inject f v1 v2 ->
       memval_inject f (Fragment v1 q n) (Fragment v2 q n)
+  | memval_inject_vundef:
+      forall mv q n, memval_inject f (Fragment Vundef q n) mv
   | memval_inject_undef:
       forall mv, memval_inject f Undef mv.
 
@@ -792,8 +795,8 @@ Proof.
   InvBooleans. assert (n = n0) by (apply beq_nat_true; auto). subst v1 q0 n0.
   replace v2 with v'.
   unfold proj_sumbool; rewrite ! dec_eq_true. rewrite <- beq_nat_refl. simpl; eauto.
-  inv H2; try discriminate; inv H4; congruence.
-  discriminate.
+  inv H2; try discriminate; inv H4; try congruence.
+  simpl_bool; des; des_sumbool; ss.
 Qed.
 
 Lemma proj_value_inject:
@@ -806,20 +809,20 @@ Proof.
   destruct (check_value (size_quantity_nat q) v1 q (Fragment v1 q0 n :: al)) eqn:B; auto.
   destruct (Val.eq v1 Vundef). subst; auto.
   erewrite check_value_inject by eauto. auto.
+  simpl_bool; des; des_sumbool; ss. des_ifs; ss.
 Qed.
 
 Lemma proj_bytes_not_inject:
   forall f vl vl',
   list_forall2 (memval_inject f) vl vl' ->
-  proj_bytes vl = None -> proj_bytes vl' <> None -> In Undef vl.
+  proj_bytes vl = None -> proj_bytes vl' <> None -> (In Undef vl \/ exists q n, In (Fragment Vundef q n) vl).
 Proof.
   induction 1; simpl; intros.
   congruence.
-  inv H; try congruence.
-  right. apply IHlist_forall2.
-  destruct (proj_bytes al); congruence.
-  destruct (proj_bytes bl); congruence.
-  auto.
+  des_ifs_safe.
+  des_ifs; eauto.
+  - exploit IHlist_forall2; ss; eauto. i; des; esplits; eauto.
+  - inv H. eauto.
 Qed.
 
 Lemma check_value_undef:
@@ -841,6 +844,26 @@ Proof.
   rewrite check_value_undef. auto. auto.
 Qed.
 
+Lemma proj_value_vundef:
+  forall q0 q1 n vl, In (Fragment Vundef q0 n) vl -> proj_value q1 vl = Vundef.
+Proof.
+  intros; unfold proj_value.
+  destruct vl; auto. destruct m; auto.
+  des_ifs. ss. des; ss; clarify. destruct q1; ss.
+  - repeat (des_ifs_safe; simpl_bool; des; des_sumbool; clarify).
+    ss. des; clarify.
+  - repeat (des_ifs_safe; simpl_bool; des; des_sumbool; clarify).
+    ss. des; clarify.
+Qed.
+
+Lemma proj_value_undef_or_vundef:
+  forall q1 vl, (In Undef vl) \/ (exists q0 n, In (Fragment Vundef q0 n) vl) -> proj_value q1 vl = Vundef.
+Proof.
+  i; des.
+  eapply proj_value_undef; eauto.
+  eapply proj_value_vundef; eauto.
+Qed.
+
 Theorem decode_val_inject:
   forall f vl1 vl2 chunk,
   list_forall2 (memval_inject f) vl1 vl2 ->
@@ -857,7 +880,9 @@ Proof.
                    | None => Val.load_result chunk (proj_value q vl2)
                    end)).
   { intros. destruct (proj_bytes vl2) as [bl2|] eqn:PB2.
-    rewrite proj_value_undef. destruct chunk; auto. eapply proj_bytes_not_inject; eauto. congruence.
+    rewrite proj_value_undef_or_vundef. destruct chunk; auto.
+    exploit proj_bytes_not_inject; eauto.
+    { ii; clarify. }
     apply Val.load_result_inject. apply proj_value_inject; auto.
   }
   destruct chunk; destruct Archi.ptr64; auto.
@@ -932,11 +957,31 @@ Lemma memval_inject_compose:
   memval_inject f v1 v2 -> memval_inject f' v2 v3 ->
   memval_inject (compose_meminj f f') v1 v3.
 Proof.
-  intros. inv H.
+  intros. inv H; try (by econs; eauto).
   inv H0. constructor.
   inv H0. econstructor.
   eapply val_inject_compose; eauto.
-  constructor.
+  inv H1. econs; eauto.
+Qed.
+
+Lemma memval_lessdef_inject_compose:
+  forall f v1 v2 v3,
+  memval_lessdef v1 v2 -> memval_inject f v2 v3 ->
+  memval_inject f v1 v3.
+Proof.
+  intros. inv H; inv H0; try (by econs; eauto); rewrite val_inject_id in *.
+  - inv H1; econs; eauto.
+  - inv H1; econs; eauto.
+Qed.
+
+Lemma memval_inject_lessdef_compose:
+  forall f v1 v2 v3,
+  memval_inject f v1 v2 -> memval_lessdef v2 v3 ->
+  memval_inject f v1 v3.
+Proof.
+  intros. inv H; inv H0; try (by econs; eauto).
+  - rewrite val_inject_id in *. inv H5; econs; eauto. inv H1; ss.
+  - inv H1; econs; eauto.
 Qed.
 
 (** * Breaking 64-bit memory accesses into two 32-bit accesses *)
