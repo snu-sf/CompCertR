@@ -16,6 +16,7 @@ Require Import Coqlib Maps Postorder.
 Require Import AST Linking.
 Require Import Values Memory Globalenvs Events Smallstep.
 Require Import Op Registers RTL Renumber.
+Require Import sflib.
 
 Definition match_prog (p tp: RTL.program) :=
   match_program (fun ctx f tf => tf = transf_fundef f) eq p tp.
@@ -30,29 +31,34 @@ Section PRESERVATION.
 
 Variables prog tprog: program.
 Hypothesis TRANSL: match_prog prog tprog.
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
 
-Lemma functions_translated:
-  forall v f,
-  Genv.find_funct ge v = Some f ->
-  Genv.find_funct tge v = Some (transf_fundef f).
-Proof (Genv.find_funct_transf TRANSL).
+Section CORELEMMA.
+
+Variable (ge tge: genv).
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun _ f tf => tf = transf_fundef f) eq prog) ge tge).
 
 Lemma function_ptr_translated:
   forall v f,
   Genv.find_funct_ptr ge v = Some f ->
   Genv.find_funct_ptr tge v = Some (transf_fundef f).
-Proof (Genv.find_funct_ptr_transf TRANSL).
+Proof (Genv.find_funct_ptr_transf_genv MATCH_GENV).
+
+Lemma functions_translated:
+  forall v f,
+  Genv.find_funct ge v = Some f ->
+  Genv.find_funct tge v = Some (transf_fundef f).
+Proof.
+  ii; ss. unfold Genv.find_funct in *. des_ifs_safe. eapply function_ptr_translated; eauto.
+Qed.
 
 Lemma symbols_preserved:
   forall id,
   Genv.find_symbol tge id = Genv.find_symbol ge id.
-Proof (Genv.find_symbol_transf TRANSL).
+Proof (Genv.find_symbol_transf_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_transf TRANSL).
+Proof (Genv.senv_transf_genv MATCH_GENV).
 
 Lemma sig_preserved:
   forall f, funsig (transf_fundef f) = funsig f.
@@ -230,6 +236,16 @@ Proof.
   constructor; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun ctx f tf => tf = transf_fundef f) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; eauto. Qed.
+
 Lemma transf_initial_states:
   forall S1, RTL.initial_state prog S1 ->
   exists S2, RTL.initial_state tprog S2 /\ match_states S1 S2.
@@ -237,7 +253,7 @@ Proof.
   intros. inv H. econstructor; split.
   econstructor.
     eapply (Genv.init_mem_transf TRANSL); eauto.
-    rewrite symbols_preserved. rewrite (match_program_main TRANSL). eauto.
+    erewrite symbols_preserved; eauto. rewrite (match_program_main TRANSL). eauto.
     eapply function_ptr_translated; eauto.
     rewrite <- H3; apply sig_preserved.
   constructor. constructor.
@@ -253,17 +269,12 @@ Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
 Proof.
   eapply forward_simulation_step.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  exact step_simulation.
+  apply step_simulation; auto.
 Qed.
 
+End WHOLE.
+
 End PRESERVATION.
-
-
-
-
-
-
-

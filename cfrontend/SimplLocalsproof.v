@@ -17,6 +17,7 @@ Require Import Coqlib Errors Ordered Maps Integers Floats.
 Require Import AST Linking.
 Require Import Values Memory Globalenvs Events Smallstep.
 Require Import Ctypes Cop Clight SimplLocals.
+Require Import sflib.
 
 Module VSF := FSetFacts.Facts(VSet).
 Module VSP := FSetProperties.Properties(VSet).
@@ -37,34 +38,42 @@ Section PRESERVATION.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: match_prog prog tprog.
-Let ge := globalenv prog.
-Let tge := globalenv tprog.
+
+Section CORELEMMA.
+
+Variable ge: Clight.genv.
+Variable tge: Clight.genv.
+
+Hypothesis (MATCH_CGENV:
+              Genv.match_genvs (match_globdef (fun (ctx : AST.program fundef type) f tf =>
+                                                 transf_fundef f = OK tf) eq prog) ge tge /\
+              genv_cenv tge = genv_cenv ge).
 
 Lemma comp_env_preserved:
   genv_cenv tge = genv_cenv ge.
 Proof.
-  unfold tge, ge. destruct prog, tprog; simpl. destruct TRANSF as [_ EQ]. simpl in EQ. congruence.
+  apply MATCH_CGENV.
 Qed.
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match (proj1 TRANSF)).
+Proof (Genv.find_symbol_match_genv (proj1 MATCH_CGENV)).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match (proj1 TRANSF)).
+Proof (Genv.senv_match_genv (proj1 MATCH_CGENV)).
 
 Lemma functions_translated:
   forall (v: val) (f: fundef),
   Genv.find_funct ge v = Some f ->
   exists tf, Genv.find_funct tge v = Some tf /\ transf_fundef f = OK tf.
-Proof (Genv.find_funct_transf_partial (proj1 TRANSF)).
+Proof (Genv.find_funct_transf_partial_genv (proj1 MATCH_CGENV)).
 
 Lemma function_ptr_translated:
   forall (b: block) (f: fundef),
   Genv.find_funct_ptr ge b = Some f ->
   exists tf, Genv.find_funct_ptr tge b = Some tf /\ transf_fundef f = OK tf.
-Proof (Genv.find_funct_ptr_transf_partial (proj1 TRANSF)).
+Proof (Genv.find_funct_ptr_transf_partial_genv (proj1 MATCH_CGENV)).
 
 Lemma type_of_fundef_preserved:
   forall fd tfd,
@@ -870,6 +879,7 @@ Lemma create_undef_temps_lifted:
   (create_undef_temps (add_lifted (cenv_for f) (fn_vars f) (fn_temps f))) ! id =
   (create_undef_temps (add_lifted (cenv_for f) (fn_params f ++ fn_vars f) (fn_temps f))) ! id.
 Proof.
+  sguard in MATCH_CGENV.
   intros. apply create_undef_temps_exten.
   unfold add_lifted. rewrite filter_app.
   unfold var_names in *.
@@ -999,6 +1009,7 @@ Proof.
   eapply alloc_variables_nextblock; eauto.
 
   (* other properties *)
+  sguard in MATCH_CGENV.
   intuition auto. edestruct F as (b & X & Y); eauto. rewrite H5 in Y.
   destruct Y as (tb & U & V). exists tb; auto.
 Qed.
@@ -2239,9 +2250,26 @@ Proof.
   eapply match_envs_set_opttemp; eauto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := globalenv prog.
+Let tge := globalenv tprog.
+
+Let MATCH_CGENV:
+              Genv.match_genvs (match_globdef (fun (ctx : AST.program fundef type) f tf =>
+                                                 transf_fundef f = OK tf) eq prog) ge tge /\
+              genv_cenv tge = genv_cenv ge.
+Proof.
+  constructor.
+  - apply Genv.globalenvs_match; eauto. apply TRANSF.
+  - unfold tge, ge. destruct prog, tprog; simpl. destruct TRANSF as [_ EQ]. simpl in EQ. congruence.
+Qed.
+
 Lemma initial_states_simulation:
   forall S, initial_state prog S ->
-  exists R, initial_state tprog R /\ match_states S R.
+  exists R, initial_state tprog R /\ match_states ge S R.
 Proof.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros [tf [A B]].
@@ -2249,7 +2277,7 @@ Proof.
   econstructor.
   eapply (Genv.init_mem_transf_partial (proj1 TRANSF)). eauto.
   replace (prog_main tprog) with (prog_main prog). 
-  instantiate (1 := b). rewrite <- H1. apply symbols_preserved.
+  instantiate (1 := b). rewrite <- H1. apply (symbols_preserved ge tge); auto.
   generalize (match_program_main (proj1 TRANSF)). simpl; auto.
   eauto.
   rewrite <- H3; apply type_of_fundef_preserved; auto.
@@ -2269,7 +2297,7 @@ Qed.
 
 Lemma final_states_simulation:
   forall S R r,
-  match_states S R -> final_state S r -> final_state R r.
+  match_states ge S R -> final_state S r -> final_state R r.
 Proof.
   intros. inv H0. inv H.
   specialize (MCONT VSet.empty). inv MCONT.
@@ -2280,11 +2308,13 @@ Theorem transf_program_correct:
   forward_simulation (semantics1 prog) (semantics2 tprog).
 Proof.
   eapply forward_simulation_plus.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact initial_states_simulation.
   eexact final_states_simulation.
-  eexact step_simulation.
+  apply step_simulation; auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.
 

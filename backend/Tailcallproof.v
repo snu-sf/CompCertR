@@ -215,28 +215,31 @@ Section PRESERVATION.
 Variable prog tprog: program.
 Hypothesis TRANSL: match_prog prog tprog.
 
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
+Section CORELEMMA.
+
+Variable ge tge: genv.
+
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => tf = transf_fundef f) eq prog) ge tge).
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_transf TRANSL).
+Proof (Genv.find_symbol_transf_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall (v: val) (f: RTL.fundef),
   Genv.find_funct ge v = Some f ->
   Genv.find_funct tge v = Some (transf_fundef f).
-Proof (Genv.find_funct_transf TRANSL).
+Proof (Genv.find_funct_transf_genv MATCH_GENV).
 
 Lemma funct_ptr_translated:
   forall (b: block) (f: RTL.fundef),
   Genv.find_funct_ptr ge b = Some f ->
   Genv.find_funct_ptr tge b = Some (transf_fundef f).
-Proof (Genv.find_funct_ptr_transf TRANSL).
+Proof (Genv.find_funct_ptr_transf_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_transf TRANSL).
+Proof (Genv.senv_transf_genv MATCH_GENV).
 
 Lemma sig_preserved:
   forall f, funsig (transf_fundef f) = funsig f.
@@ -567,6 +570,16 @@ Proof.
   rewrite Regmap.gss. auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => tf = transf_fundef f) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; eauto. Qed.
+
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
@@ -576,7 +589,7 @@ Proof.
   exists (Callstate nil (transf_fundef f) nil m0); split.
   econstructor; eauto. apply (Genv.init_mem_transf TRANSL). auto.
   replace (prog_main tprog) with (prog_main prog).
-  rewrite symbols_preserved. eauto.
+  erewrite symbols_preserved; eauto.
   symmetry; eapply match_program_main; eauto.
   rewrite <- H3. apply sig_preserved.
   constructor. constructor. constructor. apply Mem.extends_refl.
@@ -597,11 +610,13 @@ Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
 Proof.
   eapply forward_simulation_opt with (measure := measure); eauto.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  exact transf_step_correct.
+  apply transf_step_correct; auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.
 

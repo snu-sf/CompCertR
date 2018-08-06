@@ -813,36 +813,6 @@ Section PRESERVATION.
 Variable prog: program.
 Variable tprog : program.
 Hypothesis TRANSF: match_prog prog tprog.
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
-
-Lemma symbols_preserved:
-  forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match TRANSF).
-
-Lemma senv_preserved:
-  Senv.equiv ge tge.
-Proof (Genv.senv_match TRANSF).
-
-Lemma functions_translated:
-  forall (v: val) (f: RTL.fundef),
-  Genv.find_funct ge v = Some f ->
-  exists cu tf, Genv.find_funct tge v = Some tf /\ transf_fundef (romem_for cu) f = OK tf /\ linkorder cu prog.
-Proof (Genv.find_funct_match TRANSF).
-
-Lemma funct_ptr_translated:
-  forall (b: block) (f: RTL.fundef),
-  Genv.find_funct_ptr ge b = Some f ->
-  exists cu tf, Genv.find_funct_ptr tge b = Some tf /\ transf_fundef (romem_for cu) f = OK tf /\ linkorder cu prog.
-Proof (Genv.find_funct_ptr_match TRANSF).
-
-Lemma sig_preserved:
-  forall rm f tf, transf_fundef rm f = OK tf -> funsig tf = funsig f.
-Proof.
-  unfold transf_fundef; intros. destruct f; monadInv H; auto.
-  unfold transf_function in EQ.
-  destruct (analyze f (vanalyze rm f)); try discriminate. inv EQ; auto.
-Qed.
 
 Definition transf_function' (f: function) (approxs: PMap.t numbering) : function :=
   mkfunction
@@ -851,6 +821,50 @@ Definition transf_function' (f: function) (approxs: PMap.t numbering) : function
     f.(fn_stacksize)
     (transf_code approxs f.(fn_code))
     f.(fn_entrypoint).
+
+Ltac TransfInstr :=
+  match goal with
+  | H1: (PTree.get ?pc ?c = Some ?instr), f: function, approx: PMap.t numbering |- _ =>
+      cut ((transf_function' f approx).(fn_code)!pc = Some(transf_instr approx!!pc instr));
+      [ simpl transf_instr
+      | unfold transf_function', transf_code; simpl; rewrite PTree.gmap;
+        unfold option_map; rewrite H1; reflexivity ]
+  end.
+
+Section CORELEMMA.
+
+Variable ge : genv.
+Variable tge : genv.
+
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => transf_fundef (romem_for cu) f = OK tf) eq prog) ge tge).
+
+Lemma symbols_preserved:
+  forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
+
+Lemma senv_preserved:
+  Senv.equiv ge tge.
+Proof (Genv.senv_match_genv MATCH_GENV).
+
+Lemma functions_translated:
+  forall (v: val) (f: RTL.fundef),
+  Genv.find_funct ge v = Some f ->
+  exists cu tf, Genv.find_funct tge v = Some tf /\ transf_fundef (romem_for cu) f = OK tf /\ linkorder cu prog.
+Proof (Genv.find_funct_match_genv MATCH_GENV).
+
+Lemma funct_ptr_translated:
+  forall (b: block) (f: RTL.fundef),
+  Genv.find_funct_ptr ge b = Some f ->
+  exists cu tf, Genv.find_funct_ptr tge b = Some tf /\ transf_fundef (romem_for cu) f = OK tf /\ linkorder cu prog.
+Proof (Genv.find_funct_ptr_match_genv MATCH_GENV).
+
+Lemma sig_preserved:
+  forall rm f tf, transf_fundef rm f = OK tf -> funsig tf = funsig f.
+Proof.
+  unfold transf_fundef; intros. destruct f; monadInv H; auto.
+  unfold transf_function in EQ.
+  destruct (analyze f (vanalyze rm f)); try discriminate. inv EQ; auto.
+Qed.
 
 Definition regs_lessdef (rs1 rs2: regset) : Prop :=
   forall r, Val.lessdef (rs1#r) (rs2#r).
@@ -959,21 +973,12 @@ Inductive match_states: state -> state -> Prop :=
       match_states (Returnstate s v m)
                    (Returnstate s' v' m').
 
-Ltac TransfInstr :=
-  match goal with
-  | H1: (PTree.get ?pc ?c = Some ?instr), f: function, approx: PMap.t numbering |- _ =>
-      cut ((transf_function' f approx).(fn_code)!pc = Some(transf_instr approx!!pc instr));
-      [ simpl transf_instr
-      | unfold transf_function', transf_code; simpl; rewrite PTree.gmap;
-        unfold option_map; rewrite H1; reflexivity ]
-  end.
-
 (** The proof of simulation is a case analysis over the transition
   in the source code. *)
 
 Lemma transf_step_correct:
   forall s1 t s2, step ge s1 t s2 ->
-  forall s1' (MS: match_states s1 s1') (SOUND: sound_state prog s1),
+  forall s1' (MS: match_states s1 s1') (SOUND: sound_state prog ge s1),
   exists s2', step tge s1' t s2' /\ match_states s2 s2'.
 Proof.
   induction 1; intros; inv MS; try (TransfInstr; intro C).
@@ -1212,9 +1217,19 @@ Proof.
   apply set_reg_lessdef; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => transf_fundef (romem_for cu) f = OK tf) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; auto. Qed.
+
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
-  exists st2, initial_state tprog st2 /\ match_states st1 st2.
+  exists st2, initial_state tprog st2 /\ match_states ge st1 st2.
 Proof.
   intros. inversion H.
   exploit funct_ptr_translated; eauto. intros (cu & tf & A & B & C).
@@ -1222,7 +1237,7 @@ Proof.
   econstructor; eauto.
   eapply (Genv.init_mem_match TRANSF); eauto.
   replace (prog_main tprog) with (prog_main prog).
-  rewrite symbols_preserved. eauto.
+  erewrite symbols_preserved; eauto.
   symmetry. eapply match_program_main; eauto.
   rewrite <- H3. eapply sig_preserved; eauto.
   econstructor. eauto. constructor. auto. auto. apply Mem.extends_refl.
@@ -1230,7 +1245,7 @@ Qed.
 
 Lemma transf_final_states:
   forall st1 st2 r,
-  match_states st1 st2 -> final_state st1 r -> final_state st2 r.
+  match_states ge st1 st2 -> final_state st1 r -> final_state st2 r.
 Proof.
   intros. inv H0. inv H. inv RES. inv STACK. constructor.
 Qed.
@@ -1239,13 +1254,15 @@ Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
 Proof.
   eapply forward_simulation_step with
-    (match_states := fun s1 s2 => sound_state prog s1 /\ match_states s1 s2).
-- apply senv_preserved.
+    (match_states := fun s1 s2 => sound_state prog ge s1 /\ match_states ge s1 s2).
+- apply senv_preserved; auto.
 - intros. exploit transf_initial_states; eauto. intros [s2 [A B]].
   exists s2. split. auto. split. apply sound_initial; auto. auto.
 - intros. destruct H. eapply transf_final_states; eauto.
 - intros. destruct H0. exploit transf_step_correct; eauto.
   intros [s2' [A B]]. exists s2'; split. auto. split. eapply sound_step; eauto. auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.

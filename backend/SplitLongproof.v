@@ -79,13 +79,15 @@ Section CMCONSTR.
 Variable prog: program.
 Variable hf: helper_functions.
 Hypothesis HELPERS: helper_functions_declared prog hf.
-Let ge := Genv.globalenv prog.
+Variable ge : genv.
 Variable sp: val.
 Variable e: env.
 Variable m: mem.
 
 Ltac UseHelper := decompose [Logic.and] i64_helpers_correct; eauto.
 Ltac DeclHelper := red in HELPERS; decompose [Logic.and] HELPERS; eauto.
+
+Hypothesis (GENV_COMPAT: genv_compat ge prog).
 
 Lemma eval_helper:
   forall le id name sg args vargs vres,
@@ -95,7 +97,7 @@ Lemma eval_helper:
   eval_expr ge sp e m le (Eexternal id sg args) vres.
 Proof.
   intros.
-  red in H0. apply Genv.find_def_symbol in H0. destruct H0 as (b & P & Q).
+  red in H0. apply GENV_COMPAT in H0. destruct H0 as (b & P & Q).
   rewrite <- Genv.find_funct_ptr_iff in Q.
   econstructor; eauto.
 Qed.

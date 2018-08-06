@@ -141,29 +141,34 @@ Section PRESERVATION.
 
 Variables prog tprog: program.
 Hypothesis TRANSL: match_prog prog tprog.
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
+
+Section CORELEMMA.
+
+Variable ge : genv.
+Variable tge : genv.
+
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun ctx f tf => tf = tunnel_fundef f) eq prog) ge tge).
 
 Lemma functions_translated:
   forall v f,
   Genv.find_funct ge v = Some f ->
   Genv.find_funct tge v = Some (tunnel_fundef f).
-Proof (Genv.find_funct_transf TRANSL).
+Proof (Genv.find_funct_transf_genv MATCH_GENV).
 
 Lemma function_ptr_translated:
   forall v f,
   Genv.find_funct_ptr ge v = Some f ->
   Genv.find_funct_ptr tge v = Some (tunnel_fundef f).
-Proof (Genv.find_funct_ptr_transf TRANSL).
+Proof (Genv.find_funct_ptr_transf_genv MATCH_GENV).
 
 Lemma symbols_preserved:
   forall id,
   Genv.find_symbol tge id = Genv.find_symbol ge id.
-Proof (Genv.find_symbol_transf TRANSL).
+Proof (Genv.find_symbol_transf_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_transf TRANSL).
+Proof (Genv.senv_transf_genv MATCH_GENV).
 
 Lemma sig_preserved:
   forall f, funsig (tunnel_fundef f) = funsig f.
@@ -535,6 +540,16 @@ Proof.
   constructor; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun ctx f tf => tf = tunnel_fundef f) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; auto. Qed.
+
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
@@ -544,8 +559,8 @@ Proof.
   econstructor; eauto.
   apply (Genv.init_mem_transf TRANSL); auto.
   rewrite (match_program_main TRANSL).
-  rewrite symbols_preserved. eauto.
-  apply function_ptr_translated; auto.
+  erewrite symbols_preserved; eauto.
+  eapply function_ptr_translated; eauto.
   rewrite <- H3. apply sig_preserved.
   constructor. constructor. red; simpl; auto. apply Mem.extends_refl.
 Qed.
@@ -564,10 +579,12 @@ Theorem transf_program_correct:
   forward_simulation (LTL.semantics prog) (LTL.semantics tprog).
 Proof.
   eapply forward_simulation_opt.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  eexact tunnel_step_correct.
+  apply tunnel_step_correct; auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.

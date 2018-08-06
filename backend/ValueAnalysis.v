@@ -1470,7 +1470,7 @@ End SOUNDNESS.
 Section LINKING.
 
 Variable prog: program.
-Let ge := Genv.globalenv prog.
+Variable ge : genv.
 
 Inductive sound_state: state -> Prop :=
   | sound_state_intro: forall st,
@@ -1844,7 +1844,7 @@ End INITIAL.
 Require Import Axioms.
 
 Theorem sound_initial:
-  forall prog st, initial_state prog st -> sound_state prog st.
+  forall prog st, initial_state prog st -> sound_state prog (Genv.globalenv prog) st.
 Proof.
   destruct 1.
   exploit initial_mem_matches; eauto. intros (bc & GE & BELOW & NOSTACK & RM & VALID).
@@ -1869,8 +1869,8 @@ Hint Resolve areg_sound aregs_sound: va.
 
 Ltac InvSoundState :=
   match goal with
-  | H1: sound_state ?prog ?st, H2: linkorder ?cunit ?prog |- _ =>
-      let S := fresh "S" in generalize (sound_state_inv _ _ _ H1 H2); intros S; inv S
+  | H1: sound_state ?prog ?ge ?st, H2: linkorder ?cunit ?prog |- _ =>
+      let S := fresh "S" in generalize (sound_state_inv _ _ _ _ H1 H2); intros S; inv S
   end.
 
 Definition avalue (a: VA.t) (r: reg) : aval :=
@@ -1880,12 +1880,12 @@ Definition avalue (a: VA.t) (r: reg) : aval :=
   end.
 
 Lemma avalue_sound:
-  forall cunit prog s f sp pc e m r,
-  sound_state prog (State s f (Vptr sp Ptrofs.zero) pc e m) ->
+  forall cunit prog s f sp pc e m r ge,
+  sound_state prog ge (State s f (Vptr sp Ptrofs.zero) pc e m) ->
   linkorder cunit prog ->
   exists bc,
      vmatch bc e#r (avalue (analyze (romem_for cunit) f)!!pc r)
-  /\ genv_match bc (Genv.globalenv prog)
+  /\ genv_match bc ge
   /\ bc sp = BCstack.
 Proof.
   intros. InvSoundState. exists bc; split; auto. rewrite AN. apply EM.
@@ -1898,13 +1898,13 @@ Definition aaddr (a: VA.t) (r: reg) : aptr :=
   end.
 
 Lemma aaddr_sound:
-  forall cunit prog s f sp pc e m r b ofs,
-  sound_state prog (State s f (Vptr sp Ptrofs.zero) pc e m) ->
+  forall cunit prog s f sp pc e m r b ofs ge,
+  sound_state prog ge (State s f (Vptr sp Ptrofs.zero) pc e m) ->
   linkorder cunit prog ->
   e#r = Vptr b ofs ->
   exists bc,
      pmatch bc b ofs (aaddr (analyze (romem_for cunit) f)!!pc r)
-  /\ genv_match bc (Genv.globalenv prog)
+  /\ genv_match bc ge
   /\ bc sp = BCstack.
 Proof.
   intros. InvSoundState. exists bc; split; auto.
@@ -1918,13 +1918,13 @@ Definition aaddressing (a: VA.t) (addr: addressing) (args: list reg) : aptr :=
   end.
 
 Lemma aaddressing_sound:
-  forall cunit prog s f sp pc e m addr args b ofs,
-  sound_state prog (State s f (Vptr sp Ptrofs.zero) pc e m) ->
+  forall cunit prog s f sp pc e m addr args b ofs ge,
+  sound_state prog ge (State s f (Vptr sp Ptrofs.zero) pc e m) ->
   linkorder cunit prog ->
-  eval_addressing (Genv.globalenv prog) (Vptr sp Ptrofs.zero) addr e##args = Some (Vptr b ofs) ->
+  eval_addressing ge (Vptr sp Ptrofs.zero) addr e##args = Some (Vptr b ofs) ->
   exists bc,
      pmatch bc b ofs (aaddressing (analyze (romem_for cunit) f)!!pc addr args)
-  /\ genv_match bc (Genv.globalenv prog)
+  /\ genv_match bc ge
   /\ bc sp = BCstack.
 Proof.
   intros. InvSoundState. exists bc; split; auto.
@@ -1964,13 +1964,13 @@ Proof.
 Qed.
 
 Lemma aaddr_arg_sound:
-  forall cunit prog s f sp pc e m a b ofs,
-  sound_state prog (State s f (Vptr sp Ptrofs.zero) pc e m) ->
+  forall cunit prog s f sp pc e m a b ofs ge,
+  sound_state prog ge (State s f (Vptr sp Ptrofs.zero) pc e m) ->
   linkorder cunit prog ->
-  eval_builtin_arg (Genv.globalenv prog) (fun r => e#r) (Vptr sp Ptrofs.zero) m a (Vptr b ofs) ->
+  eval_builtin_arg ge (fun r => e#r) (Vptr sp Ptrofs.zero) m a (Vptr b ofs) ->
   exists bc,
      pmatch bc b ofs (aaddr_arg (analyze (romem_for cunit) f)!!pc a)
-  /\ genv_match bc (Genv.globalenv prog)
+  /\ genv_match bc ge
   /\ bc sp = BCstack.
 Proof.
   intros. InvSoundState. rewrite AN. exists bc; split; auto.

@@ -17,6 +17,7 @@ Require Import AST Linking.
 Require Import Values Events Memory Globalenvs Smallstep.
 Require Import Ctypes Cop Clight Cminor Csharpminor.
 Require Import Cshmgen.
+Require Import sflib.
 
 (** * Relational specification of the transformation *)
 
@@ -1006,28 +1007,34 @@ Variable prog: Clight.program.
 Variable tprog: Csharpminor.program.
 Hypothesis TRANSL: match_prog prog tprog.
 
-Let ge := globalenv prog.
-Let tge := Genv.globalenv tprog.
+Section CORELEMMA.
+
+Variable ge: Clight.genv.
+Variable tge : Csharpminor.genv.
+
+Hypothesis GENV_COMPAT: prog.(prog_comp_env) = ge.(genv_cenv).
+
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef match_fundef match_varinfo prog) ge tge).
 
 Lemma symbols_preserved:
   forall s, Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match TRANSL).
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match TRANSL).
+Proof (Genv.senv_match_genv MATCH_GENV).
 
 Lemma function_ptr_translated:
   forall v f,
   Genv.find_funct_ptr ge v = Some f ->
   exists cu tf, Genv.find_funct_ptr tge v = Some tf /\ match_fundef cu f tf /\ linkorder cu prog.
-Proof (Genv.find_funct_ptr_match TRANSL).
+Proof (Genv.find_funct_ptr_match_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall v f,
   Genv.find_funct ge v = Some f ->
   exists cu tf, Genv.find_funct tge v = Some tf /\ match_fundef cu f tf /\ linkorder cu prog.
-Proof (Genv.find_funct_match TRANSL).
+Proof (Genv.find_funct_match_genv MATCH_GENV).
 
 (** * Matching between environments *)
 
@@ -1127,7 +1134,7 @@ Proof.
     intros until sz. repeat rewrite PTree.gsspec.
     destruct (peq id0 id); intros. exists ty; congruence. eapply me_local_inv; eauto.
   intros [te2 [ALLOC MENV]].
-  exists te2; split. econstructor; eauto. auto.
+  exists te2; split. econstructor; rewrite GENV_COMPAT; eauto. auto.
 Qed.
 
 Lemma create_undef_temps_match:
@@ -1218,13 +1225,13 @@ Proof.
 - (* unop *)
   eapply transl_unop_correct; eauto.
 - (* binop *)
-  eapply transl_binop_correct; eauto.
+  eapply transl_binop_correct; eauto. rewrite GENV_COMPAT; auto.
 - (* cast *)
   eapply make_cast_correct; eauto.
 - (* sizeof *)
-  rewrite (transl_sizeof _ _ _ _ LINK EQ). apply make_ptrofsconst_correct.
+  rewrite (transl_sizeof _ _ _ _ LINK EQ). rewrite GENV_COMPAT. apply make_ptrofsconst_correct.
 - (* alignof *)
-  rewrite (transl_alignof _ _ _ _ LINK EQ). apply make_ptrofsconst_correct.
+  rewrite (transl_alignof _ _ _ _ LINK EQ). rewrite GENV_COMPAT. apply make_ptrofsconst_correct.
 - (* rvalue out of lvalue *)
   exploit transl_expr_lvalue; eauto. intros [tb [TRLVAL MKLOAD]].
   eapply make_load_correct; eauto.
@@ -1242,7 +1249,7 @@ Proof.
   destruct (prog_comp_env cunit)!id as [co'|] eqn:CO; monadInv EQ0.
   exploit field_offset_stable. eexact LINK. eauto. instantiate (1 := i). intros [A B].
   rewrite <- B in EQ1.
-  assert (x0 = delta) by (unfold ge in *; simpl in *; congruence).
+  assert (x0 = delta) by (simpl in *; congruence).
   subst x0.
   destruct Archi.ptr64 eqn:SF.
 + eapply eval_Ebinop; eauto using make_longconst_correct.
@@ -1539,7 +1546,7 @@ Proof.
   econstructor; split.
   apply plus_one. eapply make_store_correct; eauto.
   eapply transl_lvalue_correct; eauto. eapply make_cast_correct; eauto.
-  eapply transl_expr_correct; eauto.
+  eapply transl_expr_correct; eauto. rewrite GENV_COMPAT; eauto.
   eapply match_states_skip; eauto.
 
 - (* set *)
@@ -1754,14 +1761,27 @@ Proof.
   econstructor; eauto. simpl; reflexivity. constructor.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let GENV_COMPAT: prog.(prog_comp_env) = ge.(genv_cenv).
+Proof. ss. Qed.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef match_fundef match_varinfo prog) ge tge.
+Proof. apply Genv.globalenvs_match; eauto. Qed.
+
 Lemma transl_initial_states:
   forall S, Clight.initial_state prog S ->
-  exists R, initial_state tprog R /\ match_states S R.
+  exists R, initial_state tprog R /\ match_states ge S R.
 Proof.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros (cu & tf & A & B & C).
   assert (D: Genv.find_symbol tge (AST.prog_main tprog) = Some b).
-  { destruct TRANSL as (P & Q & R). rewrite Q. rewrite symbols_preserved. auto. }
+  { destruct TRANSL as (P & Q & R). rewrite Q. erewrite symbols_preserved; eauto. auto. }
   assert (E: funsig tf = signature_of_type Tnil type_int32s cc_default).
   { eapply transl_fundef_sig2; eauto. }
   econstructor; split.
@@ -1771,7 +1791,7 @@ Qed.
 
 Lemma transl_final_states:
   forall S R r,
-  match_states S R -> Clight.final_state S r -> final_state R r.
+  match_states ge S R -> Clight.final_state S r -> final_state R r.
 Proof.
   intros. inv H0. inv H. inv MK. constructor.
 Qed.
@@ -1780,11 +1800,13 @@ Theorem transl_program_correct:
   forward_simulation (Clight.semantics2 prog) (Csharpminor.semantics tprog).
 Proof.
   eapply forward_simulation_plus.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact transl_initial_states.
   eexact transl_final_states.
-  eexact transl_step.
+  apply transl_step; auto.
 Qed.
+
+End WHOLE.
 
 End CORRECTNESS.
 

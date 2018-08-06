@@ -506,6 +506,12 @@ Definition ef_inline (ef: external_function) : bool :=
   | EF_debug kind text targs => true
   end.
 
+Definition is_external_ef (ef: external_function): bool :=
+  match ef with
+  | EF_external name sg  => true
+  | _ => false
+  end.
+
 (** Whether an external function must reload its arguments. *)
 
 Definition ef_reloads (ef: external_function) : bool :=

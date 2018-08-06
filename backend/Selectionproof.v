@@ -18,6 +18,7 @@ Require Import AST Linking Errors Integers Values Memory Events Globalenvs Small
 Require Import Switch Cminor Op CminorSel.
 Require Import SelectOp SelectDiv SplitLong SelectLong Selection.
 Require Import SelectOpproof SelectDivproof SplitLongproof SelectLongproof.
+Require Import sflib.
 
 Local Open Scope cminorsel_scope.
 Local Open Scope error_monad_scope.
@@ -115,23 +116,30 @@ Section PRESERVATION.
 
 Variable prog: Cminor.program.
 Variable tprog: CminorSel.program.
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
 Hypothesis TRANSF: match_prog prog tprog.
+
+Section CORELEMMA.
+
+Variable ge : Cminor.genv.
+Variable tge : genv.
+
+Hypothesis (GENV_COMPAT: genv_compat ge prog).
+Hypothesis (GENV_COMPAT2: genv_compat tge tprog).
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef match_fundef eq prog) ge tge).
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match TRANSF).
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv (Genv.to_senv ge) (Genv.to_senv tge).
-Proof (Genv.senv_match TRANSF).
+Proof (Genv.senv_match_genv MATCH_GENV).
 
 Lemma function_ptr_translated:
   forall (b: block) (f: Cminor.fundef),
   Genv.find_funct_ptr ge b = Some f ->
   exists cu tf, Genv.find_funct_ptr tge b = Some tf /\ match_fundef cu f tf /\ linkorder cu prog.
-Proof (Genv.find_funct_ptr_match TRANSF).
+Proof (Genv.find_funct_ptr_match_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall (v v': val) (f: Cminor.fundef),
@@ -140,7 +148,7 @@ Lemma functions_translated:
   exists cu tf, Genv.find_funct tge v' = Some tf /\ match_fundef cu f tf /\ linkorder cu prog.
 Proof.
   intros. inv H0.
-  eapply Genv.find_funct_match; eauto.
+  eapply Genv.find_funct_match_genv; eauto.
   discriminate.
 Qed.
 
@@ -361,8 +369,10 @@ Proof.
   destruct (ef_inline ef) eqn:INLINE; auto.
   destruct (prog_defmap_linkorder _ _ _ _ H G) as (gd & P & Q).
   inv Q. inv H2.
-- apply Genv.find_def_symbol in P. destruct P as (b' & X & Y). fold ge in X, Y.
-  rewrite <- Genv.find_funct_ptr_iff in Y. congruence.
+- apply GENV_COMPAT in P. destruct P as (b' & X & Y).
+  assert (Y' : Genv.find_def ge b' = Some (Gfun (External ef))).
+  { unfold ef_inline, is_external_ef in *. des_ifs; apply Y; ss. }
+  rewrite <- Genv.find_funct_ptr_iff in Y'. unfold Cminor.fundef in *. clarify.
 - simpl in INLINE. discriminate.
 Qed.
 
@@ -1067,16 +1077,32 @@ Proof.
   apply sel_builtin_res_correct; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef match_fundef eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; auto. Qed.
+
+Let GENV_COMPAT: genv_compat ge prog.
+Proof. apply genv_compat_match. Qed.
+
+Let GENV_COMPAT2: genv_compat tge tprog.
+Proof. apply genv_compat_match. Qed.
+
 Lemma sel_initial_states:
   forall S, Cminor.initial_state prog S ->
-  exists R, initial_state tprog R /\ match_states S R.
+  exists R, initial_state tprog R /\ match_states tge S R.
 Proof.
   destruct 1.
   exploit function_ptr_translated; eauto. intros (cu & f' & A & B & C).
   econstructor; split.
   econstructor.
   eapply (Genv.init_mem_match TRANSF); eauto.
-  rewrite (match_program_main TRANSF). fold tge. rewrite symbols_preserved. eauto.
+  rewrite (match_program_main TRANSF). fold tge. erewrite symbols_preserved; eauto.
   eexact A.
   rewrite <- H2. eapply sig_function_translated; eauto.
   econstructor; eauto. red; intros; constructor. apply Mem.extends_refl.
@@ -1084,7 +1110,7 @@ Qed.
 
 Lemma sel_final_states:
   forall S R r,
-  match_states S R -> Cminor.final_state S r -> final_state R r.
+  match_states tge S R -> Cminor.final_state S r -> final_state R r.
 Proof.
   intros. inv H0. inv H.
   apply match_call_cont_cont in MC. destruct MC as (cunit0 & hf0 & MC).
@@ -1094,12 +1120,14 @@ Qed.
 Theorem transf_program_correct:
   forward_simulation (Cminor.semantics prog) (CminorSel.semantics tprog).
 Proof.
-  apply forward_simulation_opt with (match_states := match_states) (measure := measure).
-  apply senv_preserved.
+  eapply forward_simulation_opt.
+  apply senv_preserved; auto.
   apply sel_initial_states; auto.
   apply sel_final_states; auto.
   apply sel_step_correct; auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.
 

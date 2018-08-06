@@ -36,30 +36,35 @@ Section TRANSLATION.
 Variable prog: Csharpminor.program.
 Variable tprog: program.
 Hypothesis TRANSL: match_prog prog tprog.
-Let ge : Csharpminor.genv := Genv.globalenv prog.
-Let tge: genv := Genv.globalenv tprog.
+
+Section CORELEMMA.
+
+Variable ge : Csharpminor.genv.
+Variable tge: genv.
+
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => transl_fundef f = OK tf) eq prog) ge tge).
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_transf_partial TRANSL).
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_transf_partial TRANSL).
+Proof (Genv.senv_match_genv MATCH_GENV).
 
 Lemma function_ptr_translated:
   forall (b: block) (f: Csharpminor.fundef),
   Genv.find_funct_ptr ge b = Some f ->
   exists tf,
   Genv.find_funct_ptr tge b = Some tf /\ transl_fundef f = OK tf.
-Proof (Genv.find_funct_ptr_transf_partial TRANSL).
+Proof (Genv.find_funct_ptr_transf_partial_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall (v: val) (f: Csharpminor.fundef),
   Genv.find_funct ge v = Some f ->
   exists tf,
   Genv.find_funct tge v = Some tf /\ transl_fundef f = OK tf.
-Proof (Genv.find_funct_transf_partial TRANSL).
+Proof (Genv.find_funct_transf_partial_genv MATCH_GENV).
 
 Lemma sig_preserved_body:
   forall f tf cenv size,
@@ -2203,10 +2208,20 @@ Opaque PTree.set.
   eapply match_callstack_set_temp; eauto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge : Csharpminor.genv := Genv.globalenv prog.
+Let tge: genv := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => transl_fundef f = OK tf) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; eauto. Qed.
+
 Lemma match_globalenvs_init:
   forall m,
   Genv.init_mem prog = Some m ->
-  match_globalenvs (Mem.flat_inj (Mem.nextblock m)) (Mem.nextblock m).
+  match_globalenvs ge (Mem.flat_inj (Mem.nextblock m)) (Mem.nextblock m).
 Proof.
   intros. constructor.
   intros. unfold Mem.flat_inj. apply pred_dec_true; auto.
@@ -2219,14 +2234,14 @@ Qed.
 
 Lemma transl_initial_states:
   forall S, Csharpminor.initial_state prog S ->
-  exists R, Cminor.initial_state tprog R /\ match_states S R.
+  exists R, Cminor.initial_state tprog R /\ match_states ge S R.
 Proof.
   induction 1.
   exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
   econstructor; split.
   econstructor.
   apply (Genv.init_mem_transf_partial TRANSL). eauto.
-  simpl. fold tge. rewrite symbols_preserved.
+  simpl. fold tge. erewrite symbols_preserved; eauto.
   replace (prog_main tprog) with (prog_main prog). eexact H0.
   symmetry. unfold transl_program in TRANSL.
   eapply match_program_main; eauto. 
@@ -2242,7 +2257,7 @@ Qed.
 
 Lemma transl_final_states:
   forall S R r,
-  match_states S R -> Csharpminor.final_state S r -> Cminor.final_state R r.
+  match_states ge S R -> Csharpminor.final_state S r -> Cminor.final_state R r.
 Proof.
   intros. inv H0. inv H. inv MK. inv RESINJ. constructor.
 Qed.
@@ -2251,11 +2266,13 @@ Theorem transl_program_correct:
   forward_simulation (Csharpminor.semantics prog) (Cminor.semantics tprog).
 Proof.
   eapply forward_simulation_star; eauto.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact transl_initial_states.
   eexact transl_final_states.
-  eexact transl_step_correct.
+  apply transl_step_correct; auto.
 Qed.
+
+End WHOLE.
 
 End TRANSLATION.
 

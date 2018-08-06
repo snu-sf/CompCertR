@@ -17,6 +17,7 @@ Require Import AST Linking.
 Require Import Integers Values Memory Globalenvs Events Smallstep.
 Require Import Op Registers RTL.
 Require Import Unusedglob.
+Require Import sflib.
 
 Module ISF := FSetFacts.Facts(IS).
 Module ISP := FSetProperties.Properties(IS).
@@ -449,9 +450,12 @@ Variable tp: program.
 Variable used: IS.t.
 Hypothesis USED_VALID: valid_used_set p used.
 Hypothesis TRANSF: match_prog_1 used p tp.
-Let ge := Genv.globalenv p.
-Let tge := Genv.globalenv tp.
 Let pm := prog_defmap p.
+
+Section CORELEMMA.
+
+Variable ge : genv.
+Variable tge : genv.
 
 Definition kept (id: ident) : Prop := IS.In id used.
 
@@ -474,36 +478,6 @@ Proof.
   intros. eapply used_public; eauto.
 Qed.
 
-(** Relating [Genv.find_symbol] operations in the original and transformed program *)
-
-Lemma transform_find_symbol_1:
-  forall id b,
-  Genv.find_symbol ge id = Some b -> kept id -> exists b', Genv.find_symbol tge id = Some b'.
-Proof.
-  intros.
-  assert (A: exists g, (prog_defmap p)!id = Some g).
-  { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
-  destruct A as (g & P).
-  apply Genv.find_symbol_exists with g.
-  apply in_prog_defmap.
-  erewrite match_prog_def by eauto. rewrite IS.mem_1 by auto. auto.
-Qed.
-
-Lemma transform_find_symbol_2:
-  forall id b,
-  Genv.find_symbol tge id = Some b -> kept id /\ exists b', Genv.find_symbol ge id = Some b'.
-Proof.
-  intros.
-  assert (A: exists g, (prog_defmap tp)!id = Some g).
-  { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
-  destruct A as (g & P).
-  erewrite match_prog_def in P by eauto.
-  destruct (IS.mem id used) eqn:U; try discriminate.
-  split. apply IS.mem_2; auto.
-  apply Genv.find_symbol_exists with g.
-  apply in_prog_defmap. auto.
-Qed.
-
 (** Injections that preserve used globals. *)
 
 Record meminj_preserves_globals (f: meminj) : Prop := {
@@ -522,76 +496,18 @@ Record meminj_preserves_globals (f: meminj) : Prop := {
     (forall id, ref_def gd id -> kept id);
   defs_rev_inject: forall b b' delta gd,
     f b = Some(b', delta) -> Genv.find_def tge b' = Some gd ->
-    Genv.find_def ge b = Some gd /\ delta = 0
+    Genv.find_def ge b = Some gd /\ delta = 0;
+  public_eq: Genv.genv_public ge = prog_public p /\ Genv.genv_public tge = prog_public tp
 }.
-
-Definition init_meminj : meminj :=
-  fun b =>
-    match Genv.invert_symbol ge b with
-    | Some id =>
-        match Genv.find_symbol tge id with
-        | Some b' => Some (b', 0)
-        | None => None
-        end
-    | None => None
-    end.
-
-Remark init_meminj_eq:
-  forall id b b',
-  Genv.find_symbol ge id = Some b -> Genv.find_symbol tge id = Some b' ->
-  init_meminj b = Some(b', 0).
-Proof.
-  intros. unfold init_meminj. erewrite Genv.find_invert_symbol by eauto. rewrite H0. auto.
-Qed.
-
-Remark init_meminj_invert:
-  forall b b' delta,
-  init_meminj b = Some(b', delta) ->
-  delta = 0 /\ exists id, Genv.find_symbol ge id = Some b /\ Genv.find_symbol tge id = Some b'.
-Proof.
-  unfold init_meminj; intros.
-  destruct (Genv.invert_symbol ge b) as [id|] eqn:S; try discriminate.
-  destruct (Genv.find_symbol tge id) as [b''|] eqn:F; inv H.
-  split. auto. exists id. split. apply Genv.invert_find_symbol; auto. auto.
-Qed.
-
-Lemma init_meminj_preserves_globals:
-  meminj_preserves_globals init_meminj.
-Proof.
-  constructor; intros.
-- exploit init_meminj_invert; eauto. intros (A & id1 & B & C).
-  assert (id1 = id) by (eapply (Genv.genv_vars_inj ge); eauto). subst id1.
-  auto.
-- exploit transform_find_symbol_1; eauto. intros (b' & F). exists b'; split; auto.
-  eapply init_meminj_eq; eauto.
-- exploit transform_find_symbol_2; eauto. intros (K & b & F).
-  exists b; split; auto. eapply init_meminj_eq; eauto.
-- exploit init_meminj_invert; eauto. intros (A & id & B & C).
-  assert (kept id) by (eapply transform_find_symbol_2; eauto).
-  assert (pm!id = Some gd).
-  { unfold pm; rewrite Genv.find_def_symbol. exists b; auto. }
-  assert ((prog_defmap tp)!id = Some gd).
-  { erewrite match_prog_def by eauto. rewrite IS.mem_1 by auto. auto. }
-  rewrite Genv.find_def_symbol in H3. destruct H3 as (b1 & P & Q).
-  fold tge in P. replace b' with b1 by congruence. split; auto. split; auto.
-  intros. eapply kept_closed; eauto.
-- exploit init_meminj_invert; eauto. intros (A & id & B & C).
-  assert ((prog_defmap tp)!id = Some gd).
-  { rewrite Genv.find_def_symbol. exists b'; auto. }
-  erewrite match_prog_def in H1 by eauto.
-  destruct (IS.mem id used); try discriminate.
-  rewrite Genv.find_def_symbol in H1. destruct H1 as (b1 & P & Q).
-  fold ge in P. replace b with b1 by congruence. auto.
-Qed.
 
 Lemma globals_symbols_inject:
   forall j, meminj_preserves_globals j -> symbols_inject j ge tge.
 Proof.
   intros.
   assert (E1: Genv.genv_public ge = p.(prog_public)).
-  { apply Genv.globalenv_public. }
+  { exploit public_eq; eauto. i; des; eauto. }
   assert (E2: Genv.genv_public tge = p.(prog_public)).
-  { unfold tge; rewrite Genv.globalenv_public. eapply match_prog_public; eauto. }
+  { exploit public_eq; eauto. i; des. rewrite H1. eapply match_prog_public; eauto. }
   split; [|split;[|split]]; intros.
   + simpl; unfold Genv.public_symbol; rewrite E1, E2.
     destruct (Genv.find_symbol tge id) as [b'|] eqn:TFS.
@@ -734,6 +650,7 @@ Proof.
     eapply Genv.genv_defs_range; eauto.
   + eapply defs_rev_inject; eauto. apply SAME'; auto.
     eapply Genv.genv_defs_range; eauto.
+  + apply H0.
 - econstructor; eauto.
   apply IHmatch_stacks.
   intros. exploit H1; eauto. intros [A B]. split; eapply Ple_trans; eauto.
@@ -1046,6 +963,103 @@ Proof.
   econstructor; eauto. apply set_reg_inject; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv p.
+Let tge := Genv.globalenv tp.
+
+(** Relating [Genv.find_symbol] operations in the original and transformed program *)
+
+Lemma transform_find_symbol_1:
+  forall id b,
+  Genv.find_symbol ge id = Some b -> kept id -> exists b', Genv.find_symbol tge id = Some b'.
+Proof.
+  intros.
+  assert (A: exists g, (prog_defmap p)!id = Some g).
+  { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
+  destruct A as (g & P).
+  apply Genv.find_symbol_exists with g.
+  apply in_prog_defmap.
+  erewrite match_prog_def by eauto. rewrite IS.mem_1 by auto. auto.
+Qed.
+
+Lemma transform_find_symbol_2:
+  forall id b,
+  Genv.find_symbol tge id = Some b -> kept id /\ exists b', Genv.find_symbol ge id = Some b'.
+Proof.
+  intros.
+  assert (A: exists g, (prog_defmap tp)!id = Some g).
+  { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
+  destruct A as (g & P).
+  erewrite match_prog_def in P by eauto.
+  destruct (IS.mem id used) eqn:U; try discriminate.
+  split. apply IS.mem_2; auto.
+  apply Genv.find_symbol_exists with g.
+  apply in_prog_defmap. auto.
+Qed.
+
+Definition init_meminj : meminj :=
+  fun b =>
+    match Genv.invert_symbol ge b with
+    | Some id =>
+        match Genv.find_symbol tge id with
+        | Some b' => Some (b', 0)
+        | None => None
+        end
+    | None => None
+    end.
+
+Remark init_meminj_eq:
+  forall id b b',
+  Genv.find_symbol ge id = Some b -> Genv.find_symbol tge id = Some b' ->
+  init_meminj b = Some(b', 0).
+Proof.
+  intros. unfold init_meminj. erewrite Genv.find_invert_symbol by eauto. rewrite H0. auto.
+Qed.
+
+Remark init_meminj_invert:
+  forall b b' delta,
+  init_meminj b = Some(b', delta) ->
+  delta = 0 /\ exists id, Genv.find_symbol ge id = Some b /\ Genv.find_symbol tge id = Some b'.
+Proof.
+  unfold init_meminj; intros.
+  destruct (Genv.invert_symbol ge b) as [id|] eqn:S; try discriminate.
+  destruct (Genv.find_symbol tge id) as [b''|] eqn:F; inv H.
+  split. auto. exists id. split. apply Genv.invert_find_symbol; auto. auto.
+Qed.
+
+Lemma init_meminj_preserves_globals:
+  meminj_preserves_globals ge tge init_meminj.
+Proof.
+  constructor; intros.
+- exploit init_meminj_invert; eauto. intros (A & id1 & B & C).
+  assert (id1 = id) by (eapply (Genv.genv_vars_inj ge); eauto). subst id1.
+  auto.
+- exploit transform_find_symbol_1; eauto. intros (b' & F). exists b'; split; auto.
+  eapply init_meminj_eq; eauto.
+- exploit transform_find_symbol_2; eauto. intros (K & b & F).
+  exists b; split; auto. eapply init_meminj_eq; eauto.
+- exploit init_meminj_invert; eauto. intros (A & id & B & C).
+  assert (kept id) by (eapply transform_find_symbol_2; eauto).
+  assert (pm!id = Some gd).
+  { unfold pm; rewrite Genv.find_def_symbol. exists b; auto. }
+  assert ((prog_defmap tp)!id = Some gd).
+  { erewrite match_prog_def by eauto. rewrite IS.mem_1 by auto. auto. }
+  rewrite Genv.find_def_symbol in H3. destruct H3 as (b1 & P & Q).
+  fold tge in P. replace b' with b1 by congruence. split; auto. split; auto.
+  intros. eapply kept_closed; eauto.
+- exploit init_meminj_invert; eauto. intros (A & id & B & C).
+  assert ((prog_defmap tp)!id = Some gd).
+  { rewrite Genv.find_def_symbol. exists b'; auto. }
+  erewrite match_prog_def in H1 by eauto.
+  destruct (IS.mem id used); try discriminate.
+  rewrite Genv.find_def_symbol in H1. destruct H1 as (b1 & P & Q).
+  fold ge in P. replace b with b1 by congruence. auto.
+- esplit; apply Genv.globalenv_public.
+Qed.
+
 (** Relating initial memory states *)
 
 (*
@@ -1217,7 +1231,7 @@ Qed.
 Theorem init_mem_inject:
   forall m,
   Genv.init_mem p = Some m ->
-  exists f tm, Genv.init_mem tp = Some tm /\ Mem.inject f m tm /\ meminj_preserves_globals f.
+  exists f tm, Genv.init_mem tp = Some tm /\ Mem.inject f m tm /\ meminj_preserves_globals ge tge f.
 Proof.
   intros.
   exploit init_mem_exists; eauto. intros [tm INIT].
@@ -1228,7 +1242,7 @@ Proof.
 Qed.
 
 Lemma transf_initial_states:
-  forall S1, initial_state p S1 -> exists S2, initial_state tp S2 /\ match_states S1 S2.
+  forall S1, initial_state p S1 -> exists S2, initial_state tp S2 /\ match_states ge tge S1 S2.
 Proof.
   intros. inv H. exploit init_mem_inject; eauto. intros (j & tm & A & B & C).
   exploit symbols_inject_2. eauto. eapply kept_main. eexact H1. intros (tb & P & Q).
@@ -1247,7 +1261,7 @@ Qed.
 
 Lemma transf_final_states:
   forall S1 S2 r,
-  match_states S1 S2 -> final_state S1 r -> final_state S2 r.
+  match_states ge tge S1 S2 -> final_state S1 r -> final_state S2 r.
 Proof.
   intros. inv H0. inv H. inv STACKS. inv RESINJ. constructor.
 Qed.
@@ -1260,8 +1274,10 @@ Proof.
   exploit globals_symbols_inject. apply init_meminj_preserves_globals. intros [A B]. exact A.
   eexact transf_initial_states.
   eexact transf_final_states.
-  eexact step_simulation.
+  apply step_simulation.
 Qed.
+
+End WHOLE.
 
 End SOUNDNESS.
 

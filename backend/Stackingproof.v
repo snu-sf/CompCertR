@@ -77,13 +77,16 @@ Section PRESERVATION.
 Variable prog: Linear.program.
 Variable tprog: Mach.program.
 Hypothesis TRANSF: match_prog prog tprog.
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
 
 Variable return_address_offset: Mach.function -> Mach.code -> ptrofs -> Prop.
 
+Section CORELEMMA.
+
+Variable ge : Linear.genv.
+Variable tge : genv.
+
 Hypothesis return_address_offset_exists:
-  forall f sg ros c v (FUNCT: Genv.find_funct (Genv.globalenv tprog) v = Some (Internal f)),
+  forall f sg ros c v (FUNCT: Genv.find_funct tge v = Some (Internal f)),
   is_tail (Mcall sg ros :: c) (fn_code f) ->
   exists ofs, return_address_offset f c ofs.
 
@@ -179,7 +182,6 @@ Qed.
   that holds if the memory area at block [sp], offset [pos], size [4 * bound],
   reflects the values of the stack locations of kind [sl] given by the
   location map [ls], up to the memory injection [j].
-
   Two such [contains_locations] assertions will be used later, one to
   reason about the values of [Local] slots, the other about the values of
   [Outgoing] slots. *)
@@ -361,7 +363,6 @@ Qed.
   - the [retaddr] pointer representing the saved return address
   - the initial values of the used callee-save registers as given by [ls0],
     as per [contains_callee_saves].
-
 In addition, we use a nonseparating conjunction to record the fact that
 we have full access rights on the stack frame, except the part that
 represents the Linear stack data. *)
@@ -1541,27 +1542,29 @@ Qed.
 
 (** Preservation / translation of global symbols and functions. *)
 
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun _ f tf => transf_fundef f = OK tf) eq prog) ge tge).
+
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match TRANSF).
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match TRANSF).
+Proof (Genv.senv_match_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall v f,
   Genv.find_funct ge v = Some f ->
   exists tf,
   Genv.find_funct tge v = Some tf /\ transf_fundef f = OK tf.
-Proof (Genv.find_funct_transf_partial TRANSF).
+Proof (Genv.find_funct_transf_partial_genv MATCH_GENV).
 
 Lemma function_ptr_translated:
   forall b f,
   Genv.find_funct_ptr ge b = Some f ->
   exists tf,
   Genv.find_funct_ptr tge b = Some tf /\ transf_fundef f = OK tf.
-Proof (Genv.find_funct_ptr_transf_partial TRANSF).
+Proof (Genv.find_funct_ptr_transf_partial_genv MATCH_GENV).
 
 Lemma sig_preserved:
   forall f tf, transf_fundef f = OK tf -> Mach.funsig tf = Linear.funsig f.
@@ -1968,7 +1971,7 @@ Proof.
   intros [bf [tf' [A [B C]]]].
   exploit is_tail_transf_function; eauto. intros IST.
   rewrite transl_code_eq in IST. simpl in IST.
-  exploit return_address_offset_exists. { rewrite Genv.find_funct_find_funct_ptr. fold tge. eauto. } eexact IST. intros [ra D].
+  exploit return_address_offset_exists. { rewrite Genv.find_funct_find_funct_ptr. eauto. } eexact IST. intros [ra D].
   econstructor; split.
   apply plus_one. econstructor; eauto.
   econstructor; eauto.
@@ -2126,9 +2129,32 @@ Proof.
   intros; rewrite (OUTU ty ofs); auto. 
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Hypothesis return_address_offset_exists:
+  forall f sg ros c v (FUNCT: Genv.find_funct tge v = Some (Internal f)),
+  is_tail (Mcall sg ros :: c) (fn_code f) ->
+  exists ofs, return_address_offset f c ofs.
+
+Hypothesis return_address_offset_deterministic:
+  forall f c ofs ofs',
+  return_address_offset f c ofs ->
+  return_address_offset f c ofs' ->
+  ofs = ofs'.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun _ f tf => transf_fundef f = OK tf) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; eauto. Qed.
+
+Local Opaque sepconj.
+
 Lemma transf_initial_states:
   forall st1, Linear.initial_state prog st1 ->
-  exists st2, Mach.initial_state tprog st2 /\ match_states st1 st2.
+  exists st2, Mach.initial_state tprog st2 /\ match_states ge tge st1 st2.
 Proof.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
@@ -2136,7 +2162,7 @@ Proof.
   econstructor.
   eapply (Genv.init_mem_transf_partial TRANSF); eauto.
   rewrite (match_program_main TRANSF).
-  rewrite symbols_preserved. eauto.
+  erewrite symbols_preserved; eauto.
   set (j := Mem.flat_inj (Mem.nextblock m0)).
   eapply match_states_call with (j := j); eauto.
   constructor. red; intros. rewrite H3, loc_arguments_main in H. contradiction.
@@ -2155,7 +2181,7 @@ Qed.
 
 Lemma transf_final_states:
   forall st1 st2 r,
-  match_states st1 st2 -> Linear.final_state st1 r -> Mach.final_state st2 r.
+  match_states ge tge st1 st2 -> Linear.final_state st1 r -> Mach.final_state st2 r.
 Proof.
   intros. inv H0. inv H. inv STACKS.
   assert (R: exists r, loc_result signature_main = One r).
@@ -2182,9 +2208,9 @@ Qed.
 Theorem transf_program_correct:
   forward_simulation (Linear.semantics prog) (Mach.semantics return_address_offset tprog).
 Proof.
-  set (ms := fun s s' => wt_state s /\ match_states s s').
+  set (ms := fun s s' => wt_state s /\ match_states ge tge s s').
   eapply forward_simulation_plus with (match_states := ms).
-- apply senv_preserved.
+- apply senv_preserved; auto.
 - intros. exploit transf_initial_states; eauto. intros [st2 [A B]].
   exists st2; split; auto. split; auto.
   apply wt_initial_state with (prog := prog); auto. exact wt_prog.
@@ -2195,5 +2221,7 @@ Proof.
   eapply step_type_preservation; eauto. eexact wt_prog. eexact H.
   auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.

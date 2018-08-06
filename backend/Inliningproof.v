@@ -16,6 +16,7 @@ Require Import Coqlib Wfsimpl Maps Errors Integers.
 Require Import AST Linking Values Memory Globalenvs Events Smallstep.
 Require Import Op Registers RTL.
 Require Import Inlining Inliningspec.
+Require Import sflib.
 
 Definition match_prog (prog tprog: program) :=
   match_program (fun cunit f tf => transf_fundef (funenv_program cunit) f = OK tf) eq prog tprog.
@@ -31,28 +32,34 @@ Section INLINING.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: match_prog prog tprog.
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
+
+Section CORELEMMA.
+
+Variable ge tge: genv.
+
+Hypothesis (GENV_COMPAT: genv_compat ge prog).
+
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cunit f tf => transf_fundef (funenv_program cunit) f = OK tf) eq prog) ge tge).
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match TRANSF).
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match TRANSF).
+Proof (Genv.senv_match_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall (v: val) (f: fundef),
   Genv.find_funct ge v = Some f ->
   exists cu f', Genv.find_funct tge v = Some f' /\ transf_fundef (funenv_program cu) f = OK f' /\ linkorder cu prog.
-Proof (Genv.find_funct_match TRANSF).
+Proof (Genv.find_funct_match_genv MATCH_GENV).
 
 Lemma function_ptr_translated:
   forall (b: block) (f: fundef),
   Genv.find_funct_ptr ge b = Some f ->
   exists cu f', Genv.find_funct_ptr tge b = Some f' /\ transf_fundef (funenv_program cu) f = OK f' /\ linkorder cu prog.
-Proof (Genv.find_funct_ptr_match TRANSF).
+Proof (Genv.find_funct_ptr_match_genv MATCH_GENV).
 
 Lemma sig_function_translated:
   forall cu f f', transf_fundef (funenv_program cu) f = OK f' -> funsig f' = funsig f.
@@ -396,8 +403,8 @@ Lemma find_inlined_function:
   fd = Internal f.
 Proof.
   intros.
-  apply H in H1. apply Genv.find_def_symbol in H1. destruct H1 as (b & A & B).
-  simpl in H0. unfold ge, fundef in H0. rewrite A in H0.
+  apply H in H1. apply GENV_COMPAT in H1. destruct H1 as (b & A & B).
+  simpl in H0. unfold fundef in H0. rewrite A in H0.
   rewrite <- Genv.find_funct_ptr_iff in B.
   congruence.
 Qed.
@@ -1286,15 +1293,28 @@ Proof.
   econstructor; eauto. subst vres. apply agree_set_reg_undef'; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun cunit f tf => transf_fundef (funenv_program cunit) f = OK tf) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; auto. Qed.
+
+Let GENV_COMPAT: genv_compat ge prog.
+Proof. apply genv_compat_match. Qed.
+
 Lemma transf_initial_states:
-  forall st1, initial_state prog st1 -> exists st2, initial_state tprog st2 /\ match_states st1 st2.
+  forall st1, initial_state prog st1 -> exists st2, initial_state tprog st2 /\ match_states ge st1 st2.
 Proof.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros (cu & tf & FIND & TR & LINK).
   exists (Callstate nil tf nil m0); split.
   econstructor; eauto.
     eapply (Genv.init_mem_match TRANSF); eauto.
-    rewrite symbols_preserved. replace (prog_main tprog) with (prog_main prog). auto.
+    erewrite symbols_preserved; eauto. replace (prog_main tprog) with (prog_main prog). eauto.
     symmetry; eapply match_program_main; eauto.
     rewrite <- H3. eapply sig_function_translated; eauto.
   econstructor; eauto.
@@ -1312,7 +1332,7 @@ Qed.
 
 Lemma transf_final_states:
   forall st1 st2 r,
-  match_states st1 st2 -> final_state st1 r -> final_state st2 r.
+  match_states ge st1 st2 -> final_state st1 r -> final_state st2 r.
 Proof.
   intros. inv H0. inv H.
   exploit match_stacks_empty; eauto. intros EQ; subst. inv VINJ. constructor.
@@ -1323,10 +1343,12 @@ Theorem transf_program_correct:
   forward_simulation (semantics prog) (semantics tprog).
 Proof.
   eapply forward_simulation_star.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  eexact step_simulation.
+  apply step_simulation; auto.
 Qed.
+
+End WHOLE.
 
 End INLINING.

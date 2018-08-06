@@ -18,6 +18,7 @@ Require Import AST Linking.
 Require Import Values Memory Events Globalenvs Smallstep.
 Require Import Ctypes Cop Csyntax Csem Cstrategy Clight.
 Require Import SimplExpr SimplExprspec.
+Require Import sflib.
 
 (** ** Relational specification of the translation. *)
 
@@ -42,25 +43,31 @@ Variable prog: Csyntax.program.
 Variable tprog: Clight.program.
 Hypothesis TRANSL: match_prog prog tprog.
 
-Let ge := Csem.globalenv prog.
-Let tge := Clight.globalenv tprog.
+Section CORELEMMA.
+
+Variable ge : Csem.genv.
+Variable tge : Clight.genv.
 
 (** Invariance properties. *)
+
+Hypothesis (MATCH_CGENV:
+              Genv.match_genvs (match_globdef (fun (ctx : AST.program Csyntax.fundef type) f tf =>
+                                                 tr_fundef f tf) eq prog) ge tge /\
+              genv_cenv tge = Csem.genv_cenv ge).
 
 Lemma comp_env_preserved:
   Clight.genv_cenv tge = Csem.genv_cenv ge.
 Proof.
-  simpl. destruct TRANSL. generalize (prog_comp_env_eq tprog) (prog_comp_env_eq prog). 
-  congruence.
+  apply MATCH_CGENV.
 Qed.
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match (proj1 TRANSL)).
+Proof (Genv.find_symbol_match_genv (proj1 MATCH_CGENV)).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match (proj1 TRANSL)).
+Proof (Genv.senv_match_genv (proj1 MATCH_CGENV)).
 
 Lemma function_ptr_translated:
   forall b f,
@@ -69,7 +76,7 @@ Lemma function_ptr_translated:
   Genv.find_funct_ptr tge b = Some tf /\ tr_fundef f tf.
 Proof.
   intros.
-  edestruct (Genv.find_funct_ptr_match (proj1 TRANSL)) as (ctx & tf & A & B & C); eauto.
+  edestruct (Genv.find_funct_ptr_match_genv (proj1 MATCH_CGENV)) as (ctx & tf & A & B & C); eauto.
 Qed.
 
 Lemma functions_translated:
@@ -79,7 +86,7 @@ Lemma functions_translated:
   Genv.find_funct tge v = Some tf /\ tr_fundef f tf.
 Proof.
   intros.
-  edestruct (Genv.find_funct_match (proj1 TRANSL)) as (ctx & tf & A & B & C); eauto.
+  edestruct (Genv.find_funct_match_genv (proj1 MATCH_CGENV)) as (ctx & tf & A & B & C); eauto.
 Qed.
 
 Lemma type_of_fundef_preserved:
@@ -2282,10 +2289,27 @@ Proof.
   apply sstep_simulation; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Csem.globalenv prog.
+Let tge := globalenv tprog.
+
+Let MATCH_CGENV:
+  Genv.match_genvs (match_globdef (fun (ctx : AST.program Csyntax.fundef type) f tf =>
+                                     tr_fundef f tf) eq prog) ge tge /\
+  genv_cenv tge = Csem.genv_cenv ge.
+Proof.
+  intros. constructor.
+  - apply Genv.globalenvs_match. apply TRANSL.
+  - unfold tge, ge. destruct prog, tprog; simpl. destruct TRANSL as [_ EQ]. simpl in EQ. congruence.
+Qed.
+
 Lemma transl_initial_states:
   forall S,
   Csem.initial_state prog S ->
-  exists S', Clight.initial_state tprog S' /\ match_states S S'.
+  exists S', Clight.initial_state tprog S' /\ match_states tge S S'.
 Proof.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
@@ -2293,7 +2317,8 @@ Proof.
   econstructor.
   eapply (Genv.init_mem_match (proj1 TRANSL)); eauto.
   replace (prog_main tprog) with (prog_main prog).
-  rewrite symbols_preserved. eauto. 
+  assert (Genv.globalenv tprog = tge.(genv_genv)) by auto. rewrite H.
+  erewrite symbols_preserved; eauto.
   destruct TRANSL. destruct H as (A & B & C). simpl in B. auto. 
   eexact FIND.
   rewrite <- H3. apply type_of_fundef_preserved. auto.
@@ -2302,7 +2327,7 @@ Qed.
 
 Lemma transl_final_states:
   forall S S' r,
-  match_states S S' -> Csem.final_state S r -> Clight.final_state S' r.
+  match_states tge S S' -> Csem.final_state S r -> Clight.final_state S' r.
 Proof.
   intros. inv H0. inv H. inv H4. constructor.
 Qed.
@@ -2311,12 +2336,14 @@ Theorem transl_program_correct:
   forward_simulation (Cstrategy.semantics prog) (Clight.semantics1 tprog).
 Proof.
   eapply forward_simulation_star_wf with (order := ltof _ measure).
-  eapply senv_preserved.
+  eapply senv_preserved; auto.
   eexact transl_initial_states.
   eexact transl_final_states.
   apply well_founded_ltof.
-  exact simulation.
+  apply simulation; auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.
 

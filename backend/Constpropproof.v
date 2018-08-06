@@ -34,28 +34,33 @@ Section PRESERVATION.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSL: match_prog prog tprog.
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
+
+Section CORELEMMA.
+
+Variable ge : genv.
+Variable tge : genv.
 
 (** * Correctness of the code transformation *)
 
 (** We now show that the transformed code after constant propagation
   has the same semantics as the original code. *)
 
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => tf = transf_fundef (romem_for cu) f) eq prog) ge tge).
+
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match TRANSL).
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match TRANSL).
+Proof (Genv.senv_match_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall (v: val) (f: fundef),
   Genv.find_funct ge v = Some f ->
   exists cunit, Genv.find_funct tge v = Some (transf_fundef (romem_for cunit) f) /\ linkorder cunit prog.
 Proof.
-  intros. exploit (Genv.find_funct_match TRANSL); eauto.
+  intros. exploit (Genv.find_funct_match_genv MATCH_GENV); eauto.
   intros (cu & tf & A & B & C). subst tf. exists cu; auto.
 Qed.
 
@@ -64,7 +69,7 @@ Lemma function_ptr_translated:
   Genv.find_funct_ptr ge b = Some f ->
   exists cunit, Genv.find_funct_ptr tge b = Some (transf_fundef (romem_for cunit) f) /\ linkorder cunit prog.
 Proof.
-  intros. exploit (Genv.find_funct_ptr_match TRANSL); eauto.
+  intros. exploit (Genv.find_funct_ptr_match_genv MATCH_GENV); eauto.
   intros (cu & tf & A & B & C). subst tf. exists cu; auto.
 Qed.
 
@@ -350,7 +355,7 @@ Ltac TransfInstr :=
 Lemma transf_step_correct:
   forall s1 t s2,
   step ge s1 t s2 ->
-  forall n1 s1' (SS: sound_state prog s1) (MS: match_states n1 s1 s1'),
+  forall n1 s1' (SS: sound_state prog ge s1) (MS: match_states n1 s1 s1'),
   (exists n2, exists s2', step tge s1' t s2' /\ match_states n2 s2 s2')
   \/ (exists n2, n2 < n1 /\ t = E0 /\ match_states n2 s2 s1')%nat.
 Proof.
@@ -556,6 +561,16 @@ Opaque builtin_strength_reduction.
   econstructor; eauto. constructor. apply set_reg_lessdef; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => tf = transf_fundef (romem_for cu) f) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; auto. Qed.
+
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists n, exists st2, initial_state tprog st2 /\ match_states n st1 st2.
@@ -566,7 +581,7 @@ Proof.
   econstructor; eauto.
   apply (Genv.init_mem_match TRANSL); auto.
   replace (prog_main tprog) with (prog_main prog).
-  rewrite symbols_preserved. eauto.
+  erewrite symbols_preserved; eauto.
   symmetry; eapply match_program_main; eauto.
   rewrite <- H3. apply sig_function_translated.
   constructor. auto. constructor. constructor. apply Mem.extends_refl.
@@ -585,19 +600,21 @@ Qed.
 Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
 Proof.
-  apply Forward_simulation with lt (fun n s1 s2 => sound_state prog s1 /\ match_states n s1 s2); constructor.
+  apply Forward_simulation with lt (fun n s1 s2 => sound_state prog ge s1 /\ match_states n s1 s2); constructor.
 - apply lt_wf.
 - simpl; intros. exploit transf_initial_states; eauto. intros (n & st2 & A & B).
   exists n, st2; intuition. eapply sound_initial; eauto.
 - simpl; intros. destruct H. eapply transf_final_states; eauto.
 - simpl; intros. destruct H0.
-  assert (sound_state prog s1') by (eapply sound_step; eauto).
+  assert (sound_state prog ge s1') by (eapply sound_step; eauto).
   fold ge; fold tge.
   exploit transf_step_correct; eauto.
   intros [ [n2 [s2' [A B]]] | [n2 [A [B C]]]].
   exists n2; exists s2'; split; auto. left; apply plus_one; auto.
   exists n2; exists s2; split; auto. right; split; auto. subst t; apply star_refl.
-- apply senv_preserved.
+- apply senv_preserved; auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.
