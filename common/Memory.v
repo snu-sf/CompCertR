@@ -344,7 +344,7 @@ Qed.
 Program Definition empty: mem :=
   mkmem (PMap.init (ZMap.init Undef))
         (PMap.init (fun ofs k => None))
-        1%positive _ _ _.
+        2%positive _ _ _.
 Next Obligation.
   repeat rewrite PMap.gi. red; auto.
 Qed.
@@ -625,7 +625,7 @@ Qed.
 
 (** Properties of the empty store. *)
 
-Theorem nextblock_empty: nextblock empty = 1%positive.
+Theorem nextblock_empty: nextblock empty = 2%positive.
 Proof. reflexivity. Qed.
 
 Theorem perm_empty: forall b ofs k p, ~perm empty b ofs k p.

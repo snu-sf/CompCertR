@@ -264,7 +264,7 @@ Proof.
 Qed.
 
 Program Definition empty_genv (pub: list ident): t :=
-  @mkgenv pub (PTree.empty _) (PTree.empty _) 1%positive _ _ _.
+  @mkgenv pub (PTree.empty _) (PTree.empty _) 2%positive _ _ _.
 Next Obligation.
   rewrite PTree.gempty in H. discriminate.
 Qed.

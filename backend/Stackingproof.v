@@ -1409,7 +1409,7 @@ Lemma match_stacks_type_sp:
   match_stacks j cs cs' sg ->
   Val.has_type (parent_sp cs') Tptr.
 Proof.
-  induction 1; unfold parent_sp. apply Val.Vnullptr_has_type. apply Val.Vptr_has_type.
+  induction 1; unfold parent_sp; apply Val.Vptr_has_type.
 Qed.
 
 Lemma match_stacks_type_retaddr:

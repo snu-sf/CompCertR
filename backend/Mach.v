@@ -280,7 +280,7 @@ Inductive state: Type :=
 
 Definition parent_sp (s: list stackframe) : val :=
   match s with
-  | nil => Vnullptr
+  | nil => Vptr 1%positive Ptrofs.zero
   | Stackframe f sp ra c :: s' => sp
   end.
 
