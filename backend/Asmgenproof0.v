@@ -926,25 +926,11 @@ Proof.
   auto.
 Qed.
 
-Lemma parent_ra_def: forall s, match_stack s -> parent_ra s <> Vundef.
-Proof.
-  induction 1; simpl.
-  unfold Vnullptr; destruct Archi.ptr64; congruence.
-  inv H0. congruence.
-Qed.
-
 Lemma lessdef_parent_sp:
   forall s v,
   match_stack s -> Val.lessdef (parent_sp s) v -> v = parent_sp s.
 Proof.
   intros. inv H0. auto. exploit parent_sp_def; eauto. tauto.
-Qed.
-
-Lemma lessdef_parent_ra:
-  forall s v,
-  match_stack s -> Val.lessdef (parent_ra s) v -> v = parent_ra s.
-Proof.
-  intros. inv H0. auto. exploit parent_ra_def; eauto. tauto.
 Qed.
 
 End MATCH_STACK.
