@@ -20,6 +20,7 @@ Require Import Values Memory Separation Events Globalenvs Smallstep.
 Require Import LTL Op Locations Linear Mach.
 Require Import Bounds Conventions Stacklayout Lineartyping.
 Require Import Stacking.
+Require Import sflib.
 
 Local Open Scope sep_scope.
 
@@ -2218,7 +2219,12 @@ Proof.
 - intros. destruct H0.
   exploit transf_step_correct; eauto. intros [s2' [A B]].
   exists s2'; split. exact A. split.
-  eapply step_type_preservation; eauto. eexact wt_prog. eexact H.
+  eapply step_type_preservation; eauto.
+  { ii. unfold find_function in FINDF. ss. destruct ros.
+    - eapply Genv.find_funct_inversion; eauto.
+    - des_ifs. eapply Genv.find_funct_ptr_inversion; eauto.
+  }
+  eexact wt_prog.
   auto.
 Qed.
 

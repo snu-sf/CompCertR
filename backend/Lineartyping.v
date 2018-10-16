@@ -279,7 +279,14 @@ Inductive wt_state: state -> Prop :=
 Section SOUNDNESS.
 
 Variable prog: program.
-Let ge := Genv.globalenv prog.
+Variable ge: genv.
+(* Let ge := Genv.globalenv prog. *)
+Hypothesis CONTAINED: forall
+    ros rs f
+    (FINDF: find_function ge ros rs = Some f)
+  ,
+    exists i, In (i, Gfun f) (prog_defs prog)
+.
 
 Hypothesis wt_prog:
   forall i fd, In (i, Gfun fd) prog.(prog_defs) -> wt_fundef fd.
@@ -290,10 +297,7 @@ Proof.
   intros.
   assert (X: exists i, In (i, Gfun f) prog.(prog_defs)).
   {
-    destruct ros as [r | s]; simpl in H.
-    eapply Genv.find_funct_inversion; eauto.
-    destruct (Genv.find_symbol ge s) as [b|]; try discriminate.
-    eapply Genv.find_funct_ptr_inversion; eauto.
+    eauto.
   }
   destruct X as [i IN]. eapply wt_prog; eauto.
 Qed.

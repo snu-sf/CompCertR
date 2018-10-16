@@ -572,3 +572,11 @@ Proof.
   { apply X; auto. }
   unfold max_reg_function. xomega.
 Qed.
+
+Definition get_mem (st: state): mem :=
+  match st with
+  | State _ _ _ _ _ m0 => m0
+  | Callstate _ _ _ m0 => m0
+  | Returnstate _ _ m0 => m0
+  end
+.

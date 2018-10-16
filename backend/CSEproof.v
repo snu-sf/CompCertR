@@ -18,6 +18,7 @@ Require Import Values Memory Events Globalenvs Smallstep.
 Require Import Op Registers RTL.
 Require Import ValueDomain ValueAOp ValueAnalysis.
 Require Import CSEdomain CombineOp CombineOpproof CSE.
+Require Import sflib.
 
 Definition match_prog (prog tprog: RTL.program) :=
   match_program (fun cu f tf => transf_fundef (romem_for cu) f = OK tf) eq prog tprog.
@@ -978,10 +979,10 @@ Inductive match_states: state -> state -> Prop :=
 
 Lemma transf_step_correct:
   forall s1 t s2, step ge s1 t s2 ->
-  forall s1' (MS: match_states s1 s1') (SOUND: sound_state prog ge s1),
+  forall s1' (MS: match_states s1 s1') (SOUND: exists su0, sound_state prog ge su0 s1),
   exists s2', step tge s1' t s2' /\ match_states s2 s2'.
 Proof.
-  induction 1; intros; inv MS; try (TransfInstr; intro C).
+  induction 1; intros; inv MS; destruct SOUND as [su0 SOUND]; try (TransfInstr; intro C).
 
   (* Inop *)
 - econstructor; split.
@@ -1254,13 +1255,13 @@ Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (RTL.semantics tprog).
 Proof.
   eapply forward_simulation_step with
-    (match_states := fun s1 s2 => sound_state prog ge s1 /\ match_states ge s1 s2).
+    (match_states := fun s1 s2 => (exists su0, sound_state prog ge su0 s1) /\ match_states ge s1 s2).
 - apply senv_preserved; auto.
 - intros. exploit transf_initial_states; eauto. intros [s2 [A B]].
   exists s2. split. auto. split. apply sound_initial; auto. auto.
 - intros. destruct H. eapply transf_final_states; eauto.
 - intros. destruct H0. exploit transf_step_correct; eauto.
-  intros [s2' [A B]]. exists s2'; split. auto. split. eapply sound_step; eauto. auto.
+  intros [s2' [A B]]. exists s2'; split. auto. split. des. eexists. eapply sound_step; eauto. auto.
 Qed.
 
 End WHOLE.

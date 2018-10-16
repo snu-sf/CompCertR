@@ -1113,12 +1113,12 @@ Qed.
 
 (** Loading constants *)
 
-Definition genv_match (ge: genv) : Prop :=
+Definition genv_match {F V} (ge: Genv.t F V) : Prop :=
   (forall id b, Genv.find_symbol ge id = Some b <-> bc b = BCglob id)
 /\(forall b, Plt b (Genv.genv_next ge) -> bc b <> BCinvalid /\ bc b <> BCstack).
 
 Lemma symbol_address_sound:
-  forall ge id ofs,
+  forall F V (ge: Genv.t F V) id ofs,
   genv_match ge ->
   vmatch (Genv.symbol_address ge id ofs) (Ptr (Gl id ofs)).
 Proof.
@@ -1128,7 +1128,7 @@ Proof.
 Qed.
 
 Lemma vmatch_ptr_gl:
-  forall ge v id ofs,
+  forall F V (ge: Genv.t F V) v id ofs,
   genv_match ge ->
   vmatch v (Ptr (Gl id ofs)) ->
   Val.lessdef v (Genv.symbol_address ge id ofs).
@@ -4168,7 +4168,7 @@ End MATCH.
 (** * Monotonicity properties when the block classification changes. *)
 
 Lemma genv_match_exten:
-  forall ge (bc1 bc2: block_classification),
+  forall F V (ge: Genv.t F V) (bc1 bc2: block_classification),
   genv_match bc1 ge ->
   (forall b id, bc1 b = BCglob id <-> bc2 b = BCglob id) ->
   (forall b, bc1 b = BCother -> bc2 b = BCother) ->
@@ -4329,7 +4329,7 @@ Proof.
 Qed.
 
 Lemma inj_of_bc_preserves_globals:
-  forall bc ge, genv_match bc ge -> meminj_preserves_globals ge (inj_of_bc bc).
+  forall bc F V (ge: Genv.t F V), genv_match bc ge -> meminj_preserves_globals ge (inj_of_bc bc).
 Proof.
   intros. destruct H as [A B].
   split. intros. apply inj_of_bc_valid. rewrite A in H. congruence.

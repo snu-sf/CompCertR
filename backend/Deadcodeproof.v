@@ -18,6 +18,7 @@ Require Import AST Linking.
 Require Import Values Memory Globalenvs Events Smallstep.
 Require Import Registers Op RTL.
 Require Import ValueDomain ValueAnalysis NeedDomain NeedOp Deadcode.
+Require Import sflib.
 
 Definition match_prog (prog tprog: RTL.program) :=
   match_program (fun cu f tf => transf_fundef (romem_for cu) f = OK tf) eq prog tprog.
@@ -722,7 +723,7 @@ Qed.
 
 Theorem step_simulation:
   forall S1 t S2, step ge S1 t S2 ->
-  forall S1', match_states S1 S1' -> sound_state prog ge S1 ->
+  forall S1', match_states S1 S1' -> (exists su0, sound_state prog ge su0 S1) ->
   exists S2', step tge S1' t S2' /\ match_states S2 S2'.
 Proof.
 
@@ -746,7 +747,7 @@ Ltac UseTransfer :=
        simpl in *
   end.
 
-  induction 1; intros S1' MS SS; inv MS.
+  induction 1; intros S1' MS SS; inv MS; destruct SS as [su0 SS].
 
 - (* nop *)
   TransfInstr; UseTransfer.
@@ -1151,15 +1152,17 @@ Theorem transf_program_correct:
 Proof.
   intros.
   apply forward_simulation_step with
-     (match_states := fun s1 s2 => sound_state prog ge s1 /\ match_states ge s1 s2).
+     (match_states := fun s1 s2 => (exists su0, sound_state prog ge su0 s1) /\ match_states ge s1 s2).
 - apply senv_preserved; auto.
 - simpl; intros. exploit transf_initial_states; eauto. intros [st2 [A B]].
   exists st2; intuition. eapply sound_initial; eauto.
 - simpl; intros. destruct H. eapply transf_final_states; eauto.
 - simpl; intros. destruct H0.
-  assert (sound_state prog ge s1') by (eapply sound_step; eauto).
+  destruct H0 as [su0 SS].
+  assert (sound_state prog ge su0 s1') by (eapply sound_step; eauto).
   fold ge; fold tge. exploit step_simulation; eauto. intros [st2' [A B]].
   exists st2'; auto.
+  esplits; eauto.
 Qed.
 
 End WHOLE.

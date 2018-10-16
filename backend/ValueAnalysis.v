@@ -16,6 +16,11 @@ Require Import Compopts AST Linking.
 Require Import Values Memory Globalenvs Events.
 Require Import Registers Op RTL.
 Require Import ValueDomain ValueAOp Liveness.
+Require Unreach.
+Require Import sflib.
+
+Coercion Unreach.unreach: Unreach.t >-> Funclass.
+
 
 (** * The dataflow analysis *)
 
@@ -221,7 +226,7 @@ Definition definitive_initializer (init: list init_data) : bool :=
   | _ => true
   end.
 
-Definition alloc_global (rm: romem) (idg: ident * globdef fundef unit): romem :=
+Definition alloc_global {F V} (rm: romem) (idg: ident * globdef F V): romem :=
   match idg with
   | (id, Gfun f) =>
       PTree.remove id rm
@@ -231,7 +236,7 @@ Definition alloc_global (rm: romem) (idg: ident * globdef fundef unit): romem :=
       else PTree.remove id rm
   end.
 
-Definition romem_for (p: program) : romem :=
+Definition romem_for {F V} (p: AST.program F V) : romem :=
   List.fold_left alloc_global p.(prog_defs) (PTree.empty _).
 
 (** * Soundness proof *)
@@ -327,7 +332,7 @@ Qed.
 Hint Resolve areg_sound aregs_sound: va.
 
 Lemma abuiltin_arg_sound:
-  forall bc ge rs sp m ae rm am,
+  forall bc F V (ge: Genv.t F V) rs sp m ae rm am,
   ematch bc rs ae ->
   romatch bc m rm ->
   mmatch bc m am ->
@@ -347,7 +352,7 @@ Proof.
 Qed.
 
 Lemma abuiltin_args_sound:
-  forall bc ge rs sp m ae rm am,
+  forall bc F V (ge: Genv.t F V) rs sp m ae rm am,
   ematch bc rs ae ->
   romatch bc m rm ->
   mmatch bc m am ->
@@ -416,8 +421,30 @@ End NOSTACK.
 
 Ltac splitall := repeat (match goal with |- _ /\ _ => split end).
 
+Definition bc2su (bc: block_classification) (ge_nb: block) (nb: block): Unreach.t :=
+  Unreach.mk (fun blk => if plt blk nb
+                         then block_class_eq (bc blk) BCinvalid
+                         else false)
+             ge_nb
+             nb
+.
+
+Hint Extern 999 => congruence : congruence.
+Hint Extern 1000 => xomega : xomega.
+
+Lemma pos_le_lt_tight
+      x y
+      (LE: Ple x y)
+      (LT: Plt y (Pos.succ x))
+  :
+    x = y
+.
+Proof.
+  xomega.
+Qed.
+
 Theorem allocate_stack:
-  forall m sz m' sp bc ge rm am,
+  forall m sz m' sp bc F V (ge: Genv.t F V) rm am,
   Mem.alloc m 0 sz = (m', sp) ->
   genv_match bc ge ->
   romatch bc m rm ->
@@ -430,7 +457,8 @@ Theorem allocate_stack:
   /\ romatch bc' m' rm
   /\ mmatch bc' m' mfunction_entry
   /\ (forall b, Plt b sp -> bc' b = bc b)
-  /\ (forall v x, vmatch bc v x -> vmatch bc' v (Ifptr Nonstack)).
+  /\ (forall v x, vmatch bc v x -> vmatch bc' v (Ifptr Nonstack))
+  /\ (<<HLE: Unreach.hle (bc2su bc ge.(Genv.genv_next) m.(Mem.nextblock)) (bc2su bc' ge.(Genv.genv_next) m'.(Mem.nextblock))>>).
 Proof.
   intros until am; intros ALLOC GENV RO MM NOSTACK.
   exploit Mem.nextblock_alloc; eauto. intros NB.
@@ -507,12 +535,17 @@ Proof.
   simpl; intros. apply dec_eq_false. apply Plt_ne. auto.
 - (* values *)
   intros. apply vmatch_incr with bc; auto. eapply vmatch_no_stack; eauto.
+- subst.
+  unfold bc2su.
+  rr. ss. rewrite NB. esplits; ss.
+  + ii. des_ifs; xomega.
+  + xomega.
 Qed.
 
 (** Construction 2: turn the stack into an "other" block, at public calls or function returns *)
 
 Theorem anonymize_stack:
-  forall m sp bc ge rm am,
+  forall m sp bc F V (ge: Genv.t F V) rm am,
   genv_match bc ge ->
   romatch bc m rm ->
   mmatch bc m am ->
@@ -597,7 +630,7 @@ Qed.
 (** Construction 3: turn the stack into an invalid block, at private calls *)
 
 Theorem hide_stack:
-  forall m sp bc ge rm am,
+  forall m sp bc F V (ge: Genv.t F V) rm am,
   genv_match bc ge ->
   romatch bc m rm ->
   mmatch bc m am ->
@@ -682,7 +715,7 @@ Qed.
 (** Construction 4: restore the stack after a public call *)
 
 Theorem return_from_public_call:
-  forall (caller callee: block_classification) bound sp ge e ae v m rm,
+  forall (caller callee: block_classification) bound sp F V (ge: Genv.t F V) e ae v m rm,
   bc_below caller bound ->
   callee sp = BCother ->
   caller sp = BCstack ->
@@ -783,7 +816,7 @@ Qed.
 (** Construction 5: restore the stack after a private call *)
 
 Theorem return_from_private_call:
-  forall (caller callee: block_classification) bound sp ge e ae v m rm am,
+  forall (caller callee: block_classification) bound sp F V (ge: Genv.t F V) e ae v m rm am,
   bc_below caller bound ->
   callee sp = BCinvalid ->
   caller sp = BCstack ->
@@ -892,7 +925,7 @@ Qed.
 (** Construction 6: external call *)
 
 Theorem external_call_match:
-  forall ef (ge: genv) vargs m t vres m' bc rm am,
+  forall ef F V (ge: Genv.t F V) vargs m t vres m' bc rm am,
   external_call ef ge vargs m t vres m' ->
   genv_match bc ge ->
   (forall v, In v vargs -> vmatch bc v Vtop) ->
@@ -907,7 +940,8 @@ Theorem external_call_match:
   /\ romatch bc' m' rm
   /\ mmatch bc' m' mtop
   /\ bc_nostack bc'
-  /\ (forall b ofs n, Mem.valid_block m b -> bc b = BCinvalid -> Mem.loadbytes m' b ofs n = Mem.loadbytes m b ofs n).
+  /\ (forall b ofs n, Mem.valid_block m b -> bc b = BCinvalid -> Mem.loadbytes m' b ofs n = Mem.loadbytes m b ofs n)
+  /\ <<MLE: (bc2su bc ge.(Genv.genv_next) m'.(Mem.nextblock)).(Unreach.mle) m m'>>.
 Proof.
   intros until am; intros EC GENV ARGS RO MM NOSTACK.
   (* Part 1: using ec_mem_inject *)
@@ -1020,6 +1054,11 @@ Proof.
 - (* unmapped blocks are invariant *)
   intros. eapply Mem.loadbytes_unchanged_on_1; auto.
   apply UNCH1; auto. intros; red. unfold inj_of_bc; rewrite H0; auto.
+- econs; eauto.
+  + i. eapply external_call_max_perm; try apply EC; eauto.
+  + i. eapply external_call_readonly; eauto.
+  + eapply Mem.unchanged_on_implies; try apply UNCH1; eauto.
+    unfold Basics.flip. s. ii. rr in H. rr. unfold inj_of_bc. unfold bc2su in *. des_sumbool. des_ifs.
 Qed.
 
 (** ** Semantic invariant *)
@@ -1031,12 +1070,12 @@ Variable ge: genv.
 
 Let rm := romem_for prog.
 
-Inductive sound_stack: block_classification -> list stackframe -> mem -> block -> Prop :=
-  | sound_stack_nil: forall bc m bound,
-      sound_stack bc nil m bound
+Inductive sound_stack (su: Unreach.t): block_classification -> list stackframe -> mem -> block -> Prop :=
+  | sound_stack_nil: forall bc m bound (SU: Ple su.(Unreach.nb) bound),
+      sound_stack su bc nil m bound
   | sound_stack_public_call:
       forall (bc: block_classification) res f sp pc e stk m bound bc' bound' ae
-        (STK: sound_stack bc' stk m sp)
+        (STK: sound_stack su bc' stk m sp)
         (INCR: Ple bound' bound)
         (BELOW: bc_below bc' bound')
         (SP: bc sp = BCother)
@@ -1044,11 +1083,13 @@ Inductive sound_stack: block_classification -> list stackframe -> mem -> block -
         (SAME: forall b, Plt b bound' -> b <> sp -> bc b = bc' b)
         (GE: genv_match bc' ge)
         (AN: VA.ge (analyze rm f)!!pc (VA.State (AE.set res Vtop ae) mafter_public_call))
-        (EM: ematch bc' e ae),
-      sound_stack bc (Stackframe res f (Vptr sp Ptrofs.zero) pc e :: stk) m bound
+        (EM: ematch bc' e ae)
+        (LESU: Ple sp bound')
+      ,
+      sound_stack su bc (Stackframe res f (Vptr sp Ptrofs.zero) pc e :: stk) m bound
   | sound_stack_private_call:
      forall (bc: block_classification) res f sp pc e stk m bound bc' bound' ae am
-        (STK: sound_stack bc' stk m sp)
+        (STK: sound_stack su bc' stk m sp)
         (INCR: Ple bound' bound)
         (BELOW: bc_below bc' bound')
         (SP: bc sp = BCinvalid)
@@ -1057,76 +1098,89 @@ Inductive sound_stack: block_classification -> list stackframe -> mem -> block -
         (GE: genv_match bc' ge)
         (AN: VA.ge (analyze rm f)!!pc (VA.State (AE.set res (Ifptr Nonstack) ae) (mafter_private_call am)))
         (EM: ematch bc' e ae)
-        (CONTENTS: bmatch bc' m sp am.(am_stack)),
-      sound_stack bc (Stackframe res f (Vptr sp Ptrofs.zero) pc e :: stk) m bound.
+        (CONTENTS: bmatch bc' m sp am.(am_stack))
+        (LESU: Ple sp bound')
+     ,
+      sound_stack su bc (Stackframe res f (Vptr sp Ptrofs.zero) pc e :: stk) m bound.
 
-Inductive sound_state_base: state -> Prop :=
+Inductive sound_state_base (su: Unreach.t): state -> Prop :=
   | sound_regular_state:
       forall s f sp pc e m ae am bc
-        (STK: sound_stack bc s m sp)
+        (STK: sound_stack su bc s m sp)
         (AN: (analyze rm f)!!pc = VA.State ae am)
         (EM: ematch bc e ae)
         (RO: romatch bc m rm)
         (MM: mmatch bc m am)
         (GE: genv_match bc ge)
-        (SP: bc sp = BCstack),
-      sound_state_base (State s f (Vptr sp Ptrofs.zero) pc e m)
+        (SP: bc sp = BCstack)
+        (HLE: Unreach.hle su (bc2su bc ge.(Genv.genv_next) m.(Mem.nextblock)))
+        (WF: Unreach.wf su)
+      ,
+      sound_state_base su (State s f (Vptr sp Ptrofs.zero) pc e m)
   | sound_call_state:
       forall s fd args m bc
-        (STK: sound_stack bc s m (Mem.nextblock m))
+        (STK: sound_stack su bc s m (Mem.nextblock m))
         (ARGS: forall v, In v args -> vmatch bc v Vtop)
         (RO: romatch bc m rm)
         (MM: mmatch bc m mtop)
         (GE: genv_match bc ge)
-        (NOSTK: bc_nostack bc),
-      sound_state_base (Callstate s fd args m)
+        (NOSTK: bc_nostack bc)
+        (HLE: Unreach.hle su (bc2su bc ge.(Genv.genv_next) m.(Mem.nextblock)))
+        (WF: Unreach.wf su)
+      ,
+      sound_state_base su (Callstate s fd args m)
   | sound_return_state:
       forall s v m bc
-        (STK: sound_stack bc s m (Mem.nextblock m))
+        (STK: sound_stack su bc s m (Mem.nextblock m))
         (RES: vmatch bc v Vtop)
         (RO: romatch bc m rm)
         (MM: mmatch bc m mtop)
         (GE: genv_match bc ge)
-        (NOSTK: bc_nostack bc),
-      sound_state_base (Returnstate s v m).
+        (NOSTK: bc_nostack bc)
+        (HLE: Unreach.hle su (bc2su bc ge.(Genv.genv_next) m.(Mem.nextblock)))
+        (WF: Unreach.wf su)
+      ,
+      sound_state_base su (Returnstate s v m).
 
 (** Properties of the [sound_stack] invariant on call stacks. *)
 
 Lemma sound_stack_ext:
-  forall m' bc stk m bound,
-  sound_stack bc stk m bound ->
+  forall m' bc stk m bound su,
+  sound_stack su bc stk m bound ->
   (forall b ofs n bytes,
        Plt b bound -> bc b = BCinvalid -> n >= 0 ->
        Mem.loadbytes m' b ofs n = Some bytes ->
        Mem.loadbytes m b ofs n = Some bytes) ->
-  sound_stack bc stk m' bound.
+  sound_stack su bc stk m' bound.
 Proof.
   induction 1; intros INV.
-- constructor.
+- constructor; ss.
 - assert (Plt sp bound') by eauto with va.
   eapply sound_stack_public_call; eauto. apply IHsound_stack; intros.
+  (* { ss. } *)
   apply INV. xomega. rewrite SAME; auto. xomega. auto. auto.
 - assert (Plt sp bound') by eauto with va.
   eapply sound_stack_private_call; eauto. apply IHsound_stack; intros.
+  (* { ss. } *)
   apply INV. xomega. rewrite SAME; auto. xomega. auto. auto.
   apply bmatch_ext with m; auto. intros. apply INV. xomega. auto. auto. auto.
 Qed.
 
 Lemma sound_stack_inv:
-  forall m' bc stk m bound,
-  sound_stack bc stk m bound ->
+  forall m' bc stk m bound su,
+  sound_stack su bc stk m bound ->
   (forall b ofs n, Plt b bound -> bc b = BCinvalid -> n >= 0 -> Mem.loadbytes m' b ofs n = Mem.loadbytes m b ofs n) ->
-  sound_stack bc stk m' bound.
+  sound_stack su bc stk m' bound.
 Proof.
   intros. eapply sound_stack_ext; eauto. intros. rewrite <- H0; auto.
 Qed.
 
 Lemma sound_stack_storev:
-  forall chunk m addr v m' bc aaddr stk bound,
+  forall chunk m addr v m' bc aaddr stk bound su,
   Mem.storev chunk m addr v = Some m' ->
   vmatch bc addr aaddr ->
-  sound_stack bc stk m bound ->
-  sound_stack bc stk m' bound.
+  sound_stack su bc stk m bound ->
+  sound_stack su bc stk m' bound.
 Proof.
   intros. apply sound_stack_inv with m; auto.
   destruct addr; simpl in H; try discriminate.
@@ -1137,11 +1191,11 @@ Proof.
 Qed.
 
 Lemma sound_stack_storebytes:
-  forall m b ofs bytes m' bc aaddr stk bound,
+  forall m b ofs bytes m' bc aaddr stk bound su,
   Mem.storebytes m b (Ptrofs.unsigned ofs) bytes = Some m' ->
   vmatch bc (Vptr b ofs) aaddr ->
-  sound_stack bc stk m bound ->
-  sound_stack bc stk m' bound.
+  sound_stack su bc stk m bound ->
+  sound_stack su bc stk m' bound.
 Proof.
   intros. apply sound_stack_inv with m; auto.
   assert (A: pmatch bc b ofs Ptop).
@@ -1151,35 +1205,36 @@ Proof.
 Qed.
 
 Lemma sound_stack_free:
-  forall m b lo hi m' bc stk bound,
+  forall m b lo hi m' bc stk bound su,
   Mem.free m b lo hi = Some m' ->
-  sound_stack bc stk m bound ->
-  sound_stack bc stk m' bound.
+  sound_stack su bc stk m bound ->
+  sound_stack su bc stk m' bound.
 Proof.
-  intros. eapply sound_stack_ext; eauto. intros.
+  intros. eapply sound_stack_ext; eauto.
+  intros.
   eapply Mem.loadbytes_free_2; eauto.
 Qed.
 
 Lemma sound_stack_new_bound:
-  forall bc stk m bound bound',
-  sound_stack bc stk m bound ->
+  forall bc stk m bound bound' su,
+  sound_stack su bc stk m bound ->
   Ple bound bound' ->
-  sound_stack bc stk m bound'.
+  sound_stack su bc stk m bound'.
 Proof.
   intros. inv H.
-- constructor.
+- constructor; ss. xomega.
 - eapply sound_stack_public_call with (bound' := bound'0); eauto. xomega.
 - eapply sound_stack_private_call with (bound' := bound'0); eauto. xomega.
 Qed.
 
 Lemma sound_stack_exten:
-  forall bc stk m bound (bc1: block_classification),
-  sound_stack bc stk m bound ->
+  forall bc stk m bound (bc1: block_classification) su,
+  sound_stack su bc stk m bound ->
   (forall b, Plt b bound -> bc1 b = bc b) ->
-  sound_stack bc1 stk m bound.
+  sound_stack su bc1 stk m bound.
 Proof.
   intros. inv H.
-- constructor.
+- constructor; ss.
 - assert (Plt sp bound') by eauto with va.
   eapply sound_stack_public_call; eauto.
   rewrite H0; auto. xomega.
@@ -1190,10 +1245,22 @@ Proof.
   intros. rewrite H0; auto. xomega.
 Qed.
 
+Lemma sound_stack_unreach
+      su bc stk m bound
+      (STK: sound_stack su bc stk m bound)
+  :
+    <<LE: Ple su.(Unreach.nb) bound>>
+.
+Proof.
+  induction STK; i; ss; des; r.
+  - etransitivity; eauto. etransitivity; eauto.
+  - etransitivity; eauto. etransitivity; eauto.
+Qed.
+
 (** ** Preservation of the semantic invariant by one step of execution *)
 
 Lemma sound_succ_state:
-  forall bc pc ae am instr ae' am'  s f sp pc' e' m',
+  forall bc pc ae am instr ae' am'  s f sp pc' e' m' su,
   (analyze rm f)!!pc = VA.State ae am ->
   f.(fn_code)!pc = Some instr ->
   In pc' (successors_instr instr) ->
@@ -1203,28 +1270,48 @@ Lemma sound_succ_state:
   romatch bc m' rm ->
   genv_match bc ge ->
   bc sp = BCstack ->
-  sound_stack bc s m' sp ->
-  sound_state_base (State s f (Vptr sp Ptrofs.zero) pc' e' m').
+  sound_stack su bc s m' sp ->
+  Unreach.hle su (bc2su bc (Genv.genv_next ge) (Mem.nextblock m')) ->
+  Unreach.wf su ->
+  sound_state_base su (State s f (Vptr sp Ptrofs.zero) pc' e' m').
 Proof.
   intros. exploit analyze_succ; eauto. intros (ae'' & am'' & AN & EM & MM).
   econstructor; eauto.
 Qed.
 
+Lemma vmatch_sound
+      bc blk ofs av
+      (VM: vmatch bc (Vptr blk ofs) av)
+  :
+    <<VALID: bc blk <> BCinvalid>>
+.
+Proof.
+  inv VM.
+  - inv H2; try congruence.
+  - inv H2; try congruence.
+Qed.
+
+Ltac spl := split; cycle 1; [r; ss; try reflexivity|].
+
 Theorem sound_step_base:
-  forall st t st', RTL.step ge st t st' -> sound_state_base st -> sound_state_base st'.
+  forall su st t st', RTL.step ge st t st' -> sound_state_base su st -> sound_state_base su st'
+                                               /\ <<MLE: Unreach.mle su st.(get_mem) st'.(get_mem)>>.
 Proof.
   induction 1; intros SOUND; inv SOUND.
 
 - (* nop *)
+  spl.
   eapply sound_succ_state; eauto. simpl; auto.
   unfold transfer; rewrite H. auto.
 
 - (* op *)
+  spl.
   eapply sound_succ_state; eauto. simpl; auto.
   unfold transfer; rewrite H. eauto.
   apply ematch_update; auto. eapply eval_static_operation_sound; eauto with va.
 
 - (* load *)
+  spl.
   eapply sound_succ_state; eauto. simpl; auto.
   unfold transfer; rewrite H. eauto.
   apply ematch_update; auto. eapply loadv_sound; eauto with va.
@@ -1232,13 +1319,19 @@ Proof.
 
 - (* store *)
   exploit eval_static_addressing_sound; eauto with va. intros VMADDR.
+  spl.
+  { unfold Mem.storev in *. des_ifs. eapply Unreach.store_mle; eauto.
+    ii. rr in HLE. desH HLE. ss. inv WF. exploit WFHI; eauto. i. exploit OLD; eauto. i; des_ifs; try xomega. des_sumbool.
+    try (by exploit vmatch_sound; eauto); try congruence. }
   eapply sound_succ_state; eauto. simpl; auto.
   unfold transfer; rewrite H. eauto.
   eapply storev_sound; eauto.
   destruct a; simpl in H1; try discriminate. eapply romatch_store; eauto.
   eapply sound_stack_storev; eauto.
+  { rpapply HLE. f_equal. unfold Mem.storev in *. des_ifs. exploit Mem.nextblock_store; eauto. }
 
 - (* call *)
+  spl.
   assert (TR: transfer f rm pc ae am = transfer_call ae am args res).
   { unfold transfer; rewrite H; auto. }
   unfold transfer_call, analyze_call in TR.
@@ -1254,11 +1347,15 @@ Proof.
     apply Ple_refl.
     eapply mmatch_below; eauto.
     eapply mmatch_stack; eauto.
+    inv MM. exploit mmatch_below; eauto. { rewrite SP; ss. } i. xomega.
+    (* { rr in HLE. des. ss. ii. exploit PRIV; eauto. i. des_ifs. des_sumbool. congruence. } *)
   * intros. exploit list_in_map_inv; eauto. intros (r & P & Q). subst v.
     apply D with (areg ae r).
     rewrite forallb_forall in H2. apply vpincl_ge.
     apply H2. apply in_map; auto.
     auto with va.
+  * { hexploit sound_stack_unreach; eauto. i; des.
+      eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite C; try xomega; ss. ii. clarify. xomega. }
 + (* public call *)
   exploit analyze_successor; eauto. simpl; eauto. rewrite TR. intros SUCC.
   exploit anonymize_stack; eauto. intros (bc' & A & B & C & D & E & F & G).
@@ -1266,10 +1363,16 @@ Proof.
   * eapply sound_stack_public_call with (bound' := Mem.nextblock m) (bc' := bc); eauto.
     apply Ple_refl.
     eapply mmatch_below; eauto.
+    inv MM. exploit mmatch_below; eauto. { rewrite SP; ss. } i. xomega.
   * intros. exploit list_in_map_inv; eauto. intros (r & P & Q). subst v.
     apply D with (areg ae r). auto with va.
-
+  * { hexploit sound_stack_unreach; eauto. i; des.
+      eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite C; try xomega; ss. ii. clarify. xomega. }
 - (* tailcall *)
+  spl.
+  { eapply Unreach.free_mle; eauto.
+    ii. rr in HLE. desH HLE. ss. inv WF. exploit WFHI; eauto. i. exploit OLD; eauto. i; des_ifs; try xomega. des_sumbool.
+    try (by exploit vmatch_sound; eauto); try congruence. }
   exploit anonymize_stack; eauto. intros (bc' & A & B & C & D & E & F & G).
   apply sound_call_state with bc'; auto.
   erewrite Mem.nextblock_free by eauto.
@@ -1282,6 +1385,8 @@ Proof.
   apply D with (areg ae r). auto with va.
   eapply romatch_free; eauto.
   eapply mmatch_free; eauto.
+  { hexploit sound_stack_unreach; eauto. i; des. erewrite Mem.nextblock_free; eauto.
+    eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite C; try xomega; ss. ii. clarify. xomega. }
 
 - (* builtin *)
   assert (SPVALID: Plt sp0 (Mem.nextblock m)) by (eapply mmatch_below; eauto with va).
@@ -1290,8 +1395,8 @@ Proof.
   (* The default case *)
   assert (DEFAULT:
             transfer f rm pc ae am = transfer_builtin_default ae am rm args res ->
-            sound_state_base
-               (State s f (Vptr sp0 Ptrofs.zero) pc' (regmap_setres res vres rs) m')).
+            sound_state_base su
+               (State s f (Vptr sp0 Ptrofs.zero) pc' (regmap_setres res vres rs) m') /\ <<MLE: su.(Unreach.mle) m m'>>).
   { unfold transfer_builtin_default, analyze_call; intros TR'.
   set (aargs := map (abuiltin_arg ae am rm) args) in *.
   assert (ARGS: list_forall2 (vmatch bc) vargs aargs) by (eapply abuiltin_args_sound; eauto).
@@ -1305,7 +1410,7 @@ Proof.
   exploit external_call_match; eauto.
   intros. exploit list_forall2_in_left; eauto. intros (av & U & V).
   eapply D; eauto with va. apply vpincl_ge. apply H3; auto.
-  intros (bc2 & J & K & L & M & N & O & P & Q).
+  intros (bc2 & J & K & L & M & N & O & P & Q & MLE).
   exploit (return_from_private_call bc bc2); eauto.
   eapply mmatch_below; eauto.
   rewrite K; auto.
@@ -1314,6 +1419,10 @@ Proof.
   intros. apply Q; auto.
   eapply external_call_nextblock; eauto.
   intros (bc3 & U & V & W & X & Y & Z & AA).
+  spl.
+  { hexploit external_call_nextblock; try eassumption. i. eapply Unreach.mle_monotone; try eassumption.
+    ii. rr in HLE. desH HLE. ss. inv WF. exploit WFHI; eauto. i. exploit OLD; eauto. i; des_ifs; try xomega. des_sumbool.
+    rewrite C; ss. ii; clarify. congruence. }
   eapply sound_succ_state with (bc := bc3); eauto. simpl; auto.
   apply set_builtin_res_sound; auto.
   apply sound_stack_exten with bc.
@@ -1321,18 +1430,24 @@ Proof.
   intros. apply Q. red. eapply Plt_trans; eauto.
   rewrite C; auto.
   exact AA.
+  { hexploit sound_stack_unreach; eauto. i; des. hexploit external_call_nextblock; try eassumption. i.
+    eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite AA; try xomega; ss. }
 * (* public builtin call *)
   exploit anonymize_stack; eauto.
   intros (bc1 & A & B & C & D & E & F & G).
   exploit external_call_match; eauto.
   intros. exploit list_forall2_in_left; eauto. intros (av & U & V). eapply D; eauto with va.
-  intros (bc2 & J & K & L & M & N & O & P & Q).
+  intros (bc2 & J & K & L & M & N & O & P & Q & MLE).
   exploit (return_from_public_call bc bc2); eauto.
   eapply mmatch_below; eauto.
   rewrite K; auto.
   intros. rewrite K; auto. rewrite C; auto.
   eapply external_call_nextblock; eauto.
   intros (bc3 & U & V & W & X & Y & Z & AA).
+  spl.
+  { hexploit external_call_nextblock; try eassumption. i. eapply Unreach.mle_monotone; try eassumption.
+    ii. rr in HLE. desH HLE. ss. inv WF. exploit WFHI; eauto. i. exploit OLD; eauto. i; des_ifs; try xomega. des_sumbool.
+    rewrite C; ss. ii; clarify. congruence. }
   eapply sound_succ_state with (bc := bc3); eauto. simpl; auto.
   apply set_builtin_res_sound; auto.
   apply sound_stack_exten with bc.
@@ -1340,12 +1455,15 @@ Proof.
   intros. apply Q. red. eapply Plt_trans; eauto.
   rewrite C; auto.
   exact AA.
+  { hexploit sound_stack_unreach; eauto. i; des. hexploit external_call_nextblock; try eassumption. i.
+    eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite AA; try xomega; ss. }
   }
   unfold transfer_builtin in TR.
   destruct ef; auto.
 + (* volatile load *)
   inv H0; auto. inv H3; auto. inv H1.
   exploit abuiltin_arg_sound; eauto. intros VM1.
+  spl.
   eapply sound_succ_state; eauto. simpl; auto.
   apply set_builtin_res_sound; auto.
   inv H3.
@@ -1365,19 +1483,29 @@ Proof.
   exploit abuiltin_arg_sound. eauto. eauto. eauto. eauto. eauto. eexact H2. intros VM2.
   inv H9.
   * (* true volatile access *)
+    spl.
     eapply sound_succ_state; eauto. simpl; auto.
     apply set_builtin_res_sound; auto. constructor.
     apply mmatch_lub_l; auto.
   * (* normal memory access *)
+    spl.
+    { eapply Unreach.store_mle; eauto.
+    ii. rr in HLE. desH HLE. ss. inv WF. exploit WFHI; eauto. i. exploit OLD; eauto. i; des_ifs; try xomega. des_sumbool.
+    try (by exploit vmatch_sound; eauto); try congruence. }
     eapply sound_succ_state; eauto. simpl; auto.
     apply set_builtin_res_sound; auto. constructor.
     apply mmatch_lub_r. eapply storev_sound; eauto. auto.
     eapply romatch_store; eauto.
     eapply sound_stack_storev; eauto. simpl; eauto.
+    { rpapply HLE. f_equal. exploit Mem.nextblock_store; eauto. }
 + (* memcpy *)
   inv H0; auto. inv H3; auto. inv H4; auto. inv H1.
   exploit abuiltin_arg_sound. eauto. eauto. eauto. eauto. eauto. eexact H0. intros VM1.
   exploit abuiltin_arg_sound. eauto. eauto. eauto. eauto. eauto. eexact H2. intros VM2.
+  spl.
+  { eapply Unreach.storebytes_mle; eauto.
+    ii. rr in HLE. desH HLE. ss. inv WF. exploit WFHI; eauto. i. exploit OLD; eauto. i; des_ifs; try xomega. des_sumbool.
+    try (by exploit vmatch_sound; eauto); try congruence. }
   eapply sound_succ_state; eauto. simpl; auto.
   apply set_builtin_res_sound; auto. constructor.
   eapply storebytes_sound; eauto.
@@ -1386,27 +1514,35 @@ Proof.
   intros. eapply loadbytes_sound; eauto. apply match_aptr_of_aval; auto.
   eapply romatch_storebytes; eauto.
   eapply sound_stack_storebytes; eauto.
+  { rpapply HLE. f_equal. exploit Mem.nextblock_storebytes; eauto. }
 + (* annot *)
-  inv H1. eapply sound_succ_state; eauto. simpl; auto. apply set_builtin_res_sound; auto. constructor.
+  inv H1. spl. eapply sound_succ_state; eauto. simpl; auto. apply set_builtin_res_sound; auto. constructor.
 + (* annot val *)
   inv H0; auto. inv H3; auto. inv H1.
+  spl.
   eapply sound_succ_state; eauto. simpl; auto.
   apply set_builtin_res_sound; auto. eapply abuiltin_arg_sound; eauto.
 + (* debug *)
-  inv H1. eapply sound_succ_state; eauto. simpl; auto. apply set_builtin_res_sound; auto. constructor.
+  inv H1. spl. eapply sound_succ_state; eauto. simpl; auto. apply set_builtin_res_sound; auto. constructor.
 
 - (* cond *)
+  spl.
   eapply sound_succ_state; eauto.
   simpl. destruct b; auto.
   unfold transfer; rewrite H; auto.
 
 - (* jumptable *)
+  spl.
   eapply sound_succ_state; eauto.
   simpl. eapply list_nth_z_in; eauto.
   unfold transfer; rewrite H; auto.
 
 - (* return *)
   exploit anonymize_stack; eauto. intros (bc' & A & B & C & D & E & F & G).
+  spl.
+  { eapply Unreach.free_mle; eauto.
+    ii. rr in HLE. desH HLE. ss. inv WF. exploit WFHI; eauto. i. exploit OLD; eauto. i; des_ifs; try xomega. des_sumbool.
+    try (by exploit vmatch_sound; eauto); try congruence. }
   apply sound_return_state with bc'; auto.
   erewrite Mem.nextblock_free by eauto.
   apply sound_stack_new_bound with stk.
@@ -1417,27 +1553,39 @@ Proof.
   destruct or; simpl. eapply D; eauto. constructor.
   eapply romatch_free; eauto.
   eapply mmatch_free; eauto.
+  { hexploit sound_stack_unreach; eauto. i; des. erewrite Mem.nextblock_free; eauto.
+    eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite C; ss; try xomega. ii; clarify. xomega. }
 
 - (* internal function *)
   exploit allocate_stack; eauto.
-  intros (bc' & A & B & C & D & E & F & G).
+  intros (bc' & A & B & C & D & E & F & G & SU').
   exploit (analyze_entrypoint rm f args m' bc'); eauto.
   intros (ae & am & AN & EM & MM').
+  spl.
+  { eapply Unreach.alloc_mle; eauto. }
   econstructor; eauto.
   erewrite Mem.alloc_result by eauto.
   apply sound_stack_exten with bc; auto.
   apply sound_stack_inv with m; auto.
   intros. eapply Mem.loadbytes_alloc_unchanged; eauto.
   intros. apply F. erewrite Mem.alloc_result by eauto. auto.
+  { hexploit sound_stack_unreach; eauto. i; des. exploit Mem.alloc_result; eauto. i; clarify. erewrite Mem.nextblock_alloc; eauto.
+    eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite F; ss; try xomega. }
 
 - (* external function *)
   exploit external_call_match; eauto with va.
-  intros (bc' & A & B & C & D & E & F & G & K).
+  intros (bc' & A & B & C & D & E & F & G & K& MLE).
+  spl.
+  { hexploit external_call_nextblock; eauto. i. eapply Unreach.mle_monotone; try eassumption. ss.
+    ii. rr in HLE. desH HLE. ss. inv WF. exploit WFHI; eauto. i. exploit OLD; eauto. i; des_ifs; try xomega.
+  }
   econstructor; eauto.
   apply sound_stack_new_bound with (Mem.nextblock m).
   apply sound_stack_exten with bc; auto.
   apply sound_stack_inv with m; auto.
   eapply external_call_nextblock; eauto.
+  { hexploit sound_stack_unreach; eauto. i; des. hexploit external_call_nextblock; eauto. i.
+    eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite B; ss; try xomega. }
 
 - (* return *)
   inv STK.
@@ -1445,18 +1593,24 @@ Proof.
    exploit return_from_public_call; eauto.
    intros; rewrite SAME; auto.
    intros (bc1 & A & B & C & D & E & F & G).
+   spl.
    destruct (analyze rm f)#pc as [ |ae' am'] eqn:EQ; simpl in AN; try contradiction. destruct AN as [A1 A2].
    eapply sound_regular_state with (bc := bc1); eauto.
    apply sound_stack_exten with bc'; auto.
    eapply ematch_ge; eauto. apply ematch_update. auto. auto.
+   { hexploit sound_stack_unreach; eauto. i; des.
+      eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite SAME; try xomega; ss. rewrite G; try xomega; ss. }
   + (* from private call *)
    exploit return_from_private_call; eauto.
    intros; rewrite SAME; auto.
    intros (bc1 & A & B & C & D & E & F & G).
    destruct (analyze rm f)#pc as [ |ae' am'] eqn:EQ; simpl in AN; try contradiction. destruct AN as [A1 A2].
+   spl.
    eapply sound_regular_state with (bc := bc1); eauto.
    apply sound_stack_exten with bc'; auto.
    eapply ematch_ge; eauto. apply ematch_update. auto. auto.
+   { hexploit sound_stack_unreach; eauto. i; des.
+      eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite SAME; try xomega; ss. rewrite G; try xomega; ss. }
 Qed.
 
 End SOUNDNESS.
@@ -1472,31 +1626,72 @@ Section LINKING.
 Variable prog: program.
 Variable ge : genv.
 
-Inductive sound_state: state -> Prop :=
+Inductive sound_state (su: Unreach.t): state -> Prop :=
   | sound_state_intro: forall st,
-      (forall cunit, linkorder cunit prog -> sound_state_base cunit ge st) ->
-      sound_state st.
+      (forall cunit, linkorder cunit prog -> sound_state_base cunit ge su st) ->
+      sound_state su st.
 
 Theorem sound_step:
-  forall st t st', RTL.step ge st t st' -> sound_state st -> sound_state st'.
+  forall st t st' su, RTL.step ge st t st' -> sound_state su st -> sound_state su st'
+                                    /\ <<MLE: su.(Unreach.mle) st.(get_mem) st'.(get_mem)>>.
 Proof.
-  intros. inv H0. constructor; intros. eapply sound_step_base; eauto.
+  intros. inv H0. split.
+  - constructor; intros. eapply sound_step_base; eauto.
+  - exploit H1; eauto. { apply linkorder_refl. } i; des. eapply sound_step_base; eauto.
 Qed.
 
 Remark sound_state_inv:
-  forall st cunit,
-  sound_state st -> linkorder cunit prog -> sound_state_base cunit ge st.
+  forall st cunit su,
+  sound_state su st -> linkorder cunit prog -> sound_state_base cunit ge su st.
 Proof.
   intros. inv H. eauto.
 Qed.
 
 End LINKING.
 
+
+
+Program Definition ske2bc {F} (ske: Genv.t F unit): block_classification :=
+  BC
+    (fun b =>
+       if plt b (Genv.genv_next ske) then
+         match Genv.invert_symbol ske b with None => BCother | Some id => BCglob id end
+       else
+         BCinvalid)
+    _ _
+.
+Next Obligation.
+  des_ifs.
+Qed.
+Next Obligation.
+  des_ifs.
+  apply Genv.invert_find_symbol in Heq. apply Genv.invert_find_symbol in Heq0.
+  clarify.
+Qed.
+
+Lemma bc_eta
+      bc0 bc1
+      (IMG: forall blk, bc0.(bc_img) blk = bc1.(bc_img) blk)
+  :
+    bc0 = bc1
+.
+Proof.
+  destruct bc0, bc1; ss.
+  assert(bc_img = bc_img0).
+  { apply Axioms.functional_extensionality. eauto. }
+  clarify. f_equal.
+  - apply Axioms.proof_irr.
+  - apply Axioms.proof_irr.
+Qed.
+
+
+
 (** ** Soundness of the initial memory abstraction *)
 
 Section INITIAL.
 
-Variable prog: program.
+Context {F: Type}.
+Variable prog: AST.program F unit.
 
 Let ge := Genv.globalenv prog.
 
@@ -1508,7 +1703,8 @@ Lemma initial_block_classification:
   /\ bc_below bc (Mem.nextblock m)
   /\ bc_nostack bc
   /\ (forall b id, bc b = BCglob id -> Genv.find_symbol ge id = Some b)
-  /\ (forall b, Mem.valid_block m b -> bc b <> BCinvalid).
+  /\ (forall b, Mem.valid_block m b -> bc b <> BCinvalid)
+  /\ <<BC: bc = ske2bc ge>>.
 Proof.
   intros.
   set (f := fun b =>
@@ -1556,6 +1752,7 @@ Proof.
 - intros; simpl. unfold ge; erewrite Genv.init_mem_genv_next by eauto.
   rewrite pred_dec_true by assumption.
   destruct (Genv.invert_symbol (Genv.globalenv prog) b); congruence.
+- eapply bc_eta. i; ss. des_ifs.
 Qed.
 
 Section INIT.
@@ -1675,7 +1872,7 @@ Proof.
 - discriminate.
 Qed.
 
-Definition initial_mem_match (bc: block_classification) (m: mem) (g: genv) :=
+Definition initial_mem_match (bc: block_classification) (m: mem) (g: Genv.t F unit) :=
   forall id b v,
   Genv.find_symbol g id = Some b -> Genv.find_var_info g b = Some v ->
   v.(gvar_volatile) = false -> v.(gvar_readonly) = true ->
@@ -1751,7 +1948,7 @@ Proof.
   eapply alloc_global_match; eauto.
 Qed.
 
-Definition romem_consistent (defmap: PTree.t (globdef fundef unit)) (rm: romem) :=
+Definition romem_consistent (defmap: PTree.t (globdef F unit)) (rm: romem) :=
   forall id ab,
   rm!id = Some ab ->
   exists v,
@@ -1791,7 +1988,7 @@ Proof.
 Qed.
 
 Lemma romem_for_consistent_2:
-  forall cunit, linkorder cunit prog -> romem_consistent (prog_defmap prog) (romem_for cunit).
+  forall `{LF: Linker F} cunit, linkorder cunit prog -> romem_consistent (prog_defmap prog) (romem_for cunit).
 Proof.
   intros; red; intros.
   exploit (romem_for_consistent cunit); eauto. intros (v & DM & RO & VO & DEFN & AB).
@@ -1806,17 +2003,18 @@ Qed.
 End INIT.
 
 Theorem initial_mem_matches:
-  forall m,
+  forall `{LF: Linker F} m,
   Genv.init_mem prog = Some m ->
   exists bc,
      genv_match bc ge
   /\ bc_below bc (Mem.nextblock m)
   /\ bc_nostack bc
   /\ (forall cunit, linkorder cunit prog -> romatch bc m (romem_for cunit))
-  /\ (forall b, Mem.valid_block m b -> bc b <> BCinvalid).
+  /\ (forall b, Mem.valid_block m b -> bc b <> BCinvalid)
+  /\ <<BC: bc = ske2bc ge>>.
 Proof.
   intros.
-  exploit initial_block_classification; eauto. intros (bc & GE & BELOW & NOSTACK & INV & VALID).
+  exploit initial_block_classification; eauto. intros (bc & GE & BELOW & NOSTACK & INV & VALID & BC).
   exists bc; splitall; auto.
   intros.
   assert (A: initial_mem_match bc m ge).
@@ -1841,15 +2039,18 @@ Qed.
 
 End INITIAL.
 
+
 Require Import Axioms.
 
 Theorem sound_initial:
-  forall prog st, initial_state prog st -> sound_state prog (Genv.globalenv prog) st.
+  forall prog st, initial_state prog st -> exists su_init, sound_state prog (Genv.globalenv prog) su_init st.
 Proof.
   destruct 1.
-  exploit initial_mem_matches; eauto. intros (bc & GE & BELOW & NOSTACK & RM & VALID).
+  hexploit (initial_mem_matches _ _ H); eauto. intros (bc & GE & BELOW & NOSTACK & RM & VALID & BC).
+  exists (Unreach.mk (fun _ => false) ge.(Genv.genv_next) m0.(Mem.nextblock)).
   constructor; intros. apply sound_call_state with bc.
-- constructor.
+- exploit Genv.init_mem_genv_next; eauto. fold ge. intro NB.
+  constructor; ss. reflexivity.
 - simpl; tauto.
 - apply RM; auto.
 - apply mmatch_inj_top with m0.
@@ -1861,6 +2062,8 @@ Proof.
   unfold inj_of_bc. erewrite bc_below_invalid; eauto.
 - exact GE.
 - exact NOSTACK.
+- rr. ss. splits; i; des_ifs; try xomega. des_sumbool. ii. hexploit VALID; eauto.
+- econs; eauto. ss.
 Qed.
 
 Hint Resolve areg_sound aregs_sound: va.
@@ -1869,8 +2072,8 @@ Hint Resolve areg_sound aregs_sound: va.
 
 Ltac InvSoundState :=
   match goal with
-  | H1: sound_state ?prog ?ge ?st, H2: linkorder ?cunit ?prog |- _ =>
-      let S := fresh "S" in generalize (sound_state_inv _ _ _ _ H1 H2); intros S; inv S
+  | H1: sound_state ?prog ?ge ?su ?st, H2: linkorder ?cunit ?prog |- _ =>
+      let S := fresh "S" in generalize (sound_state_inv _ _ _ _ _ H1 H2); intros S; inv S
   end.
 
 Definition avalue (a: VA.t) (r: reg) : aval :=
@@ -1880,8 +2083,8 @@ Definition avalue (a: VA.t) (r: reg) : aval :=
   end.
 
 Lemma avalue_sound:
-  forall cunit prog s f sp pc e m r ge,
-  sound_state prog ge (State s f (Vptr sp Ptrofs.zero) pc e m) ->
+  forall cunit prog s f sp pc e m r ge su,
+  sound_state prog ge su (State s f (Vptr sp Ptrofs.zero) pc e m) ->
   linkorder cunit prog ->
   exists bc,
      vmatch bc e#r (avalue (analyze (romem_for cunit) f)!!pc r)
@@ -1898,8 +2101,8 @@ Definition aaddr (a: VA.t) (r: reg) : aptr :=
   end.
 
 Lemma aaddr_sound:
-  forall cunit prog s f sp pc e m r b ofs ge,
-  sound_state prog ge (State s f (Vptr sp Ptrofs.zero) pc e m) ->
+ forall cunit prog s f sp pc e m r b ofs ge su,
+  sound_state prog ge su (State s f (Vptr sp Ptrofs.zero) pc e m) ->
   linkorder cunit prog ->
   e#r = Vptr b ofs ->
   exists bc,
@@ -1918,8 +2121,8 @@ Definition aaddressing (a: VA.t) (addr: addressing) (args: list reg) : aptr :=
   end.
 
 Lemma aaddressing_sound:
-  forall cunit prog s f sp pc e m addr args b ofs ge,
-  sound_state prog ge (State s f (Vptr sp Ptrofs.zero) pc e m) ->
+  forall cunit prog s f sp pc e m addr args b ofs ge su,
+  sound_state prog ge su (State s f (Vptr sp Ptrofs.zero) pc e m) ->
   linkorder cunit prog ->
   eval_addressing ge (Vptr sp Ptrofs.zero) addr e##args = Some (Vptr b ofs) ->
   exists bc,
@@ -1948,7 +2151,7 @@ Definition aaddr_arg (a: VA.t) (ba: builtin_arg reg) : aptr :=
   end.
 
 Lemma aaddr_arg_sound_1:
-  forall bc rs ae m rm am ge sp a b ofs,
+  forall bc rs ae m rm am F V (ge: Genv.t F V) sp a b ofs,
   ematch bc rs ae ->
   romatch bc m rm ->
   mmatch bc m am ->
@@ -1964,8 +2167,8 @@ Proof.
 Qed.
 
 Lemma aaddr_arg_sound:
-  forall cunit prog s f sp pc e m a b ofs ge,
-  sound_state prog ge (State s f (Vptr sp Ptrofs.zero) pc e m) ->
+  forall cunit prog s f sp pc e m a b ofs ge su,
+  sound_state prog ge su (State s f (Vptr sp Ptrofs.zero) pc e m) ->
   linkorder cunit prog ->
   eval_builtin_arg ge (fun r => e#r) (Vptr sp Ptrofs.zero) m a (Vptr b ofs) ->
   exists bc,
