@@ -767,6 +767,15 @@ Proof.
   destruct (zlt (unsigned x) half_modulus); omega.
 Qed.
 
+Lemma Ptrofs_add_repr:
+  forall x y, (add (repr x) (repr y)) = repr (x + y)
+.
+Proof.
+  intros. apply eqm_repr_eq. eapply eqm_sym. eapply eqm_trans.
+  - apply eqm_sym. apply eqm_unsigned_repr.
+  - apply eqm_add; apply eqm_unsigned_repr.
+Qed.
+
 (** ** Properties of zero, one, minus one *)
 
 Theorem unsigned_zero: unsigned zero = 0.

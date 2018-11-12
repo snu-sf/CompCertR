@@ -67,7 +67,7 @@ COMMON=Errors.v AST.v Linking.v \
   Events.v Globalenvs.v Memdata.v Memtype.v Memory.v \
   Values.v Smallstep.v Behaviors.v Switch.v Determinism.v Unityping.v \
   Unreach.v \
-  Separation.v
+  Separation.v SimMemInj.v
 
 # Back-end modules (in backend/, $(ARCH)/)
 

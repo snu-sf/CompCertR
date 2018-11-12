@@ -857,7 +857,9 @@ Lemma external_call_parallel_rule:
   /\ Val.inject j' vres1 vres2
   /\ m2' |= minjection j' m1' ** globalenv_inject ge j' ** P
   /\ inject_incr j j'
-  /\ inject_separated j j' m1 m2.
+  /\ inject_separated j j' m1 m2
+  /\ Mem.unchanged_on (loc_unmapped j) m1 m1'
+  /\ Mem.unchanged_on (loc_out_of_reach j m1) m2 m2'.
 Proof.
   intros until vargs2; intros CALL SEP ARGS.
   destruct SEP as (A & B & C). simpl in A.
@@ -896,7 +898,8 @@ Lemma alloc_parallel_rule_2:
   exists j',
      m2' |= range b2 0 lo ** range b2 hi sz2 ** minjection j' m1' ** globalenv_inject ge j' ** P
   /\ inject_incr j j'
-  /\ j' b1 = Some(b2, delta).
+  /\ j' b1 = Some(b2, delta)
+  /\ inject_separated j j' m1 m2.
 Proof.
   intros.
   set (j1 := fun b => if eq_block b b1 then Some(b2, delta) else j b).
@@ -916,4 +919,7 @@ Proof.
   rewrite sep_swap4 in A. rewrite sep_swap4. apply globalenv_inject_incr with j1 m1; auto.
 - red; unfold j1; intros. destruct (eq_block b b1). congruence. rewrite D; auto.
 - red; unfold j1; intros. destruct (eq_block b0 b1). congruence. rewrite D in H9 by auto. congruence.
+- split; eauto. split; auto. unfold inject_separated. intros. destruct (eq_block b1 b0).
+  + subst b0. rewrite C in H9. inv H9. split; eapply Mem.fresh_block_alloc; eauto.
+  + exploit D; eauto. congruence.
 Qed.

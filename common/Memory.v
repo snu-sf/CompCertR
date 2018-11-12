@@ -38,6 +38,7 @@ Require Import Floats.
 Require Import Values.
 Require Export Memdata.
 Require Export Memtype.
+Require Import sflib.
 
 (* To avoid useless definitions of inductors in extracted code. *)
 Local Unset Elimination Schemes.
@@ -4450,6 +4451,30 @@ Proof.
   eapply perm_free_3; eauto.
 - unfold free in H. destruct (range_perm_dec m b lo hi Cur Freeable); inv H.
   simpl. auto.
+Qed.
+
+Remark free_list_nextblock:
+  forall l m m',
+  free_list m l = Some m' -> nextblock m' = nextblock m.
+Proof.
+  induction l; simpl; intros.
+  congruence.
+  destruct a. destruct p. destruct (Mem.free m b z0 z) as [m1|] eqn:?; try discriminate.
+  transitivity (Mem.nextblock m1). eauto. eapply Mem.nextblock_free; eauto.
+Qed.
+
+Lemma free_list_unchanged_on:
+  forall l m m',
+    free_list m l = Some m' ->
+    (forall b lo hi i, In (b, lo, hi) l -> lo <= i < hi -> ~ P b i) ->
+    unchanged_on m m'.
+Proof.
+  induction l; i.
+  - inv H. eapply unchanged_on_refl.
+  - destruct a, p. inv H. des_ifs.
+    exploit free_unchanged_on; eauto. { i. eapply H0; eauto. left; ss. } i.
+    eapply unchanged_on_trans; eauto. eapply IHl; eauto.
+    i. eapply H0; try right; eauto.
 Qed.
 
 Lemma drop_perm_unchanged_on:
