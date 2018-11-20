@@ -494,6 +494,13 @@ Definition is_call_cont (k: cont) : Prop :=
   | _ => False
   end.
 
+Definition is_call_cont_strong (k: cont) : Prop :=
+  match k with
+  | Kcall _ _ _ _ _ => True
+  | _ => False
+  end
+.
+
 (** Execution states of the program are grouped in 4 classes corresponding
   to the part of the program we are currently executing.  It can be
   a statement ([State]), an expression ([ExprState]), a transition

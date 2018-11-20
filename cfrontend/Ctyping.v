@@ -20,6 +20,7 @@ Require Import Coqlib Maps Integers Floats Errors.
 Require Import AST Linking.
 Require Import Values Memory Globalenvs Events.
 Require Import Ctypes Cop Csyntax Csem.
+Require Import sflib.
 
 Local Open Scope error_monad_scope.
 
@@ -313,10 +314,17 @@ Inductive wt_val : val -> type -> Prop :=
   | wt_val_void: forall v,
       wt_val v Tvoid.
 
+Inductive wt_retval (v: val) (ty: type): Prop :=
+| wt_retval_intro
+    (WTV: wt_val v ty)
+    (NVOID: ty = Tvoid -> v = Vundef)
+.
+
 Inductive wt_arguments: exprlist -> typelist -> Prop :=
   | wt_arg_nil:
       wt_arguments Enil Tnil
-  | wt_arg_cons: forall a al ty tyl,
+  | wt_arg_cons: forall a al ty tyl
+      (NVOID: ty <> Tvoid),
       wt_cast (typeof a) ty ->
       wt_arguments al tyl ->
       wt_arguments (Econs a al) (Tcons ty tyl)
@@ -474,9 +482,10 @@ Inductive wt_stmt: statement -> Prop :=
       wt_stmt Sbreak
   | wt_Scontinue:
       wt_stmt Scontinue
-  | wt_Sreturn_none:
+  | wt_Sreturn_none
+      (VOID: rt = Tvoid):
       wt_stmt (Sreturn None)
-  | wt_Sreturn_some: forall r,
+  | wt_Sreturn_some: forall r (NVOID: rt <> Tvoid),
       wt_rvalue r ->
       wt_cast (typeof r) rt ->
       wt_stmt (Sreturn (Some r))
@@ -507,6 +516,7 @@ Fixpoint bind_vars (e: typenv) (l: list (ident * type)) : typenv :=
 
 Inductive wt_function (ce: composite_env) (e: typenv) : function -> Prop :=
   | wt_function_intro: forall f,
+      forall (COMP: Forall (complete_type ce) (map snd ((f.(fn_params)) ++ f.(fn_vars)))),
       wt_stmt ce (bind_vars (bind_vars e f.(fn_params)) f.(fn_vars)) f.(fn_return) f.(fn_body) ->
       wt_function ce e f.
 
@@ -522,6 +532,8 @@ Inductive wt_program : program -> Prop :=
       let e := bind_globdef (PTree.empty _) p.(prog_defs) in
       (forall id f, In (id, Gfun (Internal f)) p.(prog_defs) ->
          wt_function p.(prog_comp_env) e f) ->
+      (forall id ef targs tres cc, In (id, Gfun (External ef targs tres cc)) p.(prog_defs) ->
+         signature_of_type targs tres cc = ef_sig ef) ->
       wt_program p.
 
 Hint Constructors wt_val wt_rvalue wt_lvalue wt_stmt wt_lblstmts: ty.
@@ -577,7 +589,7 @@ Fixpoint check_arguments (el: exprlist) (tyl: typelist) : res unit :=
   | Enil, Tnil => OK tt
   | Enil, _ => Error (msg "not enough arguments")
   | _, Tnil => if strict then Error (msg "too many arguments") else OK tt
-  | Econs e1 el, Tcons ty1 tyl => do x <- check_cast (typeof e1) ty1; check_arguments el tyl
+  | Econs e1 el, Tcons ty1 tyl => do x <- check_cast (typeof e1) ty1; assertion(negb (type_eq ty1 Tvoid)); check_arguments el tyl
   end.
 
 Definition check_rval (e: expr) : res unit :=
@@ -762,6 +774,7 @@ Definition sfor (s1: statement) (a: expr) (s2 s3: statement) : res statement :=
 
 Definition sreturn (rt: type) (a: expr) : res statement :=
   do x <- check_rval a; do y <- check_cast (typeof a) rt;
+  assertion(negb (type_eq rt Tvoid));
   OK (Sreturn (Some a)).
 
 Definition sswitch (a: expr) (sl: labeled_statements) : res statement :=
@@ -871,6 +884,7 @@ Fixpoint retype_stmt (ce: composite_env) (e: typenv) (rt: type) (s: statement) :
   | Scontinue =>
       OK Scontinue
   | Sreturn None =>
+      assertion(type_eq rt Tvoid);
       OK (Sreturn None)
   | Sreturn (Some a) =>
       do a' <- retype_expr ce e a;
@@ -896,6 +910,7 @@ with retype_lblstmts (ce: composite_env) (e: typenv) (rt: type) (sl: labeled_sta
 Definition retype_function (ce: composite_env) (e: typenv) (f: function) : res function :=
   let e := bind_vars (bind_vars e f.(fn_params)) f.(fn_vars) in
   do s <- retype_stmt ce e f.(fn_return) f.(fn_body);
+    assertion (forallb (complete_type ce) (map snd (fn_params f ++ fn_vars f)));
   OK (mkfunction f.(fn_return)
                  f.(fn_callconv)
                  f.(fn_params)
@@ -905,7 +920,7 @@ Definition retype_function (ce: composite_env) (e: typenv) (f: function) : res f
 Definition retype_fundef (ce: composite_env) (e: typenv) (fd: fundef) : res fundef :=
   match fd with
   | Internal f => do f' <- retype_function ce e f; OK (Internal f')
-  | External id args res cc => OK fd
+  | External ef args res cc => assertion(signature_eq (signature_of_type args res cc) ef.(ef_sig)); OK fd
   end.
 
 Definition typecheck_program (p: program) : res program :=
@@ -944,6 +959,8 @@ Proof.
   induction tl; destruct el; simpl; intros; try discriminate.
   constructor.
   destruct strict eqn:S; try discriminate. constructor; auto.
+  destruct (type_eq t Tvoid); ss.
+  { des_ifs. }
   monadInv H. constructor; eauto with ty.
 Qed.
 
@@ -1263,7 +1280,8 @@ Qed.
 Lemma sreturn_sound:
   forall a s, sreturn rt a = OK s -> wt_expr ce e a -> wt_stmt ce e rt s.
 Proof.
-  intros. monadInv H; eauto with ty.
+  intros. unfold sreturn in H. unfold bind in *. des_ifs; eauto with ty.
+  econs; eauto with ty. ii. rewrite H in *. ss.
 Qed.
 
 Lemma sswitch_sound:
@@ -1325,7 +1343,8 @@ Proof.
 + eapply sfor_sound; eauto using retype_expr_sound.
 + constructor.
 + constructor.
-+ destruct o; monadInv RT. eapply sreturn_sound; eauto using retype_expr_sound. constructor.
++ destruct o. monadInv RT. eapply sreturn_sound; eauto using retype_expr_sound.
+  clear - RT. des_ifs. constructor. reflexivity.
 + eapply sswitch_sound; eauto using retype_expr_sound.
 + constructor; eauto.
 + constructor.
@@ -1339,7 +1358,9 @@ End SOUNDNESS_CONSTRUCTORS.
 Lemma retype_function_sound:
   forall ce e f f', retype_function ce e f = OK f' -> wt_function ce e f'.
 Proof.
-  intros. monadInv H. constructor; simpl. eapply retype_stmt_sound; eauto.
+  intros. monadInv H. constructor; simpl.
+  { rewrite Forall_forall. rewrite forallb_forall in *. ss. }
+  eapply retype_stmt_sound; eauto.
 Qed.
 
 Theorem typecheck_program_sound:
@@ -1369,6 +1390,11 @@ Proof.
   contradiction.
   destruct H0; auto. subst b1; inv H. simpl in H1. inv H1. 
   destruct f1; monadInv H4. eapply retype_function_sound; eauto.
+  { hexploit (match_transform_partial_program _ _ _ EQ); eauto. intro M.
+    rr in M. des.  i. exploit list_forall2_in_right; eauto. intro MATCH; des. ss.
+    inv MATCH0. ss. clarify. inv H1. destruct x1; ss. clarify. unfold retype_fundef in H4. des_ifs.
+    monadInv H4.
+  }
 Qed.
 
 (** * Subject reduction *)
@@ -1851,14 +1877,30 @@ Section PRESERVATION.
 
 Variable prog: program.
 Hypothesis WTPROG: wt_program prog.
-Let ge := globalenv prog.
+Variable ge: genv.
+Hypothesis CECMPT: prog.(prog_comp_env) = ge.(genv_cenv).
+Hypothesis GECMPT: forall
+    id blk gd
+    (SYMB: Genv.find_symbol ge id = Some blk)
+    (DEF: Genv.find_def ge blk = Some gd)
+    ,
+      <<MAP: (prog_defmap prog) ! id = Some gd>>
+.
+
+Hypothesis GEWF: forall
+    blk gd
+    (DEF: Genv.find_def ge blk = Some gd)
+    ,
+    exists id, <<SYMB: Genv.find_symbol ge id = Some blk>>
+.
+
 Let gtenv := bind_globdef (PTree.empty _) prog.(prog_defs).
 
 Hypothesis WT_EXTERNAL:
   forall id ef args res cc vargs m t vres m',
   In (id, Gfun (External ef args res cc)) prog.(prog_defs) ->
   external_call ef ge vargs m t vres m' ->
-  wt_val vres res.
+  wt_retval vres res.
 
 Inductive wt_expr_cont: typenv -> function -> cont -> Prop :=
   | wt_Kdo: forall te f k,
@@ -1885,7 +1927,8 @@ Inductive wt_expr_cont: typenv -> function -> cont -> Prop :=
       wt_stmt_cont te f k ->
       wt_lblstmts ge te f.(fn_return) ls ->
       wt_expr_cont te f (Kswitch1 ls k)
-  | wt_Kreturn: forall te f k,
+  | wt_Kreturn: forall te f k
+      (NVOID: f.(fn_return) <> Tvoid),
       wt_stmt_cont te f k ->
       wt_expr_cont te f (Kreturn k)
 
@@ -1970,11 +2013,20 @@ Definition fundef_return (fd: fundef) : type :=
   | External ef targs tres cc => tres
   end.
 
+Definition fundef_args (fd: fundef) : typelist :=
+  match fd with
+  | Internal f => type_of_params f.(fn_params)
+  | External ef targs tres cc => targs
+  end.
+
 Lemma wt_find_funct:
   forall v fd, Genv.find_funct ge v = Some fd -> wt_fundef fd.
 Proof.
-  intros. apply Genv.find_funct_prop with (p := prog) (v := v); auto.
-  intros. inv WTPROG. destruct f; simpl; auto. apply H1 with id; auto.
+  i. inv WTPROG. destruct fd; ss. rewrite <- CECMPT. unfold Genv.find_funct, Genv.find_funct_ptr in *. des_ifs.
+  exploit GEWF; eauto. i; des.
+  exploit GECMPT; eauto. i; des.
+  eapply H0; eauto.
+  eapply PTree_Properties.in_of_list; eauto. (* AST.in_prog_defmap *)
 Qed.
 
 Inductive wt_state: state -> Prop :=
@@ -1991,11 +2043,19 @@ Inductive wt_state: state -> Prop :=
   | wt_call_state: forall b fd vargs k m
         (WTK: wt_call_cont k (fundef_return fd))
         (WTFD: wt_fundef fd)
-        (FIND: Genv.find_funct ge b = Some fd),
+        (FIND: Genv.find_funct ge b = Some fd)
+        (WTKS: forall
+            (EXT: forall f, fd <> (Internal f))
+          ,
+            exists _f _e _C _k, k = Kcall _f _e _C (fundef_return fd) _k)
+        (WTARGS: Forall2 val_casted vargs fd.(fundef_args).(typelist_to_listtype))
+        (NVOID: Forall (fun ty => ty <> Tvoid) fd.(fundef_args).(typelist_to_listtype))
+    ,
       wt_state (Callstate fd vargs k m)
   | wt_return_state: forall v k m ty
         (WTK: wt_call_cont k ty)
-        (VAL: wt_val v ty),
+        (VAL: wt_retval v ty)
+    ,
       wt_state (Returnstate v k m)
   | wt_stuck_state:
       wt_state Stuckstate.
@@ -2069,6 +2129,10 @@ Proof.
   { destruct fd; simpl in *.
     unfold type_of_function in H3. congruence.
     congruence. }
+  assert (fundef_args fd = tyargs0).
+  { destruct fd; simpl in *.
+    unfold type_of_function in H3. congruence.
+    congruence. }
   econstructor.
   rewrite H. econstructor; eauto.
   intros. change (wt_expr_kind ge te RV (C (Eval v ty))).
@@ -2076,6 +2140,17 @@ Proof.
   red; constructor; auto.
   eapply wt_find_funct; eauto.
   eauto.
+  { ii. subst. esplits; eauto. }
+  {
+  simpl. rewrite H5. eauto.
+  clear - H2 H10.
+  ginduction vargs; ii; ss; inv H2; inv H10; ss.
+  econs; eauto. eapply cast_val_is_casted; eauto.
+  }
+  {
+  rewrite H5. clear - H10.
+  ginduction tyargs0; ii; ss. inv H10. econs; eauto.
+  }
 - (* stuck *)
   constructor.
 Qed.
@@ -2109,11 +2184,13 @@ Proof.
 - inv WTK; eauto with ty.
 - inv WTK; eauto with ty.
 - inv WTK; eauto with ty.
-- econstructor. eapply call_cont_wt; eauto. constructor.
+- econstructor. eapply call_cont_wt; eauto. split. constructor. intro. reflexivity.
 - inv WTS. eauto with ty.
 - inv WTK. econstructor. eapply call_cont_wt; eauto.
-  inv WTE. eapply pres_sem_cast; eauto.
-- econstructor. eapply is_wt_call_cont; eauto. constructor.
+  inv WTE. split. eapply pres_sem_cast; eauto.
+  { i. clarify. }
+- econstructor. eapply is_wt_call_cont; eauto. split. constructor.
+  intro. reflexivity.
 - inv WTS; eauto with ty.
 - inv WTK. econstructor; eauto with ty.
   apply wt_seq_of_ls. apply wt_select_switch; auto.
@@ -2123,9 +2200,11 @@ Proof.
 - exploit wt_find_label. eexact WTB. eauto. eapply call_cont_wt'; eauto.
   intros [A B]. eauto with ty.
 - simpl in WTFD; inv WTFD. econstructor; eauto. apply wt_call_cont_stmt_cont; auto.
-- exploit (Genv.find_funct_inversion prog); eauto. intros (id & A).
-  econstructor; eauto.
-- inv WTK. eauto with ty.
+- econstructor; eauto.
+  unfold Genv.find_funct, Genv.find_funct_ptr in *. des_ifs. exploit GEWF; eauto. i; des. exploit GECMPT; eauto. i; des.
+  exploit WT_EXTERNAL; eauto.
+  { eapply PTree_Properties.in_of_list; eauto. }
+- inv WTK. inv VAL. eauto with ty.
 Qed.
 
 Theorem preservation:
@@ -2135,12 +2214,21 @@ Proof.
 Qed.
 
 Theorem wt_initial_state:
-  forall S, initial_state prog S -> wt_state S.
+  forall fd vargs k m,
+    initial_state prog (Callstate fd vargs k m) ->
+    (exists vf, Genv.find_funct ge vf = Some fd) ->
+    (exists f, fd = Internal f) ->
+    wt_state (Callstate fd vargs k m)
+.
 Proof.
-  intros. inv H. econstructor. constructor.
-  apply Genv.find_funct_ptr_prop with (p := prog) (b := b); auto.
-  intros. inv WTPROG. destruct f0; simpl; auto. apply H4 with id; auto.
-  instantiate (1 := (Vptr b Ptrofs.zero)). rewrite Genv.find_funct_find_funct_ptr. auto.
+  intros. des. inv H.
+  assert(PARAMS: fundef_args (Internal f) = Tnil).
+  { ss. unfold type_of_function in *. congruence. }
+  econstructor. constructor.
+  eapply wt_find_funct; eauto. eauto.
+  { ii. exfalso. des. eapply EXT; eauto. }
+  rewrite PARAMS. econstructor; eauto.
+  rewrite PARAMS. econstructor; eauto.
 Qed.
 
 End PRESERVATION.
