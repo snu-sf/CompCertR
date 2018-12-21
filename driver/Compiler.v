@@ -242,7 +242,7 @@ Definition CompCert's_passes :=
   ::: mkpass (match_if Compopts.optim_constprop Renumberproof.match_prog)
   ::: mkpass (match_if Compopts.optim_CSE CSEproof.match_prog)
   ::: mkpass (match_if Compopts.optim_redundancy Deadcodeproof.match_prog)
-  ::: mkpass Unusedglobproof.match_prog
+  ::: mkpass Unusedglobproof.match_prog_weak
   ::: mkpass Allocproof.match_prog
   ::: mkpass Tunnelingproof.match_prog
   ::: mkpass Linearizeproof.match_prog
@@ -306,7 +306,7 @@ Proof.
   exists p11; split. apply total_if_match. apply Renumberproof.transf_program_match.
   exists p12; split. eapply partial_if_match; eauto. apply CSEproof.transf_program_match.
   exists p13; split. eapply partial_if_match; eauto. apply Deadcodeproof.transf_program_match.
-  exists p14; split. apply Unusedglobproof.transf_program_match; auto.
+  exists p14; split. eapply Unusedglobproof.match_prog_weakening. apply Unusedglobproof.transf_program_match; auto.
   exists p15; split. apply Allocproof.transf_program_match; auto.
   exists p16; split. apply Tunnelingproof.transf_program_match.
   exists p17; split. apply Linearizeproof.transf_program_match; auto.
