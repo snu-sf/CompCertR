@@ -335,15 +335,14 @@ Qed.
 (** Existence of return addresses *)
 
 Lemma return_address_exists:
-  forall f sg ros c v (FUNCT: Genv.find_funct (Genv.globalenv prog) v = Some (Internal f)), is_tail (Mcall sg ros :: c) f.(Mach.fn_code) ->
+  forall f sg ros c id (FUNCT: In (id, Gfun (Internal f)) (prog_defs prog)), is_tail (Mcall sg ros :: c) f.(Mach.fn_code) ->
   exists ra, return_address_offset f c ra.
 Proof.
   intros.
   assert(TF: exists tf, transf_function f = OK tf).
   { inv TRANSF.
-    exploit Genv.find_funct_inversion; eauto. i; des.
     eapply list_forall2_in_left in H0; eauto.
-    des. inv H4. ss. clarify. inv H6. ss. monadInv H8. esplits; eauto.
+    des. inv H2. ss. clarify. inv H5. ss. monadInv H7. esplits; eauto.
   } des.
   eapply Asmgenproof0.return_address_exists; eauto.
 - intros. exploit transl_instr_label; eauto.
