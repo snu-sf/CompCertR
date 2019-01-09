@@ -1375,7 +1375,9 @@ Inductive match_stacks (j: meminj):
       tailcall_possible sg ->
       match_stacks j nil nil sg sm0
   | match_stacks_cons: forall f sp ls c cs fb sp' ra c' cs' sg trf sm0
-        (EXT_TGT_NON: forall i, ~ sm0.(SimMemInj.tgt_external) sp' i)
+        (SPVALID: sm0.(SimMemInj.tgt).(Mem.valid_block) sp' /\
+                  Ple sm0.(SimMemInj.tgt_parent_nb) sp' /\
+                  forall i, ~ sm0.(SimMemInj.tgt_external) sp' i)
         (PRIV: forall i, 0 <= i < (fe_stack_data (make_env (function_bounds f))) \/
                      fe_stack_data (make_env (function_bounds f)) + Linear.fn_stacksize f <= i < fe_size (make_env (function_bounds f))
                      -> sm0.(SimMemInj.tgt_private) sp' i)
@@ -1411,6 +1413,23 @@ Local Opaque sepconj.
   rewrite sep_swap. apply IHcs. rewrite sep_swap. assumption.
 Qed.
 
+Lemma spvalid_le
+      sm0 sm1
+      sp
+      (SPVALID: sm0.(SimMemInj.tgt).(Mem.valid_block) sp /\
+                Ple sm0.(SimMemInj.tgt_parent_nb) sp /\
+                forall i, ~ sm0.(SimMemInj.tgt_external) sp i)
+      (LE: SimMemInj.le' sm0 sm1)
+  :
+    <<SPVALID: sm1.(SimMemInj.tgt).(Mem.valid_block) sp /\
+               Ple sm1.(SimMemInj.tgt_parent_nb) sp /\
+               forall i, ~ sm1.(SimMemInj.tgt_external) sp i>>
+.
+Proof.
+  des. inv LE. rewrite <- TGTPARENTEQ. rewrite <- TGTPARENTEQNB. esplits; eauto.
+  eapply Mem.valid_block_unchanged_on; eauto.
+Qed.
+
 Lemma match_stacks_change_meminj:
   forall j j', inject_incr j j' ->
   forall cs cs' sg sm0,
@@ -1433,7 +1452,7 @@ Lemma match_stacks_le:
   match_stacks j cs cs' sg sm1.
 Proof.
   induction 4; intros; econstructor; eauto.
-  - inv LE. rewrite <- TGTPARENTEQ. eauto.
+  - eapply spvalid_le; eauto.
   - inv LE. ii. exploit PRIV; eauto. ii.
     unfold SimMemInj.tgt_private, loc_out_of_reach in *. desH H1. split.
     + ii. eapply H1. erewrite INJ; eauto.
@@ -1846,8 +1865,10 @@ Inductive match_states: Linear.state -> Mach.state -> SimMemInj.t' -> Prop :=
   | match_states_intro:
       forall cs f sp c ls m cs' fb sp' rs m' j tf
         sm0 (MCOMPAT: SimMemInj.mcompat sm0 m m' j)
+        (SPVALID: sm0.(SimMemInj.tgt).(Mem.valid_block) sp' /\
+                  Ple sm0.(SimMemInj.tgt_parent_nb) sp' /\
+                  forall i, ~ sm0.(SimMemInj.tgt_external) sp' i)
         (MWF: SimMemInj.wf' sm0)
-        (BB: forall i, ~sm0.(SimMemInj.tgt_external) sp' i)
         (PRIV: forall i, 0 <= i < fe_stack_data (make_env (function_bounds f)) \/
                     fe_stack_data (make_env (function_bounds f)) + Linear.fn_stacksize f <= i < fe_size (make_env (function_bounds f))
                     -> sm0.(SimMemInj.tgt_private) sp' i)
@@ -1973,13 +1994,14 @@ Proof.
   { inv MCOMPAT. inv MWF. econs; eauto.
     - eapply Mem.unchanged_on_refl.
     - unfold store_stack, Mem.storev in *. simpl in STORE. simpl.
-      eapply Mem.store_unchanged_on; eauto.
+      eapply Mem.store_unchanged_on; eauto. des. eauto.
     - eapply SimMemInj.frozen_refl.
     - ii. ss. unfold store_stack, Mem.storev in *. ss. eapply Mem.perm_store_2; eauto.
   }
   SimMemInj.spl_approx sm0.
   econstructor.
   { SimMemInj.compat_tac. }
+  { eapply spvalid_le; eauto. }
   { inv MCOMPAT. inv MWF. econs; ss; eauto.
     - eapply SEP.
     - etransitivity; eauto. unfold SimMemInj.tgt_private. ii. ss. des. split; eauto.
@@ -1988,7 +2010,6 @@ Proof.
     - unfold store_stack, Mem.storev in *. ss.
       erewrite Mem.nextblock_store; eauto.
   }
-  { unfold store_stack, Mem.storev in *. ss. }
   { inv MCOMPAT. ii. unfold SimMemInj.tgt_private, loc_out_of_reach in *. ss. exploit PRIV; eauto. intros [X Y]. split; eauto.
     unfold store_stack, Mem.storev in *. inv STORE. eapply Mem.store_valid_block_1; eauto.
   }
@@ -2060,8 +2081,9 @@ Proof.
   exploit SimMemInj.storev_mapped; eauto. i; des.
   SimMemInj.spl_exact sm1.
   econstructor.
-  SimMemInj.compat_tac. eauto.
-  { unfold Mem.storev in *. des_ifs. inv MLE. rewrite <- TGTPARENTEQ. ss. }
+  SimMemInj.compat_tac.
+  { eapply spvalid_le; eauto. }
+  eauto.
   { ii. unfold SimMemInj.tgt_private, loc_out_of_reach, Mem.storev in *. des_ifs. exploit PRIV; eauto. intros [X Y]. split.
     - ii. eapply X. rewrite <- MINJ. eauto. eapply Mem.perm_store_2; eauto.
     - eapply Mem.store_valid_block_1; eauto.
@@ -2125,9 +2147,9 @@ Proof.
           exploit Mem.free_range_perm. eapply H2. instantiate (1 := ofs - fe_stack_data (make_env (function_bounds f))).
           xomega. eauto with mem.
           intros [X | X]. congruence. xomega.
-    - rewrite MTGT. red. exploit Mem.free_range_perm; eauto. ii. clear - H. eauto with mem.
+    - rewrite MTGT. red. exploit Mem.free_range_perm; eauto.
   }
-  { ii. eapply BB. inv MLE. rewrite TGTPARENTEQ. eauto. }
+  { ii. eapply SPVALID1. inv MLE. rewrite TGTPARENTEQ. eauto. }
   i; des.
   SimMemInj.spl_exact sm2.
   econstructor; eauto.
@@ -2174,6 +2196,7 @@ Proof.
   SimMemInj.spl_approx sm0.
   eapply match_states_intro with (j := j'); eauto with coqlib.
   SimMemInj.compat_tac.
+  { eapply spvalid_le; eauto. }
   { inv MCOMPAT. inv MWF. econs; ss; eauto.
     - eapply SEP.
     - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
@@ -2282,9 +2305,9 @@ Proof.
           exploit Mem.free_range_perm. eapply H. instantiate (1 := ofs - fe_stack_data (make_env (function_bounds f))).
           xomega. eauto with mem.
           intros [X | X]. congruence. xomega.
-    - rewrite MTGT. red. exploit Mem.free_range_perm; eauto. ii. clear - H0. eauto with mem.
+    - rewrite MTGT. red. exploit Mem.free_range_perm; eauto.
   }
-  { ii. eapply BB. inv MLE. rewrite TGTPARENTEQ. eauto. }
+  { ii. eapply SPVALID1. inv MLE. rewrite TGTPARENTEQ. eauto. }
   i; des.
   SimMemInj.spl_exact sm2.
   econstructor; eauto.
@@ -2340,6 +2363,12 @@ Proof.
   SimMemInj.spl_approx sm0.
   eapply match_states_intro with (j := j'); eauto with coqlib.
   SimMemInj.compat_tac.
+  { des. ss. inv MCOMPAT. (* inv LE. ss. *) esplits; eauto.
+    - exploit Mem.valid_new_block; eauto. i; clarify. eapply Mem.valid_block_unchanged_on; eauto. unfold store_stack in *. ss.
+      eapply Mem.store_valid_block_1; eauto. eapply Mem.store_valid_block_1; eauto.
+    - erewrite Mem.alloc_result with (b := sp'); eauto. inv MWF. xomega.
+    - erewrite Mem.alloc_result with (b := sp'); eauto. inv MWF. intros ? T. apply TGTEXT in T. rr in T. des. r in T0. unfold Mem.valid_block in *. xomega.
+  }
   { inv MCOMPAT. inv MWF. econs; ss; eauto.
     - eapply SEP.
     - etransitivity; eauto. unfold SimMemInj.src_private. ii. des. ss. splits; eauto.
@@ -2352,7 +2381,6 @@ Proof.
     - exploit Mem.nextblock_alloc. eapply H. i. rewrite H0. xomega.
     - exploit Mem.nextblock_alloc; eauto. i. xomega.
   }
-  { ss. ii. inv MWF. inv MCOMPAT. eapply TGTEXT in H0. red in H0. des. eapply Mem.fresh_block_alloc; eauto. }
   { ii. unfold SimMemInj.tgt_private, loc_out_of_reach in *. simpl. split.
     - ii. exploit Mem.perm_alloc_inv. eexact H. eauto.
       destruct (eq_block b0 stk); i.
