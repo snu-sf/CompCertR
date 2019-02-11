@@ -18,6 +18,7 @@ Require Import AST Linking.
 Require Import Values Memory Events Globalenvs Smallstep.
 Require Import Op Locations LTL Linear.
 Require Import Linearize.
+Require Import sflib.
 
 Module NodesetFacts := FSetFacts.Facts(Nodeset).
 
@@ -489,6 +490,8 @@ Qed.
   sequence [c] that starts with the label [pc]. *)
 
 Inductive match_stackframes: LTL.stackframe -> Linear.stackframe -> Prop :=
+  | match_stackframe_dummy: forall f sp ls tf tc (DUMMY: f.(LTL.fn_code) = PTree.empty _) (SG: f.(LTL.fn_sig) = tf.(fn_sig)),
+      match_stackframes (LTL.Stackframe f sp ls []) (Linear.Stackframe tf sp ls tc)
   | match_stackframe_intro:
       forall f sp bb ls tf c,
       transf_function f = OK tf ->
@@ -499,6 +502,8 @@ Inductive match_stackframes: LTL.stackframe -> Linear.stackframe -> Prop :=
         (Linear.Stackframe tf sp ls (linearize_block bb c)).
 
 Inductive match_states: LTL.state -> Linear.state -> Prop :=
+  | match_states_dummy: forall s ts f sp rs m tc tf (STACKS: list_forall2 match_stackframes s ts),
+      match_states (Block s f sp [] rs m) (State ts tf sp tc rs m)
   | match_states_add_branch:
       forall s f sp pc ls m tf ts c
         (STACKS: list_forall2 match_stackframes s ts)
@@ -706,6 +711,7 @@ Proof.
   left; econstructor; split.
   apply plus_one. econstructor.
   econstructor; eauto.
+  left. esplits; eauto. apply plus_one. econs; eauto. econs; eauto.
 Qed.
 
 End CORELEMMA.
