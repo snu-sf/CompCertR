@@ -24,12 +24,12 @@ Local Open Scope string_scope.
 (** * Axiomatization of the helper functions *)
 
 Definition external_implements (name: string) (sg: signature) (vargs: list val) (vres: val) : Prop :=
-  forall F V (ge: Genv.t F V) m,
-  external_call (EF_runtime name sg) ge vargs m E0 vres m.
+  forall se m,
+  external_call (EF_runtime name sg) se vargs m E0 vres m.
 
 Definition builtin_implements (name: string) (sg: signature) (vargs: list val) (vres: val) : Prop :=
-  forall F V (ge: Genv.t F V) m,
-  external_call (EF_builtin name sg) ge vargs m E0 vres m.
+  forall se m,
+  external_call (EF_builtin name sg) se vargs m E0 vres m.
 
 Axiom i64_helpers_correct :
     (forall x z, Val.longoffloat x = Some z -> external_implements "__compcert_i64_dtos" sig_f_l (x::nil) z)
@@ -79,10 +79,15 @@ Section CMCONSTR.
 Variable prog: program.
 Variable hf: helper_functions.
 Hypothesis HELPERS: helper_functions_declared prog hf.
+Variable se: Senv.t.
 Variable ge : genv.
 Variable sp: val.
 Variable e: env.
 Variable m: mem.
+
+Notation "'eval_expr'" := (eval_expr se) (only parsing).
+Notation "'eval_shrimm'" := (eval_shrimm se) (only parsing).
+Notation "'eval_exprlist'" := (eval_exprlist se) (only parsing).
 
 Ltac UseHelper := decompose [Logic.and] i64_helpers_correct; eauto.
 Ltac DeclHelper := red in HELPERS; decompose [Logic.and] HELPERS; eauto.

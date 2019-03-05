@@ -144,6 +144,8 @@ Hypothesis TRANSL: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : genv.
 Variable tge : genv.
 
@@ -406,9 +408,9 @@ Proof.
 Qed.
 
 Lemma tunnel_step_correct:
-  forall st1 t st2, step ge st1 t st2 ->
+  forall st1 t st2, step se ge st1 t st2 ->
   forall st1' (MS: match_states st1 st1'),
-  (exists st2', step tge st1' t st2' /\ match_states st2 st2')
+  (exists st2', step tse tge st1' t st2' /\ match_states st2 st2')
   \/ (measure st2 < measure st1 /\ t = E0 /\ match_states st2 st1')%nat.
 Proof.
   induction 1; intros; try inv MS.
@@ -416,7 +418,7 @@ Proof.
 - (* entering a block *)
   assert (DEFAULT: branch_target f pc = pc ->
     (exists st2' : state,
-     step tge (State ts (tunnel_function f) sp (branch_target f pc) tls tm) E0 st2'
+     step tse tge (State ts (tunnel_function f) sp (branch_target f pc) tls tm) E0 st2'
      /\ match_states (Block s f sp bb rs m) st2')).
   { intros. rewrite H0. econstructor; split.
     econstructor. simpl. rewrite PTree.gmap1. rewrite H. simpl. eauto.
@@ -485,7 +487,7 @@ Proof.
   left; simpl; econstructor; split.
   eapply exec_Lbuiltin; eauto.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved. 
-  eapply external_call_symbols_preserved. apply senv_preserved. eauto.
+  eapply external_call_symbols_preserved; eauto.
   econstructor; eauto using locmap_setres_lessdef, locmap_undef_regs_lessdef.
 - (* Lbranch (preserved) *)
   left; simpl; econstructor; split.
@@ -531,7 +533,7 @@ Proof.
   intros (tvres & tm' & A & B & C & D).
   left; simpl; econstructor; split.
   eapply exec_function_external; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   simpl. econstructor; eauto using locmap_setpair_lessdef, locmap_undef_caller_save_regs_lessdef.
 - (* return *)
   inv STK. inv H1.
@@ -583,6 +585,7 @@ Proof.
   eexact transf_initial_states.
   eexact transf_final_states.
   apply tunnel_step_correct; auto.
+  eapply senv_preserved; eauto.
 Qed.
 
 End WHOLE.

@@ -29,12 +29,15 @@ Section CMCONSTR.
 Variable prog: program.
 Variable hf: helper_functions.
 Hypothesis HELPERS: helper_functions_declared prog hf.
+Variable se: Senv.t.
 Variable ge : genv.
 Variable sp: val.
 Variable e: env.
 Variable m: mem.
 
 Hypothesis (GENV_COMPAT: genv_compat ge prog).
+
+Notation "'eval_expr'" := (eval_expr se) (only parsing).
 
 Definition unary_constructor_sound (cstr: expr -> expr) (sem: val -> val) : Prop :=
   forall le a x,

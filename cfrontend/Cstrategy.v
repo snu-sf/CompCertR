@@ -35,6 +35,10 @@ Require Import Csem.
 
 Section STRATEGY.
 
+Variable se: Senv.t.
+Let rred := rred se.
+Let imm_safe := imm_safe se.
+Let assign_loc := assign_loc se.
 Variable ge: genv.
 
 (** * Definition of the strategy *)
@@ -116,7 +120,7 @@ with eval_simple_rvalue: expr -> val -> Prop :=
   | esr_rvalof: forall b ofs l ty v,
       eval_simple_lvalue l b ofs ->
       ty = typeof l -> type_is_volatile ty = false ->
-      deref_loc ge ty m b ofs E0 v ->
+      deref_loc se ty m b ofs E0 v ->
       eval_simple_rvalue (Evalof l ty) v
   | esr_addrof: forall b ofs l ty,
       eval_simple_lvalue l b ofs ->
@@ -242,7 +246,7 @@ Inductive estep: state -> trace -> state -> Prop :=
   | step_rvalof_volatile: forall f C l ty k e m b ofs t v,
       leftcontext RV RV C ->
       eval_simple_lvalue e m l b ofs ->
-      deref_loc ge ty m b ofs t v ->
+      deref_loc se ty m b ofs t v ->
       ty = typeof l -> type_is_volatile ty = true ->
       estep (ExprState f (C (Evalof l ty)) k e m)
           t (ExprState f (C (Eval v ty)) k e m)
@@ -293,7 +297,7 @@ Inductive estep: state -> trace -> state -> Prop :=
   | step_assignop: forall f C op l r tyres ty k e m b ofs v1 v2 v3 v4 t1 t2 m' t,
       leftcontext RV RV C ->
       eval_simple_lvalue e m l b ofs ->
-      deref_loc ge (typeof l) m b ofs t1 v1 ->
+      deref_loc se (typeof l) m b ofs t1 v1 ->
       eval_simple_rvalue e m r v2 ->
       sem_binary_operation ge op v1 (typeof l) v2 (typeof r) m = Some v3 ->
       sem_cast v3 tyres (typeof l) m = Some v4 ->
@@ -306,7 +310,7 @@ Inductive estep: state -> trace -> state -> Prop :=
   | step_assignop_stuck: forall f C op l r tyres ty k e m b ofs v1 v2 t,
       leftcontext RV RV C ->
       eval_simple_lvalue e m l b ofs ->
-      deref_loc ge (typeof l) m b ofs t v1 ->
+      deref_loc se (typeof l) m b ofs t v1 ->
       eval_simple_rvalue e m r v2 ->
       match sem_binary_operation ge op v1 (typeof l) v2 (typeof r) m with
       | None => True
@@ -323,7 +327,7 @@ Inductive estep: state -> trace -> state -> Prop :=
   | step_postincr: forall f C id l ty k e m b ofs v1 v2 v3 t1 t2 m' t,
       leftcontext RV RV C ->
       eval_simple_lvalue e m l b ofs ->
-      deref_loc ge ty m b ofs t1 v1 ->
+      deref_loc se ty m b ofs t1 v1 ->
       sem_incrdecr ge id v1 ty m = Some v2 ->
       sem_cast v2 (incrdecr_type ty) ty m = Some v3 ->
       assign_loc ge ty m b ofs v3 t2 m' ->
@@ -335,7 +339,7 @@ Inductive estep: state -> trace -> state -> Prop :=
   | step_postincr_stuck: forall f C id l ty k e m b ofs v1 t,
       leftcontext RV RV C ->
       eval_simple_lvalue e m l b ofs ->
-      deref_loc ge ty m b ofs t v1 ->
+      deref_loc se ty m b ofs t v1 ->
       match sem_incrdecr ge id v1 ty m with
       | None => True
       | Some v2 =>
@@ -375,12 +379,12 @@ Inductive estep: state -> trace -> state -> Prop :=
   | step_builtin: forall f C ef tyargs rargs ty k e m vargs t vres m',
       leftcontext RV RV C ->
       eval_simple_list e m rargs tyargs vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       estep (ExprState f (C (Ebuiltin ef tyargs rargs ty)) k e m)
           t (ExprState f (C (Eval vres ty)) k e m').
 
 Definition step (S: state) (t: trace) (S': state) : Prop :=
-  estep S t S' \/ sstep ge S t S'.
+  estep S t S' \/ sstep se ge S t S'.
 
 (** Properties of contexts *)
 
@@ -407,12 +411,12 @@ Hint Resolve context_compose contextlist_compose.
   if it cannot get stuck by doing silent transitions only. *)
 
 Definition safe (s: Csem.state) : Prop :=
-  forall s', star Csem.step ge s E0 s' ->
-  (exists r, final_state s' r) \/ (exists t, exists s'', Csem.step ge s' t s'').
+  forall s', star (Csem.step) se ge s E0 s' ->
+  (exists r, final_state s' r) \/ (exists t, exists s'', Csem.step se ge s' t s'').
 
 Lemma safe_steps:
   forall s s',
-  safe s -> star Csem.step ge s E0 s' -> safe s'.
+  safe s -> star (Csem.step) se ge s E0 s' -> safe s'.
 Proof.
   intros; red; intros.
   eapply H. eapply star_trans; eauto.
@@ -420,16 +424,16 @@ Qed.
 
 Lemma star_safe:
   forall s1 s2 t s3,
-  safe s1 -> star Csem.step ge s1 E0 s2 -> (safe s2 -> star Csem.step ge s2 t s3) ->
-  star Csem.step ge s1 t s3.
+  safe s1 -> star Csem.step se ge s1 E0 s2 -> (safe s2 -> star Csem.step se ge s2 t s3) ->
+  star Csem.step se ge s1 t s3.
 Proof.
   intros. eapply star_trans; eauto. apply H1. eapply safe_steps; eauto. auto.
 Qed.
 
 Lemma plus_safe:
   forall s1 s2 t s3,
-  safe s1 -> star Csem.step ge s1 E0 s2 -> (safe s2 -> plus Csem.step ge s2 t s3) ->
-  plus Csem.step ge s1 t s3.
+  safe s1 -> star Csem.step se ge s1 E0 s2 -> (safe s2 -> plus Csem.step se ge s2 t s3) ->
+  plus Csem.step se ge s1 t s3.
 Proof.
   intros. eapply star_plus_trans; eauto. apply H1. eapply safe_steps; eauto. auto.
 Qed.
@@ -533,7 +537,7 @@ Definition invert_expr_prop (a: expr) (m: mem) : Prop :=
       end
   | Eval v ty => False
   | Evalof (Eloc b ofs ty') ty =>
-      ty' = ty /\ exists t, exists v, deref_loc ge ty m b ofs t v
+      ty' = ty /\ exists t, exists v, deref_loc se ty m b ofs t v
   | Eunop op (Eval v1 ty1) ty =>
       exists v, sem_unary_operation op v1 ty1 m = Some v
   | Ebinop op (Eval v1 ty1) (Eval v2 ty2) ty =>
@@ -552,11 +556,11 @@ Definition invert_expr_prop (a: expr) (m: mem) : Prop :=
   | Eassignop op (Eloc b ofs ty1) (Eval v2 ty2) tyres ty =>
       exists t, exists v1,
       ty = ty1
-      /\ deref_loc ge ty1 m b ofs t v1
+      /\ deref_loc se ty1 m b ofs t v1
   | Epostincr id (Eloc b ofs ty1) ty =>
       exists t, exists v1,
       ty = ty1
-      /\ deref_loc ge ty m b ofs t v1
+      /\ deref_loc se ty m b ofs t v1
   | Ecomma (Eval v ty1) r2 ty =>
       typeof r2 = ty
   | Eparen (Eval v1 ty1) ty2 ty =>
@@ -572,7 +576,7 @@ Definition invert_expr_prop (a: expr) (m: mem) : Prop :=
       exprlist_all_values rargs ->
       exists vargs, exists t, exists vres, exists m',
          cast_arguments m rargs tyargs vargs
-      /\ external_call ef ge vargs m t vres m'
+      /\ external_call ef se vargs m t vres m'
   | _ => True
   end.
 
@@ -706,11 +710,11 @@ Variable m: mem.
 Lemma eval_simple_steps:
    (forall a v, eval_simple_rvalue e m a v ->
     forall C, context RV RV C ->
-    star Csem.step ge (ExprState f (C a) k e m)
+    star Csem.step se ge (ExprState f (C a) k e m)
                    E0 (ExprState f (C (Eval v (typeof a))) k e m))
 /\ (forall a b ofs, eval_simple_lvalue e m a b ofs ->
     forall C, context LV RV C ->
-    star Csem.step ge (ExprState f (C a) k e m)
+    star Csem.step se ge (ExprState f (C a) k e m)
                    E0 (ExprState f (C (Eloc b ofs (typeof a))) k e m)).
 Proof.
 
@@ -754,14 +758,14 @@ Qed.
 Lemma eval_simple_rvalue_steps:
   forall a v, eval_simple_rvalue e m a v ->
   forall C, context RV RV C ->
-  star Csem.step ge (ExprState f (C a) k e m)
+  star Csem.step se ge (ExprState f (C a) k e m)
                 E0 (ExprState f (C (Eval v (typeof a))) k e m).
 Proof (proj1 eval_simple_steps).
 
 Lemma eval_simple_lvalue_steps:
   forall a b ofs, eval_simple_lvalue e m a b ofs ->
   forall C, context LV RV C ->
-  star Csem.step ge (ExprState f (C a) k e m)
+  star Csem.step se ge (ExprState f (C a) k e m)
                 E0 (ExprState f (C (Eloc b ofs (typeof a))) k e m).
 Proof (proj2 eval_simple_steps).
 
@@ -980,7 +984,7 @@ Hint Resolve contextlist'_head contextlist'_tail.
 Lemma eval_simple_list_steps:
   forall rl vl, eval_simple_list' rl vl ->
   forall C, contextlist' C ->
-  star Csem.step ge (ExprState f (C rl) k e m)
+  star Csem.step se ge (ExprState f (C rl) k e m)
                 E0 (ExprState f (C (rval_list vl rl)) k e m).
 Proof.
   induction 1; intros.
@@ -1142,7 +1146,7 @@ End DECOMPOSITION.
 
 Lemma estep_simulation:
   forall S t S',
-  estep S t S' -> plus Csem.step ge S t S'.
+  estep S t S' -> plus Csem.step se ge S t S'.
 Proof.
   intros. inv H.
 (* simple *)
@@ -1395,7 +1399,7 @@ Qed.
 
 Theorem step_simulation:
   forall S1 t S2,
-  step S1 t S2 -> plus Csem.step ge S1 t S2.
+  step S1 t S2 -> plus Csem.step se ge S1 t S2.
 Proof.
   intros. inv H.
   apply estep_simulation; auto.
@@ -1459,17 +1463,17 @@ Proof.
 Qed.
 
 Remark assign_loc_trace:
-  forall ge ty m b ofs t v m',
-  assign_loc ge ty m b ofs v t m' ->
+  forall se ge ty m b ofs t v m',
+  assign_loc se ge ty m b ofs v t m' ->
   match t with nil => True | ev :: nil => output_event ev | _ => False end.
 Proof.
   intros. inv H; simpl; auto. inv H2; simpl; auto.
 Qed.
 
 Remark assign_loc_receptive:
-  forall ge ty m b ofs ev1 t1 v m' ev2,
-  assign_loc ge ty m b ofs v (ev1 :: t1) m' ->
-  match_traces ge (ev1 :: nil) (ev2 :: nil) ->
+  forall se ge ty m b ofs ev1 t1 v m' ev2,
+  assign_loc se ge ty m b ofs v (ev1 :: t1) m' ->
+  match_traces se (ev1 :: nil) (ev2 :: nil) ->
   ev1 :: t1 = ev2 :: nil.
 Proof.
   intros.
@@ -1498,7 +1502,7 @@ Proof.
   inv H10. exploit deref_loc_receptive; eauto. intros [EQ [v1' A]]. subst t0.
   destruct (sem_binary_operation ge op v1' (typeof l) v2 (typeof r) m) as [v3'|] eqn:?.
   destruct (sem_cast v3' tyres (typeof l) m) as [v4'|] eqn:?.
-  destruct (classic (exists t2', exists m'', assign_loc ge (typeof l) m b ofs v4' t2' m'')).
+  destruct (classic (exists t2', exists m'', assign_loc ge ge (typeof l) m b ofs v4' t2' m'')).
   destruct H1 as [t2' [m'' P]].
   econstructor; econstructor. left; eapply step_assignop with (v1 := v1'); eauto. simpl; reflexivity.
   econstructor; econstructor. left; eapply step_assignop_stuck with (v1 := v1'); eauto.
@@ -1511,7 +1515,7 @@ Proof.
   exploit deref_loc_receptive; eauto. intros [EQ [v1' A]]. subst t1.
   destruct (sem_binary_operation ge op v1' (typeof l) v2 (typeof r) m) as [v3'|] eqn:?.
   destruct (sem_cast v3' tyres (typeof l) m) as [v4'|] eqn:?.
-  destruct (classic (exists t2', exists m'', assign_loc ge (typeof l) m b ofs v4' t2' m'')).
+  destruct (classic (exists t2', exists m'', assign_loc ge ge (typeof l) m b ofs v4' t2' m'')).
   destruct H1 as [t2' [m'' P]].
   econstructor; econstructor. left; eapply step_assignop with (v1 := v1'); eauto. simpl; reflexivity.
   econstructor; econstructor. left; eapply step_assignop_stuck with (v1 := v1'); eauto.
@@ -1527,7 +1531,7 @@ Proof.
   inv H9. exploit deref_loc_receptive; eauto. intros [EQ [v1' A]]. subst t0.
   destruct (sem_incrdecr ge id v1' (typeof l) m) as [v2'|] eqn:?.
   destruct (sem_cast v2' (incrdecr_type (typeof l)) (typeof l) m) as [v3'|] eqn:?.
-  destruct (classic (exists t2', exists m'', assign_loc ge (typeof l) m b ofs v3' t2' m'')).
+  destruct (classic (exists t2', exists m'', assign_loc ge ge (typeof l) m b ofs v3' t2' m'')).
   destruct H1 as [t2' [m'' P]].
   econstructor; econstructor. left; eapply step_postincr with (v1 := v1'); eauto. simpl; reflexivity.
   econstructor; econstructor. left; eapply step_postincr_stuck with (v1 := v1'); eauto.
@@ -1540,7 +1544,7 @@ Proof.
   exploit deref_loc_receptive; eauto. intros [EQ [v1' A]]. subst t1.
   destruct (sem_incrdecr ge id v1' (typeof l) m) as [v2'|] eqn:?.
   destruct (sem_cast v2' (incrdecr_type (typeof l)) (typeof l) m) as [v3'|] eqn:?.
-  destruct (classic (exists t2', exists m'', assign_loc ge (typeof l) m b ofs v3' t2' m'')).
+  destruct (classic (exists t2', exists m'', assign_loc ge ge (typeof l) m b ofs v3' t2' m'')).
   destruct H1 as [t2' [m'' P]].
   econstructor; econstructor. left; eapply step_postincr with (v1 := v1'); eauto. simpl; reflexivity.
   econstructor; econstructor. left; eapply step_postincr_stuck with (v1 := v1'); eauto.
@@ -1613,6 +1617,7 @@ Qed.
 
 Section BIGSTEP.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** The execution of a statement produces an ``outcome'', indicating
@@ -1653,6 +1658,11 @@ Definition outcome_result_value (out: outcome) (t: type) (v: val) (m: mem) : Pro
   memory state, and [t] the trace of input/output events performed
   during this evaluation.  *)
 
+Let eval_simple_lvalue := eval_simple_lvalue se.
+Let eval_simple_rvalue := eval_simple_rvalue se.
+Let eval_simple_list := eval_simple_list se.
+Let assign_loc := assign_loc se.
+
 Inductive eval_expression: env -> mem -> expr -> trace -> mem -> val -> Prop :=
   | eval_expression_intro: forall e m a t m' a' v,
       eval_expr e m RV a t m' a' -> eval_simple_rvalue ge e m' a' v ->
@@ -1674,7 +1684,7 @@ with eval_expr: env -> mem -> kind -> expr -> trace -> mem -> expr -> Prop :=
       type_is_volatile (typeof a) = true ->
       eval_expr e m LV a t1 m' a' ->
       eval_simple_lvalue ge e m' a' b ofs ->
-      deref_loc ge (typeof a) m' b ofs t2 v ->
+      deref_loc se (typeof a) m' b ofs t2 v ->
       ty = typeof a ->
       eval_expr e m RV (Evalof a ty) (t1 ** t2) m' (Eval v ty)
   | eval_deref: forall e m a t m' a' ty,
@@ -1734,7 +1744,7 @@ with eval_expr: env -> mem -> kind -> expr -> trace -> mem -> expr -> Prop :=
                           v1 v2 v3 v4 t3 t4 m3,
       eval_expr e m LV l t1 m1 l' -> eval_expr e m1 RV r t2 m2 r' ->
       eval_simple_lvalue ge e m2 l' b ofs ->
-      deref_loc ge (typeof l) m2 b ofs t3 v1 ->
+      deref_loc se (typeof l) m2 b ofs t3 v1 ->
       eval_simple_rvalue ge e m2 r' v2 ->
       sem_binary_operation ge op v1 (typeof l) v2 (typeof r) m2 = Some v3 ->
       sem_cast v3 tyres (typeof l) m2 = Some v4 ->
@@ -1744,7 +1754,7 @@ with eval_expr: env -> mem -> kind -> expr -> trace -> mem -> expr -> Prop :=
   | eval_postincr: forall e m id l ty t1 m1 l' b ofs v1 v2 v3 m2 t2 t3,
       eval_expr e m LV l t1 m1 l' ->
       eval_simple_lvalue ge e m1 l' b ofs ->
-      deref_loc ge ty m1 b ofs t2 v1 ->
+      deref_loc se ty m1 b ofs t2 v1 ->
       sem_incrdecr ge id v1 ty m1 = Some v2 ->
       sem_cast v2 (incrdecr_type ty) ty m1 = Some v3 ->
       assign_loc ge ty m1 b ofs v3 t3 m2 ->
@@ -1898,13 +1908,13 @@ with eval_funcall: mem -> fundef -> list val -> trace -> mem -> val -> Prop :=
   | eval_funcall_internal: forall m f vargs t e m1 m2 m3 out vres m4,
       list_norepet (var_names f.(fn_params) ++ var_names f.(fn_vars)) ->
       alloc_variables ge empty_env m (f.(fn_params) ++ f.(fn_vars)) e m1 ->
-      bind_parameters ge e m1 f.(fn_params) vargs m2 ->
+      bind_parameters se ge e m1 f.(fn_params) vargs m2 ->
       exec_stmt e m2 f.(fn_body) t m3 out ->
       outcome_result_value out f.(fn_return) vres m3 ->
       Mem.free_list m3 (blocks_of_env ge e) = Some m4 ->
       eval_funcall m (Internal f) vargs t m4 vres
   | eval_funcall_external: forall m ef targs tres cconv vargs t vres m',
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       eval_funcall m (External ef targs tres cconv) vargs t m' vres.
 
 Scheme eval_expression_ind5 := Minimality for eval_expression Sort Prop
@@ -2120,7 +2130,7 @@ with evalinf_funcall: mem -> fundef -> list val -> traceinf -> Prop :=
   | evalinf_funcall_internal: forall m f vargs t e m1 m2,
       list_norepet (var_names f.(fn_params) ++ var_names f.(fn_vars)) ->
       alloc_variables ge empty_env m (f.(fn_params) ++ f.(fn_vars)) e m1 ->
-      bind_parameters ge e m1 f.(fn_params) vargs m2 ->
+      bind_parameters se ge e m1 f.(fn_params) vargs m2 ->
       execinf_stmt e m2 f.(fn_body) t ->
       evalinf_funcall m (Internal f) vargs t.
 
@@ -2183,34 +2193,34 @@ Lemma bigstep_to_steps:
   (forall e m a t m' v,
    eval_expression e m a t m' v ->
    forall f k,
-   star step ge (ExprState f a k e m) t (ExprState f (Eval v (typeof a)) k e m'))
+   star step se ge (ExprState f a k e m) t (ExprState f (Eval v (typeof a)) k e m'))
 /\(forall e m K a t m' a',
    eval_expr e m K a t m' a' ->
    forall C f k, leftcontext K RV C ->
    simple a' = true /\ typeof a' = typeof a /\
-   star step ge (ExprState f (C a) k e m) t (ExprState f (C a') k e m'))
+   star step se ge (ExprState f (C a) k e m) t (ExprState f (C a') k e m'))
 /\(forall e m al t m' al',
    eval_exprlist e m al t m' al' ->
    forall a1 al2 ty C f k, leftcontext RV RV C -> simple a1 = true -> simplelist al2 = true ->
    simplelist al' = true /\
-   star step ge (ExprState f (C (Ecall a1 (exprlist_app al2 al) ty)) k e m)
+   star step se ge (ExprState f (C (Ecall a1 (exprlist_app al2 al) ty)) k e m)
               t (ExprState f (C (Ecall a1 (exprlist_app al2 al') ty)) k e m'))
 /\(forall e m s t m' out,
    exec_stmt e m s t m' out ->
    forall f k,
    exists S,
-   star step ge (State f s k e m) t S /\ outcome_state_match e m' f k out S)
+   star step se ge (State f s k e m) t S /\ outcome_state_match e m' f k out S)
 /\(forall m fd args t m' res,
    eval_funcall m fd args t m' res ->
    forall k,
    is_call_cont k ->
-   star step ge (Callstate fd args k m) t (Returnstate res k m')).
+   star step se ge (Callstate fd args k m) t (Returnstate res k m')).
 Proof.
   apply bigstep_induction; intros.
 (* expression, general *)
   exploit (H0 (fun x => x) f k). constructor. intros [A [B C]].
   assert (match a' with Eval _ _ => False | _ => True end ->
-          star step ge (ExprState f a k e m) t (ExprState f (Eval v (typeof a)) k e m')).
+          star step se ge (ExprState f a k e m) t (ExprState f (Eval v (typeof a)) k e m')).
    intro. eapply star_right. eauto. left. eapply step_expr; eauto. traceEq.
   destruct a'; auto.
   simpl in B. rewrite B in C. inv H1. auto.
@@ -2617,7 +2627,7 @@ Lemma eval_expression_to_steps:
    forall e m a t m' v,
    eval_expression e m a t m' v ->
    forall f k,
-   star step ge (ExprState f a k e m) t (ExprState f (Eval v (typeof a)) k e m').
+   star step se ge (ExprState f a k e m) t (ExprState f (Eval v (typeof a)) k e m').
 Proof (proj1 bigstep_to_steps).
 
 Lemma eval_expr_to_steps:
@@ -2625,7 +2635,7 @@ Lemma eval_expr_to_steps:
    eval_expr e m K a t m' a' ->
    forall C f k, leftcontext K RV C ->
    simple a' = true /\ typeof a' = typeof a /\
-   star step ge (ExprState f (C a) k e m) t (ExprState f (C a') k e m').
+   star step se ge (ExprState f (C a) k e m) t (ExprState f (C a') k e m').
 Proof (proj1 (proj2 bigstep_to_steps)).
 
 Lemma eval_exprlist_to_steps:
@@ -2633,7 +2643,7 @@ Lemma eval_exprlist_to_steps:
    eval_exprlist e m al t m' al' ->
    forall a1 al2 ty C f k, leftcontext RV RV C -> simple a1 = true -> simplelist al2 = true ->
    simplelist al' = true /\
-   star step ge (ExprState f (C (Ecall a1 (exprlist_app al2 al) ty)) k e m)
+   star step se ge (ExprState f (C (Ecall a1 (exprlist_app al2 al) ty)) k e m)
               t (ExprState f (C (Ecall a1 (exprlist_app al2 al') ty)) k e m').
 Proof (proj1 (proj2 (proj2 bigstep_to_steps))).
 
@@ -2642,7 +2652,7 @@ Lemma exec_stmt_to_steps:
    exec_stmt e m s t m' out ->
    forall f k,
    exists S,
-   star step ge (State f s k e m) t S /\ outcome_state_match e m' f k out S.
+   star step se ge (State f s k e m) t S /\ outcome_state_match e m' f k out S.
 Proof (proj1 (proj2 (proj2 (proj2 bigstep_to_steps)))).
 
 Lemma eval_funcall_to_steps:
@@ -2650,7 +2660,7 @@ Lemma eval_funcall_to_steps:
   eval_funcall m fd args t m' res ->
   forall k,
   is_call_cont k ->
-  star step ge (Callstate fd args k m) t (Returnstate res k m').
+  star step se ge (Callstate fd args k m) t (Returnstate res k m').
 Proof (proj2 (proj2 (proj2 (proj2 bigstep_to_steps)))).
 
 Fixpoint esize (a: expr) : nat :=
@@ -2708,28 +2718,28 @@ Qed.
 Lemma evalinf_funcall_steps:
   forall m fd args t k,
   evalinf_funcall m fd args t ->
-  forever_N step lt ge O (Callstate fd args k m) t.
+  forever_N step se lt ge O (Callstate fd args k m) t.
 Proof.
   cofix COF.
 
   assert (COS:
     forall e m s t f k,
     execinf_stmt e m s t ->
-    forever_N step lt ge O (State f s k e m) t).
+    forever_N step se lt ge O (State f s k e m) t).
   cofix COS.
 
   assert (COE:
     forall e m K a t C f k,
     evalinf_expr e m K a t ->
     leftcontext K RV C ->
-    forever_N step lt ge (esize a) (ExprState f (C a) k e m) t).
+    forever_N step se lt ge (esize a) (ExprState f (C a) k e m) t).
   cofix COE.
 
   assert (COEL:
     forall e m a t C f k a1 al ty,
     evalinf_exprlist e m a t ->
     leftcontext RV RV C -> simple a1 = true -> simplelist al = true ->
-    forever_N step lt ge (esizelist a)
+    forever_N step se lt ge (esizelist a)
                    (ExprState f (C (Ecall a1 (exprlist_app al a) ty)) k e m) t).
   cofix COEL.
   intros. inv H.
@@ -3028,7 +3038,7 @@ Inductive bigstep_program_terminates (p: program): trace -> int -> Prop :=
       Genv.find_symbol ge p.(prog_main) = Some b ->
       Genv.find_funct_ptr ge b = Some f ->
       type_of_fundef f = Tfunction Tnil type_int32s cc_default ->
-      eval_funcall ge m0 f nil t m1 (Vint r) ->
+      eval_funcall ge ge m0 f nil t m1 (Vint r) ->
       bigstep_program_terminates p t r.
 
 Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
@@ -3038,7 +3048,7 @@ Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
       Genv.find_symbol ge p.(prog_main) = Some b ->
       Genv.find_funct_ptr ge b = Some f ->
       type_of_fundef f = Tfunction Tnil type_int32s cc_default ->
-      evalinf_funcall ge m0 f nil t ->
+      evalinf_funcall ge ge m0 f nil t ->
       bigstep_program_diverges p t.
 
 Definition bigstep_semantics (p: program) :=

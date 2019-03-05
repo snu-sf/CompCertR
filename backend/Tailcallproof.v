@@ -217,6 +217,8 @@ Hypothesis TRANSL: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge tge: genv.
 
 Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => tf = transf_fundef f) eq prog) ge tge).
@@ -400,9 +402,9 @@ Ltac EliminatedInstr :=
   of the ``option'' kind. *)
 
 Lemma transf_step_correct:
-  forall s1 t s2, step ge s1 t s2 ->
+  forall s1 t s2, step se ge s1 t s2 ->
   forall s1' (MS: match_states s1 s1'),
-  (exists s2', step tge s1' t s2' /\ match_states s2 s2')
+  (exists s2', step tse tge s1' t s2' /\ match_states s2 s2')
   \/ (measure s2 < measure s1 /\ t = E0 /\ match_states s2 s1')%nat.
 Proof.
   induction 1; intros; inv MS; EliminatedInstr.
@@ -491,7 +493,7 @@ Proof.
   left. exists (State s' (transf_function f) (Vptr sp0 Ptrofs.zero) pc' (regmap_setres res v' rs') m'1); split.
   eapply exec_Ibuiltin; eauto.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   econstructor; eauto. apply set_res_lessdef; auto.
 
 - (* cond *)
@@ -551,7 +553,7 @@ Proof.
   intros [res' [m2' [A [B [C D]]]]].
   left. exists (Returnstate s' res' m2'); split.
   simpl. econstructor; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   constructor; auto.
 
 - (* returnstate *)
@@ -602,7 +604,6 @@ Proof.
   intros. inv H0. inv H. inv H5. inv H3. constructor.
 Qed.
 
-
 (** The preservation of the observable behavior of the program then
   follows. *)
 
@@ -614,6 +615,7 @@ Proof.
   eexact transf_initial_states.
   eexact transf_final_states.
   apply transf_step_correct; auto.
+  eapply (Genv.senv_match TRANSL); eauto.
 Qed.
 
 End WHOLE.

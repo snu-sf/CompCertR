@@ -31,6 +31,7 @@ Require Import Clight.
 
 Section BIGSTEP.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** ** Big-step semantics for terminating statements and functions *)
@@ -100,7 +101,7 @@ Inductive exec_stmt: env -> temp_env -> mem -> statement -> trace -> temp_env ->
                 t (set_opttemp optid vres le) m' Out_normal
   | exec_Sbuiltin:   forall e le m optid ef al tyargs vargs t m' vres,
       eval_exprlist ge e le m al tyargs vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       exec_stmt e le m (Sbuiltin optid ef tyargs al)
                 t (set_opttemp optid vres le) m' Out_normal
   | exec_Sseq_1:   forall e le m s1 s2 t1 le1 m1 t2 le2 m2 out,
@@ -172,7 +173,7 @@ with eval_funcall: mem -> fundef -> list val -> trace -> mem -> val -> Prop :=
       Mem.free_list m3 (blocks_of_env ge e) = Some m4 ->
       eval_funcall m (Internal f) vargs t m4 vres
   | eval_funcall_external: forall m ef targs tres cconv vargs t vres m',
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       eval_funcall m (External ef targs tres cconv) vargs t m' vres.
 
 Scheme exec_stmt_ind2 := Minimality for exec_stmt Sort Prop
@@ -249,7 +250,7 @@ Inductive bigstep_program_terminates (p: program): trace -> int -> Prop :=
       Genv.find_symbol ge p.(prog_main) = Some b ->
       Genv.find_funct_ptr ge b = Some f ->
       type_of_fundef f = Tfunction Tnil type_int32s cc_default ->
-      eval_funcall ge m0 f nil t m1 (Vint r) ->
+      eval_funcall ge ge m0 f nil t m1 (Vint r) ->
       bigstep_program_terminates p t r.
 
 Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
@@ -259,7 +260,7 @@ Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
       Genv.find_symbol ge p.(prog_main) = Some b ->
       Genv.find_funct_ptr ge b = Some f ->
       type_of_fundef f = Tfunction Tnil type_int32s cc_default ->
-      evalinf_funcall ge m0 f nil t ->
+      evalinf_funcall ge ge m0 f nil t ->
       bigstep_program_diverges p t.
 
 Definition bigstep_semantics (p: program) :=
@@ -298,16 +299,16 @@ Qed.
 
 Lemma exec_stmt_eval_funcall_steps:
   (forall e le m s t le' m' out,
-   exec_stmt ge e le m s t le' m' out ->
+   exec_stmt ge ge e le m s t le' m' out ->
    forall f k, exists S,
-   star step1 ge (State f s k e le m) t S
+   star step1 ge ge (State f s k e le m) t S
    /\ outcome_state_match e le' m' f k out S)
 /\
   (forall m fd args t m' res,
-   eval_funcall ge m fd args t m' res ->
+   eval_funcall ge ge m fd args t m' res ->
    forall k,
    is_call_cont k ->
-   star step1 ge (Callstate fd args k m) t (Returnstate res k m')).
+   star step1 ge ge (Callstate fd args k m) t (Returnstate res k m')).
 Proof.
   apply exec_stmt_funcall_ind; intros.
 
@@ -476,31 +477,31 @@ Qed.
 
 Lemma exec_stmt_steps:
    forall e le m s t le' m' out,
-   exec_stmt ge e le m s t le' m' out ->
+   exec_stmt ge ge e le m s t le' m' out ->
    forall f k, exists S,
-   star step1 ge (State f s k e le m) t S
+   star step1 ge ge (State f s k e le m) t S
    /\ outcome_state_match e le' m' f k out S.
 Proof (proj1 exec_stmt_eval_funcall_steps).
 
 Lemma eval_funcall_steps:
    forall m fd args t m' res,
-   eval_funcall ge m fd args t m' res ->
+   eval_funcall ge ge m fd args t m' res ->
    forall k,
    is_call_cont k ->
-   star step1 ge (Callstate fd args k m) t (Returnstate res k m').
+   star step1 ge ge (Callstate fd args k m) t (Returnstate res k m').
 Proof (proj2 exec_stmt_eval_funcall_steps).
 
 Definition order (x y: unit) := False.
 
 Lemma evalinf_funcall_forever:
   forall m fd args T k,
-  evalinf_funcall ge m fd args T ->
-  forever_N step1 order ge tt (Callstate fd args k m) T.
+  evalinf_funcall ge ge m fd args T ->
+  forever_N step1 ge order ge tt (Callstate fd args k m) T.
 Proof.
   cofix CIH_FUN.
   assert (forall e le m s T f k,
-          execinf_stmt ge e le m s T ->
-          forever_N step1 order ge tt (State f s k e le m) T).
+          execinf_stmt ge ge e le m s T ->
+          forever_N step1 ge order ge tt (State f s k e le m) T).
   cofix CIH_STMT.
   intros. inv H.
 

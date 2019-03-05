@@ -387,6 +387,8 @@ Hypothesis TRANSF: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable (se tse: Senv.t).
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : genv.
 Variable tge : genv.
 
@@ -693,12 +695,12 @@ Qed.
 
 Lemma transf_volatile_store:
   forall v1 v2 v1' v2' m tm chunk sp nm t v m',
-  volatile_store_sem chunk ge (v1::v2::nil) m t v m' ->
+  volatile_store_sem chunk se (v1::v2::nil) m t v m' ->
   Val.lessdef v1 v1' ->
   vagree v2 v2' (store_argument chunk) ->
   magree m tm (nlive ge sp nm) ->
   v = Vundef /\
-  exists tm', volatile_store_sem chunk ge (v1'::v2'::nil) tm t Vundef tm'
+  exists tm', volatile_store_sem chunk se (v1'::v2'::nil) tm t Vundef tm'
            /\ magree m' tm' (nlive ge sp nm).
 Proof.
   intros. inv H. split; auto.
@@ -722,9 +724,9 @@ Qed.
 (** * The simulation diagram *)
 
 Theorem step_simulation:
-  forall S1 t S2, step ge S1 t S2 ->
+  forall S1 t S2, step se ge S1 t S2 ->
   forall S1', match_states S1 S1' -> (exists su0, sound_state prog ge su0 S1) ->
-  exists S2', step tge S1' t S2' /\ match_states S2 S2'.
+  exists S2', step tse tge S1' t S2' /\ match_states S2 S2'.
 Proof.
 
 Ltac TransfInstr :=
@@ -903,7 +905,7 @@ Ltac UseTransfer :=
   InvSoundState. exploit transfer_builtin_arg_sound; eauto.
   intros (tv1 & A & B & C & D).
   inv H1. simpl in B. inv B.
-  assert (X: exists tvres, volatile_load ge chunk tm b ofs t tvres /\ Val.lessdef vres tvres).
+  assert (X: exists tvres, volatile_load se chunk tm b ofs t tvres /\ Val.lessdef vres tvres).
   {
     inv H2.
   * exists (Val.load_result chunk v); split; auto. constructor; auto.
@@ -918,7 +920,7 @@ Ltac UseTransfer :=
   eapply exec_Ibuiltin; eauto.
   apply eval_builtin_args_preserved with (ge1 := ge). exact symbols_preserved.
   constructor. eauto. constructor.
-  eapply external_call_symbols_preserved. apply senv_preserved.
+  eapply external_call_symbols_preserved. apply MATCH_SENV.
   constructor. simpl. eauto.
   eapply match_succ_states; eauto. simpl; auto.
   apply eagree_set_res; auto.
@@ -939,7 +941,7 @@ Ltac UseTransfer :=
   eapply exec_Ibuiltin; eauto.
   apply eval_builtin_args_preserved with (ge1 := ge). exact symbols_preserved.
   constructor. eauto. constructor. eauto. constructor.
-  eapply external_call_symbols_preserved. apply senv_preserved.
+  eapply external_call_symbols_preserved. apply MATCH_SENV.
   simpl; eauto.
   eapply match_succ_states; eauto. simpl; auto.
   apply eagree_set_res; auto.
@@ -979,7 +981,7 @@ Ltac UseTransfer :=
   eapply exec_Ibuiltin; eauto.
   apply eval_builtin_args_preserved with (ge1 := ge). exact symbols_preserved.
   constructor. eauto. constructor. eauto. constructor.
-  eapply external_call_symbols_preserved. apply senv_preserved.
+  eapply external_call_symbols_preserved. apply MATCH_SENV.
   simpl in B1; inv B1. simpl in B2; inv B2. econstructor; eauto.
   eapply match_succ_states; eauto. simpl; auto.
   apply eagree_set_res; auto.
@@ -1008,7 +1010,7 @@ Ltac UseTransfer :=
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
   apply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved. apply senv_preserved.
+  eapply external_call_symbols_preserved. apply MATCH_SENV.
   constructor. eapply eventval_list_match_lessdef; eauto 2 with na.
   eapply match_succ_states; eauto. simpl; auto.
   apply eagree_set_res; auto.
@@ -1020,7 +1022,7 @@ Ltac UseTransfer :=
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
   apply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved. apply senv_preserved.
+  eapply external_call_symbols_preserved. apply MATCH_SENV.
   constructor.
   eapply eventval_match_lessdef; eauto 2 with na.
   eapply match_succ_states; eauto. simpl; auto.
@@ -1047,7 +1049,7 @@ Ltac UseTransfer :=
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
   apply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved. apply senv_preserved. eauto.
+  eapply external_call_symbols_preserved. apply MATCH_SENV. eauto.
   eapply match_succ_states; eauto. simpl; auto.
   apply eagree_set_res; auto.
   eapply mextends_agree; eauto.
@@ -1102,7 +1104,7 @@ Ltac UseTransfer :=
   simpl in FUN. inv FUN.
   econstructor; split.
   econstructor; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   econstructor; eauto.
 
 - (* return *)
@@ -1153,14 +1155,14 @@ Proof.
   intros.
   apply forward_simulation_step with
      (match_states := fun s1 s2 => (exists su0, sound_state prog ge su0 s1) /\ match_states ge s1 s2).
-- apply senv_preserved; auto.
+- apply senv_preserved; eauto.
 - simpl; intros. exploit transf_initial_states; eauto. intros [st2 [A B]].
   exists st2; intuition. eapply sound_initial; eauto.
 - simpl; intros. destruct H. eapply transf_final_states; eauto.
 - simpl; intros. destruct H0.
   destruct H0 as [su0 SS].
   assert (sound_state prog ge su0 s1') by (eapply sound_step; eauto).
-  fold ge; fold tge. exploit step_simulation; eauto. intros [st2' [A B]].
+  fold ge; fold tge. exploit step_simulation; eauto. { apply senv_preserved; eauto. } intros [st2' [A B]].
   exists st2'; auto.
   esplits; eauto.
 Qed.

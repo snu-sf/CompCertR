@@ -852,9 +852,9 @@ Proof.
 Qed.
 
 Lemma wt_exec_Ibuiltin:
-  forall env f ef (ge: genv) args res s vargs m t vres m' rs,
+  forall env f ef (se: Senv.t) args res s vargs m t vres m' rs,
   wt_instr f env (Ibuiltin ef args res s) ->
-  external_call ef ge vargs m t vres m' ->
+  external_call ef se vargs m t vres m' ->
   wt_regset env rs ->
   wt_regset env (regmap_setres res vres rs).
 Proof.
@@ -916,10 +916,11 @@ Variable p: program.
 
 Hypothesis wt_p: wt_program p.
 
+Variable se: Senv.t.
 Let ge := Genv.globalenv p.
 
 Lemma subject_reduction:
-  forall st1 t st2, step ge st1 t st2 ->
+  forall st1 t st2, step se ge st1 t st2 ->
   forall (WT: wt_state st1), wt_state st2.
 Proof.
   induction 1; intros; inv WT;

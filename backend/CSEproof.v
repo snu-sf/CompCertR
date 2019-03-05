@@ -834,6 +834,8 @@ Ltac TransfInstr :=
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : genv.
 Variable tge : genv.
 
@@ -978,9 +980,9 @@ Inductive match_states: state -> state -> Prop :=
   in the source code. *)
 
 Lemma transf_step_correct:
-  forall s1 t s2, step ge s1 t s2 ->
+  forall s1 t s2, step se ge s1 t s2 ->
   forall s1' (MS: match_states s1 s1') (SOUND: exists su0, sound_state prog ge su0 s1),
-  exists s2', step tge s1' t s2' /\ match_states s2 s2'.
+  exists s2', step tse tge s1' t s2' /\ match_states s2 s2'.
 Proof.
   induction 1; intros; inv MS; destruct SOUND as [su0 SOUND]; try (TransfInstr; intro C).
 
@@ -1121,7 +1123,7 @@ Proof.
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   econstructor; eauto.
   eapply analysis_correct_1; eauto. simpl; auto.
 * unfold transfer; rewrite H.
@@ -1207,7 +1209,7 @@ Proof.
   intros (v' & m1' & P & Q & R & S).
   econstructor; split.
   eapply exec_function_external; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   econstructor; eauto.
 
 - (* return *)
@@ -1261,6 +1263,7 @@ Proof.
   exists s2. split. auto. split. apply sound_initial; auto. auto.
 - intros. destruct H. eapply transf_final_states; eauto.
 - intros. destruct H0. exploit transf_step_correct; eauto.
+  apply senv_preserved; eauto.
   intros [s2' [A B]]. exists s2'; split. auto. split. des. eexists. eapply sound_step; eauto. auto.
 Qed.
 

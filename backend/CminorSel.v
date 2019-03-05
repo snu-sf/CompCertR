@@ -151,6 +151,7 @@ Inductive state: Type :=
 
 Section RELSEM.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** The evaluation predicates have the same general shape as those
@@ -189,14 +190,14 @@ Inductive eval_expr: letenv -> expr -> val -> Prop :=
       eval_expr le (Eletvar n) v
   | eval_Ebuiltin: forall le ef al vl v,
       eval_exprlist le al vl ->
-      external_call ef ge vl m E0 v m ->
+      external_call ef se vl m E0 v m ->
       eval_expr le (Ebuiltin ef al) v
   | eval_Eexternal: forall le id sg al b ef vl v,
       Genv.find_symbol ge id = Some b ->
       Genv.find_funct_ptr ge b = Some (External ef) ->
       ef_sig ef = sg ->
       eval_exprlist le al vl ->
-      external_call ef ge vl m E0 v m ->
+      external_call ef se vl m E0 v m ->
       eval_expr le (Eexternal id sg al) v
 
 with eval_exprlist: letenv -> exprlist -> list val -> Prop :=
@@ -377,7 +378,7 @@ Inductive step: state -> trace -> state -> Prop :=
 
   | step_builtin: forall f res ef al k sp e m vl t v m',
       list_forall2 (eval_builtin_arg sp e m) al vl ->
-      external_call ef ge vl m t v m' ->
+      external_call ef se vl m t v m' ->
       step (State f (Sbuiltin res ef al) k sp e m)
          t (State f Sskip k sp (set_builtin_res res v e) m')
 
@@ -438,7 +439,7 @@ Inductive step: state -> trace -> state -> Prop :=
       step (Callstate (Internal f) vargs k m)
         E0 (State f f.(fn_body) k (Vptr sp Ptrofs.zero) e m')
   | step_external_function: forall ef vargs k m t vres m',
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       step (Callstate (External ef) vargs k m)
          t (Returnstate vres k m')
 
@@ -541,22 +542,22 @@ Proof.
 Qed.
 
 Lemma eval_lift_expr:
-  forall ge sp e m w le a v,
-  eval_expr ge sp e m le a v ->
+  forall se ge sp e m w le a v,
+  eval_expr se ge sp e m le a v ->
   forall p le', insert_lenv le p w le' ->
-  eval_expr ge sp e m le' (lift_expr p a) v.
+  eval_expr se ge sp e m le' (lift_expr p a) v.
 Proof.
   intros until w.
-  apply (eval_expr_ind3 ge sp e m
+  apply (eval_expr_ind3 se ge sp e m
     (fun le a v =>
       forall p le', insert_lenv le p w le' ->
-      eval_expr ge sp e m le' (lift_expr p a) v)
+      eval_expr se ge sp e m le' (lift_expr p a) v)
     (fun le al vl =>
       forall p le', insert_lenv le p w le' ->
-      eval_exprlist ge sp e m le' (lift_exprlist p al) vl)
+      eval_exprlist se ge sp e m le' (lift_exprlist p al) vl)
     (fun le a b =>
       forall p le', insert_lenv le p w le' ->
-      eval_condexpr ge sp e m le' (lift_condexpr p a) b));
+      eval_condexpr se ge sp e m le' (lift_condexpr p a) b));
   simpl; intros; eauto with evalexpr.
 
   eapply eval_Econdition; eauto. destruct va; eauto.
@@ -572,9 +573,9 @@ Proof.
 Qed.
 
 Lemma eval_lift:
-  forall ge sp e m le a v w,
-  eval_expr ge sp e m le a v ->
-  eval_expr ge sp e m (w::le) (lift a) v.
+  forall se ge sp e m le a v w,
+  eval_expr se ge sp e m le a v ->
+  eval_expr se ge sp e m (w::le) (lift a) v.
 Proof.
   intros. unfold lift. eapply eval_lift_expr.
   eexact H. apply insert_lenv_0.

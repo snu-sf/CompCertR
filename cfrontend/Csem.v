@@ -53,6 +53,7 @@ Definition empty_env: env := (PTree.empty (block * type)).
 
 Section SEMANTICS.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** [deref_loc ty m b ofs t v] computes the value of a datum
@@ -71,7 +72,7 @@ Inductive deref_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs) : trace -> val 
       deref_loc ty m b ofs E0 v
   | deref_loc_volatile: forall chunk t v,
       access_mode ty = By_value chunk -> type_is_volatile ty = true ->
-      volatile_load ge chunk m b ofs t v ->
+      volatile_load se chunk m b ofs t v ->
       deref_loc ty m b ofs t v
   | deref_loc_reference:
       access_mode ty = By_reference ->
@@ -96,7 +97,7 @@ Inductive assign_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs):
       assign_loc ty m b ofs v E0 m'
   | assign_loc_volatile: forall v chunk t m',
       access_mode ty = By_value chunk -> type_is_volatile ty = true ->
-      volatile_store ge chunk m b ofs v t m' ->
+      volatile_store se chunk m b ofs v t m' ->
       assign_loc ty m b ofs v t m'
   | assign_loc_copy: forall b' ofs' bytes m',
       access_mode ty = By_copy ->
@@ -308,7 +309,7 @@ Inductive rred: expr -> mem -> trace -> expr -> mem -> Prop :=
         E0 (Eval v ty) m
   | red_builtin: forall ef tyargs el ty m vargs t vres m',
       cast_arguments m el tyargs vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       rred (Ebuiltin ef tyargs el ty) m
          t (Eval vres ty) m'.
 
@@ -755,7 +756,7 @@ Inductive sstep: state -> trace -> state -> Prop :=
          E0 (State f f.(fn_body) k e m2)
 
   | step_external_function: forall ef targs tres cc vargs k m vres t m',
-      external_call ef  ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       sstep (Callstate (External ef targs tres cc) vargs k m)
           t (Returnstate vres k m')
 
@@ -804,7 +805,7 @@ Proof.
   set (ge := globalenv p) in *.
   assert (DEREF: forall chunk m b ofs t v, deref_loc ge chunk m b ofs t v -> (length t <= 1)%nat).
     intros. inv H0; simpl; try omega. inv H3; simpl; try omega.
-  assert (ASSIGN: forall chunk m b ofs t v m', assign_loc ge chunk m b ofs v t m' -> (length t <= 1)%nat).
+  assert (ASSIGN: forall chunk m b ofs t v m', assign_loc ge ge chunk m b ofs v t m' -> (length t <= 1)%nat).
     intros. inv H0; simpl; try omega. inv H3; simpl; try omega.
   destruct H.
   inv H; simpl; try omega. inv H0; eauto; simpl; try omega.

@@ -40,6 +40,8 @@ Hypothesis TRANSF: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : LTL.genv.
 Variable tge : Linear.genv.
 
@@ -257,7 +259,7 @@ Lemma starts_with_correct:
   unique_labels c2 ->
   starts_with lbl c1 = true ->
   find_label lbl c2 = Some c3 ->
-  plus step tge (State s f sp c1 ls m)
+  plus step tse tge (State s f sp c1 ls m)
              E0 (State s f sp c3 ls m).
 Proof.
   induction c1.
@@ -461,7 +463,7 @@ Lemma add_branch_correct:
   transf_function f = OK tf ->
   is_tail k tf.(fn_code) ->
   find_label lbl tf.(fn_code) = Some c ->
-  plus step tge (State s tf sp (add_branch lbl k) ls m)
+  plus step tse tge (State s tf sp (add_branch lbl k) ls m)
              E0 (State s tf sp c ls m).
 Proof.
   intros. unfold add_branch.
@@ -563,9 +565,9 @@ Proof.
 Qed.
 
 Theorem transf_step_correct:
-  forall s1 t s2, LTL.step ge s1 t s2 ->
+  forall s1 t s2, LTL.step se ge s1 t s2 ->
   forall s1' (MS: match_states s1 s1'),
-  (exists s2', plus Linear.step tge s1' t s2' /\ match_states s2 s2')
+  (exists s2', plus Linear.step tse tge s1' t s2' /\ match_states s2 s2')
   \/ (measure s2 < measure s1 /\ t = E0 /\ match_states s2 s1')%nat.
 Proof.
   induction 1; intros; try (inv MS).
@@ -646,7 +648,7 @@ Proof.
   left; econstructor; split. simpl.
   apply plus_one. eapply exec_Lbuiltin; eauto.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   econstructor; eauto.
 
   (* Lbranch *)
@@ -703,7 +705,7 @@ Proof.
   (* external function *)
   monadInv H8. left; econstructor; split.
   apply plus_one. eapply exec_function_external; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   econstructor; eauto.
 
   (* return *)
@@ -753,6 +755,7 @@ Proof.
   eexact transf_initial_states.
   eexact transf_final_states.
   apply transf_step_correct; auto.
+  eapply senv_preserved; eauto.
 Qed.
 
 End WHOLE.

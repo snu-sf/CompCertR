@@ -473,7 +473,7 @@ Proof.
     { unfold f; intros. destruct (eq_block b sp); auto. eelim NOSTACK; eauto. }
     intros. transitivity sp; auto. symmetry; auto.
   }
-  assert (F_glob: forall b1 b2 id, f b1 = BCglob id -> f b2 = BCglob id -> b1 = b2).
+  assert (F_glob: forall b1 b2 id, f b1 = BCglob (Some id) -> f b2 = BCglob (Some id) -> b1 = b2).
   {
     assert (forall b id, f b = BCglob id -> bc b = BCglob id).
     { unfold f; intros. destruct (eq_block b sp). congruence. auto. }
@@ -569,7 +569,7 @@ Proof.
     destruct (eq_block b2 sp); try discriminate.
     eapply bc_stack; eauto.
   }
-  assert (F_glob: forall b1 b2 id, f b1 = BCglob id -> f b2 = BCglob id -> b1 = b2).
+  assert (F_glob: forall b1 b2 id, f b1 = BCglob (Some id) -> f b2 = BCglob (Some id) -> b1 = b2).
   {
     unfold f; intros.
     destruct (eq_block b1 sp); try discriminate.
@@ -655,7 +655,7 @@ Proof.
     destruct (eq_block b2 sp); try discriminate.
     eapply bc_stack; eauto.
   }
-  assert (F_glob: forall b1 b2 id, f b1 = BCglob id -> f b2 = BCglob id -> b1 = b2).
+  assert (F_glob: forall b1 b2 id, f b1 = BCglob (Some id) -> f b2 = BCglob (Some id) -> b1 = b2).
   {
     unfold f; intros.
     destruct (eq_block b1 sp); try discriminate.
@@ -746,7 +746,7 @@ Proof.
     { unfold f; intros. destruct (eq_block b sp); auto. eelim NOSTACK; eauto. }
     intros. transitivity sp; auto. symmetry; auto.
   }
-  assert (F_glob: forall b1 b2 id, f b1 = BCglob id -> f b2 = BCglob id -> b1 = b2).
+  assert (F_glob: forall b1 b2 id, f b1 = BCglob (Some id) -> f b2 = BCglob (Some id) -> b1 = b2).
   {
     assert (forall b id, f b = BCglob id -> callee b = BCglob id).
     { unfold f; intros. destruct (eq_block b sp). congruence. auto. }
@@ -772,6 +772,21 @@ Proof.
   assert (SM: forall b p, smatch callee m b p -> smatch bc m b Ptop).
   {
     intros. destruct H; split; intros. eapply VM; eauto. eapply PM; eauto.
+  }
+  assert(GESAME: forall b id, caller b = BCglob id <-> bc b = BCglob id).
+  { i. s. des_ifs.
+    { intuition. }
+    split; i.
+    - rewrite <- SAME; ss. apply BELOW. rewrite H; ss.
+    - assert(caller b = BCglob id).
+      { clear - GE1 GE2 H n.
+        rr in GE1. rr in GE2. des.
+        destruct id.
+        - apply GE1. apply GE2. eauto.
+        - exploit GE3; eauto. i. exploit GE4; eauto. i; des. destruct id; ss.
+          apply GE1 in H1. apply GE2 in H1. congruence.
+      }
+      rewrite SAME; ss. apply BELOW. rewrite H0; ss.
   }
 (* Conclusions *)
   exists bc; splitall.
@@ -801,9 +816,6 @@ Proof.
     eapply mmatch_below; eauto.
 - (* genv *)
   eapply genv_match_exten with caller; eauto.
-  simpl; intros. destruct (eq_block b sp). intuition congruence.
-  split; intros. rewrite SAME in H by eauto with va. auto.
-  apply <- (proj1 GE2) in H. apply (proj1 GE1) in H. auto.
   simpl; intros. destruct (eq_block b sp). congruence.
   rewrite <- SAME; eauto with va.
 - (* sp *)
@@ -848,7 +860,7 @@ Proof.
     { unfold f; intros. destruct (eq_block b sp); auto. eelim NOSTACK; eauto. }
     intros. transitivity sp; auto. symmetry; auto.
   }
-  assert (F_glob: forall b1 b2 id, f b1 = BCglob id -> f b2 = BCglob id -> b1 = b2).
+  assert (F_glob: forall b1 b2 id, f b1 = BCglob (Some id) -> f b2 = BCglob (Some id) -> b1 = b2).
   {
     assert (forall b id, f b = BCglob id -> callee b = BCglob id).
     { unfold f; intros. destruct (eq_block b sp). congruence. auto. }
@@ -925,8 +937,8 @@ Qed.
 (** Construction 6: external call *)
 
 Theorem external_call_match:
-  forall ef F V (ge: Genv.t F V) vargs m t vres m' bc rm am,
-  external_call ef ge vargs m t vres m' ->
+  forall ef F V (se: Senv.t) (ge: Genv.t F V) (SEGE: senv_genv_compat se ge) vargs m t vres m' bc rm am,
+  external_call ef se vargs m t vres m' ->
   genv_match bc ge ->
   (forall v, In v vargs -> vmatch bc v Vtop) ->
   romatch bc m rm ->
@@ -945,8 +957,13 @@ Theorem external_call_match:
 Proof.
   intros until am; intros EC GENV ARGS RO MM NOSTACK.
   (* Part 1: using ec_mem_inject *)
-  exploit (@external_call_mem_inject ef _ _ ge vargs m t vres m' (inj_of_bc bc) m vargs).
-  apply inj_of_bc_preserves_globals; auto.
+  exploit (@external_call_mem_inject_gen ef se se vargs m t vres m' (inj_of_bc bc) m vargs).
+  { exploit inj_of_bc_preserves_globals; eauto. intro GEINJ. rr in GENV. rr in GEINJ. des. rr. unfold inj_of_bc. inv SEGE.
+    esplits; eauto.
+    - i. des_ifs.
+    - i. esplits; eauto. des_ifs. exploit (GENV0 b1); eauto. { rewrite <- NB. eapply Senv.find_symbol_below; eauto. } i; des. congruence.
+    - i. des_ifs.
+  }
   exact EC.
   eapply mmatch_inj; eauto. eapply mmatch_below; eauto.
   revert ARGS. generalize vargs.
@@ -970,7 +987,7 @@ Proof.
     { unfold f; intros. destruct (plt b (Mem.nextblock m)); auto. destruct (j' b); discriminate. }
     intros. apply (bc_stack bc); auto.
   }
-  assert (F_glob: forall b1 b2 id, f b1 = BCglob id -> f b2 = BCglob id -> b1 = b2).
+  assert (F_glob: forall b1 b2 id, f b1 = BCglob (Some id) -> f b2 = BCglob (Some id) -> b1 = b2).
   {
     assert (forall b id, f b = BCglob id -> bc b = BCglob id).
     { unfold f; intros. destruct (plt b (Mem.nextblock m)); auto. destruct (j' b); discriminate. }
@@ -1066,7 +1083,9 @@ Qed.
 Section SOUNDNESS.
 
 Variable prog: program.
+Variable se: Senv.t.
 Variable ge: genv.
+Hypothesis SEGE: senv_genv_compat se ge.
 
 Let rm := romem_for prog.
 
@@ -1294,7 +1313,7 @@ Qed.
 Ltac spl := split; cycle 1; [r; ss; try reflexivity|].
 
 Theorem sound_step_base:
-  forall su st t st', RTL.step ge st t st' -> sound_state_base su st -> sound_state_base su st'
+  forall su st t st', RTL.step se ge st t st' -> sound_state_base su st -> sound_state_base su st'
                                                /\ <<MLE: Unreach.mle su st.(get_mem) st'.(get_mem)>>.
 Proof.
   induction 1; intros SOUND; inv SOUND.
@@ -1469,9 +1488,11 @@ Proof.
   inv H3.
   * (* true volatile access *)
     assert (V: vmatch bc v (Ifptr Glob)).
-    { inv H4; simpl in *; constructor. econstructor. eapply GE; eauto. }
-    destruct (va_strict tt). apply vmatch_lub_r. apply vnormalize_sound. auto.
-    apply vnormalize_sound. eapply vmatch_ge; eauto. constructor. constructor.
+    { inv H4; simpl in *; constructor.
+      rr in GE. des. inv SEGE. exploit GE0; eauto. { rewrite <- NB. eapply Senv.find_symbol_below; eauto. } i; des. econstructor; eauto. }
+    destruct (va_strict tt).
+    -- apply vmatch_lub_r. apply vnormalize_sound. auto.
+    -- apply vnormalize_sound. eapply vmatch_ge; eauto. constructor. constructor.
   * (* normal memory access *)
     exploit loadv_sound; eauto. simpl; eauto. intros V.
     destruct (va_strict tt).
@@ -1611,6 +1632,8 @@ Proof.
    eapply ematch_ge; eauto. apply ematch_update. auto. auto.
    { hexploit sound_stack_unreach; eauto. i; des.
       eapply Unreach.hle_update; try eassumption; ss; try xomega. i. try (des_ifs; try xomega; []). rewrite SAME; try xomega; ss. rewrite G; try xomega; ss. }
+Unshelve.
+  all: ss.
 Qed.
 
 End SOUNDNESS.
@@ -1624,7 +1647,9 @@ End SOUNDNESS.
 Section LINKING.
 
 Variable prog: program.
+Variable se : Senv.t.
 Variable ge : genv.
+Hypothesis SEGE: senv_genv_compat se ge.
 
 Inductive sound_state (su: Unreach.t): state -> Prop :=
   | sound_state_intro: forall st,
@@ -1632,7 +1657,7 @@ Inductive sound_state (su: Unreach.t): state -> Prop :=
       sound_state su st.
 
 Theorem sound_step:
-  forall st t st' su, RTL.step ge st t st' -> sound_state su st -> sound_state su st'
+  forall st t st' su, RTL.step se ge st t st' -> sound_state su st -> sound_state su st'
                                     /\ <<MLE: su.(Unreach.mle) st.(get_mem) st'.(get_mem)>>.
 Proof.
   intros. inv H0. split.
@@ -1655,7 +1680,7 @@ Program Definition ske2bc {F} (ske: Genv.t F unit): block_classification :=
   BC
     (fun b =>
        if plt b (Genv.genv_next ske) then
-         match Genv.invert_symbol ske b with None => BCother | Some id => BCglob id end
+         match Genv.invert_symbol ske b with None => BCglob None | Some id => BCglob (Some id) end
        else
          BCinvalid)
     _ _
@@ -1702,17 +1727,17 @@ Lemma initial_block_classification:
      genv_match bc ge
   /\ bc_below bc (Mem.nextblock m)
   /\ bc_nostack bc
-  /\ (forall b id, bc b = BCglob id -> Genv.find_symbol ge id = Some b)
+  /\ (forall b id, bc b = BCglob (Some id) -> Genv.find_symbol ge id = Some b)
   /\ (forall b, Mem.valid_block m b -> bc b <> BCinvalid)
   /\ <<BC: bc = ske2bc ge>>.
 Proof.
   intros.
   set (f := fun b =>
               if plt b (Genv.genv_next ge) then
-                match Genv.invert_symbol ge b with None => BCother | Some id => BCglob id end
+                match Genv.invert_symbol ge b with None => BCglob None | Some id => BCglob (Some id) end
               else
                 BCinvalid).
-  assert (F_glob: forall b1 b2 id, f b1 = BCglob id -> f b2 = BCglob id -> b1 = b2).
+  assert (F_glob: forall b1 b2 id, f b1 = BCglob (Some id) -> f b2 = BCglob (Some id) -> b1 = b2).
   {
     unfold f; intros.
     destruct (plt b1 (Genv.genv_next ge)); try discriminate.
@@ -1731,7 +1756,7 @@ Proof.
   }
   set (bc := BC f F_stack F_glob). unfold f in bc.
   exists bc; splitall.
-- split; simpl; intros.
+- split; [|split]; simpl; intros.
   + split; intros.
     * rewrite pred_dec_true by (eapply Genv.genv_symb_range; eauto).
       erewrite Genv.find_invert_symbol; eauto.
@@ -1739,7 +1764,8 @@ Proof.
       destruct (plt b (Genv.genv_next ge)); try discriminate.
       destruct (Genv.invert_symbol ge b); congruence.
   + rewrite ! pred_dec_true by assumption.
-    destruct (Genv.invert_symbol); split; congruence.
+    destruct (Genv.invert_symbol); eauto.
+  + des_ifs.
 - red; simpl; intros. destruct (plt b (Genv.genv_next ge)); try congruence.
   erewrite <- Genv.init_mem_genv_next by eauto. auto.
 - red; simpl; intros.

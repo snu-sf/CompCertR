@@ -293,6 +293,8 @@ Hypothesis TRANSF: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : genv.
 Variable tge : genv.
 
@@ -359,7 +361,7 @@ Qed.
 
 Lemma eval_add_delta_ranges:
   forall s f sp c rs m before after,
-  star step tge (State s f sp (add_delta_ranges before after c) rs m)
+  star step tse tge (State s f sp (add_delta_ranges before after c) rs m)
              E0 (State s f sp c rs m).
 Proof.
   intros. unfold add_delta_ranges.
@@ -425,9 +427,9 @@ Qed.
 (** The simulation diagram. *)
 
 Theorem transf_step_correct:
-  forall s1 t s2, step ge s1 t s2 ->
+  forall s1 t s2, step se ge s1 t s2 ->
   forall ts1 (MS: match_states s1 ts1),
-  exists ts2, plus step tge ts1 t ts2 /\ match_states s2 ts2.
+  exists ts2, plus step tse tge ts1 t ts2 /\ match_states s2 ts2.
 Proof.
   induction 1; intros ts1 MS; inv MS; try (inv TRC).
 - (* getstack *)
@@ -481,7 +483,7 @@ Proof.
   eapply plus_left.
   econstructor; eauto.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   apply eval_add_delta_ranges. traceEq.
   constructor; auto.
 - (* label *)
@@ -522,7 +524,7 @@ Proof.
 - (* external function *)
   monadInv H8. econstructor; split.
   apply plus_one. econstructor; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   constructor; auto.
 - (* return *)
   inv H3. inv H1.
@@ -569,6 +571,7 @@ Proof.
   eexact transf_initial_states.
   eexact transf_final_states.
   apply transf_step_correct; auto.
+  apply senv_preserved; eauto.
 Qed.
 
 End WHOLE.

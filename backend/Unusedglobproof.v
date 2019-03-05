@@ -529,8 +529,11 @@ Let pm := prog_defmap p.
 
 Section CORELEMMA.
 
+Variable (se tse: Senv.t).
 Variable ge : genv.
 Variable tge : genv.
+Hypothesis SECOMPATSRC: senv_genv_compat se ge.
+Hypothesis SECOMPATTGT: senv_genv_compat tse tge.
 
 Lemma kept_closed:
   forall id gd id',
@@ -570,7 +573,7 @@ Record meminj_preserves_globals (f: meminj) : Prop := {
   defs_rev_inject: forall b b' delta gd,
     f b = Some(b', delta) -> Genv.find_def tge b' = Some gd ->
     Genv.find_def ge b = Some gd /\ delta = 0;
-  public_eq: Genv.genv_public ge = prog_public p /\ Genv.genv_public tge = prog_public tp
+  public_eq: Genv.genv_public ge = prog_public p /\ Genv.genv_public tge = prog_public tp;
 }.
 
 Lemma globals_symbols_inject:
@@ -670,6 +673,7 @@ Qed.
 Inductive match_stacks (j: meminj):
         list stackframe -> list stackframe -> block -> block -> Prop :=
   | match_stacks_nil: forall bound tbound,
+      forall (SYMBINJ: symbols_inject j se tse),
       meminj_preserves_globals j ->
       Ple (Genv.genv_next ge) bound -> Ple (Genv.genv_next tge) tbound ->
       match_stacks j nil nil bound tbound
@@ -683,6 +687,14 @@ Inductive match_stacks (j: meminj):
       match_stacks j (Stackframe res f (Vptr sp Ptrofs.zero) pc rs :: s)
                      (Stackframe res f (Vptr tsp Ptrofs.zero) pc trs :: ts)
                      bound tbound.
+
+Lemma match_stacks_symbols_inject:
+  forall j s ts bound tbound,
+  match_stacks j s ts bound tbound ->
+  symbols_inject j se tse.
+Proof.
+  induction 1; auto.
+Qed.
 
 Lemma match_stacks_preserves_globals:
   forall j s ts bound tbound,
@@ -712,7 +724,12 @@ Proof.
     exploit H; eauto. congruence.
     exploit H3; eauto. intros [A B]. elim (Plt_strict b').
     eapply Plt_Ple_trans. eauto. eapply Ple_trans; eauto. }
-  constructor; auto.  constructor; intros.
+  constructor; auto.
+  { eapply symbols_inject_incr; eauto.
+    - i. inv SECOMPATSRC. rewrite NB in *. apply SAME; ss.
+    - i. inv SECOMPATTGT. rewrite NB in *. apply SAME'; ss.
+  }
+  constructor; intros.
   + exploit symbols_inject_1; eauto. apply SAME; auto.
     eapply Genv.genv_symb_range; eauto.
   + exploit symbols_inject_2; eauto. intros (b' & A & B).
@@ -772,13 +789,12 @@ Inductive match_states: state -> state -> SimMemInj.t' -> Prop :=
                    (Returnstate ts tres tm) sm0.
 
 Lemma external_call_inject:
-  forall ef vargs m1 t vres m2 f m1' vargs',
-  meminj_preserves_globals f ->
-  external_call ef ge vargs m1 t vres m2 ->
+  forall ef vargs m1 t vres m2 f m1' vargs' (SYMBINJ: symbols_inject f se tse),
+  external_call ef se vargs m1 t vres m2 ->
   Mem.inject f m1 m1' ->
   Val.inject_list f vargs vargs' ->
   exists f', exists vres', exists m2',
-    external_call ef tge vargs' m1' t vres' m2'
+    external_call ef tse vargs' m1' t vres' m2'
     /\ Val.inject f' vres vres'
     /\ Mem.inject f' m2 m2'
     /\ Mem.unchanged_on (loc_unmapped f) m1 m2
@@ -787,7 +803,6 @@ Lemma external_call_inject:
     /\ inject_separated f f' m1 m1'.
 Proof.
   intros. eapply external_call_mem_inject_gen; eauto.
-  apply globals_symbols_inject; auto.
 Qed.
 
 Lemma find_function_inject:
@@ -876,9 +891,9 @@ Proof.
 Qed.
 
 Theorem step_simulation:
-  forall S1 t S2, step ge S1 t S2 ->
+  forall S1 t S2, step se ge S1 t S2 ->
   forall S1' sm0 (MS: match_states S1 S1' sm0),
-  exists S2', step tge S1' t S2' /\ (exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>).
+  exists S2', step tse tge S1' t S2' /\ (exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>).
 Proof.
   induction 1; intros; inv MS.
 
@@ -981,7 +996,7 @@ Proof.
   intros. apply KEPT. red. econstructor; econstructor; eauto.
   intros (vargs' & P & Q).
   exploit external_call_inject; eauto.
-  eapply match_stacks_preserves_globals; eauto.
+  eapply match_stacks_symbols_inject; eauto.
   intros (j' & tv & tm' & A & B & C & D & E & F & G).
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
@@ -1066,7 +1081,7 @@ Proof.
 
 - (* external function *)
   exploit external_call_inject; eauto.
-  eapply match_stacks_preserves_globals; eauto.
+  eapply match_stacks_symbols_inject; eauto.
   intros (j' & tres & tm' & A & B & C & D & E & F & G).
   econstructor; split.
   eapply exec_function_external; eauto.
@@ -1385,7 +1400,7 @@ Proof.
 Qed.
 
 Lemma transf_initial_states:
-  forall S1, initial_state p S1 -> exists S2, initial_state tp S2 /\ exists sm, match_states ge tge S1 S2 sm.
+  forall S1, initial_state p S1 -> exists S2, initial_state tp S2 /\ exists sm, match_states ge tge ge tge S1 S2 sm.
 Proof.
   intros. inv H. exploit init_mem_inject; eauto. intros (j & tm & A & B & C).
   exploit symbols_inject_2. eauto. eapply kept_main. eexact H1. intros (tb & P & Q).
@@ -1400,14 +1415,16 @@ Proof.
   econstructor; eauto.
   { SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. }
+  exploit globals_symbols_inject; eauto. intro TTT.
   constructor. auto.
+  auto.
   erewrite <- Genv.init_mem_genv_next by eauto. apply Ple_refl.
   erewrite <- Genv.init_mem_genv_next by eauto. apply Ple_refl.
 Qed.
 
 Lemma transf_final_states:
   forall S1 S2 r,
-  (exists sm, match_states ge tge S1 S2 sm) -> final_state S1 r -> final_state S2 r.
+  (exists sm, match_states ge tge ge tge S1 S2 sm) -> final_state S1 r -> final_state S2 r.
 Proof.
   intros. des. inv H0. inv H. inv STACKS. inv RESINJ. constructor.
 Qed.
@@ -1416,11 +1433,11 @@ Lemma transf_program_correct_1:
   forward_simulation (semantics p) (semantics tp).
 Proof.
   intros.
-  eapply forward_simulation_step with (match_states := fun s1 s2 => exists sm, match_states ge tge s1 s2 sm).
+  eapply forward_simulation_step with (match_states := fun s1 s2 => exists sm, match_states ge tge ge tge s1 s2 sm).
   exploit globals_symbols_inject. apply init_meminj_preserves_globals. intros [A B]. exact A.
   eexact transf_initial_states.
   eexact transf_final_states.
-  { i. des. exploit step_simulation; eauto. i; des; eauto. }
+  { i. des. ss. exploit step_simulation; eauto. i; des; eauto. }
 Qed.
 
 End WHOLE.

@@ -24,6 +24,7 @@ Require Import Floats.
 Require Import Values.
 Require Import Memory.
 Require Import Globalenvs.
+Require Import sflib.
 
 (** * Events and traces *)
 
@@ -489,6 +490,48 @@ Proof.
 Qed.
 
 End EVENTVAL_INJECT.
+
+Lemma init_symbols_inject
+      C `{Linking.Linker C} F1 V1 F2 V2
+      (ge: Genv.t F1 V1) (tge: Genv.t F2 V2)
+      match_fundef match_varinfo CTX
+      (MGE: Genv.match_genvs (Linking.match_globdef match_fundef match_varinfo CTX) ge tge)
+  :
+    symbols_inject (Mem.flat_inj ge.(Genv.genv_next)) ge tge
+.
+Proof.
+  inv MGE. rr. s.
+  unfold Mem.flat_inj, Genv.public_symbol, Genv.find_symbol, Genv.block_is_volatile, Genv.find_var_info, Genv.find_def.
+  splits; ss.
+  - i. specialize (mge_symb id). rewrite mge_symb. des_ifs.
+    rewrite mge_pubs. ss.
+  - i. des_ifs. split; ss. specialize (mge_symb id). rewrite mge_symb. des_ifs.
+  - i. des_ifs_safe. des_sumbool. exploit Genv.genv_symb_range; eauto. intro T.
+    des_ifs. esplits; eauto. specialize (mge_symb id). congruence.
+  - i. des_ifs_safe. specialize (mge_defs b2). inv mge_defs; ss. inv H2; ss. inv H3; ss.
+Qed.
+
+Lemma symbols_inject_incr
+      j se tse j'
+      (SYMBINJ: symbols_inject j se tse)
+      (INCR: inject_incr j j')
+      (SAME: forall b b' delta, Plt b (Senv.nextblock se) -> j' b = Some(b', delta) -> j b = Some(b', delta))
+      (SAME': forall b b' delta, Plt b' (Senv.nextblock tse) -> j' b = Some(b', delta) -> j b = Some (b', delta))
+  :
+    <<SYMBINJ: symbols_inject j' se tse>>
+.
+Proof.
+  rr in SYMBINJ. des. rr. esplits; ss.
+  * i. eapply SYMBINJ0; eauto. erewrite <- SAME; ss. eapply Senv.find_symbol_below; eauto.
+  * i. exploit SYMBINJ1; eauto. i; des. esplits; eauto.
+  * i. destruct (Classical_Prop.classic (Plt b1 (Senv.nextblock se))).
+    { erewrite SYMBINJ2; eauto. }
+    { destruct (Senv.block_is_volatile se b1) eqn:TSRC.
+      { exploit Senv.block_is_volatile_below; eauto. }
+      destruct (Senv.block_is_volatile tse b2) eqn:TTGT; ss.
+      { exploit Senv.block_is_volatile_below; eauto. }
+    }
+Qed.
 
 (** * Matching traces. *)
 

@@ -1619,7 +1619,7 @@ Proof.
 Qed.
 
 Lemma add_equations_builtin_eval:
-  forall ef env args args' e1 e2 m1 m1' rs ls (ge: RTL.genv) sp vargs t vres m2,
+  forall ef env args args' e1 e2 m1 m1' rs ls se (ge: RTL.genv) sp vargs t vres m2,
   wt_regset env rs ->
   match ef with
   | EF_debug _ _ _ => add_equations_debug_args env args args' e1
@@ -1628,11 +1628,11 @@ Lemma add_equations_builtin_eval:
   Mem.extends m1 m1' ->
   satisf rs ls e2 ->
   eval_builtin_args ge (fun r => rs # r) sp m1 args vargs ->
-  external_call ef ge vargs m1 t vres m2 ->
+  external_call ef se vargs m1 t vres m2 ->
   satisf rs ls e1 /\
   exists vargs' vres' m2',
      eval_builtin_args ge ls sp m1' args' vargs'
-  /\ external_call ef ge vargs' m1' t vres' m2'
+  /\ external_call ef se vargs' m1' t vres' m2'
   /\ Val.lessdef vres vres'
   /\ Mem.extends m2 m2'.
 Proof.
@@ -1641,7 +1641,7 @@ Proof.
     satisf rs ls e1 /\
     exists vargs' vres' m2',
        eval_builtin_args ge ls sp m1' args' vargs'
-    /\ external_call ef ge vargs' m1' t vres' m2'
+    /\ external_call ef se vargs' m1' t vres' m2'
     /\ Val.lessdef vres vres'
     /\ Mem.extends m2 m2').
   {
@@ -1795,6 +1795,8 @@ Ltac UseShape :=
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : RTL.genv.
 Variable tge : genv.
 
@@ -1858,7 +1860,7 @@ Lemma exec_moves:
   satisf rs ls e' ->
   wt_regset env rs ->
   exists ls',
-    star step tge (Block s f sp (expand_moves mv bb) ls m)
+    star step tse tge (Block s f sp (expand_moves mv bb) ls m)
                E0 (Block s f sp bb ls' m)
   /\ satisf rs ls' e.
 Proof.
@@ -1919,7 +1921,7 @@ Inductive match_stackframes: list RTL.stackframe -> list LTL.stackframe -> signa
            Val.has_type v (env res) ->
            agree_callee_save ls ls1 ->
            exists ls2,
-           star LTL.step tge (Block ts tf sp bb ls1 m)
+           star LTL.step tse tge (Block ts tf sp bb ls1 m)
                           E0 (State ts tf sp pc ls2 m)
            /\ satisf (rs#res <- v) ls2 e),
       match_stackframes
@@ -1992,9 +1994,9 @@ Qed.
     "plus" kind. *)
 
 Lemma step_simulation:
-  forall S1 t S2, RTL.step ge S1 t S2 -> wt_state S1 ->
+  forall S1 t S2, RTL.step se ge S1 t S2 -> wt_state S1 ->
   forall S1', match_states S1 S1' ->
-  exists S2', plus LTL.step tge S1' t S2' /\ match_states S2 S2'.
+  exists S2', plus LTL.step tse tge S1' t S2' /\ match_states S2 S2'.
 Proof.
   induction 1; intros WT S1' MS; inv MS; try UseShape.
 
@@ -2367,7 +2369,8 @@ Proof.
   eapply star_trans. eexact A1.
   eapply star_left. econstructor.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved. apply senv_preserved. eauto.
+  eapply external_call_symbols_preserved. eauto.
+  eauto.
   instantiate (1 := ls2); auto.
   eapply star_right. eexact A3.
   econstructor.
@@ -2461,7 +2464,7 @@ Proof.
   simpl in FUN; inv FUN.
   econstructor; split.
   apply plus_one. econstructor; eauto.
-  eapply external_call_symbols_preserved with (ge1 := ge); eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved with (ge1 := se); eauto.
   econstructor; eauto.
   simpl. destruct (loc_result (ef_sig ef)) eqn:RES; simpl.
   rewrite Locmap.gss; auto.
@@ -2497,7 +2500,7 @@ Proof. apply Genv.globalenvs_match; eauto. Qed.
 
 Lemma initial_states_simulation:
   forall st1, RTL.initial_state prog st1 ->
-  exists st2, LTL.initial_state tprog st2 /\ match_states tge st1 st2.
+  exists st2, LTL.initial_state tprog st2 /\ match_states tge tge st1 st2.
 Proof.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
@@ -2518,7 +2521,7 @@ Qed.
 
 Lemma final_states_simulation:
   forall st1 st2 r,
-  match_states tge st1 st2 -> RTL.final_state st1 r -> LTL.final_state st2 r.
+  match_states tge tge st1 st2 -> RTL.final_state st1 r -> LTL.final_state st2 r.
 Proof.
   intros. inv H0. inv H. inv STACKS.
   econstructor. rewrite <- (loc_result_exten sg). inv RES; auto.
@@ -2541,7 +2544,7 @@ Qed.
 Theorem transf_program_correct:
   forward_simulation (RTL.semantics prog) (LTL.semantics tprog).
 Proof.
-  set (ms := fun s s' => wt_state s /\ match_states tge s s').
+  set (ms := fun s s' => wt_state s /\ match_states tge tge s s').
   eapply forward_simulation_plus with (match_states := ms).
 - apply senv_preserved; auto.
 - intros. exploit initial_states_simulation; eauto. intros [st2 [A B]].
@@ -2549,7 +2552,7 @@ Proof.
   apply wt_initial_state with (p := prog); auto. exact wt_prog.
 - intros. destruct H. eapply final_states_simulation; eauto.
 - intros. destruct H0.
-  exploit step_simulation; eauto. intros [s2' [A B]].
+  exploit step_simulation; eauto. eapply senv_preserved; eauto. intros [s2' [A B]].
   exists s2'; split. exact A. split.
   eapply subject_reduction; eauto. eexact wt_prog. eexact H.
   auto.

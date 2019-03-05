@@ -1780,7 +1780,7 @@ Theorem find_symbol_match:
   forall (s : ident),
   find_symbol (globalenv tp) s = find_symbol (globalenv p) s.
 Proof.
-  intros. destruct globalenvs_match. apply mge_symb0.
+  intros. destruct globalenvs_match. unfold find_symbol. congruence.
 Qed.
 
 Theorem senv_match:
@@ -1977,7 +1977,7 @@ Lemma find_symbol_match_genv:
   forall id,
   Genv.find_symbol tge id = Genv.find_symbol ge id.
 Proof.
-  apply MATCH_GENV.
+  inv MATCH_GENV. unfold find_symbol. i. congruence.
 Qed.
 
 Lemma senv_match_genv:
@@ -2122,3 +2122,17 @@ Proof.
   - i. eapply Genv.find_def_symbol. esplit; eauto.
 Qed.
 
+Inductive senv_genv_compat {F V} (se: Senv.t) (ge: Genv.t F V): Prop :=
+| senv_genv_compat_intro
+    (INCL: forall id blk (SYMB: Genv.find_symbol ge id = Some blk), <<SYMB: Senv.find_symbol se id = Some blk>>)
+    (NB: se.(Senv.nextblock) = ge.(Genv.genv_next))
+.
+
+Lemma senv_genv_compat_refl
+      F V (ge: Genv.t F V)
+  :
+    senv_genv_compat ge ge
+.
+Proof. econs; eauto. Qed.
+
+Hint Resolve senv_genv_compat_refl.

@@ -34,6 +34,8 @@ Hypothesis TRANSL: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable (se tse: Senv.t).
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable (ge tge: genv).
 Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun _ f tf => tf = transf_fundef f) eq prog) ge tge).
 
@@ -162,9 +164,9 @@ Inductive match_states: RTL.state -> RTL.state -> Prop :=
                    (Returnstate stk' v m).
 
 Lemma step_simulation:
-  forall S1 t S2, RTL.step ge S1 t S2 ->
+  forall S1 t S2, RTL.step se ge S1 t S2 ->
   forall S1', match_states S1 S1' ->
-  exists S2', RTL.step tge S1' t S2' /\ match_states S2 S2'.
+  exists S2', RTL.step tse tge S1' t S2' /\ match_states S2 S2'.
 Proof.
   induction 1; intros S1' MS; inv MS; try TR_AT.
 (* nop *)
@@ -203,7 +205,7 @@ Proof.
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
     eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-    eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+    eapply external_call_symbols_preserved; eauto.
   constructor; auto. eapply reach_succ; eauto. simpl; auto.
 (* cond *)
   econstructor; split.
@@ -227,7 +229,7 @@ Proof.
 (* external function *)
   econstructor; split.
   eapply exec_function_external; eauto.
-    eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+    eapply external_call_symbols_preserved; eauto.
   constructor; auto.
 (* return *)
   inv STACKS. inv H1.
@@ -273,6 +275,7 @@ Proof.
   eexact transf_initial_states.
   eexact transf_final_states.
   apply step_simulation; auto.
+  apply senv_preserved; auto.
 Qed.
 
 End WHOLE.

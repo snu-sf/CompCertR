@@ -37,6 +37,8 @@ Hypothesis TRANSL: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : genv.
 Variable tge : genv.
 
@@ -242,16 +244,16 @@ Lemma builtin_strength_reduction_correct:
   forall sp bc ae rs ef args vargs m t vres m',
   ematch bc rs ae ->
   eval_builtin_args ge (fun r => rs#r) sp m args vargs ->
-  external_call ef ge vargs m t vres m' ->
+  external_call ef se vargs m t vres m' ->
   exists vargs',
      eval_builtin_args ge (fun r => rs#r) sp m (builtin_strength_reduction ae ef args) vargs'
-  /\ external_call ef ge vargs' m t vres m'.
+  /\ external_call ef se vargs' m t vres m'.
 Proof.
   intros.
   assert (DEFAULT: forall cl,
     exists vargs',
        eval_builtin_args ge (fun r => rs#r) sp m (builtin_args_strength_reduction ae args cl) vargs'
-    /\ external_call ef ge vargs' m t vres m').
+    /\ external_call ef se vargs' m t vres m').
   { exists vargs; split; auto. eapply builtin_args_strength_reduction_correct; eauto. }
   unfold builtin_strength_reduction.
   destruct ef; auto.
@@ -354,9 +356,9 @@ Ltac TransfInstr :=
 
 Lemma transf_step_correct:
   forall s1 t s2,
-  step ge s1 t s2 ->
+  step se ge s1 t s2 ->
   forall n1 s1' (SS: exists su0, sound_state prog ge su0 s1) (MS: match_states n1 s1 s1'),
-  (exists n2, exists s2', step tge s1' t s2' /\ match_states n2 s2 s2')
+  (exists n2, exists s2', step tse tge s1' t s2' /\ match_states n2 s2 s2')
   \/ (exists n2, n2 < n1 /\ t = E0 /\ match_states n2 s2 s1')%nat.
 Proof.
   induction 1; intros; inv MS; destruct SS as [su0 SS]; try InvSoundState; try (inv PC; try congruence).
@@ -488,7 +490,7 @@ Opaque builtin_strength_reduction.
   left; econstructor; econstructor; split.
   eapply exec_Ibuiltin; eauto.
   eapply eval_builtin_args_preserved. eexact symbols_preserved. eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   eapply match_states_succ; eauto.
   apply set_res_lessdef; auto.
 
@@ -551,7 +553,7 @@ Opaque builtin_strength_reduction.
   intros [v' [m2' [A [B [C D]]]]].
   simpl. left; econstructor; econstructor; split.
   eapply exec_function_external; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   constructor; auto.
 
 - (* return *)
@@ -607,9 +609,10 @@ Proof.
 - simpl; intros. destruct H. eapply transf_final_states; eauto.
 - simpl; intros. destruct H0.
   destruct H0 as [su0 SS].
-  assert (sound_state prog ge su0 s1') by (eapply sound_step; eauto).
+  assert (sound_state prog ge su0 s1') by (eapply sound_step; eauto; econstructor; eauto).
   fold ge; fold tge.
   exploit transf_step_correct; eauto.
+  { apply senv_preserved; eauto. }
   intros [ [n2 [s2' [A B]]] | [n2 [A [B C]]]].
   exists n2; exists s2'; split; auto. left; apply plus_one; auto.
   split; eauto.

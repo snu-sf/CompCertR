@@ -239,6 +239,7 @@ Inductive assign_loc (ce: composite_env) (ty: type) (m: mem) (b: block) (ofs: pt
 
 Section SEMANTICS.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** Allocation of function-local variables.
@@ -570,7 +571,7 @@ Inductive step: state -> trace -> state -> Prop :=
 
   | step_builtin:   forall f optid ef tyargs al k e le m vargs t vres m',
       eval_exprlist e le m al tyargs vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       step (State f (Sbuiltin optid ef tyargs al) k e le m)
          t (State f Sskip k e (set_opttemp optid vres le) m')
 
@@ -654,7 +655,7 @@ Inductive step: state -> trace -> state -> Prop :=
         E0 (State f f.(fn_body) k e le m1)
 
   | step_external_function: forall ef targs tres cconv vargs k m vres t m',
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       step (Callstate (External ef targs tres cconv) vargs k m)
          t (Returnstate vres k m')
 
@@ -696,7 +697,7 @@ Inductive function_entry1 (ge: genv) (f: function) (vargs: list val) (m: mem) (e
       le = create_undef_temps f.(fn_temps) ->
       function_entry1 ge f vargs m e le m'.
 
-Definition step1 (ge: genv) := step ge (function_entry1 ge).
+Definition step1 (se: Senv.t) (ge: genv) := step se ge (function_entry1 ge).
 
 (** Second, parameters as temporaries. *)
 
@@ -709,7 +710,7 @@ Inductive function_entry2 (ge: genv)  (f: function) (vargs: list val) (m: mem) (
       bind_parameter_temps f.(fn_params) vargs (create_undef_temps f.(fn_temps)) = Some le ->
       function_entry2 ge f vargs m e le m'.
 
-Definition step2 (ge: genv) := step ge (function_entry2 ge).
+Definition step2 (se: Senv.t) (ge: genv) := step se ge (function_entry2 ge).
 
 (** Wrapping up these definitions in two small-step semantics. *)
 
@@ -729,7 +730,7 @@ Proof.
   intros. unfold semantics1.
   set (ge := globalenv p). constructor; simpl; intros.
 (* receptiveness *)
-  assert (t1 = E0 -> exists s2, step1 ge s t2 s2).
+  assert (t1 = E0 -> exists s2, step1 ge ge s t2 s2).
     intros. subst. inv H0. exists s1; auto.
   inversion H; subst; auto.
   (* builtin *)

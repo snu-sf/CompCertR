@@ -36,7 +36,11 @@ Hypothesis TRANSF: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge tge: genv.
+Hypothesis SECOMPATSRC: senv_genv_compat se ge.
+Hypothesis SECOMPATTGT: senv_genv_compat tse tge.
 
 Hypothesis (GENV_COMPAT: genv_compat ge prog).
 
@@ -232,7 +236,7 @@ Lemma tr_moves_init_regs:
   (forall r, In r rdsts -> Ple r ctx2.(mreg)) ->
   list_forall2 (val_reg_charact F ctx1 rs1) vl rsrcs ->
   exists rs2,
-    star step tge (State stk f sp pc1 rs1 m)
+    star step tse tge (State stk f sp pc1 rs1 m)
                E0 (State stk f sp pc2 rs2 m)
   /\ agree_regs F ctx2 (init_regs vl rdsts) rs2
   /\ forall r, Plt r ctx2.(dreg) -> rs2#r = rs1#r.
@@ -489,6 +493,8 @@ Qed.
 Inductive match_stacks (F: meminj) (m m': mem) (sm0: SimMemInj.t') :
              list stackframe -> list stackframe -> block -> Prop :=
   | match_stacks_nil: forall bound1 bound
+        (SYMBINJ: symbols_inject F se tse)
+        (HI: bound1 = ge.(Genv.genv_next))
         (MG: match_globalenvs F bound1)
         (BELOW: Ple bound1 bound),
       match_stacks F m m' sm0 nil nil bound
@@ -553,6 +559,17 @@ Section MATCH_STACKS.
 Variable F: meminj.
 Variables m m': mem.
 
+Lemma match_stacks_symbols_inject:
+  forall stk stk' bound sm0,
+  match_stacks F m m' sm0 stk stk' bound -> symbols_inject F se tse
+with match_stacks_inside_symbols_inject:
+  forall stk stk' f ctx sp rs' sm0,
+  match_stacks_inside F m m' sm0 stk stk' f ctx sp rs' -> symbols_inject F se tse.
+Proof.
+  induction 1; eauto.
+  induction 1; eauto.
+Qed.
+
 Lemma match_stacks_globalenvs:
   forall stk stk' bound sm0,
   match_stacks F m m' sm0 stk stk' bound -> exists b, match_globalenvs F b
@@ -586,7 +603,7 @@ Lemma match_stacks_bound:
   match_stacks F m m' sm0 stk stk' bound1.
 Proof.
   intros. inv H.
-  apply match_stacks_nil with bound0. auto. eapply Ple_trans; eauto.
+  apply match_stacks_nil with ge.(Genv.genv_next); auto. eapply Ple_trans; eauto.
   eapply match_stacks_cons; eauto. eapply Pos.lt_le_trans; eauto.
   eapply match_stacks_untailcall; eauto. eapply Pos.lt_le_trans; eauto.
 Qed.
@@ -628,6 +645,15 @@ Proof.
   induction 1; intros.
   (* nil *)
   apply match_stacks_nil with (bound1 := bound1).
+  { eapply symbols_inject_incr; eauto.
+    - i. inv SECOMPATSRC. rewrite NB in *.
+      inv MG. exploit DOMAIN; eauto. i; clarify.
+      exploit INCR; eauto. i; clarify.
+    - i. inv SECOMPATTGT. rewrite NB in *.
+      erewrite INJ; eauto.
+      inv MATCH_GENV. rewrite mge_next in *. xomega.
+  }
+  { ss. }
   inv MG. constructor; auto.
   intros. apply IMAGE with delta. eapply INJ; eauto. eapply Pos.lt_le_trans; eauto.
   auto. auto.
@@ -855,6 +881,15 @@ with match_stacks_inside_extcall:
 Proof.
   induction 1; intros.
   apply match_stacks_nil with bound1; auto.
+    { eapply symbols_inject_incr; eauto.
+      - i. destruct (F1 b) eqn:T.
+        + destruct p. exploit INCR; eauto. i; clarify.
+        + inv SECOMPATSRC. clarify. rewrite NB in *. inv MG. exploit DOMAIN; eauto. i; clarify.
+      - i. destruct (F1 b) eqn:T.
+        + destruct p. exploit INCR; eauto. i; clarify.
+        + exploit SEP; eauto. i; des. clarify. inv SECOMPATTGT. rewrite NB in *.
+          inv MATCH_GENV. rewrite mge_next in *. unfold Mem.valid_block in *. xomega.
+    }
     inv MG. constructor; intros; eauto.
     destruct (F1 b1) as [[b2' delta']|] eqn:?.
     exploit INCR; eauto. intros EQ; rewrite H0 in EQ; inv EQ. eapply IMAGE; eauto.
@@ -997,9 +1032,9 @@ Qed.
 
 Theorem step_simulation:
   forall S1 t S2,
-  step ge S1 t S2 ->
+  step se ge S1 t S2 ->
   forall S1' sm0 (MS: match_states S1 S1' sm0),
-  (exists S2', plus step tge S1' t S2' /\ exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>)
+  (exists S2', plus step tse tge S1' t S2' /\ exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>)
   \/ (measure S2 < measure S1 /\ t = E0 /\ exists sm1, match_states S2 S1' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>)%nat.
 Proof.
   induction 1; intros; inv MS.
@@ -1178,13 +1213,12 @@ Proof.
 - (* builtin *)
   exploit tr_funbody_inv; eauto. intros TR; inv TR.
   exploit match_stacks_inside_globalenvs; eauto. intros [bound MG].
+  exploit match_stacks_inside_symbols_inject; eauto. intro SYMBINJ.
   exploit tr_builtin_args; eauto. intros (vargs' & P & Q).
-  exploit external_call_mem_inject; eauto.
-    eapply match_stacks_inside_globals; eauto.
+  exploit external_call_mem_inject_gen; eauto.
   intros [F1 [v1 [m1' [A [B [C [D [E [J K]]]]]]]]].
   left; econstructor; split.
   eapply plus_one. eapply exec_Ibuiltin; eauto.
-    eapply external_call_symbols_preserved; eauto. apply senv_preserved.
   assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
                     (SimMemInj.mk m' m1' F1 sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
                                   sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
@@ -1427,13 +1461,12 @@ Proof.
 
 - (* external function *)
   exploit match_stacks_globalenvs; eauto. intros [bound MG].
-  exploit external_call_mem_inject; eauto.
-    eapply match_globalenvs_preserves_globals; eauto.
+  exploit match_stacks_symbols_inject; eauto. intro SYMBINJ.
+  exploit external_call_mem_inject_gen; eauto.
   intros [F1 [v1 [m1' [A [B [C [D [E [J K]]]]]]]]].
   simpl in FD. inv FD.
   left; econstructor; split.
   eapply plus_one. eapply exec_function_external; eauto.
-    eapply external_call_symbols_preserved; eauto. apply senv_preserved.
   assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
                     (SimMemInj.mk m' m1' F1 sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
                                   sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
@@ -1521,6 +1554,7 @@ Proof. apply Genv.globalenvs_match; auto. Qed.
 Let GENV_COMPAT: genv_compat ge prog.
 Proof. apply genv_compat_match. Qed.
 
+Let match_states := match_states ge tge.
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 -> exists st2, initial_state tprog st2 /\ exists sm, match_states ge st1 st2 sm.
 Proof.
@@ -1538,6 +1572,8 @@ Proof.
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }
   all: s.
   apply match_stacks_nil with (Mem.nextblock m0).
+  { erewrite <- Genv.init_mem_genv_next; eauto. eapply (init_symbols_inject MATCH_GENV). }
+  { erewrite <- Genv.init_mem_genv_next; eauto. unfold ge. ss. }
   constructor; intros.
     unfold Mem.flat_inj. apply pred_dec_true; auto.
     unfold Mem.flat_inj in H. destruct (plt b1 (Mem.nextblock m0)); congruence.

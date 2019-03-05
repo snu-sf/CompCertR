@@ -41,8 +41,12 @@ Hypothesis TRANSL: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : Csharpminor.genv.
 Variable tge: genv.
+Hypothesis SECOMPATSRC: senv_genv_compat se ge.
+Hypothesis SECOMPATTGT: senv_genv_compat tse tge.
 
 Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => transl_fundef f = OK tf) eq prog) ge tge).
 
@@ -484,6 +488,7 @@ Inductive match_callstack (f: meminj) (m: mem) (tm: mem) (sm0: SimMemInj.t'):
                           callstack -> block -> block -> Prop :=
   | mcs_nil:
       forall hi bound tbound,
+        forall (SYMBINJ: symbols_inject f se tse) (HI: hi = ge.(Genv.genv_next)),
       match_globalenvs f hi ->
       Ple hi bound -> Ple hi tbound ->
       match_callstack f m tm sm0 nil bound tbound
@@ -503,10 +508,18 @@ Inductive match_callstack (f: meminj) (m: mem) (tm: mem) (sm0: SimMemInj.t'):
 
 (** [match_callstack] implies [match_globalenvs]. *)
 
+Lemma match_callstack_symbols_inject:
+  forall f m tm cs bound tbound sm0,
+  match_callstack f m tm sm0 cs bound tbound ->
+  symbols_inject f se tse.
+Proof.
+  induction 1; eauto.
+Qed.
+
 Lemma match_callstack_match_globalenvs:
   forall f m tm cs bound tbound sm0,
   match_callstack f m tm sm0 cs bound tbound ->
-  exists hi, match_globalenvs f hi.
+  exists hi, match_globalenvs f hi /\ (<<HI: hi = ge.(Genv.genv_next)>>).
 Proof.
   induction 1; eauto.
 Qed.
@@ -536,6 +549,10 @@ Proof.
   induction 1; intros.
   (* base case *)
   econstructor; eauto.
+  { eapply symbols_inject_incr; eauto.
+    - i. inv SECOMPATSRC. rewrite NB in *. rewrite <- H5; ss. xomega.
+    - i. inv SECOMPATTGT. rewrite NB in *. exploit H6; eauto. inv MATCH_GENV. rewrite mge_next in *. xomega.
+  }
   inv H. constructor; intros; eauto.
   eapply IMAGE; eauto. eapply H6; eauto. xomega.
   (* inductive case *)
@@ -658,6 +675,14 @@ Proof.
   induction 1; intros.
 (* base case *)
   apply mcs_nil with hi; auto.
+  { eapply symbols_inject_incr; eauto.
+    - i. destruct (f1 b) eqn:T; ss.
+      + destruct p. clarify. exploit INCR; eauto. i. clarify.
+      + exploit SEPARATED; eauto. i; des. unfold Mem.valid_block in *. clarify. inv SECOMPATSRC. rewrite NB in *. xomega.
+    - i. destruct (f1 b) eqn:T; ss.
+      + destruct p. clarify. exploit INCR; eauto. i. clarify.
+      + exploit SEPARATED; eauto. i; des. unfold Mem.valid_block in *. clarify. inv SECOMPATTGT. rewrite NB in *. inv MATCH_GENV. rewrite mge_next in *. xomega.
+  }
   inv H. constructor; auto.
   intros. case_eq (f1 b1).
   intros [b2' delta'] EQ. rewrite (INCR _ _ _ EQ) in H. inv H. eauto.
@@ -1497,7 +1522,7 @@ Proof.
   constructor. simpl. rewrite Ptrofs.add_zero_l; auto.
   congruence.
   (* global *)
-  exploit match_callstack_match_globalenvs; eauto. intros [bnd MG]. inv MG.
+  exploit match_callstack_match_globalenvs; eauto. intros [bnd [MG _]]. inv MG.
   exists (Vptr b Ptrofs.zero); split.
   constructor. simpl. unfold Genv.symbol_address. 
   rewrite symbols_preserved. rewrite H2. auto.
@@ -1714,7 +1739,7 @@ Lemma match_is_call_cont:
   match_cont k tk cenv xenv cs ->
   Csharpminor.is_call_cont k ->
   exists tk',
-    star step tge (State tfn Sskip tk sp te tm)
+    star step tse tge (State tfn Sskip tk sp te tm)
                E0 (State tfn Sskip tk' sp te tm)
     /\ is_call_cont tk'
     /\ match_cont k tk' cenv nil cs.
@@ -1808,7 +1833,7 @@ Lemma switch_descent:
   exists k',
   transl_lblstmt_cont cenv xenv ls k k'
   /\ (forall f sp e m,
-      plus step tge (State f s k sp e m) E0 (State f body k' sp e m)).
+      plus step tse tge (State f s k sp e m) E0 (State f body k' sp e m)).
 Proof.
   induction ls; intros.
 - monadInv H. econstructor; split.
@@ -1828,7 +1853,7 @@ Lemma switch_ascent:
   forall k k1,
   transl_lblstmt_cont cenv xenv ls k k1 ->
   exists k2,
-  star step tge (State f (Sexit n) k1 sp e m)
+  star step tse tge (State f (Sexit n) k1 sp e m)
              E0 (State f (Sexit O) k2 sp e m)
   /\ transl_lblstmt_cont cenv xenv ls' k k2.
 Proof.
@@ -1864,7 +1889,7 @@ Lemma switch_match_states:
     (MK: match_cont k tk cenv xenv cs)
     (TK: transl_lblstmt_cont cenv xenv ls tk tk'),
   exists S,
-  plus step tge (State tfn (Sexit O) tk' (Vptr sp Ptrofs.zero) te tm) E0 S
+  plus step tse tge (State tfn (Sexit O) tk' (Vptr sp Ptrofs.zero) te tm) E0 S
   /\ exists sm1, match_states (Csharpminor.State fn (seq_of_lbl_stmt ls) k e le m) S sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>.
 Proof.
   intros. inv TK.
@@ -2082,9 +2107,9 @@ Proof.
 Qed.
 
 Lemma transl_step_correct:
-  forall S1 t S2, Csharpminor.step ge S1 t S2 ->
+  forall S1 t S2, Csharpminor.step se ge S1 t S2 ->
   forall T1 sm0, match_states S1 T1 sm0 ->
-  (exists T2, plus step tge T1 t T2 /\ (exists sm1, match_states S2 T2 sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>))
+  (exists T2, plus step tse tge T1 t T2 /\ (exists sm1, match_states S2 T2 sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>))
   \/ (measure S2 < measure S1 /\ t = E0 /\ (exists sm1, match_states S2 T1 sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>))%nat.
 Proof.
   induction 1; intros T1 sm0 MSTATE; inv MSTATE.
@@ -2160,7 +2185,7 @@ Proof.
   monadInv TR.
   exploit transl_expr_correct; eauto. intros [tvf [EVAL1 VINJ1]].
   assert (tvf = vf).
-    exploit match_callstack_match_globalenvs; eauto. intros [bnd MG].
+    exploit match_callstack_match_globalenvs; eauto. intros [bnd [MG TTT]].
     eapply val_inject_function_pointer; eauto.
   subst tvf.
   exploit transl_exprlist_correct; eauto.
@@ -2178,12 +2203,12 @@ Proof.
   exploit transl_exprlist_correct; eauto.
   intros [tvargs [EVAL2 VINJ2]].
   exploit match_callstack_match_globalenvs; eauto. intros [hi' MG].
-  exploit external_call_mem_inject; eauto.
-  eapply inj_preserves_globals; eauto.
+  exploit external_call_mem_inject_gen; eauto.
+  { eapply match_callstack_symbols_inject; eauto. }
   intros [f' [vres' [tm' [EC [VINJ [MINJ' [UNMAPPED [OUTOFREACH [INCR SEPARATED]]]]]]]]].
   left; econstructor; split.
   apply plus_one. econstructor. eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eauto.
   assert (MCS': match_callstack f' m' tm' sm0
                  (Frame cenv tfn e le te sp lo hi :: cs)
                  (Mem.nextblock m') (Mem.nextblock tm')).
@@ -2389,13 +2414,11 @@ Opaque PTree.set.
 
 (* external call *)
   monadInv TR.
-  exploit match_callstack_match_globalenvs; eauto. intros [hi MG].
-  exploit external_call_mem_inject; eauto.
-  eapply inj_preserves_globals; eauto.
+  exploit external_call_mem_inject_gen; eauto.
+  { eapply match_callstack_symbols_inject; eauto. }
   intros [f' [vres' [tm' [EC [VINJ [MINJ' [UNMAPPED [OUTOFREACH [INCR SEPARATED]]]]]]]]].
   left; econstructor; split.
-  apply plus_one. econstructor.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  apply plus_one. econstructor. eauto.
   assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
                     (SimMemInj.mk m' tm' f' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
                                   sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
@@ -2462,7 +2485,7 @@ Qed.
 
 Lemma transl_initial_states:
   forall S, Csharpminor.initial_state prog S ->
-  exists R, Cminor.initial_state tprog R /\ exists sm, match_states ge S R sm.
+  exists R, Cminor.initial_state tprog R /\ exists sm, match_states ge tge ge S R sm.
 Proof.
   induction 1.
   exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
@@ -2481,14 +2504,17 @@ Proof.
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }
   auto.
   eapply Genv.initmem_inject; eauto.
-  apply mcs_nil with (Mem.nextblock m0). apply match_globalenvs_init; auto. xomega. xomega.
+  apply mcs_nil with (Mem.nextblock m0); try xomega.
+  { erewrite <- Genv.init_mem_genv_next; eauto. eapply (init_symbols_inject MATCH_GENV); eauto. }
+  { erewrite <- Genv.init_mem_genv_next; eauto. unfold ge. ss. }
+  apply match_globalenvs_init; auto.
   constructor. red; auto.
   constructor.
 Qed.
 
 Lemma transl_final_states:
   forall S R r,
-  (exists sm, match_states ge S R sm) -> Csharpminor.final_state S r -> Cminor.final_state R r.
+  (exists sm, match_states ge tge ge S R sm) -> Csharpminor.final_state S r -> Cminor.final_state R r.
 Proof.
   intros. des. inv H0. inv H. inv MK. inv RESINJ. constructor.
 Qed.
@@ -2496,11 +2522,11 @@ Qed.
 Theorem transl_program_correct:
   forward_simulation (Csharpminor.semantics prog) (Cminor.semantics tprog).
 Proof.
-  eapply forward_simulation_star with (match_states := fun s1 s2 => exists sm, match_states ge s1 s2 sm); eauto.
+  eapply forward_simulation_star with (match_states := fun s1 s2 => exists sm, match_states ge tge ge s1 s2 sm); eauto.
   apply senv_preserved; auto.
   eexact transl_initial_states.
   eexact transl_final_states.
-  { i. des. exploit transl_step_correct; eauto. i; des; eauto. }
+  { i. des. exploit transl_step_correct; eauto. { eapply (Genv.senv_match TRANSL). } i; des; eauto. }
 Qed.
 
 End WHOLE.

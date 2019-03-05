@@ -244,6 +244,7 @@ Inductive state: Type :=
 
 Section RELSEM.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** Evaluation of constants and operator applications.
@@ -475,7 +476,7 @@ Inductive step: state -> trace -> state -> Prop :=
 
   | step_builtin: forall f optid ef bl k sp e m vargs t vres m',
       eval_exprlist sp e m bl vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       step (State f (Sbuiltin optid ef bl) k sp e m)
          t (State f Sskip k sp (set_optvar optid vres e) m')
 
@@ -538,7 +539,7 @@ Inductive step: state -> trace -> state -> Prop :=
       step (Callstate (Internal f) vargs k m)
         E0 (State f f.(fn_body) k (Vptr sp Ptrofs.zero) e m')
   | step_external_function: forall ef vargs k m t vres m',
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       step (Callstate (External ef) vargs k m)
          t (Returnstate vres k m')
 
@@ -580,7 +581,7 @@ Lemma semantics_receptive:
 Proof.
   intros. constructor; simpl; intros.
 (* receptiveness *)
-  assert (t1 = E0 -> exists s2, step (Genv.globalenv p) s t2 s2).
+  assert (t1 = E0 -> exists s2, Step (semantics p) s t2 s2).
     intros. subst. inv H0. exists s1; auto.
   inversion H; subst; auto.
   exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]].
@@ -632,6 +633,7 @@ Definition outcome_free_mem
 Section NATURALSEM.
 
 Variable ge: genv.
+Variable se: Senv.t.
 
 (** Evaluation of a function invocation: [eval_funcall ge m f args t m' res]
   means that the function [f], applied to the arguments [args] in
@@ -652,7 +654,7 @@ Inductive eval_funcall:
       eval_funcall m (Internal f) vargs t m3 vres
   | eval_funcall_external:
       forall ef m args t res m',
-      external_call ef ge args m t res m' ->
+      external_call ef se args m t res m' ->
       eval_funcall m (External ef) args t m' res
 
 (** Execution of a statement: [exec_stmt ge f sp e m s t e' m' out]
@@ -692,7 +694,7 @@ with exec_stmt:
   | exec_Sbuiltin:
       forall f sp e m optid ef bl t m' vargs vres e',
       eval_exprlist ge sp e m bl vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       e' = set_optvar optid vres e ->
       exec_stmt f sp e m (Sbuiltin optid ef bl) t e' m' Out_normal
   | exec_Sifthenelse:
@@ -840,7 +842,7 @@ Inductive bigstep_program_terminates (p: program): trace -> int -> Prop :=
       Genv.find_symbol ge p.(prog_main) = Some b ->
       Genv.find_funct_ptr ge b = Some f ->
       funsig f = signature_main ->
-      eval_funcall ge m0 f nil t m (Vint r) ->
+      eval_funcall ge ge m0 f nil t m (Vint r) ->
       bigstep_program_terminates p t r.
 
 Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
@@ -851,7 +853,7 @@ Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
       Genv.find_symbol ge p.(prog_main) = Some b ->
       Genv.find_funct_ptr ge b = Some f ->
       funsig f = signature_main ->
-      evalinf_funcall ge m0 f nil t ->
+      evalinf_funcall ge ge m0 f nil t ->
       bigstep_program_diverges p t.
 
 Definition bigstep_semantics (p: program) :=
@@ -905,16 +907,16 @@ Qed.
 
 Lemma eval_funcall_exec_stmt_steps:
   (forall m fd args t m' res,
-   eval_funcall ge m fd args t m' res ->
+   eval_funcall ge ge m fd args t m' res ->
    forall k,
    is_call_cont k ->
-   star step ge (Callstate fd args k m)
+   Star (semantics prog) (Callstate fd args k m)
               t (Returnstate res k m'))
 /\(forall f sp e m s t e' m' out,
-   exec_stmt ge f sp e m s t e' m' out ->
+   exec_stmt ge ge f sp e m s t e' m' out ->
    forall k,
    exists S,
-   star step ge (State f s k sp e m) t S
+   Star (semantics prog) (State f s k sp e m) t S
    /\ outcome_state_match sp e' m' f k out S).
 Proof.
   apply eval_funcall_exec_stmt_ind2; intros.
@@ -1067,31 +1069,31 @@ Qed.
 
 Lemma eval_funcall_steps:
    forall m fd args t m' res,
-   eval_funcall ge m fd args t m' res ->
+   eval_funcall ge ge m fd args t m' res ->
    forall k,
    is_call_cont k ->
-   star step ge (Callstate fd args k m)
+   Star (semantics prog) (Callstate fd args k m)
               t (Returnstate res k m').
 Proof (proj1 eval_funcall_exec_stmt_steps).
 
 Lemma exec_stmt_steps:
    forall f sp e m s t e' m' out,
-   exec_stmt ge f sp e m s t e' m' out ->
+   exec_stmt ge ge f sp e m s t e' m' out ->
    forall k,
    exists S,
-   star step ge (State f s k sp e m) t S
+   Star (semantics prog) (State f s k sp e m) t S
    /\ outcome_state_match sp e' m' f k out S.
 Proof (proj2 eval_funcall_exec_stmt_steps).
 
 Lemma evalinf_funcall_forever:
   forall m fd args T k,
-  evalinf_funcall ge m fd args T ->
-  forever_plus step ge (Callstate fd args k m) T.
+  evalinf_funcall ge ge m fd args T ->
+  forever_plus step ge ge (Callstate fd args k m) T.
 Proof.
   cofix CIH_FUN.
   assert (forall sp e m s T f k,
-          execinf_stmt ge f sp e m s T ->
-          forever_plus step ge (State f s k sp e m) T).
+          execinf_stmt ge ge f sp e m s T ->
+          forever_plus step ge ge (State f s k sp e m) T).
   cofix CIH_STMT.
   intros. inv H.
 

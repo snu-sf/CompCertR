@@ -42,8 +42,12 @@ Hypothesis TRANSF: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge: Clight.genv.
 Variable tge: Clight.genv.
+Hypothesis SECOMPATSRC: senv_genv_compat se ge.
+Hypothesis SECOMPATTGT: senv_genv_compat tse tge.
 
 Hypothesis (MATCH_CGENV:
               Genv.match_genvs (match_globdef (fun (ctx : AST.program fundef type) f tf =>
@@ -300,7 +304,7 @@ Lemma step_Sdebug_temp:
   forall f id ty k e le m v,
   le!id = Some v ->
   val_casted v ty ->
-  step2 tge (State f (Sdebug_temp id ty) k e le m)
+  step2 tse tge (State f (Sdebug_temp id ty) k e le m)
          E0 (State f Sskip k e le m).
 Proof.
   intros. unfold Sdebug_temp. eapply step_builtin with (optid := None).
@@ -311,7 +315,7 @@ Qed.
 Lemma step_Sdebug_var:
   forall f id ty k e le m b,
   e!id = Some(b, ty) ->
-  step2 tge (State f (Sdebug_var id ty) k e le m)
+  step2 tse tge (State f (Sdebug_var id ty) k e le m)
          E0 (State f Sskip k e le m).
 Proof.
   intros. unfold Sdebug_var. eapply step_builtin with (optid := None).
@@ -324,11 +328,11 @@ Lemma step_Sset_debug:
   forall f id ty a k e le m v v',
   eval_expr tge e le m a v ->
   sem_cast v (typeof a) ty m = Some v' ->
-  plus step2 tge (State f (Sset_debug id ty a) k e le m)
+  plus step2 tse tge (State f (Sset_debug id ty a) k e le m)
               E0 (State f Sskip k e (PTree.set id v' le) m).
 Proof.
   intros; unfold Sset_debug.
-  assert (forall k, step2 tge (State f (Sset id (make_cast a ty)) k e le m)
+  assert (forall k, step2 tse tge (State f (Sset id (make_cast a ty)) k e le m)
                            E0 (State f Sskip k e (PTree.set id v' le) m)).
   { intros. apply step_set. eapply make_cast_correct; eauto. }
   destruct (Compopts.debug tt).
@@ -344,7 +348,7 @@ Qed.
 Lemma step_add_debug_vars:
   forall f s e le m vars k,
   (forall id ty, In (id, ty) vars -> exists b, e!id = Some (b, ty)) ->
-  star step2 tge (State f (add_debug_vars vars s) k e le m)
+  star step2 tse tge (State f (add_debug_vars vars s) k e le m)
               E0 (State f s k e le m).
 Proof.
   unfold add_debug_vars. destruct (Compopts.debug tt).
@@ -378,7 +382,7 @@ Lemma step_add_debug_params:
   list_norepet (var_names params) ->
   list_forall2 val_casted vl (map snd params) ->
   bind_parameter_temps params vl le1 = Some le ->
-  star step2 tge (State f (add_debug_params params s) k e le m)
+  star step2 tse tge (State f (add_debug_params params s) k e le m)
               E0 (State f s k e le m).
 Proof.
   unfold add_debug_params. destruct (Compopts.debug tt).
@@ -1127,7 +1131,7 @@ Theorem store_params_correct:
   (forall id, In id (var_names params) -> le!id = None) ->
   (forall id b' ty i, te!id = Some (b', ty) -> ~ext_tgt b' i) ->
   exists tle, exists tm',
-  star step2 tge (State f (store_params cenv params s) k te tle tm)
+  star step2 tse tge (State f (store_params cenv params s) k te tle tm)
               E0 (State f s k te tle tm')
   /\ bind_parameter_temps params targs tle2 = Some tle
   /\ Mem.inject j m' tm'
@@ -1573,6 +1577,7 @@ End EVAL_EXPR.
 
 Inductive match_cont (f: meminj): compilenv -> cont -> cont -> mem -> block -> block -> Prop :=
   | match_Kstop: forall cenv m bound tbound hi,
+      forall (SYMBINJ: symbols_inject f se tse) (HI: hi = ge.(Genv.genv_next)),
       match_globalenvs f hi -> Ple hi bound -> Ple hi tbound ->
       match_cont f cenv Kstop Kstop m bound tbound
   | match_Kseq: forall cenv s k ts tk m bound tbound,
@@ -1617,6 +1622,10 @@ Lemma match_cont_invariant:
   match_cont f' cenv k tk m' bound tbound.
 Proof.
   induction 1; intros LOAD INCR INJ1 INJ2; econstructor; eauto.
+  { eapply symbols_inject_incr; eauto.
+    - i. erewrite <- INJ1; eauto. inv SECOMPATSRC. rewrite NB in *. xomega.
+    - i. erewrite <- INJ2; eauto. inv SECOMPATTGT. rewrite NB in *. inv MATCH_CGENV. inv H4. rewrite mge_next in *. xomega.
+  }
 (* globalenvs *)
   inv H. constructor; intros; eauto.
   assert (f b1 = Some (b2, delta)). rewrite <- H; symmetry; eapply INJ2; eauto. xomega.
@@ -1757,6 +1766,14 @@ Qed.
 
 (** Matching of global environments *)
 
+Lemma match_cont_symbols_inject:
+  forall f cenv k tk m bound tbound,
+  match_cont f cenv k tk m bound tbound ->
+  symbols_inject f se tse.
+Proof.
+  induction 1; auto.
+Qed.
+
 Lemma match_cont_globalenv:
   forall f cenv k tk m bound tbound,
   match_cont f cenv k tk m bound tbound ->
@@ -1765,7 +1782,7 @@ Proof.
   induction 1; auto. exists hi; auto.
 Qed.
 
-Hint Resolve match_cont_globalenv: compat.
+Hint Resolve match_cont_symbols_inject match_cont_globalenv: compat.
 
 Lemma match_cont_find_funct:
   forall f cenv k tk m bound tbound vf fd tvf,
@@ -2205,9 +2222,9 @@ Proof.
 Qed.
 
 Lemma step_simulation:
-  forall S1 t S2, step1 ge S1 t S2 ->
+  forall S1 t S2, step1 se ge S1 t S2 ->
   forall S1' sm0 (MS: match_states S1 S1' sm0),
-  exists S2', plus step2 tge S1' t S2' /\ (exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>).
+  exists S2', plus step2 tse tge S1' t S2' /\ (exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>).
 Proof.
   induction 1; simpl; intros; inv MS; simpl in *; try (monadInv TRS).
 
@@ -2347,10 +2364,10 @@ Proof.
 
 (* builtin *)
   exploit eval_simpl_exprlist; eauto with compat. intros [CASTED [tvargs [C D]]].
-  exploit external_call_mem_inject; eauto. apply match_globalenvs_preserves_globals; eauto with compat.
+  exploit external_call_mem_inject_gen; eauto with compat.
   intros [j' [tvres [tm' [P [Q [R [S [T [U V]]]]]]]]].
   econstructor; split.
-  apply plus_one. econstructor; eauto. eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  apply plus_one. econstructor; eauto.
   assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
                     (SimMemInj.mk m' tm' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
                                   sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
@@ -2587,11 +2604,12 @@ Proof.
 
 (* external function *)
   monadInv TRFD. inv FUNTY.
-  exploit external_call_mem_inject; eauto. apply match_globalenvs_preserves_globals.
-  eapply match_cont_globalenv. eexact (MCONT VSet.empty).
+  exploit match_cont_symbols_inject; eauto. intro SYMBINJ; des.
+  exploit match_cont_globalenv; eauto. intro MG; des.  
+  exploit external_call_mem_inject_gen; eauto.
   intros [j' [tvres [tm' [P [Q [R [S [T [U V]]]]]]]]].
   econstructor; split.
-  apply plus_one. econstructor; eauto. eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  apply plus_one. econstructor; eauto.
     assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
                     (SimMemInj.mk m' tm' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
                                   sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
@@ -2629,6 +2647,7 @@ Proof.
 
 Unshelve.
   all: try by (try eapply SimMemInj.inject_separated_frozen; eauto).
+  all: try econs; econs.
 Qed.
 
 End CORELEMMA.
@@ -2650,7 +2669,7 @@ Qed.
 
 Lemma initial_states_simulation:
   forall S, initial_state prog S ->
-  exists R, initial_state tprog R /\ (exists sm, match_states ge S R sm).
+  exists R, initial_state tprog R /\ (exists sm, match_states ge tge ge S R sm).
 Proof.
   intros. inv H.
   exploit function_ptr_translated; eauto. intros [tf [A B]].
@@ -2668,7 +2687,9 @@ Proof.
   { instantiate (1 := Mem.flat_inj (Mem.nextblock m0)). SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }
   intros.
-  econstructor. instantiate (1 := Mem.nextblock m0).
+  econstructor.
+  { erewrite <- Genv.init_mem_genv_next; eauto. inv MATCH_CGENV. eapply (init_symbols_inject H); eauto. }
+  { instantiate (1 := Mem.nextblock m0). erewrite <- Genv.init_mem_genv_next; eauto. unfold ge; ss. }
   constructor; intros.
   unfold Mem.flat_inj. apply pred_dec_true; auto.
   unfold Mem.flat_inj in H. destruct (plt b1 (Mem.nextblock m0)); inv H. auto.
@@ -2683,7 +2704,7 @@ Qed.
 
 Lemma final_states_simulation:
   forall S R r,
-  (exists sm, match_states ge S R sm) -> final_state S r -> final_state R r.
+  (exists sm, match_states ge tge ge S R sm) -> final_state S r -> final_state R r.
 Proof.
   intros. des. inv H0. inv H.
   specialize (MCONT VSet.empty). inv MCONT.
@@ -2693,7 +2714,7 @@ Qed.
 Theorem transf_program_correct:
   forward_simulation (semantics1 prog) (semantics2 tprog).
 Proof.
-  eapply forward_simulation_plus with (match_states := fun s1 s2 => exists sm, match_states ge s1 s2 sm).
+  eapply forward_simulation_plus with (match_states := fun s1 s2 => exists sm, match_states ge tge ge s1 s2 sm).
   apply senv_preserved; auto.
   eexact initial_states_simulation.
   eexact final_states_simulation.

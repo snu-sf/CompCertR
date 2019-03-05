@@ -359,7 +359,7 @@ Qed.
 Lemma do_assign_loc_sound:
   forall w ty m b ofs v w' t m',
   do_assign_loc w ty m b ofs v = Some(w', t, m') ->
-  assign_loc ge ty m b ofs v t m' /\ possible_trace w t w'.
+  assign_loc ge ge ty m b ofs v t m' /\ possible_trace w t w'.
 Proof.
   unfold do_assign_loc; intros until m'.
   destruct (access_mode ty) eqn:?; mydestr.
@@ -371,7 +371,7 @@ Qed.
 
 Lemma do_assign_loc_complete:
   forall w ty m b ofs v w' t m',
-  assign_loc ge ty m b ofs v t m' -> possible_trace w t w' ->
+  assign_loc ge ge ty m b ofs v t m' -> possible_trace w t w' ->
   do_assign_loc w ty m b ofs v = Some(w', t, m').
 Proof.
   unfold do_assign_loc; intros. inv H.
@@ -894,7 +894,7 @@ Inductive imm_safe_t: kind -> expr -> mem -> Prop :=
       context LV to C ->
       imm_safe_t to (C l) m
   | imm_safe_t_rred: forall to C r m t r' m' w',
-      rred ge r m t r' m' -> possible_trace w t w' ->
+      rred ge ge r m t r' m' -> possible_trace w t w' ->
       context RV to C ->
       imm_safe_t to (C r) m
   | imm_safe_t_callred: forall to C r m fd args ty,
@@ -903,7 +903,7 @@ Inductive imm_safe_t: kind -> expr -> mem -> Prop :=
       imm_safe_t to (C r) m.
 
 Remark imm_safe_t_imm_safe:
-  forall k a m, imm_safe_t k a m -> imm_safe ge e k a m.
+  forall k a m, imm_safe_t k a m -> imm_safe ge ge e k a m.
 Proof.
   induction 1.
   constructor.
@@ -953,7 +953,7 @@ Definition invert_expr_prop (a: expr) (m: mem) : Prop :=
       exists b, bool_val v1 ty1 m = Some b
   | Eassign (Eloc b ofs ty1) (Eval v2 ty2) ty =>
       exists v, exists m', exists t, exists w',
-      ty = ty1 /\ sem_cast v2 ty2 ty1 m = Some v /\ assign_loc ge ty1 m b ofs v t m' /\ possible_trace w t w'
+      ty = ty1 /\ sem_cast v2 ty2 ty1 m = Some v /\ assign_loc ge ge ty1 m b ofs v t m' /\ possible_trace w t w'
   | Eassignop op (Eloc b ofs ty1) (Eval v2 ty2) tyres ty =>
       exists t, exists v1, exists w',
       ty = ty1 /\ deref_loc ge ty1 m b ofs t v1 /\ possible_trace w t w'
@@ -992,7 +992,7 @@ Proof.
 Qed.
 
 Lemma rred_invert:
-  forall w' r m t r' m', rred ge r m t r' m' -> possible_trace w t w' -> invert_expr_prop r m.
+  forall w' r m t r' m', rred ge ge r m t r' m' -> possible_trace w t w' -> invert_expr_prop r m.
 Proof.
   induction 1; intros; red; auto.
   split; auto; exists t; exists v; exists w'; auto.
@@ -1106,7 +1106,7 @@ Hint Resolve context_compose contextlist_compose.
 Definition reduction_ok (k: kind) (a: expr) (m: mem) (rd: reduction) : Prop :=
   match k, rd with
   | LV, Lred _ l' m' => lred ge e a m l' m'
-  | RV, Rred _ r' m' t => rred ge a m t r' m' /\ exists w', possible_trace w t w'
+  | RV, Rred _ r' m' t => rred ge ge a m t r' m' /\ exists w', possible_trace w t w'
   | RV, Callred _ fd args tyres m' => callred ge a m fd args tyres /\ m' = m
   | LV, Stuckred => ~imm_safe_t k a m
   | RV, Stuckred => ~imm_safe_t k a m
@@ -1542,7 +1542,7 @@ Qed.
 
 Lemma rred_topred:
   forall w' r1 m1 t r2 m2,
-  rred ge r1 m1 t r2 m2 -> possible_trace w t w' ->
+  rred ge ge r1 m1 t r2 m2 -> possible_trace w t w' ->
   exists rule, step_expr RV r1 m1 = topred (Rred rule r2 m2 t).
 Proof.
   induction 1; simpl; intros.
@@ -1802,10 +1802,10 @@ Qed.
 
 Lemma imm_safe_imm_safe_t:
   forall k a m,
-  imm_safe ge e k a m ->
+  imm_safe ge ge e k a m ->
   imm_safe_t k a m \/
   exists C, exists a1, exists t, exists a1', exists m',
-    context RV k C /\ a = C a1 /\ rred ge a1 m t a1' m' /\ forall w', ~possible_trace w t w'.
+    context RV k C /\ a = C a1 /\ rred ge ge a1 m t a1' m' /\ forall w', ~possible_trace w t w'.
 Proof.
   intros. inv H.
   left. apply imm_safe_t_val.
@@ -1821,15 +1821,15 @@ Qed.
   whose trace is not accepted by the external world. *)
 
 Definition can_crash_world (w: world) (S: state) : Prop :=
-  exists t, exists S', Csem.step ge S t S' /\ forall w', ~possible_trace w t w'.
+  exists t, exists S', Csem.step ge ge S t S' /\ forall w', ~possible_trace w t w'.
 
 Theorem not_imm_safe_t:
   forall K C a m f k,
   context K RV C ->
   ~imm_safe_t K a m ->
-  Csem.step ge (ExprState f (C a) k e m) E0 Stuckstate \/ can_crash_world w (ExprState f (C a) k e m).
+  Csem.step ge ge (ExprState f (C a) k e m) E0 Stuckstate \/ can_crash_world w (ExprState f (C a) k e m).
 Proof.
-  intros. destruct (classic (imm_safe ge e K a m)).
+  intros. destruct (classic (imm_safe ge ge e K a m)).
   exploit imm_safe_imm_safe_t; eauto.
   intros [A | [C1 [a1 [t [a1' [m' [A [B [D E]]]]]]]]]. contradiction.
   right. red. exists t; econstructor; split; auto.
@@ -1884,7 +1884,7 @@ end.
 
 Lemma sem_bind_parameters_sound : forall w e m l lv m',
   sem_bind_parameters w e m l lv = Some m' ->
-  bind_parameters ge e m l lv m'.
+  bind_parameters ge ge e m l lv m'.
 Proof.
    intros; functional induction (sem_bind_parameters w e m l lv); try discriminate.
    inversion H; constructor; auto.
@@ -1892,7 +1892,7 @@ Proof.
 Qed.
 
 Lemma sem_bind_parameters_complete : forall w e m l lv m',
-  bind_parameters ge e m l lv m' ->
+  bind_parameters ge ge e m l lv m' ->
   sem_bind_parameters w e m l lv = Some m'.
 Proof.
    induction 1; simpl; auto.
@@ -2058,7 +2058,7 @@ Hint Extern 3 => exact I.
 Theorem do_step_sound:
   forall w S rule t S',
   In (TR rule t S') (do_step w S) ->
-  Csem.step ge S t S' \/ (t = E0 /\ S' = Stuckstate /\ can_crash_world w S).
+  Csem.step ge ge S t S' \/ (t = E0 /\ S' = Stuckstate /\ can_crash_world w S).
 Proof with try (left; right; econstructor; eauto; fail).
   intros until S'. destruct S; simpl.
 (* State *)
@@ -2109,7 +2109,7 @@ Proof with try (left; right; econstructor; eauto; fail).
 Qed.
 
 Remark estep_not_val:
-  forall f a k e m t S, estep ge (ExprState f a k e m) t S -> is_val a = None.
+  forall f a k e m t S, estep ge ge (ExprState f a k e m) t S -> is_val a = None.
 Proof.
   intros.
   assert (forall b from to C, context from to C -> (from = to /\ C = fun x => x) \/ is_val (C b) = None).
@@ -2123,7 +2123,7 @@ Qed.
 
 Theorem do_step_complete:
   forall w S t S' w',
-  possible_trace w t w' -> Csem.step ge S t S' -> exists rule, In (TR rule t S') (do_step w S).
+  possible_trace w t w' -> Csem.step ge ge S t S' -> exists rule, In (TR rule t S') (do_step w S).
 Proof with (unfold ret; eauto with coqlib).
   intros until w'; intros PT H.
   destruct H.

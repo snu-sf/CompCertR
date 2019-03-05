@@ -37,6 +37,8 @@ Hypothesis TRANSL: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : genv.
 Variable tge : genv.
 
@@ -235,9 +237,9 @@ Proof.
 Qed.
 
 Theorem transf_step_correct:
-  forall s1 t s2, step ge s1 t s2 ->
+  forall s1 t s2, step se ge s1 t s2 ->
   forall s1' (MS: match_states s1 s1'),
-  (exists s2', step tge s1' t s2' /\ match_states s2 s2')
+  (exists s2', step tse tge s1' t s2' /\ match_states s2 s2')
   \/ (measure s2 < measure s1 /\ t = E0 /\ match_states s2 s1')%nat.
 Proof.
   induction 1; intros; inv MS; try rewrite remove_unused_labels_cons.
@@ -281,7 +283,7 @@ Proof.
   left; econstructor; split.
   econstructor.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   eauto.
   econstructor; eauto with coqlib.
 (* Llabel *)
@@ -320,7 +322,7 @@ Proof.
   econstructor; eauto with coqlib.
 (* external function *)
   left; econstructor; split.
-  econstructor; eauto. eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  econstructor; eauto. eapply external_call_symbols_preserved; eauto.
   econstructor; eauto with coqlib.
 (* return *)
   inv H3. inv H1. left; econstructor; split.
@@ -367,6 +369,7 @@ Proof.
   eexact transf_initial_states.
   eexact transf_final_states.
   apply transf_step_correct; auto.
+  eapply senv_preserved; eauto.
 Qed.
 
 End WHOLE.
