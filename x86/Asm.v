@@ -78,7 +78,7 @@ Inductive testcond: Type :=
   | Cond_e | Cond_ne
   | Cond_b | Cond_be | Cond_ae | Cond_a
   | Cond_l | Cond_le | Cond_ge | Cond_g
-  | Cond_p | Cond_np.
+  | Cond_p | Cond_np | Cond_s.
 
 (** Instructions.  IA32 instructions accept many combinations of
   registers, memory references and immediate constants as arguments.
@@ -537,6 +537,11 @@ Definition eval_testcond (c: testcond) (rs: regset) : option bool :=
       | Vint n => Some (Int.eq n Int.zero)
       | _ => None
       end
+  | Cond_s =>
+    match rs SF with
+    | Vint n => Some (Int.eq n Int.one)
+    | _ => None
+    end
   end.
 
 (** The semantics is purely small-step and defined as a function
