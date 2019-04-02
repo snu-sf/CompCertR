@@ -16,6 +16,7 @@
 Require Import String.
 Require Import Coqlib Errors.
 Require Import AST Linking Smallstep.
+Require Import Conventions.
 (** Languages (syntax and semantics). *)
 Require Ctypes Csyntax Csem Cstrategy Cexec.
 Require Clight.
@@ -72,6 +73,8 @@ Require Stackingproof.
 Require Asmgenproof.
 (** Command-line flags. *)
 Require Import Compopts.
+
+Local Existing Instance main_args_none.
 
 (** Pretty-printers (defined in Caml). *)
 Parameter print_Clight: Clight.program -> unit.

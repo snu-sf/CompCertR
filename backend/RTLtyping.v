@@ -26,6 +26,7 @@ Require Import Memory.
 Require Import Events.
 Require Import RTL.
 Require Import Conventions.
+Require Import sflib.
 
 (** * The type system *)
 
@@ -870,9 +871,12 @@ Proof.
   intros. inv H. eauto.
 Qed.
 
+Section WTSTATE.
+Context {CTX: main_args_ctx}.
+
 Inductive wt_stackframes: list stackframe -> signature -> Prop :=
   | wt_stackframes_nil: forall sg,
-      sg.(sig_res) = Some Tint ->
+      (if main_args then True else sg.(sig_res) = Some Tint) ->
       wt_stackframes nil sg
   | wt_stackframes_cons:
       forall s res f sp pc rs env sg,
@@ -906,7 +910,7 @@ Remark wt_stackframes_change_sig:
   sg1.(sig_res) = sg2.(sig_res) -> wt_stackframes s sg1 -> wt_stackframes s sg2.
 Proof.
   intros. inv H0.
-- constructor; congruence.
+- constructor; des_ifs; congruence.
 - econstructor; eauto. rewrite H3. unfold proj_sig_res. rewrite H. auto.
 Qed.
 
@@ -917,7 +921,14 @@ Variable p: program.
 Hypothesis wt_p: wt_program p.
 
 Variable se: Senv.t.
-Let ge := Genv.globalenv p.
+Variable ge: genv.
+
+Hypothesis CONTAINED: forall
+    fptr f
+    (FINDF: Genv.find_funct ge fptr = Some f)
+  ,
+    exists i, In (i, Gfun f) (prog_defs p)
+.
 
 Lemma subject_reduction:
   forall st1 t st2, step se ge st1 t st2 ->
@@ -936,11 +947,9 @@ Proof.
   (* Icall *)
   assert (wt_fundef fd).
     destruct ros; simpl in H0.
-    pattern fd. apply Genv.find_funct_prop with fundef unit p (rs#r).
-    exact wt_p. exact H0.
+    pattern fd. exploit CONTAINED; eauto. i; des. eapply wt_p. eauto.
     caseEq (Genv.find_symbol ge i); intros; rewrite H1 in H0.
-    pattern fd. apply Genv.find_funct_ptr_prop with fundef unit p b.
-    exact wt_p. exact H0.
+    pattern fd. rewrite <- Genv.find_funct_find_funct_ptr in H0. exploit CONTAINED; eauto. i; des. eapply wt_p. eauto.
     discriminate.
   econstructor; eauto.
   econstructor; eauto. inv WTI; auto.
@@ -948,11 +957,9 @@ Proof.
   (* Itailcall *)
   assert (wt_fundef fd).
     destruct ros; simpl in H0.
-    pattern fd. apply Genv.find_funct_prop with fundef unit p (rs#r).
-    exact wt_p. exact H0.
+    pattern fd. exploit CONTAINED; eauto. i; des. eapply wt_p. eauto.
     caseEq (Genv.find_symbol ge i); intros; rewrite H1 in H0.
-    pattern fd. apply Genv.find_funct_ptr_prop with fundef unit p b.
-    exact wt_p. exact H0.
+    pattern fd. rewrite <- Genv.find_funct_find_funct_ptr in H0. exploit CONTAINED; eauto. i; des. eapply wt_p. eauto.
     discriminate.
   econstructor; eauto.
   inv WTI. apply wt_stackframes_change_sig with (fn_sig f); auto.
@@ -981,7 +988,7 @@ Qed.
 Lemma wt_initial_state:
   forall S, initial_state p S -> wt_state S.
 Proof.
-  intros. inv H. constructor. constructor. rewrite H3; auto.
+  intros. inv H. constructor. constructor. des_ifs. rewrite H3; auto.
   pattern f. apply Genv.find_funct_ptr_prop with fundef unit p b.
   exact wt_p. exact H2.
   rewrite H3. constructor.
@@ -999,4 +1006,5 @@ Qed.
 
 End SUBJECT_REDUCTION.
 
+End WTSTATE.
 

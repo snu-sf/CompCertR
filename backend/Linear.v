@@ -266,3 +266,8 @@ Inductive final_state: state -> int -> Prop :=
 
 Definition semantics (p: program) :=
   Semantics step (initial_state p) final_state (Genv.globalenv p).
+
+Definition dummy_function (sig: signature) := (mkfunction sig 0 (Lgoto 1%positive :: nil)).
+
+Definition dummy_stack (sig: signature) (ls: locset) := Stackframe (dummy_function sig) Vundef ls nil.
+Hint Unfold dummy_stack.

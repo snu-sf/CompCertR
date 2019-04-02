@@ -21,6 +21,7 @@ Require Import Values Memory Globalenvs Events Smallstep.
 Require Archi.
 Require Import Op Registers RTL Locations Conventions RTLtyping LTL.
 Require Import Allocation.
+Require Import sflib.
 
 Definition match_prog (p: RTL.program) (tp: LTL.program) :=
   match_program (fun _ f tf => transf_fundef f = OK tf) eq p tp.
@@ -1795,6 +1796,7 @@ Ltac UseShape :=
 
 Section CORELEMMA.
 
+Context {CTX: main_args_ctx}.
 Variable se tse: Senv.t.
 Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : RTL.genv.
@@ -1905,8 +1907,15 @@ Qed.
 
 Inductive match_stackframes: list RTL.stackframe -> list LTL.stackframe -> signature -> Prop :=
   | match_stackframes_nil: forall sg,
+      forall (MAINARGS: main_args = false),
       sg.(sig_res) = Some Tint ->
       match_stackframes nil nil sg
+  | match_stackframes_dummy: forall
+      sg sg_init ls_init
+      (MAINARGS: main_args = true)
+      (SAMERES: sg_init.(sig_res) = sg.(sig_res))
+    ,
+      match_stackframes nil [(dummy_stack sg_init ls_init)] sg
   | match_stackframes_cons:
       forall res f sp pc rs s tf bb ls ts sg an e env
         (STACKS: match_stackframes s ts (fn_sig tf))
@@ -1969,7 +1978,8 @@ Lemma match_stackframes_change_sig:
   match_stackframes s ts sg'.
 Proof.
   intros. inv H.
-  constructor. congruence.
+  constructor. ss. congruence.
+  constructor. ss. congruence.
   econstructor; eauto.
   unfold proj_sig_res in *. rewrite H0; auto.
   intros. rewrite (loc_result_exten sg' sg) in H by auto. eauto.
@@ -2498,6 +2508,8 @@ Let tge := Genv.globalenv tprog.
 Let MATCH_GENV: Genv.match_genvs (match_globdef (fun _ f tf => transf_fundef f = OK tf) eq prog) ge tge.
 Proof. apply Genv.globalenvs_match; eauto. Qed.
 
+Local Existing Instance main_args_none.
+
 Lemma initial_states_simulation:
   forall st1, RTL.initial_state prog st1 ->
   exists st2, LTL.initial_state tprog st2 /\ match_states tge tge st1 st2.
@@ -2512,7 +2524,7 @@ Proof.
   rewrite (match_program_main TRANSF).  auto.
   congruence.
   constructor; auto.
-  constructor. rewrite SIG; rewrite H3; auto.
+  constructor. constructor. rewrite SIG; rewrite H3; auto.
   rewrite SIG, H3, loc_arguments_main. auto.
   red; auto.
   apply Mem.extends_refl.
@@ -2526,6 +2538,7 @@ Proof.
   intros. inv H0. inv H. inv STACKS.
   econstructor. rewrite <- (loc_result_exten sg). inv RES; auto.
   rewrite H; auto.
+  inv MAINARGS.
 Qed.
 
 Lemma wt_prog: wt_program prog.
@@ -2554,7 +2567,7 @@ Proof.
 - intros. destruct H0.
   exploit step_simulation; eauto. eapply senv_preserved; eauto. intros [s2' [A B]].
   exists s2'; split. exact A. split.
-  eapply subject_reduction; eauto. eexact wt_prog. eexact H.
+  eapply subject_reduction; eauto. eexact wt_prog. eapply Genv.find_funct_inversion; eauto.
   auto.
 Qed.
 

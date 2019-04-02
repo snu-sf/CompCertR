@@ -321,3 +321,13 @@ Fixpoint successors_block (b: bblock) : list node :=
   | Lreturn :: _ => nil
   | instr :: b' => successors_block b'
   end.
+
+Definition dummy_function (sig: signature) := (mkfunction sig 0 (PTree.empty _) 1%positive).
+
+Definition dummy_stack (sig: signature) (ls: locset) :=
+  Stackframe (dummy_function sig)
+             Vundef
+             ls
+             nil
+.
+Hint Unfold dummy_stack.

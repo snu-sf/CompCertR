@@ -511,3 +511,6 @@ Lemma wf_initial:
 Proof.
   intros. inv H. fold ge. constructor. constructor.
 Qed.
+
+Definition dummy_stack (parent_sp parent_ra: val): stackframe := Stackframe 1%positive parent_sp parent_ra nil.
+Hint Unfold dummy_stack.
