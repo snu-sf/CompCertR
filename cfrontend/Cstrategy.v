@@ -32,6 +32,7 @@ Require Import Ctypes.
 Require Import Cop.
 Require Import Csyntax.
 Require Import Csem.
+Require Import sflib.
 
 Section STRATEGY.
 
@@ -410,9 +411,12 @@ Hint Resolve context_compose contextlist_compose.
 (** A state is safe according to the nondeterministic semantics
   if it cannot get stuck by doing silent transitions only. *)
 
+Variable PROP: Csem.state -> Prop.
+Hypothesis NOSTUCK: ~ PROP Stuckstate.
+
 Definition safe (s: Csem.state) : Prop :=
   forall s', star (Csem.step) se ge s E0 s' ->
-  (exists r, final_state s' r) \/ (exists t, exists s'', Csem.step se ge s' t s'').
+  (exists r, final_state s' r) \/ (exists t, exists s'', Csem.step se ge s' t s'') \/ PROP s'.
 
 Lemma safe_steps:
   forall s s',
@@ -448,7 +452,8 @@ Proof.
   destruct (H Stuckstate).
   apply star_one. left. econstructor; eauto.
   destruct H2 as [r F]. inv F.
-  destruct H2 as [t [s' S]]. inv S. inv H2. inv H2.
+  destruct H2 as [[t [s' S]]|PP]. inv S. inv H2. inv H2.
+  ss.
 Qed.
 
 (** Safe expressions are well-formed with respect to l-values and r-values. *)
@@ -1408,9 +1413,9 @@ Qed.
 
 Theorem progress:
   forall S,
-  safe S -> (exists r, final_state S r) \/ (exists t, exists S', step S t S').
+  safe S -> (exists r, final_state S r) \/ (exists t, exists S', step S t S') \/ PROP S.
 Proof.
-  intros. exploit H. apply star_refl. intros [FIN | [t [S' STEP]]].
+  intros. exploit H. apply star_refl. intros [FIN | [[t [S' STEP]]|PP]].
   (* 1. Finished. *)
   auto.
   right. destruct STEP.
@@ -1425,11 +1430,13 @@ Proof.
     eapply can_estep; eauto. inv H2; auto. inv H1; auto.
     (* stuck *)
     exploit (H Stuckstate). apply star_one. left. econstructor; eauto.
-    intros [[r F] | [t [S' R]]]. inv F. inv R. inv H0. inv H0.
+    intros [[r F] | [[t [S' R]]|PP]]. inv F. inv R. inv H0. inv H0.
+    { ss. }
   destruct H1 as [t' [S'' ESTEP]].
-  exists t'; exists S''; left; auto.
+  left. exists t'; exists S''; left; auto.
   (* 3. Other step. *)
-  exists t; exists S'; right; auto.
+  left. exists t; exists S'; right; auto.
+  { eauto. }
 Qed.
 
 End STRATEGY.
@@ -1608,7 +1615,10 @@ Proof.
 (* final states match *)
   intros. subst s2. auto.
 (* progress *)
-  intros. subst s2. apply progress. auto.
+  intros. subst s2. hexploit progress; eauto.
+  { instantiate (1:= bot1). ss. }
+  { ii. exploit H0; eauto. i; des; eauto. }
+  { i. des; ss; eauto. }
 (* simulation *)
   intros. subst s1. exists s2'; split; auto. apply step_simulation; auto.
 Qed.
