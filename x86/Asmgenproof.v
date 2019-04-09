@@ -36,6 +36,7 @@ Hypothesis TRANSF: match_prog prog tprog.
 
 Section CORELEMMA.
 
+Context {CTX: main_args_ctx}.
 Variable se tse: Senv.t.
 Hypothesis (MATCH_SENV: Senv.equiv se tse).
 Variable ge : Mach.genv.
@@ -375,6 +376,8 @@ Qed.
 *)
 
 Inductive match_states: Mach.state -> Asm.state -> Prop :=
+  | match_states_dummy sp v rs m rs0 m0 (EXT: Mem.extends m m0):
+      match_states (Mach.State [] sp v [] rs m) (State rs0 m0)
   | match_states_intro:
       forall s fb sp c ep ms m m' rs f tf tc
         (STACKS: match_stack ge s)
@@ -878,7 +881,7 @@ Transparent destroyed_at_function_entry.
   apply agree_undef_caller_save_regs; auto. 
 
 - (* return *)
-  inv STACKS. simpl in *.
+  inv STACKS; simpl in *. { right. esplits; eauto. econs. auto. }
   right. split. omega. split. auto.
   econstructor; eauto. replace (rs0 PC) with ra; eauto.
   { inv H5. inv ATPC. auto. } congruence.
@@ -888,6 +891,7 @@ End CORELEMMA.
 
 Section WHOLE.
 
+Local Existing Instance main_args_none.
 Let ge := Genv.globalenv prog.
 Let tge := Genv.globalenv tprog.
 
@@ -906,6 +910,7 @@ Proof.
      with (Vptr fb Ptrofs.zero).
   econstructor; eauto.
   constructor.
+  auto.
   apply Mem.extends_refl.
   split. reflexivity. simpl.
   unfold Vnullptr; destruct Archi.ptr64; congruence.

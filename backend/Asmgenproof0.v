@@ -908,11 +908,17 @@ End STRAIGHTLINE.
 
 Section MATCH_STACK.
 
+Context {CTX: main_args_ctx}.
 Variable ge: Mach.genv.
 
 Inductive match_stack: list Mach.stackframe -> Prop :=
   | match_stack_nil:
+      forall (MAINARGS: main_args = false),
       match_stack nil
+  | match_stack_dummy initial_parent_sp initial_parent_ra:
+      forall (MAINARGS: main_args = true)
+        (INITSPDEF: initial_parent_sp <> Vundef),
+      match_stack ((dummy_stack initial_parent_sp initial_parent_ra)::[])
   | match_stack_cons: forall fb sp ra c s f tf tc,
       Genv.find_funct_ptr ge fb = Some (Internal f) ->
       transl_code_at_pc ge ra fb f c false tf tc ->
@@ -924,6 +930,7 @@ Lemma parent_sp_def: forall s, match_stack s -> parent_sp s <> Vundef.
 Proof.
   induction 1; simpl.
   unfold Vnullptr; destruct Archi.ptr64; congruence.
+  auto.
   auto.
 Qed.
 
