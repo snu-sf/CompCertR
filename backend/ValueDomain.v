@@ -3664,8 +3664,8 @@ Qed.
 Lemma romatch_ext:
   forall m rm m',
   romatch m rm ->
-  (forall b id ofs n bytes, bc b = BCglob id -> Mem.loadbytes m' b ofs n = Some bytes -> Mem.loadbytes m b ofs n = Some bytes) ->
-  (forall b id ofs p, bc b = BCglob id -> Mem.perm m' b ofs Max p -> Mem.perm m b ofs Max p) ->
+  (forall b id ofs n bytes (ROMEM: exists ab, rm ! id = Some ab), bc b = BCglob (Some id) -> Mem.loadbytes m' b ofs n = Some bytes -> Mem.loadbytes m b ofs n = Some bytes) ->
+  (forall b id ofs p (ROMEM: exists ab, rm ! id = Some ab), bc b = BCglob (Some id) -> Mem.perm m' b ofs Max p -> Mem.perm m b ofs Max p) ->
   romatch m' rm.
 Proof.
   intros; red; intros. exploit H; eauto. intros (A & B & C).
