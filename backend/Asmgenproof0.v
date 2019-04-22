@@ -922,6 +922,7 @@ Inductive match_stack: list Mach.stackframe -> Prop :=
   | match_stack_cons: forall fb sp ra c s f tf tc,
       Genv.find_funct_ptr ge fb = Some (Internal f) ->
       transl_code_at_pc ge ra fb f c false tf tc ->
+      forall (OFSZERO: forall ofs blk (SPOFS: sp = Vptr blk ofs), ofs = Ptrofs.zero),
       sp <> Vundef ->
       match_stack s ->
       match_stack (Stackframe fb sp ra c :: s).

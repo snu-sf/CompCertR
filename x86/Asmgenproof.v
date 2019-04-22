@@ -381,6 +381,7 @@ Inductive match_states: Mach.state -> Asm.state -> Prop :=
   | match_states_intro:
       forall s fb sp c ep ms m m' rs f tf tc
         (STACKS: match_stack ge s)
+        (OFSZERO: forall ofs blk (SPOFS: sp = Vptr blk ofs), ofs = Ptrofs.zero)
         (FIND: Genv.find_funct_ptr ge fb = Some (Internal f))
         (MEXT: Mem.extends m m')
         (AT: transl_code_at_pc ge (rs PC) fb f c ep tf tc)
@@ -409,6 +410,7 @@ Inductive match_states: Mach.state -> Asm.state -> Prop :=
 Lemma exec_straight_steps:
   forall s fb f rs1 i c ep tf tc m1' m2 m2' sp ms2,
   match_stack ge s ->
+  forall (OFSZERO: forall ofs blk (SPOFS: sp = Vptr blk ofs), ofs = Ptrofs.zero),
   Mem.extends m2 m2' ->
   Genv.find_funct_ptr ge fb = Some (Internal f) ->
   transl_code_at_pc ge (rs1 PC) fb f (i :: c) ep tf tc ->
@@ -431,6 +433,7 @@ Qed.
 Lemma exec_straight_steps_goto:
   forall s fb f rs1 i c ep tf tc m1' m2 m2' sp ms2 lbl c',
   match_stack ge s ->
+  forall (OFSZERO: forall ofs blk (SPOFS: sp = Vptr blk ofs), ofs = Ptrofs.zero),
   Mem.extends m2 m2' ->
   Genv.find_funct_ptr ge fb = Some (Internal f) ->
   Mach.find_label lbl f.(Mach.fn_code) = Some c' ->
@@ -649,7 +652,8 @@ Opaque loadind.
   eapply plus_left. eapply exec_step_internal. eauto.
   eapply functions_transl; eauto. eapply find_instr_tail; eauto.
   simpl. replace (chunk_of_type Tptr) with Mptr in * by (unfold Tptr, Mptr; destruct Archi.ptr64; auto).
-  rewrite C. rewrite A. rewrite <- (sp_val _ _ _ AG). rewrite E. eauto.
+  rewrite C. rewrite A. rewrite <- (sp_val _ _ _ AG) in *. exploit OFSZERO; eauto. i. clarify.
+  rewrite Ptrofs.unsigned_zero in *. rewrite Z.add_0_l in *. rewrite E. eauto.
   apply star_one. eapply exec_step_internal.
   transitivity (Val.offset_ptr rs0#PC Ptrofs.one). auto. rewrite <- H4. simpl. eauto.
   eapply functions_transl; eauto. eapply find_instr_tail; eauto.
@@ -665,7 +669,8 @@ Opaque loadind.
   eapply plus_left. eapply exec_step_internal. eauto.
   eapply functions_transl; eauto. eapply find_instr_tail; eauto.
   simpl. replace (chunk_of_type Tptr) with Mptr in * by (unfold Tptr, Mptr; destruct Archi.ptr64; auto).
-  rewrite C. rewrite A. rewrite <- (sp_val _ _ _ AG). rewrite E. eauto.
+  rewrite C. rewrite A. rewrite <- (sp_val _ _ _ AG) in *. exploit OFSZERO; eauto. i. clarify.
+  rewrite Ptrofs.unsigned_zero in *. rewrite Z.add_0_l in *. rewrite E. eauto.
   apply star_one. eapply exec_step_internal.
   transitivity (Val.offset_ptr rs0#PC Ptrofs.one). auto. rewrite <- H4. simpl. eauto.
   eapply functions_transl; eauto. eapply find_instr_tail; eauto.
@@ -825,7 +830,8 @@ Transparent destroyed_by_jumptable.
   left; econstructor; split.
   eapply plus_left. eapply exec_step_internal. eauto.
   eapply functions_transl; eauto. eapply find_instr_tail; eauto.
-  simpl. rewrite C. rewrite A. rewrite <- (sp_val _ _ _ AG). rewrite E. eauto.
+  simpl. rewrite C. rewrite A. rewrite <- (sp_val _ _ _ AG) in *. exploit OFSZERO; eauto. i. clarify.
+  rewrite Ptrofs.unsigned_zero in *. rewrite Z.add_0_l in *. rewrite E. eauto.
   apply star_one. eapply exec_step_internal.
   transitivity (Val.offset_ptr rs0#PC Ptrofs.one). auto. rewrite <- H3. simpl. eauto.
   eapply functions_transl; eauto. eapply find_instr_tail; eauto.
@@ -854,6 +860,7 @@ Transparent destroyed_by_jumptable.
   rewrite (sp_val _ _ _ AG) in F. rewrite F.
   rewrite P. eauto.
   econstructor; eauto.
+  ii. unfold sp in *. clarify.
   unfold nextinstr. rewrite Pregmap.gss. repeat rewrite Pregmap.gso; auto with asmgen.
   rewrite ATPC. simpl. constructor; eauto.
   unfold fn_code. eapply code_tail_next_int. simpl in g. omega.
