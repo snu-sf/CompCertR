@@ -2043,7 +2043,13 @@ Inductive wt_state: state -> Prop :=
       wt_state (ExprState f r k e m)
   | wt_call_state: forall vf tyf tyargs tyres cc vargs k m
         (WTK: wt_call_cont k tyres)
-        (CLASSIFY: classify_fun tyf = fun_case_f tyargs tyres cc)
+        (CLASSIFY: classify_fun_strong tyf = fun_case_f tyargs tyres cc)
+        (WTKS: forall
+            (EXT: forall f, Genv.find_funct ge vf <> Some (Internal f))
+          ,
+            exists _f _e _C _k, k = Kcall _f _e _C tyres _k)
+        (WTARGS: Forall2 val_casted vargs tyargs.(typelist_to_listtype))
+        (NVOID: Forall (fun ty => ty <> Tvoid) tyargs.(typelist_to_listtype))
     ,
       wt_state (Callstate vf tyf vargs k m)
   | wt_return_state: forall v k m ty
@@ -2124,7 +2130,14 @@ Proof.
   intros. change (wt_expr_kind ge te RV (C (Eval v ty))).
   eapply wt_context with (a := (Ecall (Eval fptr tyf0) el ty)); eauto.
   red; constructor; auto.
+  rr. ss.
+  { ii. esplits; eauto. }
+  {
   simpl. eauto.
+  clear - H2 H10. ginduction vargs; ii; ss; inv H2; inv H10; ss. econs; eauto. eapply cast_val_is_casted; eauto.
+  }
+  clear - H10. ginduction tyargs0; ii; ss. inv H10. econs; eauto.
+
 - (* stuck *)
   constructor.
 Qed.
@@ -2197,9 +2210,16 @@ Proof.
 Qed.
 
 Theorem wt_initial_state:
-  forall S, initial_state prog S -> wt_state S.
+  forall vf tyf vargs k m,
+    initial_state prog (Callstate vf tyf vargs k m) ->
+    (exists fd, Genv.find_funct ge vf = Some (Internal fd)) ->
+    wt_state (Callstate vf tyf vargs k m)
+.
 Proof.
   intros. inv H. econstructor. constructor.
+  econstructor; eauto.
+  { ii. exfalso. des. eapply EXT; eauto. }
+  econstructor; eauto.
   econstructor; eauto.
 Qed.
 
