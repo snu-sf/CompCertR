@@ -938,8 +938,6 @@ Record bsim_properties (L1 L2: semantics) (index: Type)
       exists i', exists s1',
          (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ order i' i))
       /\ match_states i' s1' s2';
-    bsim_public_preserved:
-      forall id, Senv.public_symbol (symbolenv L2) id = Senv.public_symbol (symbolenv L1) id
   }.
 
 Arguments bsim_properties: clear implicits.
@@ -1227,8 +1225,6 @@ Proof.
   eapply (bsim_progress props'). eauto. eapply star_safe; eauto. eapply bsim_safe; eauto.
 - (* simulation *)
   apply bb_simulation; auto.
-- (* symbols *)
-  intros. transitivity (Senv.public_symbol (symbolenv L2) id); eapply bsim_public_preserved; eauto.
 Qed.
 
 (** ** Converting a forward simulation to a backward simulation *)
@@ -1522,8 +1518,6 @@ Proof.
   inv H1. right; econstructor; econstructor; eauto.
 - (* simulation *)
   eapply f2b_simulation_step; eauto.
-- (* symbols preserved *)
-  exact (fsim_public_preserved FS).
 Qed.
 
 (** * Transforming a semantics into a single-event, equivalent semantics *)
@@ -1749,8 +1743,6 @@ Proof.
   eapply fbs_progress; eauto.
 - (* simulation *)
   eapply fbs_simulation; eauto.
-- (* symbols *)
-  simpl. exact (bsim_public_preserved sim).
 Qed.
 
 (** Receptiveness of [atomic L]. *)
