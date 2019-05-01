@@ -447,6 +447,19 @@ Section EVENTVAL_INJECT.
 Variable f: block -> option (block * Z).
 Variable ge1 ge2: Senv.t.
 
+Definition symbols_inject_weak m : Prop :=
+   (forall id, Senv.public_symbol ge2 id = Senv.public_symbol ge1 id)
+/\ (forall id b1 b2 delta,
+     f b1 = Some(b2, delta) -> Senv.find_symbol ge1 id = Some b1 ->
+     delta = 0 /\ Senv.find_symbol ge2 id = Some b2)
+/\ (forall id b1,
+     Senv.public_symbol ge1 id = true -> Senv.find_symbol ge1 id = Some b1 ->
+     exists b2, f b1 = Some(b2, 0) /\ Senv.find_symbol ge2 id = Some b2)
+/\ (forall b1 b2 delta,
+     f b1 = Some(b2, delta) ->
+     forall (PERM: Senv.block_is_volatile ge1 b1 = true \/ exists ofs, Mem.perm m b1 ofs Max Nonempty),
+     Senv.block_is_volatile ge2 b2 = Senv.block_is_volatile ge1 b1).
+
 Definition symbols_inject : Prop :=
    (forall id, Senv.public_symbol ge2 id = Senv.public_symbol ge1 id)
 /\ (forall id b1 b2 delta,
@@ -459,7 +472,18 @@ Definition symbols_inject : Prop :=
      f b1 = Some(b2, delta) ->
      Senv.block_is_volatile ge2 b2 = Senv.block_is_volatile ge1 b1).
 
-Hypothesis symb_inj: symbols_inject.
+Lemma symbols_inject_weak_imply
+      (SYMBINJ: symbols_inject)
+  :
+    forall m, symbols_inject_weak m.
+Proof.
+  intros m. destruct SYMBINJ as (A & B & C & D).
+  unfold symbols_inject_weak. esplits; auto.
+  intros. eapply D; eauto.
+Qed.
+
+Variable m: mem.
+Hypothesis symb_inj: symbols_inject_weak m.
 
 Lemma eventval_match_inject:
   forall ev ty v1 v2,
@@ -710,9 +734,9 @@ Record extcall_properties (sem: extcall_sem) (sg: signature) : Prop :=
 
 (** External calls must commute with memory injections,
   in the following sense. *)
-  ec_mem_inject:
+  ec_mem_inject_weak:
     forall ge1 ge2 vargs m1 t vres m2 f m1' vargs',
-    symbols_inject f ge1 ge2 ->
+    symbols_inject_weak f ge1 ge2 m1 ->
     sem ge1 vargs m1 t vres m2 ->
     Mem.inject f m1 m1' ->
     Val.inject_list f vargs vargs' ->
@@ -742,6 +766,24 @@ Record extcall_properties (sem: extcall_sem) (sg: signature) : Prop :=
     sem ge vargs m t1 vres1 m1 -> sem ge vargs m t2 vres2 m2 ->
     match_traces ge t1 t2 /\ (t1 = t2 -> vres1 = vres2 /\ m1 = m2)
 }.
+
+Lemma ec_mem_inject sem sg (ECPROP: extcall_properties sem sg):
+  forall ge1 ge2 vargs m1 t vres m2 f m1' vargs',
+    symbols_inject f ge1 ge2 ->
+    sem ge1 vargs m1 t vres m2 ->
+    Mem.inject f m1 m1' ->
+    Val.inject_list f vargs vargs' ->
+    exists f', exists vres', exists m2',
+          sem ge2 vargs' m1' t vres' m2'
+          /\ Val.inject f' vres vres'
+          /\ Mem.inject f' m2 m2'
+          /\ Mem.unchanged_on (loc_unmapped f) m1 m2
+          /\ Mem.unchanged_on (loc_out_of_reach f m1) m1' m2'
+          /\ inject_incr f f'
+          /\ inject_separated f f' m1 m1'.
+Proof.
+  intros. exploit ec_mem_inject_weak; eauto. apply symbols_inject_weak_imply. auto.
+Qed.
 
 (** ** Semantics of volatile loads *)
 
@@ -777,7 +819,7 @@ Qed.
 
 Lemma volatile_load_inject:
   forall ge1 ge2 f chunk m b ofs t v b' ofs' m',
-  symbols_inject f ge1 ge2 ->
+  symbols_inject_weak f ge1 ge2 m ->
   volatile_load ge1 chunk m b ofs t v ->
   Val.inject f (Vptr b ofs) (Vptr b' ofs') ->
   Mem.inject f m m' ->
@@ -797,6 +839,8 @@ Proof.
   exists v2; split; auto.
   constructor; auto.
   inv VI. erewrite D; eauto.
+  eapply Mem.load_valid_access in H0. right. eexists. apply Mem.perm_cur. destruct H0.
+  eapply Mem.perm_implies; [eapply r|econs]. split. reflexivity. set (size_chunk_pos chunk). omega.
 Qed.
 
 Lemma volatile_load_receptive:
@@ -915,7 +959,7 @@ Qed.
 
 Lemma volatile_store_inject:
   forall ge1 ge2 f chunk m1 b ofs v t m2 m1' b' ofs' v',
-  symbols_inject f ge1 ge2 ->
+  symbols_inject_weak f ge1 ge2 m1 ->
   volatile_store ge1 chunk m1 b ofs v t m2 ->
   Val.inject f (Vptr b ofs) (Vptr b' ofs') ->
   Val.inject f v v' ->
@@ -941,6 +985,8 @@ Proof.
   exploit Mem.storev_mapped_inject; eauto. intros [m2' [A B]].
   exists m2'; intuition auto.
 + constructor; auto. erewrite S; eauto.
+  eapply Mem.store_valid_access_3 in H1. right. eexists. apply Mem.perm_cur. destruct H1.
+  eapply Mem.perm_implies; [eapply r|econs]. split. reflexivity. set (size_chunk_pos chunk). omega.
 + eapply Mem.store_unchanged_on; eauto.
   unfold loc_unmapped; intros. inv AI; congruence.
 + eapply Mem.store_unchanged_on; eauto.
