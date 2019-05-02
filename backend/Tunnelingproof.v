@@ -211,6 +211,8 @@ Definition locmap_lessdef (ls1 ls2: locset) : Prop :=
   forall l, Val.lessdef (ls1 l) (ls2 l).
 
 Inductive match_stackframes: stackframe -> stackframe -> Prop :=
+  | match_stackframes_dummy: forall f sp ls tls tf tc (DUMMY: f.(LTL.fn_code) = PTree.empty _) (SG: f.(LTL.fn_sig) = tf.(fn_sig)) (LS: locmap_lessdef ls tls),
+      match_stackframes (Stackframe f sp ls nil) (Stackframe tf sp tls tc)
   | match_stackframes_intro:
       forall f sp ls0 bb tls0,
       locmap_lessdef ls0 tls0 ->
@@ -219,6 +221,8 @@ Inductive match_stackframes: stackframe -> stackframe -> Prop :=
          (Stackframe (tunnel_function f) sp tls0 (tunneled_block f bb)).
 
 Inductive match_states: state -> state -> Prop :=
+  | match_states_dummy: forall s ts f sp rs trs m tm tc tf (STACKS: list_forall2 match_stackframes s ts),
+      match_states (Block s f sp nil rs m) (Block ts tf sp tc trs tm)
   | match_states_intro:
       forall s f sp pc ls m ts tls tm
         (STK: list_forall2 match_stackframes s ts)
@@ -543,6 +547,7 @@ Proof.
   simpl. econstructor; eauto using locmap_setpair_lessdef, locmap_undef_caller_save_regs_lessdef.
 - (* return *)
   inv STK. inv H1.
+  { left; econstructor; split. - eapply exec_return; eauto. - constructor; auto. }
   left; econstructor; split.
   eapply exec_return; eauto.
   constructor; auto.
