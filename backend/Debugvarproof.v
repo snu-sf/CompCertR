@@ -17,6 +17,7 @@ Require Import Integers Floats AST Linking.
 Require Import Values Memory Events Globalenvs Smallstep.
 Require Import Machregs Locations Conventions Op Linear.
 Require Import Debugvar.
+Require Import sflib.
 
 (** * Relational characterization of the transformation *)
 
@@ -335,13 +336,12 @@ Qed.
 
 Lemma find_function_translated:
   forall ros ls fptr,
-  find_function_ptr ge ros ls = fptr ->
-  exists tfptr,
-  find_function_ptr tge ros ls = tfptr /\ Val.lessdef fptr tfptr.
+  find_function_ptr ge ros ls m= fptr ->
+  exists tfptr, find_function_ptr tge ros ls m= tfptr /\ <<EQ: fptr = tfptr>>.
 Proof.
   unfold find_function_ptr; intros; destruct ros; simpl.
-- esplit; eauto.
-- rewrite symbols_preserved. destruct (Genv.find_symbol ge i); esplit; eauto.
+- esplits; eauto.
+- rewrite symbols_preserved. destruct (Genv.find_symbol ge i); eauto.
 Qed.
 
 (** Evaluation of the debug annotations introduced by the transformation. *)
@@ -403,11 +403,10 @@ Inductive match_states: Linear.state ->  Linear.state -> Prop :=
       match_states (State s f sp c rs m)
                    (State ts tf sp tc rs m)
   | match_states_call:
-      forall s fptr sg rs m tfptr ts,
+      forall s fptr sg rs m ts,
       list_forall2 match_stackframes s ts ->
-      Val.lessdef fptr tfptr ->
       match_states (Callstate s fptr sg rs m)
-                   (Callstate ts tfptr sg rs m)
+                   (Callstate ts fptr sg rs m)
   | match_states_return:
       forall s rs m ts,
       list_forall2 match_stackframes s ts ->
@@ -465,18 +464,16 @@ Proof.
   exploit find_function_translated; eauto. intros (tf' & A & B).
   econstructor; split.
   apply plus_one.
-  econstructor. rewrite A. constructor. auto. auto.
+  econstructor. rewrite A. constructor. auto. auto. des. clarify.
   constructor; auto. constructor; auto. constructor; auto.
-  inversion FPTR. apply B.
 - (* tailcall *)
   exploit find_function_translated; eauto. intros (tf' & A & B).
   exploit parent_locset_match; eauto. intros PLS.
   econstructor; split.
   apply plus_one.
-  econstructor. rewrite A. constructor. auto. auto. auto.
-  inv TRF; eauto.
-  rewrite PLS. constructor; auto.
-  inversion FPTR. rewrite <- PLS. apply B.
+  econstructor. eauto. rewrite PLS. auto. auto. auto.
+  inv TRF; eauto. traceEq.
+  des; clarify. constructor; auto.
 - (* builtin *)
   econstructor; split.
   eapply plus_left.
@@ -515,8 +512,6 @@ Proof.
   rewrite (parent_locset_match _ _ STACKS). constructor; auto.
 - (* internal function *)
   exploit functions_translated; eauto. intros (tf & FIND' & TRANS).
-  assert (fptr = tfptr).
-  { eapply find_funct_lessdef; eauto. }
   monadInv TRANS. rename x into tf.
   assert (MF: match_function f tf) by (apply transf_function_match; auto).
   inversion MF; subst.
@@ -525,8 +520,6 @@ Proof.
   constructor; auto.
 - (* external function *)
   exploit functions_translated; eauto. intros (tf & FIND' & TRANS).
-  assert (fptr = tfptr).
-  { eapply find_funct_lessdef; eauto. }
   monadInv TRANS. econstructor; split.
   apply plus_one. econstructor; eauto.
   eapply external_call_symbols_preserved; eauto.
@@ -556,7 +549,7 @@ Proof.
   exists (Callstate nil (Vptr b Ptrofs.zero) signature_main (Locmap.init Vundef) m0); split.
   econstructor; eauto. eapply (Genv.init_mem_transf_partial TRANSF); eauto.
   erewrite (match_program_main TRANSF), symbols_preserved; eauto.
-  constructor. constructor. auto.
+  constructor. constructor.
 Qed.
 
 Lemma transf_final_states:
