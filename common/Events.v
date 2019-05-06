@@ -457,8 +457,9 @@ Definition symbols_inject_weak m : Prop :=
      exists b2, f b1 = Some(b2, 0) /\ Senv.find_symbol ge2 id = Some b2)
 /\ (forall b1 b2 delta,
      f b1 = Some(b2, delta) ->
-     forall (PERM: Senv.block_is_volatile ge1 b1 = true \/ exists ofs, Mem.perm m b1 ofs Max Nonempty),
-     Senv.block_is_volatile ge2 b2 = Senv.block_is_volatile ge1 b1).
+     Senv.block_is_volatile ge2 b2 = Senv.block_is_volatile ge1 b1 \/
+     (Senv.block_is_volatile ge1 b1 = false /\ forall ofs p k, ~ Mem.perm m b1 ofs k p))
+.
 
 Definition symbols_inject : Prop :=
    (forall id, Senv.public_symbol ge2 id = Senv.public_symbol ge1 id)
@@ -479,7 +480,7 @@ Lemma symbols_inject_weak_imply
 Proof.
   intros m. destruct SYMBINJ as (A & B & C & D).
   unfold symbols_inject_weak. esplits; auto.
-  intros. eapply D; eauto.
+  intros. left. eapply D; eauto.
 Qed.
 
 Variable m: mem.
@@ -831,16 +832,19 @@ Proof.
   inv VI. exploit B; eauto. intros [U V]. subst delta.
   exploit eventval_match_inject_2; eauto. intros (v2 & X & Y).
   rewrite Ptrofs.add_zero. exists (Val.load_result chunk v2); split.
-  constructor; auto.
-  erewrite D; eauto.
+  econs; auto. destruct (D _ _ _ H5) as [|[]].
+  rewrite H2. assumption.
+  congruence.
   apply Val.load_result_inject. auto.
 - (* normal load *)
   exploit Mem.loadv_inject; eauto. simpl; eauto. simpl; intros (v2 & X & Y).
   exists v2; split; auto.
   constructor; auto.
-  inv VI. erewrite D; eauto.
-  eapply Mem.load_valid_access in H0. right. eexists. apply Mem.perm_cur. destruct H0.
-  eapply Mem.perm_implies; [eapply r|econs]. split. reflexivity. set (size_chunk_pos chunk). omega.
+  inv VI.
+  destruct (D _ _ _ H4) as [|[]]. congruence.
+  exfalso. eapply H2.
+  eapply Mem.load_valid_access in H0. destruct H0. eapply H0.
+  split. reflexivity. set (size_chunk_pos chunk). omega.
 Qed.
 
 Lemma volatile_load_receptive:
@@ -976,7 +980,10 @@ Proof.
 - (* volatile store *)
   inv AI. exploit Q; eauto. intros [A B]. subst delta.
   rewrite Ptrofs.add_zero. exists m1'; split.
-  constructor; auto. erewrite S; eauto.
+  constructor; auto.
+  destruct (S _ _ _ H5) as [|[]].
+  rewrite H2. assumption.
+  congruence.
   eapply eventval_match_inject; eauto. apply Val.load_result_inject. auto.
   intuition auto with mem.
 - (* normal store *)
@@ -984,9 +991,12 @@ Proof.
   assert (Mem.storev chunk m1 (Vptr b ofs) v = Some m2). simpl; auto.
   exploit Mem.storev_mapped_inject; eauto. intros [m2' [A B]].
   exists m2'; intuition auto.
-+ constructor; auto. erewrite S; eauto.
-  eapply Mem.store_valid_access_3 in H1. right. eexists. apply Mem.perm_cur. destruct H1.
-  eapply Mem.perm_implies; [eapply r|econs]. split. reflexivity. set (size_chunk_pos chunk). omega.
++ constructor; auto.
+  destruct (S _ _ _ H4) as [|[]].
+  rewrite H2. auto.
+  exfalso. eapply H3. eapply Mem.store_valid_access_3 in H1.
+  destruct H1. eapply H1.
+  split. reflexivity. set (size_chunk_pos chunk). omega.
 + eapply Mem.store_unchanged_on; eauto.
   unfold loc_unmapped; intros. inv AI; congruence.
 + eapply Mem.store_unchanged_on; eauto.
@@ -1658,7 +1668,7 @@ Lemma eval_builtin_arg_determ:
 Proof.
   induction 1; intros v' EV; inv EV; try congruence.
   f_equal; eauto.
-  apply IHeval_builtin_arg1 in H3. apply IHeval_builtin_arg2 in H5. subst; auto. 
+  apply IHeval_builtin_arg1 in H3. apply IHeval_builtin_arg2 in H5. subst; auto.
 Qed.
 
 Lemma eval_builtin_args_determ:
@@ -1733,7 +1743,7 @@ Proof.
   econstructor; split; eauto with barg. apply Val.longofwords_lessdef; auto.
 - destruct IHeval_builtin_arg1 as (vhi' & P & Q).
   destruct IHeval_builtin_arg2 as (vlo' & R & S).
-  econstructor; split; eauto with barg. 
+  econstructor; split; eauto with barg.
   destruct Archi.ptr64; auto using Val.add_lessdef, Val.addl_lessdef.
 Qed.
 
@@ -1749,4 +1759,3 @@ Proof.
 Qed.
 
 End EVAL_BUILTIN_ARG_LESSDEF.
-
