@@ -125,7 +125,7 @@ DRIVER=Compopts.v Compiler.v Complements.v
 # All source files
 
 FILES=$(VLIB) $(COMMON) $(BACKEND) $(CFRONTEND) $(DRIVER) $(FLOCQ) \
-  $(PARSERVALIDATOR) $(PARSER)
+  $(PARSERVALIDATOR) $(PARSER) exportclight/Clightdefs.v
 
 # Generated source files
 
