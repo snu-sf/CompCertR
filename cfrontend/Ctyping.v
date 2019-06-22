@@ -21,6 +21,7 @@ Require Import Coqlib Maps Integers Floats Errors.
 Require Import AST Linking.
 Require Import Values Memory Globalenvs Events.
 Require Import Ctypes Cop Csyntax Csem.
+Require Import Classical.
 Require Import sflib.
 
 Local Open Scope error_monad_scope.
@@ -45,10 +46,35 @@ Section WTTY.
   Fixpoint wt_type (t: type) : bool :=
     match t with
     | Tarray t' _ _ => wt_type t'
+    | Tpointer t' _ => wt_type t'
     | Tstruct id _ | Tunion id _ =>
                      match ce!id with Some co => true | None => false end
     | _ => true
     end.
+
+  Lemma wt_type_sizeof_stable:
+    forall t ce'
+       (extends: forall id co, ce!id = Some co -> ce'!id = Some co), wt_type t = true -> sizeof ce t = sizeof ce' t.
+  Proof.
+    induction t; simpl; intros; auto.
+    - erewrite IHt; eauto.
+    - destruct (ce!i) as [co|] eqn:E; try discriminate.
+      erewrite extends by eauto. auto.
+    - destruct (ce!i) as [co|] eqn:E; try discriminate.
+      erewrite extends by eauto. auto.
+  Qed.
+
+  Lemma wt_type_alignof_stable:
+    forall t ce'
+       (extends: forall id co, ce!id = Some co -> ce'!id = Some co), wt_type t = true -> alignof ce t = alignof ce' t.
+  Proof.
+    induction t; simpl; intros; auto.
+    - erewrite IHt; eauto.
+    - destruct (ce!i) as [co|] eqn:E; try discriminate.
+      erewrite extends by eauto. auto.
+    - destruct (ce!i) as [co|] eqn:E; try discriminate.
+      erewrite extends by eauto. auto.
+  Qed.
 
   Fixpoint types_of_expr (e: expr): list type :=
     match e with
@@ -159,6 +185,7 @@ Section WTTY.
                  (forall ty (IN: In ty (types_of_expr (C e0))), wt_type ty)) /\
       (forall ty (IN: In ty (types_of_statement f.(fn_body))), wt_type ty) /\
       wt_type ty /\
+      (forall i blk ty, e ! i = Some (blk, ty) -> wt_type ty) /\
       context RV RV C
     end
   .
@@ -704,7 +731,7 @@ Fixpoint bind_vars (e: typenv) (l: list (ident * type)) : typenv :=
 
 Inductive wt_function (ce: composite_env) (e: typenv) : function -> Prop :=
   | wt_function_intro: forall f,
-      forall (COMP: Forall (complete_type ce) (map snd ((f.(fn_params)) ++ f.(fn_vars)))),
+      forall (WT: Forall (wt_type ce) (map snd ((f.(fn_params)) ++ f.(fn_vars)))),
       forall (WTYF: forall ty (IN: In ty (types_of_statement f.(fn_body))), wt_type ce ty),
       wt_stmt ce (bind_vars (bind_vars e f.(fn_params)) f.(fn_vars)) f.(fn_return) f.(fn_body) ->
       wt_function ce e f.
@@ -1099,7 +1126,7 @@ with retype_lblstmts (ce: composite_env) (e: typenv) (rt: type) (sl: labeled_sta
 Definition retype_function (ce: composite_env) (e: typenv) (f: function) : res function :=
   let e := bind_vars (bind_vars e f.(fn_params)) f.(fn_vars) in
   do s <- retype_stmt ce e f.(fn_return) f.(fn_body);
-    assertion (forallb (complete_type ce) (map snd (fn_params f ++ fn_vars f)));
+    assertion (forallb (wt_type ce) (map snd (fn_params f ++ fn_vars f)));
     assertion (forallb (wt_type ce) (types_of_statement s));
   OK (mkfunction f.(fn_return)
                  f.(fn_callconv)
@@ -1197,7 +1224,7 @@ Proof.
 - subst i2; congruence.
 - destruct i2; congruence.
 Qed.
- 
+
 Lemma type_combine_cast:
   forall t1 t2 t,
   type_combine t1 t2 = OK t ->
@@ -1235,14 +1262,14 @@ Proof.
   destruct (typeconv t1) eqn:T1; try discriminate;
   destruct (typeconv t2) eqn:T2; inv H; eauto using D, binarith_type_cast.
 - split; apply typeconv_cast; unfold wt_cast.
-  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence. 
-  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence. 
+  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence.
+  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence.
 - split; apply typeconv_cast; unfold wt_cast.
-  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence. 
-  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence. 
+  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence.
+  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence.
 - split; apply typeconv_cast; unfold wt_cast.
-  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence. 
-  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence. 
+  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence.
+  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence.
 Qed.
 
 Section SOUNDNESS_CONSTRUCTORS.
@@ -1579,7 +1606,7 @@ Proof.
   intros id f. revert MATCH; generalize (prog_defs p) (AST.prog_defs tp).
   induction 1; simpl; intros.
   contradiction.
-  destruct H0; auto. subst b1; inv H. simpl in H1. inv H1. 
+  destruct H0; auto. subst b1; inv H. simpl in H1. inv H1.
   destruct f1; monadInv H4. eapply retype_function_sound; eauto.
   { hexploit (match_transform_partial_program _ _ _ EQ); eauto. intro M.
     rr in M. des.  i. exploit list_forall2_in_right; eauto. intro MATCH; des. ss.
@@ -1605,7 +1632,7 @@ Qed.
 Lemma wt_val_casted:
   forall v ty, val_casted v ty -> wt_val v ty.
 Proof.
-  induction 1; constructor; auto. 
+  induction 1; constructor; auto.
 - rewrite <- H; apply pres_cast_int_int.
 Qed.
 
@@ -1781,7 +1808,7 @@ Lemma wt_load_result:
   access_mode ty = By_value chunk ->
   wt_val (Val.load_result chunk v) ty.
 Proof.
-  unfold access_mode, Val.load_result. remember Archi.ptr64 as ptr64. 
+  unfold access_mode, Val.load_result. remember Archi.ptr64 as ptr64.
   intros until v; intros AC. destruct ty; simpl in AC; try discriminate AC.
 - destruct i; [destruct s|destruct s|idtac|idtac]; inv AC; simpl.
   destruct v; auto with ty. constructor; red. apply Int.sign_ext_idem; omega.
@@ -1802,7 +1829,7 @@ Lemma wt_decode_val:
 Proof.
   intros until vl; intros ACC.
   assert (LR: forall v, wt_val (Val.load_result chunk v) ty) by (eauto using wt_load_result).
-  destruct ty; simpl in ACC; try discriminate. 
+  destruct ty; simpl in ACC; try discriminate.
 - destruct i; [destruct s|destruct s|idtac|idtac]; inv ACC; unfold decode_val.
   destruct (proj_bytes vl); auto with ty.
   constructor; red. apply Int.sign_ext_idem; omega.
@@ -1812,11 +1839,11 @@ Proof.
   constructor; red. apply Int.sign_ext_idem; omega.
   destruct (proj_bytes vl); auto with ty.
   constructor; red. apply Int.zero_ext_idem; omega.
-  destruct (proj_bytes vl). auto with ty. destruct Archi.ptr64 eqn:SF; auto with ty. 
+  destruct (proj_bytes vl). auto with ty. destruct Archi.ptr64 eqn:SF; auto with ty.
   destruct (proj_bytes vl); auto with ty.
   constructor; red. apply Int.zero_ext_idem; omega.
 - inv ACC. unfold decode_val. destruct (proj_bytes vl). auto with ty.
-  destruct Archi.ptr64 eqn:SF; auto with ty. 
+  destruct Archi.ptr64 eqn:SF; auto with ty.
 - destruct f; inv ACC; unfold decode_val; destruct (proj_bytes vl); auto with ty.
 - inv ACC. unfold decode_val. destruct (proj_bytes vl).
   unfold Mptr in *. destruct Archi.ptr64 eqn:SF; auto with ty.
@@ -2079,6 +2106,13 @@ Hypothesis GECMPT: forall
       <<MAP: (prog_defmap prog) ! id = Some gd>>
 .
 
+Hypothesis GECMPTREV: forall
+    id gd
+    (MAP: (prog_defmap prog) ! id = Some gd)
+  ,
+    exists blk,
+      (<<SYMB: Genv.find_symbol ge id = Some blk>>).
+
 Hypothesis GEWF: forall
     blk gd
     (DEF: Genv.find_def ge blk = Some gd)
@@ -2161,8 +2195,10 @@ with wt_call_cont: cont -> type -> Prop :=
   | wt_Kstop: forall ty,
       wt_call_cont Kstop ty
   | wt_Kcall: forall te f e C ty k,
+      te = (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) ->
       wt_expr_cont te f k ->
       wt_stmt ge te f.(fn_return) f.(fn_body) ->
+      (forall i, In i (map fst (fn_params f ++ fn_vars f)) -> exists b t, e ! i = Some (b, t)) ->
       (forall v, wt_val v ty -> wt_rvalue ge te (C (Eval v ty))) ->
       wt_call_cont (Kcall f e C ty k) ty.
 
@@ -2218,7 +2254,43 @@ Proof.
   exploit GEWF; eauto. i; des.
   exploit GECMPT; eauto. i; des.
   eapply H0; eauto.
-  eapply PTree_Properties.in_of_list; eauto. (* AST.in_prog_defmap *)
+  eapply PTree_Properties.in_of_list; eauto.
+Qed.
+
+Scheme wt_rvalue_ind2 := Minimality for wt_rvalue Sort Prop
+  with wt_lvalue_ind2 := Minimality for wt_lvalue Sort Prop
+  with wt_exprlist_ind2 := Minimality for wt_exprlist Sort Prop.
+Combined Scheme wt_expression_ind from wt_rvalue_ind2, wt_lvalue_ind2, wt_exprlist_ind2.
+
+Lemma wt_expr_wt_expr
+      co te k1 k2 C e
+      (CTX: context k1 k2 C)
+      (WT: wt_expr co te (C e))
+  :
+    wt_expr co te e.
+Proof.
+  generalize dependent e.
+  revert co te.
+  revert CTX. revert k1 k2 C.
+  eapply (context_ind2
+            (fun k k' C => forall co te e,
+                 wt_expr co te (C e) -> wt_expr co te e)
+            (fun k C => forall co te e,
+                 wt_exprlist co te (C e) -> wt_expr co te e)); ss; i;
+    try (inv H1; eapply H0; eauto); remember (C e) as e'; destruct e'; clarify;
+      try (by inv H4); try (by inv H3); try (by inv H5); try (by inv H6); try inv H7; inv H8.
+  Qed.
+
+Lemma wt_rvalue_wt_expr
+      co te C e
+      (CTX: context LV RV C)
+      (WT: wt_rvalue co te (C e))
+  :
+    wt_expr co te e.
+Proof.
+  eapply wt_expr_wt_expr; eauto.
+  unfold wt_expr in *. des_ifs.
+  destruct (C e); clarify; inv WT.
 Qed.
 
 Inductive wt_state: state -> Prop :=
@@ -2226,6 +2298,10 @@ Inductive wt_state: state -> Prop :=
         (WTYK: wtype_cont ge k)
         (WTYB: forall ty (IN: In ty (types_of_statement f.(fn_body))), wt_type ge ty)
         (WTYS: forall ty (IN: In ty (types_of_statement s)), wt_type ge ty)
+        (WTENV: forall i blk ty, e ! i = Some (blk, ty) -> wt_type ge ty)
+        (WFENV: forall i, In i (map fst (fn_params f ++ fn_vars f)) -> exists b t, e ! i = Some (b, t))
+        (TENV: te = (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)))
+        (WTTENV: forall i ty, te ! i = Some ty -> (exists blk ty, e ! i = Some (blk, ty)) \/ exists blk, Genv.find_symbol ge i = Some blk)
         (WTK: wt_stmt_cont te f k)
         (WTB: wt_stmt ge te f.(fn_return) f.(fn_body))
         (WTS: wt_stmt ge te f.(fn_return) s),
@@ -2234,6 +2310,10 @@ Inductive wt_state: state -> Prop :=
         (WTYK: wtype_cont ge k)
         (WTYB: forall ty (IN: In ty (types_of_statement f.(fn_body))), wt_type ge ty)
         (WTYE: forall ty (IN: In ty (types_of_expr r)), wt_type ge ty)
+        (WTENV: forall i blk ty, e ! i = Some (blk, ty) -> wt_type ge ty)
+        (WFENV: forall i, In i (map fst (fn_params f ++ fn_vars f)) -> exists b t, e ! i = Some (b, t))
+        (TENV: te = (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)))
+        (WTTENV: forall i ty, te ! i = Some ty -> (exists blk ty, e ! i = Some (blk, ty)) \/ exists blk, Genv.find_symbol ge i = Some blk)
         (WTK: wt_expr_cont te f k)
         (WTB: wt_stmt ge te f.(fn_return) f.(fn_body))
         (WTE: wt_rvalue ge te r),
@@ -2243,6 +2323,10 @@ Inductive wt_state: state -> Prop :=
         (WTYK: wtype_cont ge k)
         (WTK: wt_call_cont k tyres)
         (CLASSIFY: classify_fun_strong tyf = fun_case_f tyargs tyres cc)
+        (WTLOCAL: forall f
+            (INTERNAL: Genv.find_funct ge vf = Some (Internal f))
+          ,
+            Forall (fun t : type => wt_type ge t) (map snd (fn_params f ++ fn_vars f)))
         (WTKS: forall
             (EXT: forall f, Genv.find_funct ge vf <> Some (Internal f))
           ,
@@ -2325,26 +2409,33 @@ Proof.
     exploit types_of_context1; eauto. intro X; des. specialize (X a' ty). specialize (X0 a ty).
     inv H; ss; eauto.
   }
-  change (wt_expr_kind ge te RV (C a')).
+  change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV (C a')).
   eapply wt_context with (a := a); eauto.
   eapply lred_same_type; eauto.
-  eapply wt_lred; eauto. change (wt_expr_kind ge te LV a). eapply wt_subexpr; eauto.
+  eapply wt_lred; eauto. change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) LV a). eapply wt_subexpr; eauto.
 - (* rred *)
   econstructor; eauto.
   { ii. clear - H H0 IN WTYE.
     pose a' as TT.
     exploit types_of_context1; eauto. intro X; des. specialize (X a' ty). specialize (X0 a ty).
     apply X in IN.
+    exploit types_of_context1; eauto. intros [tys0 [A B]].
     inv H; ss; try rewrite ! in_app_iff in *; ss; des; des_ifs; clarify; eauto; try (by eapply WTYE; eauto; eapply X0; eauto 10).
-    - inv H1; ss; unfold access_mode in *; des_ifs; eauto.
-    - inv H1; ss; unfold access_mode in *; des_ifs; eauto.
+    - inv H1; ss; unfold access_mode in *; des_ifs; ss.
+      { exploit (WTYE (Tpointer t a)); ss. eapply B; ss; auto. }
+      { exploit (WTYE (Tpointer t0 a)); ss. eapply B; ss; auto. }
+      { exploit (WTYE (Tarray t z a)); ss. eapply B; ss; auto. }
+    - inv H1; ss; unfold access_mode in *; des_ifs; ss.
+      { exploit (WTYE (Tpointer t a)); ss. eapply B; ss; auto. }
+      { exploit (WTYE (Tpointer t0 a)); ss. eapply B; ss; auto. }
+      { exploit (WTYE (Tarray t z a)); ss. eapply B; ss; auto. }
   }
-  change (wt_expr_kind ge te RV (C a')).
+  change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV (C a')).
   eapply wt_context with (a := a); eauto.
   eapply rred_same_type; eauto.
-  eapply wt_rred; eauto. change (wt_expr_kind ge te RV a). eapply wt_subexpr; eauto.
+  eapply wt_rred; eauto. change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV a). eapply wt_subexpr; eauto.
 - (* call *)
-  assert (A: wt_expr_kind ge te RV a) by (eapply wt_subexpr; eauto).
+  assert (A: wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV a) by (eapply wt_subexpr; eauto).
   simpl in A. inv H. inv A. simpl in H9; rewrite H4 in H9; inv H9.
   econstructor.
   { ss. }
@@ -2356,10 +2447,13 @@ Proof.
       exploit types_of_context1; eauto. intro X; des. eapply X0. ss. wtype_tac. right. left. right. ss. eauto.
   }
   econstructor; eauto.
-  intros. change (wt_expr_kind ge te RV (C (Eval v ty))).
+  intros. change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV (C (Eval v ty))).
   eapply wt_context with (a := (Ecall (Eval fptr tyf0) el ty)); eauto.
   red; constructor; auto.
   rr. ss.
+  { inv WTPROG. i. unfold Genv.find_funct in *. des_ifs. rewrite Genv.find_funct_ptr_iff in *.
+    exploit GEWF; eauto. i. des. exploit GECMPT; eauto. i. rr in H6. exploit in_prog_defmap; eauto. i.
+    exploit H; eauto. i. inv H11. rewrite CECMPT in *. auto. }
   { ii. esplits; eauto. }
   {
   simpl. eauto.
@@ -2446,10 +2540,56 @@ Proof.
       try (by (exploit H2; eauto; i; des; wtype_tac)).
 Qed.
 
+Lemma alloc_variables_environment
+      e m l e' m' i
+      (ALLOC: alloc_variables ge e m l e' m')
+      (IN: In i (map fst l))
+  :
+    exists blk ty, e' ! i = Some (blk, ty).
+Proof.
+  clear -IN ALLOC.
+  ginduction l; ss.
+  i. destruct a; ss; des; subst.
+  - inv ALLOC. ss.
+    assert (exists a, (PTree.set i (b1, t) e) ! i = Some a).
+    { erewrite PTree.gss. eauto. }
+    remember (PTree.set i (b1, t) e) as e1.
+    clear -H7 H.
+    {
+      ginduction l; ss.
+      - i. inv H7. des.
+        rewrite H. destruct a. eauto.
+      - i. inv H7. des. destruct a.
+        destruct (classic (i = id)).
+        + subst.
+          exploit IHl; eauto.
+          erewrite PTree.gss; eauto.
+        + exploit IHl; eauto.
+          erewrite PTree.gso; eauto.
+    }
+  - inv ALLOC. ss.
+    exploit IHl; eauto.
+Qed.
+
+Lemma bind_vars_none
+      te l i ty
+      (TENV: (bind_vars te l) ! i = Some ty)
+      (NOTIN: ~ In i (map fst l))
+  :
+    te ! i = Some ty.
+Proof.
+  clear -TENV NOTIN.
+  ginduction l; ss.
+  i. destruct a. ss.
+  eapply not_or_and in NOTIN. des.
+  exploit IHl; eauto. i.
+  erewrite PTree.gso in H; eauto.
+Qed.
+
 Lemma preservation_sstep:
   forall S t S', sstep se ge S t S' -> wt_state S -> wt_state S'.
 Proof.
-  induction 1; intros WT; inv WT.
+  induction 1; intros WT; inversion WT; subst.
 - inv WTS; econs; eauto with ty; wtype_tac.
 - inv WTK; econs; eauto with ty; wtype_tac.
 - inv WTS; econs; eauto with ty; wtype_tac.
@@ -2497,7 +2637,54 @@ Proof.
   { eapply types_of_find_label1 in H. eapply H in IN. wtype_tac. }
 - assert(WTFD: wt_fundef (Internal f)).
   { eapply wt_find_funct; eauto. }
-  simpl in WTFD; inv WTFD. econstructor; eauto. apply wt_call_cont_stmt_cont; auto.
+  simpl in WTFD; inv WTFD. econstructor; eauto.
+  { clear -H0 WT0.
+    assert (EMPTY:forall (i : positive) (blk : block) (ty : type), empty_env ! i = Some (blk, ty) -> wt_type ge ty).
+    { ii. erewrite PTree.gempty in H. clarify. }
+    remember (fn_params f ++ fn_vars f) as l.
+    remember empty_env as ev.
+    clear Heqev.
+    clear Heql.
+    ginduction l; i; ss; inv H0.
+    - eapply EMPTY; eauto.
+    - exploit IHl; eauto.
+      { inv WT0; eauto. }
+      i. rewrite PTree.gsspec in *. des_ifs.
+      + inv WT0. eauto.
+      + eapply EMPTY; eauto. }
+  { i. clear -H0 H3.
+    exploit alloc_variables_environment; eauto. }
+  { i. unfold gtenv in *. ss.
+    destruct (classic (In i (map fst (fn_params f)) \/ In i (map fst (fn_vars f)))) as [A | A].
+    { clear -H0 A. left.
+      assert (In i (map fst (fn_params f ++ fn_vars f))).
+      { rewrite map_app. eapply in_or_app; eauto. }
+      exploit alloc_variables_environment; eauto. }
+    eapply not_or_and in A.
+    assert (In i (prog_defs_names prog)).
+    { remember (fn_params f) as l1.
+      remember (fn_vars f) as l2.
+      clear -H3 A. des.
+      do 2 (eapply bind_vars_none in H3; eauto).
+      unfold prog_defs_names. ss.
+      remember (prog_defs prog) as l.
+      assert ((PTree.empty type) ! i = None).
+      { rewrite PTree.gempty in *. clarify. }
+      remember (PTree.empty type) as pe.
+      clear - H3 H.
+      ginduction l; ss.
+      - i. clarify.
+      - i. destruct a. ss.
+        destruct (classic (i0 = i)); eauto.
+        right.
+        des_ifs.
+        + eapply IHl in H3; eauto.
+          erewrite PTree.gso; eauto.
+        + eapply IHl in H3; eauto.
+          erewrite PTree.gso; eauto. }
+    exploit prog_defmap_dom; eauto. i. des.
+    exploit GECMPTREV; eauto. }
+  apply wt_call_cont_stmt_cont; auto.
   inv CLASSIFY. eauto.
 - assert(WTFD: wt_fundef (External ef targs tres cc)).
   { eapply wt_find_funct; eauto. }
@@ -2506,6 +2693,7 @@ Proof.
   { eapply PTree_Properties.in_of_list; eauto. }
   inv CLASSIFY.
   econstructor; eauto.
+  (* admit "". *)
 - inv WTK. inv VAL. econs; eauto with ty; wtype_tac.
   { exploit types_of_context1; eauto. intro Y; des. eapply Y in IN. rewrite in_app_iff in *.
     des.
@@ -2515,6 +2703,35 @@ Proof.
       hexploit (Y0 (Eval v ty0) tyy); eauto. { wtype_tac. } intro Z.
       exploit WTYK0; eauto. i. ss. des; ss. clarify.
   }
+  { i. unfold gtenv in *. ss.
+    destruct (classic (In i (map fst (fn_params f)) \/ In i (map fst (fn_vars f)))) as [A | A].
+    { left.
+      assert (In i (map fst (fn_params f ++ fn_vars f))).
+      { rewrite map_app. eapply in_or_app; eauto. }
+      inv WT. inv WTK. ss. eapply H14; eauto. }
+    eapply not_or_and in A.
+    assert (In i (prog_defs_names prog)).
+    { remember (fn_params f) as l1.
+      remember (fn_vars f) as l2.
+      clear -H A. des.
+      do 2 (eapply bind_vars_none in H; eauto).
+      unfold prog_defs_names. ss.
+      remember (prog_defs prog) as l.
+      assert ((PTree.empty type) ! i = None).
+      { rewrite PTree.gempty in *. clarify. }
+      remember (PTree.empty type) as pe.
+      clear - H0 H.
+      ginduction l; ss.
+      - i. clarify.
+      - i. destruct a. ss.
+        destruct (classic (i0 = i)); eauto.
+        right.
+        des_ifs; eapply IHl in H; eauto.
+        + erewrite PTree.gso; eauto.
+        + erewrite PTree.gso; eauto. }
+    exploit prog_defmap_dom; eauto. i. des.
+    exploit GECMPTREV; eauto. }
+  Unshelve. all: auto.
 Qed.
 
 Theorem preservation:
@@ -2534,6 +2751,9 @@ Proof.
   { ss. }
   econstructor; eauto.
   { ss. }
+  { inv WTPROG. i. unfold Genv.find_funct in *. des_ifs. rewrite Genv.find_funct_ptr_iff in *.
+    exploit GEWF; eauto. i. des. exploit GECMPT; eauto. i. rr in H2. exploit in_prog_defmap; eauto. i.
+    exploit H; eauto. i. inv H4. rewrite CECMPT in *. auto. }
   { ii. exfalso. des. eapply EXT; eauto. }
   econstructor; eauto.
   econstructor; eauto.
