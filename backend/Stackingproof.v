@@ -2374,31 +2374,12 @@ Proof.
   econstructor; split.
   apply plus_one. econstructor; eauto.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' m1' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply UNCH1; eauto; eapply H1.
-    - econs; i; eapply UNCH2; eauto; eapply H1.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  assert(LE: SimMemInj.le' sm0
-                    (SimMemInj.mk m' m1' j' sm0.(SimMemInj.src_external) sm0.(SimMemInj.tgt_external)
-                                  sm0.(SimMemInj.src_parent_nb) sm0.(SimMemInj.tgt_parent_nb))).
-  { exploit SimMemInj.unlift_spec; eauto. }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto).
+  { eapply SEP. }
+  i; des. SimMemInj.spl_exact sm1.
   eapply match_states_intro with (j := j'); eauto with coqlib.
   SimMemInj.compat_tac.
   { eapply spvalid_le; eauto. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - eapply SEP.
-    - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-    - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-    - eapply Ple_trans; eauto; eapply UNCH1.
-    - eapply Ple_trans; eauto; eapply UNCH2.
-  }
   { inv MCOMPAT. ii. unfold SimMemInj.tgt_private, loc_out_of_reach in *. ss. exploit PRIV; eauto. intros [X Y]. split.
     - ii. destruct (sm0.(SimMemInj.inj) b0) as [[sp1 delta1] |] eqn:?.
       + exploit INCR; eauto. ii. clarify. eapply PRIV; eauto. eapply external_call_max_perm; eauto.
@@ -2408,15 +2389,12 @@ Proof.
   }
   inv MCOMPAT.
   assert(SAME: forall (b0 b2 : block) (delta : Z),
-            Mem.valid_block (SimMemInj.tgt sm0) b2 -> j' b0 = Some (b2, delta) -> SimMemInj.inj sm0 b0 = Some (b2, delta)).
-  { ii. ss. destruct (sm0.(SimMemInj.inj) b0) as [[sp1 delta1] |] eqn:?.
-    - exploit INCR; eauto. ii. clarify.
-    - exploit ISEP; eauto. ii; des. exfalso. eauto. }
+            Mem.valid_block (SimMemInj.tgt sm0) b2 -> (SimMemInj.inj sm1) b0 = Some (b2, delta) -> SimMemInj.inj sm0 b0 = Some (b2, delta)).
+  { ii. ss. eapply SimMemInj.frozen_preserves_tgt; try (erewrite <- SimMemInj.inject_separated_frozen; eauto); eauto. }
   eapply match_stacks_change_meminj; eauto.
   { i. apply SAME; eauto. ss. des. inv GENVINJ0. inv SECOMPATSRC. rewrite NB in *. exploit DOMAIN; eauto. i; clarify. exploit INCR; eauto. i; clarify. unfold Mem.valid_block. xomega. }
   { i. apply SAME; eauto. ss. des. inv GENVINJ0. inv SECOMPATTGT. rewrite NB in *. inv MATCH_GENV. rewrite mge_next in *. exploit DOMAIN; eauto. i; clarify. exploit INCR; eauto. i; clarify. unfold Mem.valid_block. xomega. }
-  {
-    eapply match_stacks_le; eauto; try congruence.
+  { eapply match_stacks_le; eauto; try congruence.
     - ii. ss. eapply external_call_max_perm; eauto. eapply Mem.valid_block_inject_1; try eapply SAME; eauto.
   }
   apply agree_regs_set_res; auto. apply agree_regs_undef_regs; auto. eapply agree_regs_inject_incr; eauto.
@@ -2598,9 +2576,7 @@ Proof.
   inv MCOMPAT.
   assert(SAME: forall (b0 b2 : block) (delta : Z),
             Mem.valid_block (SimMemInj.tgt sm0) b2 -> j' b0 = Some (b2, delta) -> SimMemInj.inj sm0 b0 = Some (b2, delta)).
-  { ii. ss. destruct (sm0.(SimMemInj.inj) b0) as [[sp1 delta1] |] eqn:?.
-    - exploit K; eauto. ii. clarify.
-    - exploit INJ_SEP; eauto. ii; des. exfalso. eauto. }
+  { ii. ss. eapply SimMemInj.frozen_preserves_tgt; try (erewrite <- SimMemInj.inject_separated_frozen; eauto); eauto. }
   eapply match_stacks_change_meminj; eauto.
   { i. apply SAME; eauto. ss. des. inv GENVINJ0. inv SECOMPATSRC. rewrite NB in *. exploit DOMAIN; eauto. i; clarify. exploit K; eauto. i; clarify. unfold Mem.valid_block. xomega. }
   { i. apply SAME; eauto. ss. des. inv GENVINJ0. inv SECOMPATTGT. rewrite NB in *. inv MATCH_GENV. rewrite mge_next in *. exploit DOMAIN; eauto. i; clarify. exploit K; eauto. i; clarify. unfold Mem.valid_block. xomega. }
@@ -2625,42 +2601,23 @@ Proof.
   rewrite sep_comm, sep_assoc in SEP.
   exploit external_call_parallel_rule; eauto.
   { eapply match_stacks_symbols_inject; eauto. }
-  intros (j' & res' & m1' & A & B & C & D & E).
+  intros (j' & res' & m1' & A & B & C & D & E & F & G).
   econstructor; split.
   apply plus_one. eapply exec_function_external; eauto.
-  exploit external_call_mem_inject_gen; try eapply H0; eauto. eapply match_stacks_symbols_inject; eauto. i; des.
-  exploit external_call_deterministic. eauto. eapply A. i; des. clarify.
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' m1' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply H3; eauto; eapply H7.
-    - econs; i; eapply H4; eauto; eapply H7.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto).
+  { eapply C. } i; des.
+  SimMemInj.spl_exact sm1.
   eapply match_states_return with (j := j').
   SimMemInj.compat_tac.
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - eapply C.
-    - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-    - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-    - eapply Ple_trans; eauto; eapply H3.
-    - eapply Ple_trans; eauto; eapply H4.
-  }
+  { eauto. }
   inv MCOMPAT.
   assert(SAME: forall (b0 b2 : block) (delta : Z),
-            Mem.valid_block (SimMemInj.tgt sm0) b2 -> j' b0 = Some (b2, delta) -> SimMemInj.inj sm0 b0 = Some (b2, delta)).
-  { ii. ss. destruct (sm0.(SimMemInj.inj) b0) as [[sp1 delta1] |] eqn:?.
-    - exploit D; eauto. ii. clarify.
-    - exploit E; eauto. ii; des. exfalso. eapply H10. eauto. }
+            Mem.valid_block (SimMemInj.tgt sm0) b2 -> (SimMemInj.inj sm1) b0 = Some (b2, delta) -> SimMemInj.inj sm0 b0 = Some (b2, delta)).
+  { ii. ss. eapply SimMemInj.frozen_preserves_tgt; try (erewrite <- SimMemInj.inject_separated_frozen; eauto); eauto. }
   eapply match_stacks_change_meminj; eauto.
   { i. apply SAME; eauto. ss. des. inv GENVINJ0. inv SECOMPATSRC. rewrite NB in *. exploit DOMAIN; eauto. i; clarify. exploit D; eauto. i; clarify. unfold Mem.valid_block. xomega. }
   { i. apply SAME; eauto. ss. des. inv GENVINJ0. inv SECOMPATTGT. rewrite NB in *. inv MATCH_GENV. rewrite mge_next in *. exploit DOMAIN; eauto. i; clarify. exploit D; eauto. i; clarify. unfold Mem.valid_block. xomega. }
-  {
-    eapply match_stacks_le; eauto; try congruence. exploit SimMemInj.unlift_spec; eauto.
+  { eapply match_stacks_le; eauto; try congruence.
     ii. ss. eapply external_call_max_perm; eauto. eapply Mem.valid_block_inject_1; try eapply SAME; eauto.
   }
   apply agree_regs_set_pair. apply agree_regs_undef_caller_save_regs.
@@ -2670,7 +2627,6 @@ Proof.
   apply agree_callee_save_regs_after; auto.
   apply stack_contents_change_meminj with j; auto.
   rewrite sep_comm, sep_assoc; auto.
-  { exploit SimMemInj.unlift_spec; eauto. }
 
 - (* return *)
   inv STACKS; exploit wt_returnstate_agree; eauto; intros [AGCS OUTU].

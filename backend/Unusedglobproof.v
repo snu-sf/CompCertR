@@ -994,33 +994,16 @@ Proof.
   intros (j' & tv & tm' & A & B & C & D & E & F & G).
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' tm' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  {
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply D; eauto; eapply H2.
-    - econs; i; eapply E; eauto; eapply H2.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInj.spl_exact sm1.
   eapply match_states_regular with (j := j'); eauto.
   { SimMemInj.compat_tac. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-    - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-    - eapply Ple_trans; eauto; eapply D.
-    - eapply Ple_trans; eauto; eapply E.
-  }
   apply match_stacks_incr with j; auto.
   intros. exploit G; eauto. intros [U V].
   assert (Mem.valid_block m sp0) by (eapply Mem.valid_block_inject_1; eauto).
   assert (Mem.valid_block tm tsp) by (eapply Mem.valid_block_inject_2; eauto).
   unfold Mem.valid_block in *; xomega.
   apply set_res_inject; auto. apply regset_inject_incr with j; auto.
-  { exploit SimMemInj.unlift_spec; eauto. }
 
 - (* cond *)
   assert (C: eval_condition cond trs##args tm = Some b).
@@ -1095,33 +1078,16 @@ Proof.
   eapply exec_function_external; eauto.
   { rewrite L. rewrite Genv.find_funct_find_funct_ptr. rewrite Genv.find_funct_ptr_iff. eauto. }
   { eauto. }
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' tm' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  {
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply D; eauto; eapply H0.
-    - econs; i; eapply E; eauto; eapply H0.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInj.spl_exact sm1.
   eapply match_states_return with (j := j'); eauto.
   { SimMemInj.compat_tac. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-    - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-    - eapply Ple_trans; eauto; eapply D.
-    - eapply Ple_trans; eauto; eapply E.
-  }
   apply match_stacks_bound with (Mem.nextblock m) (Mem.nextblock tm).
   apply match_stacks_incr with j; auto.
   intros. exploit G; eauto. intros [P Q].
   unfold Mem.valid_block in *; xomega.
   eapply external_call_nextblock; eauto.
   eapply external_call_nextblock; eauto.
-  { exploit SimMemInj.unlift_spec; eauto. }
 
 - (* return *)
   inv STACKS. econstructor; split.

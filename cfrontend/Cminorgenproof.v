@@ -2212,31 +2212,14 @@ Proof.
     xomega. xomega.
     eapply external_call_nextblock; eauto.
     eapply external_call_nextblock; eauto.
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' tm' f' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  {
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply UNMAPPED; eauto; eapply H1.
-    - econs; i; eapply OUTOFREACH; eauto; eapply H1.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInj.spl_exact sm1.
   econstructor; eauto.
   { SimMemInj.compat_tac. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-    - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-    - eapply Ple_trans; eauto; eapply UNMAPPED.
-    - eapply Ple_trans; eauto; eapply OUTOFREACH.
-  }
 Opaque PTree.set.
   unfold set_optvar. destruct optid; simpl.
-  eapply match_callstack_set_temp; eauto. eapply match_callstack_le; eauto. exploit SimMemInj.unlift_spec; eauto.
-  eapply match_callstack_le; eauto. exploit SimMemInj.unlift_spec; eauto.
-  { exploit SimMemInj.unlift_spec; eauto. }
+  eapply match_callstack_set_temp; eauto. eapply match_callstack_le; eauto.
+  eapply match_callstack_le; eauto.
 
 (* seq *)
   monadInv TR.
@@ -2428,34 +2411,17 @@ Opaque PTree.set.
   left; econstructor; split.
   apply plus_one. econstructor. eauto. eauto.
   eauto.
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' tm' f' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  {
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply UNMAPPED; eauto; eapply H0.
-    - econs; i; eapply OUTOFREACH; eauto; eapply H0.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInj.spl_exact sm1.
   econstructor; eauto.
   { SimMemInj.compat_tac. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-    - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-    - eapply Ple_trans; eauto; eapply UNMAPPED.
-    - eapply Ple_trans; eauto; eapply OUTOFREACH.
-  }
   apply match_callstack_incr_bound with (Mem.nextblock m) (Mem.nextblock tm).
   eapply match_callstack_external_call; eauto.
   intros. eapply external_call_max_perm; eauto.
-  eapply match_callstack_le; eauto. exploit SimMemInj.unlift_spec; eauto.
+  eapply match_callstack_le; eauto.
   xomega. xomega.
   eapply external_call_nextblock; eauto.
   eapply external_call_nextblock; eauto.
-  { exploit SimMemInj.unlift_spec; eauto. }
 
 (* return *)
   inv MK. simpl.

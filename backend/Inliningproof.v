@@ -1234,31 +1234,16 @@ Proof.
   intros [F1 [v1 [m1' [A [B [C [D [E [J K]]]]]]]]].
   left; econstructor; split.
   eapply plus_one. eapply exec_Ibuiltin; eauto.
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' m1' F1 sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  {
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply D; eauto; eapply H2.
-    - econs; i; eapply E; eauto; eapply H2.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInj.spl_exact sm1.
   econstructor.
-    { SimMemInj.compat_tac. }
-    { inv MCOMPAT. inv MWF. econs; ss; eauto.
-      - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-      - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-      - eapply Ple_trans; eauto; eapply D.
-      - eapply Ple_trans; eauto; eapply E.
-    }
+    { instantiate (1 := F1). SimMemInj.compat_tac. }
+    { eauto. }
     eapply match_stacks_inside_set_res.
     eapply match_stacks_inside_extcall with (F1 := F) (F2 := F1) (m1 := m) (m1' := m'0); eauto.
     intros; eapply external_call_max_perm; eauto.
     intros; eapply external_call_max_perm; eauto.
-  eapply match_stacks_inside_le; eauto. etransitivity. eapply SimMemInj.unlift_spec; eauto. reflexivity.
+    { eapply match_stacks_inside_le; eauto. }
   auto. eauto. auto.
   destruct res; simpl; [apply agree_set_reg;auto|idtac|idtac]; eapply agree_regs_incr; eauto.
   auto. auto.
@@ -1267,7 +1252,6 @@ Proof.
     intros; eapply external_call_max_perm; eauto.
   auto.
   intros. apply SSZ2. eapply external_call_max_perm; eauto.
-  { exploit SimMemInj.unlift_spec; eauto. }
 
 - (* cond *)
   exploit tr_funbody_inv; eauto. intros TR; inv TR.
@@ -1486,35 +1470,19 @@ Proof.
   simpl in FD. inv FD.
   left; econstructor; split.
   eapply plus_one. eapply exec_function_external; eauto.
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' m1' F1 sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  {
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply D; eauto; eapply H0.
-    - econs; i; eapply E; eauto; eapply H0.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInj.spl_exact sm1.
   econstructor.
-    { SimMemInj.compat_tac. }
-    { inv MCOMPAT. inv MWF. econs; ss; eauto.
-      - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-      - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-      - eapply Ple_trans; eauto; eapply D.
-      - eapply Ple_trans; eauto; eapply E.
-    }
+    { instantiate (1 := F1). SimMemInj.compat_tac. }
+    { eauto. }
     eapply match_stacks_bound with (Mem.nextblock m'0).
     eapply match_stacks_extcall with (F1 := F) (F2 := F1) (m1 := m) (m1' := m'0); eauto.
     intros; eapply external_call_max_perm; eauto.
     intros; eapply external_call_max_perm; eauto.
-    { eapply match_stacks_le; eauto. etransitivity; eauto. eapply SimMemInj.unlift_spec; eauto. reflexivity. }
+    { eapply match_stacks_le; eauto. }
     xomega.
     eapply external_call_nextblock; eauto.
     auto. auto.
-  { exploit SimMemInj.unlift_spec; eauto. }
 - clarify.
 
 - (* return fron noninlined function *)

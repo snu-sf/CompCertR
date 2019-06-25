@@ -589,6 +589,48 @@ Proof.
     + etransitivity; eauto. eapply Mem.nextblock_alloc in H. rewrite H. xomega.
 Qed.
 
+Lemma external_call
+      sm0 ef se vargs t vres m_src0 tse vargs' vres' m_tgt0 f'
+      (MWF: wf' sm0)
+      (EXTCALLSRC: external_call ef se vargs sm0.(src) t vres m_src0)
+      (EXTCALLTGT: external_call ef tse vargs' sm0.(tgt) t vres' m_tgt0)
+      (MEMINJ: Mem.inject f' m_src0 m_tgt0)
+      (UNCHANGSRC: Mem.unchanged_on (loc_unmapped sm0.(inj)) sm0.(src) m_src0)
+      (UNCHANGTGT: Mem.unchanged_on (loc_out_of_reach sm0.(inj) sm0.(src)) sm0.(tgt) m_tgt0)
+      (INJINCR: inject_incr sm0.(inj) f')
+      (INJSEP: inject_separated sm0.(inj) f' sm0.(src) sm0.(tgt))
+  :
+    exists sm1,
+      (<<MSRC: sm1.(src) = m_src0>>)
+      /\ (<<MTGT: sm1.(tgt) = m_tgt0>>)
+      /\ (<<MINJ: sm1.(inj) = f'>>)
+      /\ (<<MWF: wf' sm1>>)
+      /\ (<<MLE: le' sm0 sm1>>)
+.
+Proof.
+  inv MWF.
+  assert (LE_LIFTED: le' sm0.(lift')
+                               (mk m_src0 m_tgt0 f' sm0.(src_private) sm0.(tgt_private)
+                                                                            sm0.(src).(Mem.nextblock) sm0.(tgt).(Mem.nextblock))).
+  { econs; ss; eauto.
+    - econs; i; eapply UNCHANGSRC; eauto; eapply H.
+    - econs; i; eapply UNCHANGTGT; eauto; eapply H.
+    - eapply inject_separated_frozen; eauto.
+    - ii. eapply external_call_max_perm; eauto.
+    - ii. eapply external_call_max_perm; eauto.
+  }
+  eexists (mk _ _ _ sm0.(src_external) sm0.(tgt_external) sm0.(src_parent_nb) sm0.(tgt_parent_nb)); eauto.
+  esplits; ss; eauto.
+  - econs; ss; eauto.
+    + etransitivity; eauto. eapply (after_private_src _ LE_LIFTED).
+    + etransitivity; eauto. eapply (after_private_tgt _ _ LE_LIFTED).
+    + eapply Ple_trans; eauto. eapply UNCHANGSRC.
+    + eapply Ple_trans; eauto; eapply UNCHANGTGT.
+  - exploit unlift_spec; eauto. econs; eauto.
+Unshelve.
+  all: by (try eapply inject_separated_frozen; eauto).
+Qed.
+
 End ORIGINALS.
 
 Record mcompat (sm0: t') (m_src0 m_tgt0: mem) (F: meminj): Prop := mkmcompat {

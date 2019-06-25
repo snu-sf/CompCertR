@@ -2387,33 +2387,19 @@ Proof.
   intros [j' [tvres [tm' [P [Q [R [S [T [U V]]]]]]]]].
   econstructor; split.
   apply plus_one. econstructor; eauto.
-  assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' tm' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  {
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply S; eauto; eapply H1.
-    - econs; i; eapply T; eauto; eapply H1.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInj.spl_exact sm1.
   econstructor; eauto with compat.
   { SimMemInj.compat_tac. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-    - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-    - eapply Ple_trans; eauto; eapply S.
-    - eapply Ple_trans; eauto; eapply T.
-  }
   eapply match_envs_set_opttemp; eauto.
   eapply match_envs_extcall; eauto.
+  { inv MLE. rewrite <- SRCPARENTEQ. eauto. }
+  { inv MLE. rewrite <- TGTPARENTEQ. eauto. }
   eapply match_cont_extcall; eauto.
   inv MENV; xomega. inv MENV; xomega.
+  { inv MLE. rewrite <- SRCPARENTEQ. rewrite <- TGTPARENTEQ. eauto. }
   eapply Ple_trans; eauto. eapply external_call_nextblock; eauto.
   eapply Ple_trans; eauto. eapply external_call_nextblock; eauto.
-  { exploit SimMemInj.unlift_spec; eauto. }
 
 (* sequence *)
   econstructor; split. apply plus_one. econstructor.
@@ -2632,31 +2618,15 @@ Proof.
   intros [j' [tvres [tm' [P [Q [R [S [T [U V]]]]]]]]].
   econstructor; split.
   apply plus_one. econstructor; eauto.
-    assert(LE_LIFTED: SimMemInj.le' (SimMemInj.lift' sm0)
-                    (SimMemInj.mk m' tm' j' sm0.(SimMemInj.src_private) sm0.(SimMemInj.tgt_private)
-                                  sm0.(SimMemInj.src).(Mem.nextblock) sm0.(SimMemInj.tgt).(Mem.nextblock))).
-  {
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - econs; i; eapply S; eauto; eapply H0.
-    - econs; i; eapply T; eauto; eapply H0.
-    - eapply SimMemInj.inject_separated_frozen; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-    - ii. eapply external_call_max_perm; eauto.
-  }
-  SimMemInj.spl_approx sm0.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInj.spl_exact sm1.
   econstructor; eauto.
   { SimMemInj.compat_tac. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto.
-    - etransitivity; eauto. eapply (SimMemInj.after_private_src _ LE_LIFTED).
-    - etransitivity; eauto. eapply (SimMemInj.after_private_tgt _ _ LE_LIFTED).
-    - eapply Ple_trans; eauto; eapply S.
-    - eapply Ple_trans; eauto; eapply T.
-  }
   intros. apply match_cont_incr_bounds with (Mem.nextblock m) (Mem.nextblock tm).
   eapply match_cont_extcall; eauto. xomega. xomega.
   eapply external_call_nextblock; eauto.
   eapply external_call_nextblock; eauto.
-  { exploit SimMemInj.unlift_spec; eauto. }
+  { inv MLE. rewrite <- SRCPARENTEQ. rewrite <- TGTPARENTEQ. eauto. }
 
 (* return *)
   specialize (MCONT (cenv_for f)). inv MCONT.
