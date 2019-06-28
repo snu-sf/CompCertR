@@ -23,9 +23,9 @@ endif
 
 DIRS=lib common $(ARCHDIRS) backend cfrontend driver \
   flocq/Core flocq/Prop flocq/Calc flocq/Appli exportclight \
-  cparser cparser/MenhirLib
+  cparser cparser/MenhirLib demo
 
-RECDIRS=lib common $(ARCHDIRS) backend cfrontend driver flocq exportclight cparser
+RECDIRS=lib common $(ARCHDIRS) backend cfrontend driver flocq exportclight cparser demo
 
 COQINCLUDES=$(foreach d, $(RECDIRS), -R $(d) compcert.$(d))
 
@@ -67,7 +67,7 @@ COMMON=Errors.v AST.v Linking.v \
   Events.v Globalenvs.v Memdata.v Memtype.v Memory.v \
   Values.v Smallstep.v Behaviors.v Switch.v Determinism.v Unityping.v \
   Unreach.v \
-  Separation.v SimMemInj.v
+  Separation.v SimMemInj.v SimMemInjInv.v
 
 # Back-end modules (in backend/, $(ARCH)/)
 
@@ -88,6 +88,7 @@ BACKEND=\
   CSEdomain.v CombineOp.v CSE.v CombineOpproof.v CSEproof.v \
   NeedDomain.v NeedOp.v Deadcode.v Deadcodeproof.v \
   Unusedglob.v Unusedglobproof.v \
+  Unreadglob.v Unreadglobproof.v \
   Machregs.v Locations.v Conventions1.v Conventions.v LTL.v \
   Allocation.v Allocproof.v \
   Tunneling.v Tunnelingproof.v \
