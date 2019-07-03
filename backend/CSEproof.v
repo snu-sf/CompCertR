@@ -816,28 +816,21 @@ Variable tprog : program.
 Hypothesis TRANSF: match_prog prog tprog.
 
 Definition transf_function' (f: function) (approxs: PMap.t numbering) : function :=
-  mkfunction
-    f.(fn_sig)
-    f.(fn_params)
-    f.(fn_stacksize)
-    (transf_code approxs f.(fn_code))
-    f.(fn_entrypoint).
+  mkfunction f.(fn_sig) f.(fn_params) f.(fn_stacksize) (transf_code approxs f.(fn_code)) f.(fn_entrypoint).
 
 Ltac TransfInstr :=
   match goal with
   | H1: (PTree.get ?pc ?c = Some ?instr), f: function, approx: PMap.t numbering |- _ =>
       cut ((transf_function' f approx).(fn_code)!pc = Some(transf_instr approx!!pc instr));
-      [ simpl transf_instr
-      | unfold transf_function', transf_code; simpl; rewrite PTree.gmap;
-        unfold option_map; rewrite H1; reflexivity ]
+      [ simpl transf_instr | unfold transf_function', transf_code; simpl; rewrite PTree.gmap;
+                             unfold option_map; rewrite H1; reflexivity ]
   end.
 
 Section CORELEMMA.
 
 Variable se tse: Senv.t.
 Hypothesis (MATCH_SENV: Senv.equiv se tse).
-Variable ge : genv.
-Variable tge : genv.
+Variable ge tge: genv.
 
 Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => transf_fundef (romem_for cu) f = OK tf) eq prog) ge tge).
 
@@ -902,8 +895,7 @@ Lemma find_function_translated:
   forall ros rs fptr rs',
   find_function_ptr ge ros rs = fptr ->
   regs_lessdef rs rs' ->
-  exists tfptr, find_function_ptr tge ros rs' = tfptr
-              /\ Val.lessdef fptr tfptr.
+  exists tfptr, find_function_ptr tge ros rs' = tfptr /\ Val.lessdef fptr tfptr.
 Proof.
   unfold find_function_ptr; intros; destruct ros.
 - specialize (H0 r). inv H0.

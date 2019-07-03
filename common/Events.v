@@ -458,8 +458,7 @@ Definition symbols_inject_weak m : Prop :=
 /\ (forall b1 b2 delta,
      f b1 = Some(b2, delta) ->
      Senv.block_is_volatile ge2 b2 = Senv.block_is_volatile ge1 b1 \/
-     (Senv.block_is_volatile ge1 b1 = false /\ forall ofs p k, ~ Mem.perm m b1 ofs k p))
-.
+     (Senv.block_is_volatile ge1 b1 = false /\ forall ofs p k, ~ Mem.perm m b1 ofs k p)).
 
 Definition symbols_inject : Prop :=
    (forall id, Senv.public_symbol ge2 id = Senv.public_symbol ge1 id)
@@ -474,8 +473,7 @@ Definition symbols_inject : Prop :=
      Senv.block_is_volatile ge2 b2 = Senv.block_is_volatile ge1 b1).
 
 Lemma symbols_inject_weak_imply
-      (SYMBINJ: symbols_inject)
-  :
+      (SYMBINJ: symbols_inject):
     forall m, symbols_inject_weak m.
 Proof.
   intros m. destruct SYMBINJ as (A & B & C & D).
@@ -520,16 +518,13 @@ Lemma init_symbols_inject
       C `{Linking.Linker C} F1 V1 F2 V2
       (ge: Genv.t F1 V1) (tge: Genv.t F2 V2)
       match_fundef match_varinfo CTX
-      (MGE: Genv.match_genvs (Linking.match_globdef match_fundef match_varinfo CTX) ge tge)
-  :
-    symbols_inject (Mem.flat_inj ge.(Genv.genv_next)) ge tge
-.
+      (MGE: Genv.match_genvs (Linking.match_globdef match_fundef match_varinfo CTX) ge tge):
+    symbols_inject (Mem.flat_inj ge.(Genv.genv_next)) ge tge.
 Proof.
   inv MGE. rr. s.
   unfold Mem.flat_inj, Genv.public_symbol, Genv.find_symbol, Genv.block_is_volatile, Genv.find_var_info, Genv.find_def.
   splits; ss.
-  - i. specialize (mge_symb id). rewrite mge_symb. des_ifs.
-    rewrite mge_pubs. ss.
+  - i. specialize (mge_symb id). rewrite mge_symb. des_ifs. rewrite mge_pubs. ss.
   - i. des_ifs. split; ss. specialize (mge_symb id). rewrite mge_symb. des_ifs.
   - i. des_ifs_safe. des_sumbool. exploit Genv.genv_symb_range; eauto. intro T.
     des_ifs. esplits; eauto. specialize (mge_symb id). congruence.
@@ -541,10 +536,8 @@ Lemma symbols_inject_incr
       (SYMBINJ: symbols_inject j se tse)
       (INCR: inject_incr j j')
       (SAME: forall b b' delta, Plt b (Senv.nextblock se) -> j' b = Some(b', delta) -> j b = Some(b', delta))
-      (SAME': forall b b' delta, Plt b' (Senv.nextblock tse) -> j' b = Some(b', delta) -> j b = Some (b', delta))
-  :
-    <<SYMBINJ: symbols_inject j' se tse>>
-.
+      (SAME': forall b b' delta, Plt b' (Senv.nextblock tse) -> j' b = Some(b', delta) -> j b = Some (b', delta)):
+    <<SYMBINJ: symbols_inject j' se tse>>.
 Proof.
   rr in SYMBINJ. des. rr. esplits; ss.
   * i. eapply SYMBINJ0; eauto. erewrite <- SAME; ss. eapply Senv.find_symbol_below; eauto.
@@ -833,17 +826,14 @@ Proof.
   exploit eventval_match_inject_2; eauto. intros (v2 & X & Y).
   rewrite Ptrofs.add_zero. exists (Val.load_result chunk v2); split.
   econs; auto. destruct (D _ _ _ H5) as [|[]].
-  rewrite H2. assumption.
-  congruence.
+  rewrite H2. assumption. congruence.
   apply Val.load_result_inject. auto.
 - (* normal load *)
   exploit Mem.loadv_inject; eauto. simpl; eauto. simpl; intros (v2 & X & Y).
   exists v2; split; auto.
-  constructor; auto.
-  inv VI.
+  constructor; auto. inv VI.
   destruct (D _ _ _ H4) as [|[]]. congruence.
-  exfalso. eapply H2.
-  eapply Mem.load_valid_access in H0. destruct H0. eapply H0.
+  exfalso. eapply H2. eapply Mem.load_valid_access in H0. destruct H0. eapply H0.
   split. reflexivity. set (size_chunk_pos chunk). omega.
 Qed.
 
@@ -980,10 +970,8 @@ Proof.
 - (* volatile store *)
   inv AI. exploit Q; eauto. intros [A B]. subst delta.
   rewrite Ptrofs.add_zero. exists m1'; split.
-  constructor; auto.
-  destruct (S _ _ _ H5) as [|[]].
-  rewrite H2. assumption.
-  congruence.
+  constructor; auto. destruct (S _ _ _ H5) as [|[]].
+  rewrite H2. assumption. congruence.
   eapply eventval_match_inject; eauto. apply Val.load_result_inject. auto.
   intuition auto with mem.
 - (* normal store *)
@@ -991,12 +979,10 @@ Proof.
   assert (Mem.storev chunk m1 (Vptr b ofs) v = Some m2). simpl; auto.
   exploit Mem.storev_mapped_inject; eauto. intros [m2' [A B]].
   exists m2'; intuition auto.
-+ constructor; auto.
-  destruct (S _ _ _ H4) as [|[]].
++ constructor; auto. destruct (S _ _ _ H4) as [|[]].
   rewrite H2. auto.
   exfalso. eapply H3. eapply Mem.store_valid_access_3 in H1.
-  destruct H1. eapply H1.
-  split. reflexivity. set (size_chunk_pos chunk). omega.
+  destruct H1. eapply H1. split. reflexivity. set (size_chunk_pos chunk). omega.
 + eapply Mem.store_unchanged_on; eauto.
   unfold loc_unmapped; intros. inv AI; congruence.
 + eapply Mem.store_unchanged_on; eauto.

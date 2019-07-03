@@ -1908,11 +1908,9 @@ Inductive match_stackframes: list RTL.stackframe -> list LTL.stackframe -> signa
       forall (MAINARGS: main_args = false),
       sg.(sig_res) = Some Tint ->
       match_stackframes nil nil sg
-  | match_stackframes_dummy: forall
-      sg sg_init ls_init
+  | match_stackframes_dummy: forall sg sg_init ls_init
       (MAINARGS: main_args = true)
-      (SAMERES: sg_init.(sig_res) = sg.(sig_res))
-    ,
+      (SAMERES: sg_init.(sig_res) = sg.(sig_res)),
       match_stackframes nil [(dummy_stack sg_init ls_init)] sg
   | match_stackframes_cons:
       forall res f sp pc rs s tf bb ls ts sg an e env
@@ -2375,8 +2373,7 @@ Proof.
   eapply star_trans. eexact A1.
   eapply star_left. econstructor.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved. eauto.
-  eauto.
+  eapply external_call_symbols_preserved; eauto.
   instantiate (1 := ls2); auto.
   eapply star_right. eexact A3.
   econstructor.
@@ -2535,8 +2532,7 @@ Lemma final_states_simulation:
 Proof.
   intros. inv H0. inv H. inv STACKS.
   econstructor. rewrite <- (loc_result_exten sg). inv RES; auto.
-  rewrite H; auto.
-  inv MAINARGS.
+  rewrite H; auto. inv MAINARGS.
 Qed.
 
 Lemma wt_prog: wt_program prog.

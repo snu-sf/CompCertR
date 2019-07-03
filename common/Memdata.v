@@ -819,8 +819,7 @@ Lemma proj_bytes_not_inject:
 Proof.
   induction 1; simpl; intros.
   congruence.
-  des_ifs_safe.
-  des_ifs; eauto.
+  des_ifs_safe. des_ifs; eauto.
   - exploit IHlist_forall2; ss; eauto. i; des; esplits; eauto.
   - inv H. eauto.
 Qed.
@@ -850,18 +849,13 @@ Proof.
   intros; unfold proj_value.
   destruct vl; auto. destruct m; auto.
   des_ifs. ss. des; ss; clarify. destruct q1; ss.
-  - repeat (des_ifs_safe; simpl_bool; des; des_sumbool; clarify).
-    ss. des; clarify.
-  - repeat (des_ifs_safe; simpl_bool; des; des_sumbool; clarify).
-    ss. des; clarify.
+  all: repeat (des_ifs_safe; simpl_bool; des; des_sumbool; clarify); ss; des; clarify.
 Qed.
 
 Lemma proj_value_undef_or_vundef:
   forall q1 vl, (In Undef vl) \/ (exists q0 n, In (Fragment Vundef q0 n) vl) -> proj_value q1 vl = Vundef.
 Proof.
-  i; des.
-  eapply proj_value_undef; eauto.
-  eapply proj_value_vundef; eauto.
+  i; des. eapply proj_value_undef; eauto. eapply proj_value_vundef; eauto.
 Qed.
 
 Theorem decode_val_inject:
@@ -970,8 +964,7 @@ Lemma memval_lessdef_inject_compose:
   memval_inject f v1 v3.
 Proof.
   intros. inv H; inv H0; try (by econs; eauto); rewrite val_inject_id in *.
-  - inv H1; econs; eauto.
-  - inv H1; econs; eauto.
+  all: inv H1; econs; eauto.
 Qed.
 
 Lemma memval_inject_lessdef_compose:

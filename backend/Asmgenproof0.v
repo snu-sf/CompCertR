@@ -602,8 +602,7 @@ Inductive return_address_offset (f: Mach.function) (c: Mach.code) (ofs: ptrofs) 
     tf tc
     (TF: transf_function f = OK tf)
     (TC: transl_code f c false = OK tc)
-    (TL: code_tail (Ptrofs.unsigned ofs) (fn_code tf) tc)
-.
+    (TL: code_tail (Ptrofs.unsigned ofs) (fn_code tf) tc).
 
 (** We now show that such an offset always exists if the Mach code [c]
   is a suffix of [f.(fn_code)].  This holds because the translation
@@ -623,12 +622,10 @@ Section RETADDR_EXISTS.
 Variable f: Mach.function.
 Variable tf: Asm.function.
 Hypothesis transf_function_success: transf_function f = OK tf.
-Hypothesis transl_instr_tail:
-  forall i ep k c, transl_instr f i ep k = OK c -> is_tail k c.
+Hypothesis transl_instr_tail: forall i ep k c, transl_instr f i ep k = OK c -> is_tail k c.
 Hypothesis transf_function_inv:
   exists tc, exists ep, transl_code f (Mach.fn_code f) ep = OK tc /\ is_tail tc (fn_code tf).
-Hypothesis transf_function_len:
-  list_length_z (fn_code tf) <= Ptrofs.max_unsigned.
+Hypothesis transf_function_len: list_length_z (fn_code tf) <= Ptrofs.max_unsigned.
 
 Lemma transl_code_tail:
   forall c1 c2, is_tail c1 c2 ->
@@ -646,8 +643,7 @@ Lemma return_address_exists:
   forall sg ros c, is_tail (Mcall sg ros :: c) f.(Mach.fn_code) ->
   exists ra, return_address_offset f c ra.
 Proof.
-  intros.
-+ hexploit transf_function_inv; eauto. intros (tc1 & ep1 & TR1 & TL1).
+  intros. hexploit transf_function_inv; eauto. intros (tc1 & ep1 & TR1 & TL1).
   exploit transl_code_tail; eauto. intros (tc2 & ep2 & TR2 & TL2).
 Opaque transl_instr.
   monadInv TR2.
@@ -658,8 +654,7 @@ Opaque transl_instr.
   exploit is_tail_code_tail. eexact TL3. intros [ofs CT].
   exists (Ptrofs.repr ofs). econs; eauto.
   rewrite Ptrofs.unsigned_repr. esplits; eauto.
-  exploit code_tail_bounds_1; eauto.
-  omega.
+  exploit code_tail_bounds_1; eauto. omega.
 Qed.
 
 End RETADDR_EXISTS.
@@ -931,8 +926,7 @@ Lemma parent_sp_def: forall s, match_stack s -> parent_sp s <> Vundef.
 Proof.
   induction 1; simpl.
   unfold Vnullptr; destruct Archi.ptr64; congruence.
-  auto.
-  auto.
+  auto. auto.
 Qed.
 
 Lemma lessdef_parent_sp:

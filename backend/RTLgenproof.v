@@ -1348,8 +1348,7 @@ Proof.
   econstructor; eauto. constructor.
 
   (* call *)
-  clear H2.
-  inv TS; inv H.
+  clear H2. inv TS; inv H.
   (* indirect *)
   exploit transl_expr_correct; eauto.
   intros [rs' [tm' [A [B [C [D X]]]]]].
@@ -1367,13 +1366,11 @@ Proof.
   econstructor; split.
   left; eapply plus_right. eexact E.
   eapply exec_Icall; eauto. simpl. rewrite symbols_preserved. rewrite H4.
-  econs; eauto.
-  traceEq.
+  econs; eauto. traceEq.
   constructor; auto. econstructor; eauto.
 
   (* tailcall *)
-  clear H2.
-  inv TS; inv H.
+  clear H2. inv TS; inv H.
   (* indirect *)
   exploit transl_expr_correct; eauto.
   intros [rs' [tm' [A [B [C [D X]]]]]].
@@ -1398,8 +1395,7 @@ Proof.
   econstructor; split.
   left; eapply plus_right. eexact E.
   eapply exec_Itailcall; eauto. simpl. rewrite symbols_preserved. rewrite H5.
-  { econs; eauto. }
-  rewrite H; eauto.
+  econs; eauto. rewrite H; eauto.
   traceEq.
   constructor; auto.
 
@@ -1517,8 +1513,7 @@ Proof.
                           <<FPTR: Genv.find_funct tge tfptr = Some tf>>).
   { exploit functions_translated; eauto. i; des. esplits; eauto.
     exploit Genv.find_funct_inv; eauto. i; des. clarify. inv FPTR0. ss. }
-  des.
-  monadInv TF. exploit transl_function_charact; eauto. intro TRF.
+  des. monadInv TF. exploit transl_function_charact; eauto. intro TRF.
   inversion TRF. subst f0.
   pose (e := set_locals (fn_vars f) (set_params vargs (CminorSel.fn_params f))).
   pose (rs := init_regs targs rparams).
@@ -1529,8 +1524,7 @@ Proof.
     exploit (add_vars_valid (CminorSel.fn_params f)); eauto. intros [A B].
     eapply add_vars_wf; eauto. eapply add_vars_wf; eauto. apply init_mapping_wf.
   edestruct Mem.alloc_extends as [tm' []]; eauto; try apply Z.le_refl.
-  clarify. simpl.
-  econstructor; split.
+  clarify. simpl. econstructor; split.
   left; apply plus_one. eapply exec_function_internal; simpl; eauto.
   simpl. econstructor; eauto.
   econstructor; eauto.
@@ -1541,8 +1535,7 @@ Proof.
                           <<FPTR: Genv.find_funct tge tfptr = Some tf>>).
   { exploit functions_translated; eauto. i; des. esplits; eauto.
     exploit Genv.find_funct_inv; eauto. i; des. clarify. inv FPTR0. ss. }
-  des.
-  monadInv TF.
+  des. monadInv TF.
   edestruct external_call_mem_extends as [tvres [tm' [A [B [C D]]]]]; eauto.
   econstructor; split.
   left; apply plus_one. eapply exec_function_external; eauto.
@@ -1573,10 +1566,9 @@ Lemma transl_initial_states:
 Proof.
   induction 1.
   econstructor; split.
-  econstructor. apply (Genv.init_mem_transf_partial TRANSL); eauto.
+  econstructor; auto. apply (Genv.init_mem_transf_partial TRANSL); eauto.
   replace (prog_main tprog) with (prog_main prog). erewrite symbols_preserved; eauto.
   symmetry; eapply match_program_main; eauto.
-  auto. auto.
   constructor. auto. constructor.
   constructor. constructor. apply Mem.extends_refl.
 Qed.

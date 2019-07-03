@@ -498,3 +498,28 @@ Inductive final_state: state -> int -> Prop :=
 
 Definition semantics (p: program) :=
   Semantics step (initial_state p) final_state (Genv.globalenv p).
+
+Lemma alloc_variables_nextblock: forall e1 m1 vars e2 m2,
+  alloc_variables e1 m1 vars e2 m2 -> Ple (Mem.nextblock m1) (Mem.nextblock m2).
+Proof.
+  induction 1.
+  - apply Ple_refl.
+  - eapply Ple_trans; eauto. exploit Mem.nextblock_alloc; eauto. intros EQ; rewrite EQ. apply Ple_succ.
+Qed.
+
+Lemma alloc_variables_unchanged_on: forall e m l e' m' P,
+    alloc_variables e m l e' m' -> Mem.unchanged_on P m m'.
+Proof.
+  induction 1; intros.
+  - eapply Mem.unchanged_on_refl.
+  - eapply Mem.unchanged_on_trans; eauto. eapply Mem.alloc_unchanged_on; eauto.
+Qed.
+
+Lemma alloc_variables_perm: forall e m l e' m' b i k p,
+    Mem.valid_block m b -> alloc_variables e m l e' m' ->
+    Mem.perm m' b i k p -> Mem.perm m b i k p.
+Proof.
+  induction 2; intros; eauto. eapply Mem.perm_alloc_4; eauto.
+  - eapply IHalloc_variables; eauto. eapply Mem.valid_block_alloc; eauto.
+  - unfold not. intros. subst b1. exploit Mem.fresh_block_alloc; eauto.
+Qed.

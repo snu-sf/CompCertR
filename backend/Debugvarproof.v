@@ -296,8 +296,7 @@ Section CORELEMMA.
 
 Variable se tse: Senv.t.
 Hypothesis (MATCH_SENV: Senv.equiv se tse).
-Variable ge : genv.
-Variable tge : genv.
+Variable ge tge: genv.
 
 Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun _ f tf => transf_fundef f = OK tf) eq prog) ge tge).
 
@@ -566,8 +565,7 @@ Proof.
   apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  apply transf_step_correct; auto.
-  apply senv_preserved; eauto.
+  apply transf_step_correct; auto. apply senv_preserved; eauto.
 Qed.
 
 End WHOLE.

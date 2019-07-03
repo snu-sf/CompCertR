@@ -1686,13 +1686,12 @@ Lemma add_global_match:
   R g1 g2 ->
   match_genvs (add_global ge1 (id, g1)) (add_global ge2 (id, g2)).
 Proof.
-  intros. destruct H. constructor; simpl; intros.
+  intros. destruct H. constructor; simpl; intros; auto.
 - congruence.
 - rewrite mge_next0, ! PTree.gsspec. destruct (peq id0 id); auto.
 - rewrite mge_next0, ! PTree.gsspec. destruct (peq b (genv_next ge1)).
   constructor; auto.
   auto.
-- auto.
 Qed.
 
 Lemma add_globals_match:
@@ -2092,10 +2091,8 @@ Lemma find_funct_lessdef
       {F V} (ge: Genv.t F V)
       fptr tfptr f
       (FPTR: Genv.find_funct ge fptr = Some f)
-      (LD: Val.lessdef fptr tfptr)
-  :
-    <<EQ: fptr = tfptr>>
-.
+      (LD: Val.lessdef fptr tfptr):
+    <<EQ: fptr = tfptr>>.
 Proof.
   exploit Genv.find_funct_inv; eauto. i; des. clarify. inv LD; ss.
 Qed.
@@ -2111,8 +2108,7 @@ Inductive genv_compat {F V} (ge: Genv.t (AST.fundef F) V) (p: program (AST.funde
               end))
     (FIND_MAP_INV: forall id b g,
         (Genv.find_symbol ge id = Some b /\ Genv.find_def ge b = Some g) ->
-        p.(prog_defmap) ! id = Some g)
-.
+        p.(prog_defmap) ! id = Some g).
 
 Lemma genv_compat_match {F V} (p: program (AST.fundef F) V) : genv_compat (Genv.globalenv p) p.
 Proof.
@@ -2125,14 +2121,11 @@ Qed.
 Inductive senv_genv_compat {F V} (se: Senv.t) (ge: Genv.t F V): Prop :=
 | senv_genv_compat_intro
     (INCL: forall id blk (SYMB: Genv.find_symbol ge id = Some blk), <<SYMB: Senv.find_symbol se id = Some blk>>)
-    (NB: se.(Senv.nextblock) = ge.(Genv.genv_next))
-.
+    (NB: se.(Senv.nextblock) = ge.(Genv.genv_next)).
 
 Lemma senv_genv_compat_refl
-      F V (ge: Genv.t F V)
-  :
-    senv_genv_compat ge ge
-.
+      F V (ge: Genv.t F V):
+    senv_genv_compat ge ge.
 Proof. econs; eauto. Qed.
 
 Hint Resolve senv_genv_compat_refl.

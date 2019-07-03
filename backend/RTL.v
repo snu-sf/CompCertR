@@ -193,8 +193,7 @@ Definition find_function_ptr (ros: reg + ident) (rs: regset) : val :=
     | Some b => (Vptr b Ptrofs.zero)
     | None => Vundef
     end
-  end
-.
+  end.
 
 (** The transitions are presented as an inductive predicate
   [step ge st1 t st2], where [ge] is the global environment,
@@ -232,9 +231,7 @@ Inductive step: state -> trace -> state -> Prop :=
       (fn_code f)!pc = Some(Icall sig ros args res pc') ->
       DUMMY_PROP ->
       DUMMY_PROP ->
-      forall
-      (FPTR: find_function_ptr ros rs m= fptr)
-      ,
+      forall (FPTR: find_function_ptr ros rs m= fptr),
       step (State s f sp pc rs m)
         E0 (Callstate (Stackframe res f sp pc' rs :: s) fptr sig rs##args m)
   | exec_Itailcall:
@@ -242,9 +239,7 @@ Inductive step: state -> trace -> state -> Prop :=
       (fn_code f)!pc = Some(Itailcall sig ros args) ->
       DUMMY_PROP ->
       DUMMY_PROP ->
-      forall
-      (FPTR: find_function_ptr ros rs m= fptr)
-      ,
+      forall (FPTR: find_function_ptr ros rs m= fptr),
       Mem.free m stk 0 f.(fn_stacksize) = Some m' ->
       step (State s f (Vptr stk Ptrofs.zero) pc rs m)
         E0 (Callstate s fptr sig rs##args m')
@@ -278,8 +273,7 @@ Inductive step: state -> trace -> state -> Prop :=
   | exec_function_internal:
       forall s f fptr sg args m m' stk
       (FPTR: Genv.find_funct ge fptr = Some (Internal f))
-      (SIG: funsig (Internal f) = sg)
-      ,
+      (SIG: funsig (Internal f) = sg),
       Mem.alloc m 0 f.(fn_stacksize) = (m', stk) ->
       step (Callstate s fptr sg args m)
         E0 (State s
@@ -291,8 +285,7 @@ Inductive step: state -> trace -> state -> Prop :=
   | exec_function_external:
       forall s ef fptr sg args res t m m'
       (FPTR: Genv.find_funct ge fptr = Some (External ef))
-      (SIG: funsig (External ef) = sg)
-      ,
+      (SIG: funsig (External ef) = sg),
       external_call ef se args m t res m' ->
       step (Callstate s fptr sg args m)
          t (Returnstate s res m')
@@ -592,5 +585,4 @@ Definition get_mem (st: state): mem :=
   | State _ _ _ _ _ m0 => m0
   | Callstate _ _ _ _ m0 => m0
   | Returnstate _ _ m0 => m0
-  end
-.
+  end.

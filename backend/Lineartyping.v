@@ -280,12 +280,9 @@ Section SOUNDNESS.
 Variable prog: program.
 Variable se: Senv.t.
 Variable ge: genv.
-Hypothesis CONTAINED: forall
-    fptr f
-    (FINDF: Genv.find_funct ge fptr = Some f)
-  ,
-    exists i, In (i, Gfun f) (prog_defs prog)
-.
+Hypothesis CONTAINED: forall fptr f
+    (FINDF: Genv.find_funct ge fptr = Some f),
+    exists i, In (i, Gfun f) (prog_defs prog).
 
 Hypothesis wt_prog:
   forall i fd, In (i, Gfun fd) prog.(prog_defs) -> wt_fundef fd.
@@ -295,9 +292,7 @@ Lemma wt_find_funct:
 Proof.
   intros.
   assert (X: exists i, In (i, Gfun f) prog.(prog_defs)).
-  {
-    eauto.
-  }
+  { eauto. }
   destruct X as [i IN]. eapply wt_prog; eauto.
 Qed.
 

@@ -540,16 +540,14 @@ Inductive step: state -> trace -> state -> Prop :=
 
   | step_internal_function: forall fptr sg f vargs k m m' sp e
      (FPTR: Genv.find_funct ge fptr = Some (Internal f))
-     (SIG: f.(fn_sig) = sg)
-    ,
+     (SIG: f.(fn_sig) = sg),
       Mem.alloc m 0 f.(fn_stackspace) = (m', sp) ->
       set_locals f.(fn_vars) (set_params vargs f.(fn_params)) = e ->
       step (Callstate fptr sg vargs k m)
         E0 (State f f.(fn_body) k (Vptr sp Ptrofs.zero) e m')
   | step_external_function: forall fptr sg ef vargs k m t vres m'
      (FPTR: Genv.find_funct ge fptr = Some (External ef))
-     (SIG: ef.(ef_sig) = sg)
-    ,
+     (SIG: ef.(ef_sig) = sg),
       external_call ef se vargs m t vres m' ->
       step (Callstate fptr sg vargs k m)
          t (Returnstate vres k m')
@@ -942,7 +940,6 @@ Proof.
   assert (call_cont k = k) by (apply call_cont_is_call_cont; auto).
   eapply star_left. econstructor; eauto.
   eapply star_trans. eexact A.
-  rewrite <- SIG.
   inversion B; clear B; subst out; simpl in H3; simpl; try contradiction.
   (* Out normal *)
   subst vres. apply star_one. apply step_skip_call; auto.
@@ -1089,8 +1086,7 @@ Lemma eval_funcall_steps:
    eval_funcall ge ge m fd args t m' res ->
    forall fptr sg k
    (FPTR: Genv.find_funct ge fptr = Some fd)
-   (SIG: funsig fd = sg)
-   ,
+   (SIG: funsig fd = sg),
    is_call_cont k ->
    star step ge ge (Callstate fptr sg args k m)
               t (Returnstate res k m').

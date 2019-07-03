@@ -2189,11 +2189,9 @@ Proof with (unfold ret; eauto with coqlib).
   rewrite H0...
 
   (* Call step *)
-  rewrite FPTR.
-  repeat rewrite pred_dec_true; eauto. rewrite (do_alloc_variables_complete _ _ _ _ _ H1).
+  rewrite FPTR. repeat rewrite pred_dec_true; eauto. rewrite (do_alloc_variables_complete _ _ _ _ _ H1).
   rewrite (sem_bind_parameters_complete _ _ _ _ _ _ H2)...
-  rewrite FPTR.
-  repeat rewrite pred_dec_true; eauto.
+  rewrite FPTR. repeat rewrite pred_dec_true; eauto.
   exploit do_ef_external_complete; eauto. intro EQ; rewrite EQ. auto with coqlib.
 Qed.
 

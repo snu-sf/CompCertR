@@ -39,8 +39,7 @@ Section CORELEMMA.
 
 Variable se tse: Senv.t.
 Hypothesis (MATCH_SENV: Senv.equiv se tse).
-Variable ge : genv.
-Variable tge : genv.
+Variable ge tge: genv.
 
 (** * Correctness of the code transformation *)
 
@@ -112,8 +111,7 @@ Proof.
   destruct (areg ae r); auto. destruct p; auto.
   predSpec Ptrofs.eq Ptrofs.eq_spec ofs Ptrofs.zero; intros; auto.
   subst ofs. exploit vmatch_ptr_gl; eauto. intros LD'. inv LD'; try discriminate.
-  + unfold Genv.symbol_address in H1.
-    simpl. rewrite symbols_preserved.
+  + unfold Genv.symbol_address in H1. simpl. rewrite symbols_preserved.
     destruct (Genv.find_symbol ge id) as [b|]; eauto.
   + rewrite <- H0 in *; eauto.
 - (* function symbol *)
@@ -458,8 +456,7 @@ Proof.
   TransfInstr; intro.
   left; econstructor; econstructor; split.
   eapply exec_Icall; eauto. instantiate (1 := tfptr). rewrite <- FIND. apply my_eq_refl.
-  constructor; auto. inversion FPTR. eauto.
-  econstructor; eauto.
+  constructor; auto. inversion FPTR. eauto. econstructor; eauto.
   econstructor; eauto.
   apply regs_lessdef_regs; auto.
 

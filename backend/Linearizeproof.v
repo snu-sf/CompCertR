@@ -92,10 +92,8 @@ Lemma find_function_ptr_translated:
   forall ros ls,
   LTL.find_function_ptr ge ros ls = find_function_ptr tge ros ls.
 Proof.
-  unfold LTL.find_function_ptr; intros; destruct ros; simpl.
-  auto.
-  rewrite symbols_preserved. destruct (Genv.find_symbol ge i).
-  auto. auto.
+  unfold LTL.find_function_ptr; intros; destruct ros; simpl. auto.
+  rewrite symbols_preserved. destruct (Genv.find_symbol ge i). auto. auto.
 Qed.
 
 (** * Correctness of reachability analysis *)
@@ -748,8 +746,7 @@ Proof.
   apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  apply transf_step_correct; auto.
-  eapply senv_preserved; eauto.
+  apply transf_step_correct; auto. eapply senv_preserved; eauto.
 Qed.
 
 End WHOLE.

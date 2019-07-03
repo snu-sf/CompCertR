@@ -102,8 +102,7 @@ Definition find_function_ptr (ros: mreg + ident) (rs: locset) : val :=
     | Some b => (Vptr b Ptrofs.zero)
     | None => Vundef
     end
-  end
-.
+  end.
 
 (** Linear execution states. *)
 
@@ -178,16 +177,14 @@ Inductive step: state -> trace -> state -> Prop :=
         E0 (State s f sp b rs' m')
   | exec_Lcall:
       forall s f sp sig ros b rs m fptr
-      (FPTR: find_function_ptr ros rs m= fptr)
-      ,
+      (FPTR: find_function_ptr ros rs m= fptr),
       DUMMY_PROP ->
       DUMMY_PROP ->
       step (State s f sp (Lcall sig ros :: b) rs m)
         E0 (Callstate (Stackframe f sp rs b:: s) fptr sig rs m)
   | exec_Ltailcall:
       forall s f stk sig ros b rs m rs' fptr m'
-      (FPTR: find_function_ptr ros rs' m= fptr)
-      ,
+      (FPTR: find_function_ptr ros rs' m= fptr),
       rs' = return_regs (parent_locset s) rs ->
       DUMMY_PROP ->
       DUMMY_PROP ->
@@ -239,8 +236,7 @@ Inductive step: state -> trace -> state -> Prop :=
   | exec_function_internal:
       forall s fptr sg f rs m rs' m' stk
       (FPTR: Genv.find_funct ge fptr = Some (Internal f))
-      (SIG: sg = funsig (Internal f))
-      ,
+      (SIG: sg = funsig (Internal f)),
       Mem.alloc m 0 f.(fn_stacksize) = (m', stk) ->
       rs' = undef_regs destroyed_at_function_entry (call_regs rs) ->
       step (Callstate s fptr sg rs m)
@@ -248,8 +244,7 @@ Inductive step: state -> trace -> state -> Prop :=
   | exec_function_external:
       forall s fptr sg ef args res rs1 rs2 m t m'
       (FPTR: Genv.find_funct ge fptr = Some (External ef))
-      (SIG: sg = funsig (External ef))
-      ,
+      (SIG: sg = funsig (External ef)),
       args = map (fun p => Locmap.getpair p rs1) (loc_arguments (ef_sig ef)) ->
       external_call ef se args m t res m' ->
       rs2 = Locmap.setpair (loc_result (ef_sig ef)) res (undef_caller_save_regs rs1) ->

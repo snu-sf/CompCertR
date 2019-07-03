@@ -389,8 +389,7 @@ Section CORELEMMA.
 
 Variable (se tse: Senv.t).
 Hypothesis (MATCH_SENV: Senv.equiv se tse).
-Variable ge : genv.
-Variable tge : genv.
+Variable ge tge: genv.
 
 Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => transf_fundef (romem_for cu) f = OK tf) eq prog) ge tge).
 
@@ -1166,8 +1165,7 @@ Proof.
   destruct H0 as [su0 SS].
   assert (sound_state prog ge su0 s1') by (eapply sound_step; eauto).
   fold ge; fold tge. exploit step_simulation; eauto. { apply senv_preserved; eauto. } intros [st2' [A B]].
-  exists st2'; auto.
-  esplits; eauto.
+  exists st2'; auto. esplits; eauto.
 Qed.
 
 End WHOLE.

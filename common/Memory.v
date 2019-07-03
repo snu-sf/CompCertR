@@ -4453,7 +4453,7 @@ Proof.
   simpl. auto.
 Qed.
 
-Remark free_list_nextblock:
+Lemma free_list_nextblock:
   forall l m m',
   free_list m l = Some m' -> nextblock m' = nextblock m.
 Proof.

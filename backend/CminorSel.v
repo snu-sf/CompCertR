@@ -436,16 +436,14 @@ Inductive step: state -> trace -> state -> Prop :=
 
   | step_internal_function: forall f vargs k m m' sp e fptr sg
       (FPTR: Genv.find_funct ge fptr = Some (Internal f))
-      (SIG: funsig (Internal f) = sg)
-    ,
+      (SIG: funsig (Internal f) = sg),
       Mem.alloc m 0 f.(fn_stackspace) = (m', sp) ->
       set_locals f.(fn_vars) (set_params vargs f.(fn_params)) = e ->
       step (Callstate fptr sg vargs k m)
         E0 (State f f.(fn_body) k (Vptr sp Ptrofs.zero) e m')
   | step_external_function: forall ef vargs k m t vres m' fptr sg
       (FPTR: Genv.find_funct ge fptr = Some (External ef))
-      (SIG: funsig (External ef) = sg)
-    ,
+      (SIG: funsig (External ef) = sg),
       external_call ef se vargs m t vres m' ->
       step (Callstate fptr sg vargs k m)
          t (Returnstate vres k m')

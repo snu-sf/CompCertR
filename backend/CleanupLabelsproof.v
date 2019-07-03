@@ -39,8 +39,7 @@ Section CORELEMMA.
 
 Variable se tse: Senv.t.
 Hypothesis (MATCH_SENV: Senv.equiv se tse).
-Variable ge : genv.
-Variable tge : genv.
+Variable ge tge: genv.
 
 Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun ctx f tf => tf = transf_fundef f) eq prog) ge tge).
 
@@ -356,11 +355,9 @@ Lemma transf_initial_states:
 Proof.
   intros. inv H.
   econstructor; split.
-  eapply initial_state_intro.
+  eapply initial_state_intro; eauto.
   eapply (Genv.init_mem_transf TRANSL); eauto.
   erewrite (match_program_main TRANSL), symbols_preserved; eauto.
-  auto.
-  auto.
   constructor; auto. constructor.
 Qed.
 
@@ -378,8 +375,7 @@ Proof.
   apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  apply transf_step_correct; auto.
-  eapply senv_preserved; eauto.
+  apply transf_step_correct; auto. eapply senv_preserved; eauto.
 Qed.
 
 End WHOLE.

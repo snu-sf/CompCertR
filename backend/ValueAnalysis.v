@@ -423,11 +423,8 @@ Ltac splitall := repeat (match goal with |- _ /\ _ => split end).
 
 Definition bc2su (bc: block_classification) (ge_nb: block) (nb: block): Unreach.t :=
   Unreach.mk (fun blk => if plt blk nb
-                         then block_class_eq (bc blk) BCinvalid
-                         else false)
-             ge_nb
-             nb
-.
+                      then block_class_eq (bc blk) BCinvalid else false)
+             ge_nb nb.
 
 Hint Extern 999 => congruence : congruence.
 Hint Extern 1000 => xomega : xomega.
@@ -435,13 +432,9 @@ Hint Extern 1000 => xomega : xomega.
 Lemma pos_le_lt_tight
       x y
       (LE: Ple x y)
-      (LT: Plt y (Pos.succ x))
-  :
-    x = y
-.
-Proof.
-  xomega.
-Qed.
+      (LT: Plt y (Pos.succ x)):
+    x = y.
+Proof. xomega. Qed.
 
 Theorem allocate_stack:
   forall m sz m' sp bc F V (ge: Genv.t F V) rm am,
@@ -535,11 +528,8 @@ Proof.
   simpl; intros. apply dec_eq_false. apply Plt_ne. auto.
 - (* values *)
   intros. apply vmatch_incr with bc; auto. eapply vmatch_no_stack; eauto.
-- subst.
-  unfold bc2su.
-  rr. ss. rewrite NB. esplits; ss.
+- subst. unfold bc2su. rr. ss. rewrite NB. esplits; ss; try xomega.
   + ii. des_ifs; xomega.
-  + xomega.
 Qed.
 
 (** Construction 2: turn the stack into an "other" block, at public calls or function returns *)
@@ -774,14 +764,10 @@ Proof.
     intros. destruct H; split; intros. eapply VM; eauto. eapply PM; eauto.
   }
   assert(GESAME: forall b id, caller b = BCglob id <-> bc b = BCglob id).
-  { i. s. des_ifs.
-    { intuition. }
-    split; i.
+  { i. s. des_ifs; try by intuition. split; i.
     - rewrite <- SAME; ss. apply BELOW. rewrite H; ss.
     - assert(caller b = BCglob id).
-      { clear - GE1 GE2 H n.
-        rr in GE1. rr in GE2. des.
-        destruct id.
+      { clear - GE1 GE2 H n. rr in GE1. rr in GE2. des. destruct id.
         - apply GE1. apply GE2. eauto.
         - exploit GE3; eauto. i. exploit GE4; eauto. i; des. destruct id; ss.
           apply GE1 in H1. apply GE2 in H1. congruence.
@@ -959,10 +945,8 @@ Proof.
   (* Part 1: using ec_mem_inject *)
   exploit (@external_call_mem_inject_gen ef se se vargs m t vres m' (inj_of_bc bc) m vargs).
   { exploit inj_of_bc_preserves_globals; eauto. intro GEINJ. rr in GENV. rr in GEINJ. des. rr. unfold inj_of_bc. inv SEGE.
-    esplits; eauto.
-    - i. des_ifs.
-    - i. esplits; eauto. des_ifs. exploit (GENV0 b1); eauto. { rewrite <- NB. eapply Senv.find_symbol_below; eauto. } i; des. congruence.
-    - i. des_ifs.
+    esplits; eauto; i; try by des_ifs.
+    esplits; eauto. des_ifs. exploit (GENV0 b1); eauto. { rewrite <- NB. eapply Senv.find_symbol_below; eauto. } i; des. congruence.
   }
   exact EC.
   eapply mmatch_inj; eauto. eapply mmatch_below; eauto.
@@ -1103,8 +1087,7 @@ Inductive sound_stack (su: Unreach.t): block_classification -> list stackframe -
         (GE: genv_match bc' ge)
         (AN: VA.ge (analyze rm f)!!pc (VA.State (AE.set res Vtop ae) mafter_public_call))
         (EM: ematch bc' e ae)
-        (LESU: Ple sp bound')
-      ,
+        (LESU: Ple sp bound'),
       sound_stack su bc (Stackframe res f (Vptr sp Ptrofs.zero) pc e :: stk) m bound
   | sound_stack_private_call:
      forall (bc: block_classification) res f sp pc e stk m bound bc' bound' ae am
@@ -1118,8 +1101,7 @@ Inductive sound_stack (su: Unreach.t): block_classification -> list stackframe -
         (AN: VA.ge (analyze rm f)!!pc (VA.State (AE.set res (Ifptr Nonstack) ae) (mafter_private_call am)))
         (EM: ematch bc' e ae)
         (CONTENTS: bmatch bc' m sp am.(am_stack))
-        (LESU: Ple sp bound')
-     ,
+        (LESU: Ple sp bound'),
       sound_stack su bc (Stackframe res f (Vptr sp Ptrofs.zero) pc e :: stk) m bound.
 
 Inductive sound_state_base (su: Unreach.t): state -> Prop :=
@@ -1133,8 +1115,7 @@ Inductive sound_state_base (su: Unreach.t): state -> Prop :=
         (GE: genv_match bc ge)
         (SP: bc sp = BCstack)
         (HLE: Unreach.hle su (bc2su bc ge.(Genv.genv_next) m.(Mem.nextblock)))
-        (WF: Unreach.wf su)
-      ,
+        (WF: Unreach.wf su),
       sound_state_base su (State s f (Vptr sp Ptrofs.zero) pc e m)
   | sound_call_state:
       forall s fptr sg args m bc
@@ -1145,8 +1126,7 @@ Inductive sound_state_base (su: Unreach.t): state -> Prop :=
         (GE: genv_match bc ge)
         (NOSTK: bc_nostack bc)
         (HLE: Unreach.hle su (bc2su bc ge.(Genv.genv_next) m.(Mem.nextblock)))
-        (WF: Unreach.wf su)
-      ,
+        (WF: Unreach.wf su),
       sound_state_base su (Callstate s fptr sg args m)
   | sound_return_state:
       forall s v m bc
@@ -1157,8 +1137,7 @@ Inductive sound_state_base (su: Unreach.t): state -> Prop :=
         (GE: genv_match bc ge)
         (NOSTK: bc_nostack bc)
         (HLE: Unreach.hle su (bc2su bc ge.(Genv.genv_next) m.(Mem.nextblock)))
-        (WF: Unreach.wf su)
-      ,
+        (WF: Unreach.wf su),
       sound_state_base su (Returnstate s v m).
 
 (** Properties of the [sound_stack] invariant on call stacks. *)
@@ -1176,11 +1155,9 @@ Proof.
 - constructor; ss.
 - assert (Plt sp bound') by eauto with va.
   eapply sound_stack_public_call; eauto. apply IHsound_stack; intros.
-  (* { ss. } *)
   apply INV. xomega. rewrite SAME; auto. xomega. auto. auto.
 - assert (Plt sp bound') by eauto with va.
   eapply sound_stack_private_call; eauto. apply IHsound_stack; intros.
-  (* { ss. } *)
   apply INV. xomega. rewrite SAME; auto. xomega. auto. auto.
   apply bmatch_ext with m; auto. intros. apply INV. xomega. auto. auto. auto.
 Qed.
@@ -1266,15 +1243,9 @@ Qed.
 
 Lemma sound_stack_unreach
       su bc stk m bound
-      (STK: sound_stack su bc stk m bound)
-  :
-    <<LE: Ple su.(Unreach.nb) bound>>
-.
-Proof.
-  induction STK; i; ss; des; r.
-  - etransitivity; eauto. etransitivity; eauto.
-  - etransitivity; eauto. etransitivity; eauto.
-Qed.
+      (STK: sound_stack su bc stk m bound):
+    <<LE: Ple su.(Unreach.nb) bound>>.
+Proof. induction STK; i; ss; des; r; etransitivity; eauto; etransitivity; eauto. Qed.
 
 (** ** Preservation of the semantic invariant by one step of execution *)
 
@@ -1300,15 +1271,9 @@ Qed.
 
 Lemma vmatch_sound
       bc blk ofs av
-      (VM: vmatch bc (Vptr blk ofs) av)
-  :
-    <<VALID: bc blk <> BCinvalid>>
-.
-Proof.
-  inv VM.
-  - inv H2; try congruence.
-  - inv H2; try congruence.
-Qed.
+      (VM: vmatch bc (Vptr blk ofs) av):
+    <<VALID: bc blk <> BCinvalid>>.
+Proof. inv VM; inv H2; try congruence. Qed.
 
 Ltac spl := split; cycle 1; [r; ss; try reflexivity|].
 
@@ -1319,19 +1284,16 @@ Proof.
   induction 1; intros SOUND; inv SOUND.
 
 - (* nop *)
-  spl.
-  eapply sound_succ_state; eauto. simpl; auto.
+  spl. eapply sound_succ_state; eauto. simpl; auto.
   unfold transfer; rewrite H. auto.
 
 - (* op *)
-  spl.
-  eapply sound_succ_state; eauto. simpl; auto.
+  spl. eapply sound_succ_state; eauto. simpl; auto.
   unfold transfer; rewrite H. eauto.
   apply ematch_update; auto. eapply eval_static_operation_sound; eauto with va.
 
 - (* load *)
-  spl.
-  eapply sound_succ_state; eauto. simpl; auto.
+  spl. eapply sound_succ_state; eauto. simpl; auto.
   unfold transfer; rewrite H. eauto.
   apply ematch_update; auto. eapply loadv_sound; eauto with va.
   eapply eval_static_addressing_sound; eauto with va.
@@ -1350,10 +1312,9 @@ Proof.
   { rpapply HLE. f_equal. unfold Mem.storev in *. des_ifs. exploit Mem.nextblock_store; eauto. }
 
 - (* call *)
-  spl.
   assert (TR: transfer f rm pc ae am = transfer_call ae am args res).
   { unfold transfer; rewrite H; auto. }
-  unfold transfer_call, analyze_call in TR.
+  spl. unfold transfer_call, analyze_call in TR.
   destruct (pincl (am_nonstack am) Nonstack &&
             forallb (fun av => vpincl av Nonstack) (aregs ae args)) eqn:NOLEAK.
 + (* private call *)
@@ -1482,8 +1443,7 @@ Proof.
 + (* volatile load *)
   inv H0; auto. inv H3; auto. inv H1.
   exploit abuiltin_arg_sound; eauto. intros VM1.
-  spl.
-  eapply sound_succ_state; eauto. simpl; auto.
+  spl. eapply sound_succ_state; eauto. simpl; auto.
   apply set_builtin_res_sound; auto.
   inv H3.
   * (* true volatile access *)
@@ -1504,8 +1464,7 @@ Proof.
   exploit abuiltin_arg_sound. eauto. eauto. eauto. eauto. eauto. eexact H2. intros VM2.
   inv H9.
   * (* true volatile access *)
-    spl.
-    eapply sound_succ_state; eauto. simpl; auto.
+    spl. eapply sound_succ_state; eauto. simpl; auto.
     apply set_builtin_res_sound; auto. constructor.
     apply mmatch_lub_l; auto.
   * (* normal memory access *)
@@ -1540,21 +1499,18 @@ Proof.
   inv H1. spl. eapply sound_succ_state; eauto. simpl; auto. apply set_builtin_res_sound; auto. constructor.
 + (* annot val *)
   inv H0; auto. inv H3; auto. inv H1.
-  spl.
-  eapply sound_succ_state; eauto. simpl; auto.
+  spl. eapply sound_succ_state; eauto. simpl; auto.
   apply set_builtin_res_sound; auto. eapply abuiltin_arg_sound; eauto.
 + (* debug *)
   inv H1. spl. eapply sound_succ_state; eauto. simpl; auto. apply set_builtin_res_sound; auto. constructor.
 
 - (* cond *)
-  spl.
-  eapply sound_succ_state; eauto.
+  spl. eapply sound_succ_state; eauto.
   simpl. destruct b; auto.
   unfold transfer; rewrite H; auto.
 
 - (* jumptable *)
-  spl.
-  eapply sound_succ_state; eauto.
+  spl. eapply sound_succ_state; eauto.
   simpl. eapply list_nth_z_in; eauto.
   unfold transfer; rewrite H; auto.
 
@@ -1626,8 +1582,7 @@ Proof.
    intros; rewrite SAME; auto.
    intros (bc1 & A & B & C & D & E & F & G).
    destruct (analyze rm f)#pc as [ |ae' am'] eqn:EQ; simpl in AN; try contradiction. destruct AN as [A1 A2].
-   spl.
-   eapply sound_regular_state with (bc := bc1); eauto.
+   spl. eapply sound_regular_state with (bc := bc1); eauto.
    apply sound_stack_exten with bc'; auto.
    eapply ematch_ge; eauto. apply ematch_update. auto. auto.
    { hexploit sound_stack_unreach; eauto. i; des.
@@ -1677,29 +1632,19 @@ End LINKING.
 
 
 Program Definition ske2bc {F} (ske: Genv.t F unit): block_classification :=
-  BC
-    (fun b =>
-       if plt b (Genv.genv_next ske) then
-         match Genv.invert_symbol ske b with None => BCglob None | Some id => BCglob (Some id) end
-       else
-         BCinvalid)
-    _ _
-.
+  BC (fun b =>
+        if plt b (Genv.genv_next ske) then
+          match Genv.invert_symbol ske b with None => BCglob None | Some id => BCglob (Some id) end
+        else BCinvalid) _ _.
+Next Obligation. des_ifs. Qed.
 Next Obligation.
-  des_ifs.
-Qed.
-Next Obligation.
-  des_ifs.
-  apply Genv.invert_find_symbol in Heq. apply Genv.invert_find_symbol in Heq0.
-  clarify.
+  des_ifs. apply Genv.invert_find_symbol in Heq. apply Genv.invert_find_symbol in Heq0. clarify.
 Qed.
 
 Lemma bc_eta
       bc0 bc1
-      (IMG: forall blk, bc0.(bc_img) blk = bc1.(bc_img) blk)
-  :
-    bc0 = bc1
-.
+      (IMG: forall blk, bc0.(bc_img) blk = bc1.(bc_img) blk):
+    bc0 = bc1.
 Proof.
   destruct bc0, bc1; ss.
   assert(bc_img = bc_img0).
@@ -2064,7 +2009,6 @@ Proof.
 Qed.
 
 End INITIAL.
-
 
 Require Import Axioms.
 

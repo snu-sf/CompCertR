@@ -271,8 +271,7 @@ Proof.
   apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  apply step_simulation; auto.
-  apply senv_preserved; auto.
+  apply step_simulation; auto. apply senv_preserved; auto.
 Qed.
 
 End WHOLE.

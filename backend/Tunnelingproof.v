@@ -146,8 +146,7 @@ Section CORELEMMA.
 
 Variable se tse: Senv.t.
 Hypothesis (MATCH_SENV: Senv.equiv se tse).
-Variable ge : genv.
-Variable tge : genv.
+Variable ge tge: genv.
 
 Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun ctx f tf => tf = tunnel_fundef f) eq prog) ge tge).
 
@@ -542,8 +541,7 @@ Proof.
   intros (tvres & tm' & A & B & C & D).
   left; simpl; econstructor; split.
   eapply exec_function_external. rewrite <- H. apply FPTR'. auto. eauto.
-  eapply external_call_symbols_preserved; eauto.
-  eauto.
+  eapply external_call_symbols_preserved; eauto. eauto.
   simpl. econstructor; eauto using locmap_setpair_lessdef, locmap_undef_caller_save_regs_lessdef.
 - (* return *)
   inv STK. inv H1.
@@ -573,8 +571,7 @@ Proof.
   apply (Genv.init_mem_transf TRANSL); auto.
   rewrite (match_program_main TRANSL).
   erewrite symbols_preserved; eauto.
-  constructor. constructor. red; simpl; auto. apply Mem.extends_refl.
-  auto.
+  constructor. constructor. red; simpl; auto. apply Mem.extends_refl. auto.
 Qed.
 
 Lemma transf_final_states:
@@ -594,8 +591,7 @@ Proof.
   apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  apply tunnel_step_correct; auto.
-  eapply senv_preserved; eauto.
+  apply tunnel_step_correct; auto. eapply senv_preserved; eauto.
 Qed.
 
 End WHOLE.

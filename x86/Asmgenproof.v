@@ -916,8 +916,7 @@ Proof.
   replace (Genv.symbol_address (Genv.globalenv tprog) (prog_main tprog) Ptrofs.zero)
      with (Vptr fb Ptrofs.zero).
   econstructor; eauto.
-  constructor.
-  auto.
+  constructor. auto.
   apply Mem.extends_refl.
   split. reflexivity. simpl.
   unfold Vnullptr; destruct Archi.ptr64; congruence.

@@ -1120,8 +1120,7 @@ Definition genv_match {F V} (ge: Genv.t F V) : Prop :=
 /\(forall b, bc b = BCglob None -> Plt b (Genv.genv_next ge)).
 
 Definition senv_match (se: Senv.t): Prop :=
-  forall b, bc b = BCglob None -> exists id, Senv.find_symbol se id = Some b
-.
+  forall b, bc b = BCglob None -> exists id, Senv.find_symbol se id = Some b.
 
 Lemma symbol_address_sound:
   forall F V (ge: Genv.t F V) id ofs,

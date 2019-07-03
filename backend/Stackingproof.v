@@ -66,19 +66,9 @@ Proof.
 Qed.
 
 Lemma load_stack_transf_ofs
-      m sp spofs ty ofs
-  :
-    <<EQ: load_stack m (Vptr sp spofs) ty ofs = load_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.add spofs ofs)>>
-.
+      m sp spofs ty ofs:
+    <<EQ: load_stack m (Vptr sp spofs) ty ofs = load_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.add spofs ofs)>>.
 Proof. red. cbn. rewrite Ptrofs.add_zero_l. ss. Qed.
-
-(* Lemma store_stack_transf_ofs *)
-(*       m sp spofs ty ofs v *)
-(*   : *)
-(*     <<EQ: store_stack m (Vptr sp spofs true) ty ofs v = store_stack m (Vptr sp Ptrofs.zero) ty (Ptrofs.add spofs ofs) v>> *)
-(* . *)
-(* Proof. red. cbn. rewrite Ptrofs.add_zero_l. ss. Qed. *)
-(* >>>>>>> 17ade0ce... Allocproof (#269) *)
 
 Section PRESERVATION.
 
@@ -985,10 +975,8 @@ Local Opaque mreg_type.
 - exists rs, m.
   split. apply star_refl.
   split. rewrite sep_pure; split; auto. eapply sep_drop; eauto.
-  split. auto.
-  split. eapply Mem.unchanged_on_refl.
-  split. auto.
-  auto.
+  split. auto. split. eapply Mem.unchanged_on_refl.
+  split. auto. auto.
 - set (ty := mreg_type r) in *.
   set (sz := AST.typesize ty) in *.
   set (pos1 := align pos sz) in *.
@@ -1021,10 +1009,10 @@ Local Opaque mreg_type.
   split. eapply star_left; eauto. constructor. exact STORE. auto. traceEq.
   split. rewrite sep_assoc, sep_swap. exact B.
   split. intros. apply C. unfold store_stack in STORE; simpl in STORE. eapply Mem.perm_store_1; eauto.
-  split. { eapply Mem.unchanged_on_trans; eauto. unfold store_stack, Mem.storev in *. ss. eapply Mem.store_unchanged_on; eauto.
-           ii. exploit EXT_TGT_BOUND; eauto. xomega. }
-  split. { ii. unfold store_stack, Mem.storev in *. ss. eapply Mem.perm_store_2; eauto. eapply MAX; eauto.
-           unfold Mem.valid_block in *. erewrite Mem.nextblock_store; eauto. }
+  split. { eapply Mem.unchanged_on_trans; eauto. unfold store_stack, Mem.storev in *. ss.
+           eapply Mem.store_unchanged_on; eauto. ii. exploit EXT_TGT_BOUND; eauto. xomega. }
+  split. { ii. unfold store_stack, Mem.storev in *. ss. eapply Mem.perm_store_2; eauto.
+           eapply MAX; eauto. unfold Mem.valid_block in *. erewrite Mem.nextblock_store; eauto. }
   auto.
 Qed.
 
@@ -1084,14 +1072,11 @@ Lemma save_callee_save_correct:
   /\ agree_regs j ls1 rs'.
 Proof.
   intros until ext_tgt; intros SEP TY AGCS AG EXT_TGT_BOUND SP_NEXTBLOCK; intros ls1 rs1.
-  exploit (save_callee_save_rec_correct j cs fb sp ls1).
+  exploit (save_callee_save_rec_correct j cs fb sp ls1); eauto.
 - intros. unfold ls1. apply LTL_undef_regs_same. eapply destroyed_by_setstack_function_entry; eauto.
 - intros. unfold ls1. apply undef_regs_type. apply TY.
 - exact b.(used_callee_save_prop).
-- eexact SEP.
 - instantiate (1 := rs1). apply agree_regs_undef_regs. apply agree_regs_call_regs. auto.
-- eauto.
-- eauto.
 - clear SEP. intros (rs' & m' & EXEC & SEP & PERMS & UNCH & MAX & AG').
   exists rs', m'.
   split. eexact EXEC.
@@ -1392,17 +1377,13 @@ End FRAME_PROPERTIES.
 (** This is the memory assertion that captures the contents of the stack frames
   mentioned in the call stacks. *)
 Definition dummy_frame_contents (j: meminj) (ls: locset) (sg: signature) (sp: block) (spofs: Z): massert :=
-  (contains_locations j sp spofs (size_arguments sg) Outgoing ls)
-.
+  (contains_locations j sp spofs (size_arguments sg) Outgoing ls).
 
 Lemma dummy_frame_contents_incr
-      j ls sg sp spofs j'
-      m P
+      j ls sg sp spofs j' m P
       (DUMMY: m |= dummy_frame_contents j ls sg sp spofs ** P)
-      (INCR: inject_incr j j')
-  :
-    <<DUMMY: m |= dummy_frame_contents j' ls sg sp spofs ** P>>
-.
+      (INCR: inject_incr j j'):
+    <<DUMMY: m |= dummy_frame_contents j' ls sg sp spofs ** P>>.
 Proof.
   red. unfold dummy_frame_contents. rewrite <- (contains_locations_incr j j') by auto. assumption.
 Qed.
@@ -1429,18 +1410,12 @@ Fixpoint stack_contents_args (j: meminj) (cs: list Linear.stackframe) (cs': list
 Notation "'stack_contents'" := (if main_args then stack_contents_args else stack_contents_noargs)
                                  (only parsing).
 
-Lemma stack_contents_nil_left_false
-      j cs'
-  :
-    stack_contents_args j [] cs' = pure False
-.
+Lemma stack_contents_nil_left_false: forall j cs',
+    stack_contents_args j [] cs' = pure False.
 Proof. ss; des_ifs. Qed.
 
-Lemma stack_contents_nil_right_false
-      j cs
-  :
-    stack_contents_args j cs [] = pure False
-.
+Lemma stack_contents_nil_right_false: forall j cs,
+    stack_contents_args j cs [] = pure False.
 Proof. destruct cs; ss; des_ifs; ss; des_ifs. Qed.
 
 (** [match_stacks] captures additional properties (not related to memory)
@@ -1456,20 +1431,15 @@ Inductive match_stacks (j: meminj):
   | match_stacks_dummy
       (MAINARGS: main_args = true)
       (SYMBINJ: symbols_inject j se tse)
-      sg_init sp ls_init
-      sg ra
+      sg_init sp ls_init sg ra sm0
       (RAPTR: Val.has_type ra Tptr)
-      (ARGS: forall
-          ofs ty
-          (LOC: In (S Outgoing ofs ty) (regs_of_rpairs (loc_arguments sg_init)))
-        ,
+      (ARGS: forall ofs ty
+          (LOC: In (S Outgoing ofs ty) (regs_of_rpairs (loc_arguments sg_init))),
           <<BOUND: ofs + typesize ty <= size_arguments sg_init>>)
       (LE: sg = sg_init \/ tailcall_possible sg)
-      sm0
       (SPVALID: sm0.(SimMemInj.tgt).(Mem.valid_block) sp /\
                 Ple sm0.(SimMemInj.tgt_parent_nb) sp /\
-                forall i, ~ sm0.(SimMemInj.tgt_external) sp i)
-    :
+                forall i, ~ sm0.(SimMemInj.tgt_external) sp i):
       match_stacks j [Linear.dummy_stack sg_init ls_init]
                    [Mach.dummy_stack (Vptr sp Ptrofs.zero) ra] sg sm0
   | match_stacks_cons: forall f sp ls c cs fb sp' ra c' cs' sg trf sm0
@@ -1509,9 +1479,7 @@ Ltac sep_simpl_tac :=
               | [H: _ |= _ ** pure False |- _] => apply sep_proj2 in H
               | [H: _ |= _ ** pure False ** _ |- _] => apply sep_pick2 in H
               end;
-          idtac
-         )
-.
+          idtac).
 
 Lemma stack_contents_change_meminj:
   forall m j j', inject_incr j j' ->
@@ -1521,34 +1489,28 @@ Lemma stack_contents_change_meminj:
 Proof.
 Local Opaque sepconj.
   destruct main_args eqn:MAINARGS; cycle 1.
-{
-  induction cs as [ | [] cs]; destruct cs' as [ | [] cs']; simpl; intros; auto.
+- induction cs as [ | [] cs]; destruct cs' as [ | [] cs']; simpl; intros; auto.
   destruct sp0; auto.
   rewrite sep_assoc in *.
   apply frame_contents_incr with (j := j); auto.
   rewrite sep_swap. apply IHcs. rewrite sep_swap. assumption.
-} {
-  induction cs as [ | [] cs]; destruct cs' as [ | [] cs']; simpl; intros; auto.
+- induction cs as [ | [] cs]; destruct cs' as [ | [] cs']; simpl; intros; auto.
   destruct sp0; auto.
   destruct cs, cs'; sep_simpl_tac; des; try congruence.
   { eapply dummy_frame_contents_incr; eauto. }
   apply frame_contents_incr with (j := j); auto.
   rewrite sep_swap. apply IHcs. rewrite sep_swap. assumption.
-}
 Qed.
 
 Lemma spvalid_le
-      sm0 sm1
-      sp
+      sm0 sm1 sp
       (SPVALID: sm0.(SimMemInj.tgt).(Mem.valid_block) sp /\
                 Ple sm0.(SimMemInj.tgt_parent_nb) sp /\
                 forall i, ~ sm0.(SimMemInj.tgt_external) sp i)
-      (LE: SimMemInj.le' sm0 sm1)
-  :
+      (LE: SimMemInj.le' sm0 sm1):
     <<SPVALID: sm1.(SimMemInj.tgt).(Mem.valid_block) sp /\
                Ple sm1.(SimMemInj.tgt_parent_nb) sp /\
-               forall i, ~ sm1.(SimMemInj.tgt_external) sp i>>
-.
+               forall i, ~ sm1.(SimMemInj.tgt_external) sp i>>.
 Proof.
   des. inv LE. rewrite <- TGTPARENTEQ. rewrite <- TGTPARENTEQNB. esplits; eauto.
   eapply Mem.valid_block_unchanged_on; eauto.
@@ -1556,10 +1518,8 @@ Qed.
 
 Lemma match_stacks_symbols_inject
       j cs cs' sg sm0
-      (MCS: match_stacks j cs cs' sg sm0)
-  :
-    <<SYMBINJ: symbols_inject j se tse>>
-.
+      (MCS: match_stacks j cs cs' sg sm0):
+    <<SYMBINJ: symbols_inject j se tse>>.
 Proof. induction MCS; auto. Qed.
 
 Lemma match_stacks_change_meminj:
@@ -1593,17 +1553,12 @@ Proof.
   { econs; eauto. inv LE. des_safe.
     rewrite <- TGTPARENTEQ. rewrite <- TGTPARENTEQNB. esplits; eauto. eapply Mem.valid_block_unchanged_on; eauto. }
   assert(PRIVEQ: SimMemInj.tgt_private sm0 sp' <1= SimMemInj.tgt_private sm1 sp').
-  {
-    clear - PERM INJ LE.
-    ii.
+  { clear - PERM INJ LE. ii.
     unfold SimMemInj.tgt_private, loc_out_of_reach in *. ss. desH PR. split.
-    + ii. eapply PR. erewrite INJ; eauto.
-      eapply PERM; eauto.
-    + eapply Mem.valid_block_unchanged_on; eauto.
-      inv LE; eauto.
+    + ii. eapply PR. erewrite INJ; eauto. eapply PERM; eauto.
+    + eapply Mem.valid_block_unchanged_on; eauto. inv LE; eauto.
   }
-  econs; eauto.
-  - eapply spvalid_le; eauto.
+  econs; eauto. eapply spvalid_le; eauto.
 Qed.
 
 (** Invariance with respect to change of signature. *)
@@ -1614,10 +1569,8 @@ Lemma match_stacks_change_sig:
   tailcall_possible sg1 ->
   match_stacks j cs cs' sg1 sm0.
 Proof.
-  induction 1; intros.
-  econstructor; eauto.
-  econstructor; eauto.
-  econstructor; eauto. intros. elim (H0 _ H1).
+  induction 1; intros; econstructor; eauto.
+  intros. elim (H0 _ H1).
   rewrite tailcall_size; try assumption; try xomega. hexploit (size_arguments_above sg); eauto. i; xomega.
 Qed.
 
@@ -1636,8 +1589,7 @@ Lemma match_stacks_type_retaddr:
   match_stacks j cs cs' sg sm0 ->
   Val.has_type (parent_ra cs') Tptr.
 Proof.
-  induction 1; unfold parent_ra. apply Val.Vnullptr_has_type. auto.
-  auto.
+  induction 1; unfold parent_ra; auto. apply Val.Vnullptr_has_type.
 Qed.
 
 (** * Syntactic properties of the translation *)
@@ -1802,16 +1754,12 @@ Lemma find_function_ptr_translated:
   Linear.find_function_ptr ge ros ls = fptr ->
   exists tfptr,
      <<TFPTR: find_function_ptr tge ros rs = tfptr>>
-     /\ <<FPTR: Val.inject j fptr tfptr>>
-.
+     /\ <<FPTR: Val.inject j fptr tfptr>>.
 Proof.
-  ii.
-  inv H0; des.
-  destruct ros; ss; clarify.
+  ii. inv H0; des. destruct ros; ss; clarify.
   - esplits; eauto.
   - erewrite symbols_preserved. des_ifs.
-    + esplits; eauto.
-      inv H0. exploit SYMBOLS; eauto.
+    + esplits; eauto. inv H0. exploit SYMBOLS; eauto.
     + esplits; eauto.
 Qed.
 
@@ -2094,8 +2042,7 @@ Proof.
   exploit frame_get_local; eauto. intros (v & A & B).
   econstructor; split.
   apply plus_one. apply exec_Mgetstack. exact A.
-  SimMemInj.spl.
-  econstructor; eauto with coqlib.
+  SimMemInj.spl. econstructor; eauto with coqlib.
   apply agree_regs_set_reg; auto.
   apply agree_locs_set_reg; auto.
 + (* Lgetstack, incoming *)
@@ -2103,35 +2050,28 @@ Proof.
   exploit incoming_slot_in_parameters; eauto. intros IN_ARGS.
   inversion STACKS; clear STACKS.
   elim (H1 _ IN_ARGS).
-  {
-    rewrite MAINARGS in *. subst s cs'. exploit (slot_outgoing_argument_valid f); eauto. intro VALID.
+  { rewrite MAINARGS in *. subst s cs'. exploit (slot_outgoing_argument_valid f); eauto. intro VALID.
     Local Opaque Z.mul Z.add Z.div make_env.
     unfold slot_valid in *. simpl_bool. des; cycle 1.
     { hnf in LE. exploit LE; eauto. ss. } clarify. des_sumbool. ss.
     des_ifs; cycle 1.
-    {
-      exploit get_location; eauto. apply sep_pick2 in SEP. eauto. eapply ARGS; eauto. intros (v & A & B).
-      rewrite <- Ptrofs.Ptrofs_add_repr, Ptrofs.repr_unsigned, <- load_stack_transf_ofs in *.
-      esplits; eauto.
+    { exploit get_location; eauto. apply sep_pick2 in SEP. eauto. eapply ARGS; eauto. intros (v & A & B).
+      rewrite <- Ptrofs.Ptrofs_add_repr, Ptrofs.repr_unsigned, <- load_stack_transf_ofs in *. esplits; eauto.
       - apply plus_one. eapply exec_Mgetparam; eauto.
         + rewrite (unfold_transf_function _ _ TRANSL). unfold fn_link_ofs. eapply frame_get_parent. eexact SEP.
       - econstructor; eauto with coqlib. econstructor; eauto.
-        apply agree_regs_set_reg. apply agree_regs_set_reg. auto. auto.
-        erewrite agree_incoming by eauto. exact B.
-        apply agree_locs_set_reg; auto. ss. eapply agree_locs_set_reg; eauto. ss.
-        rewrite MAINARGS. eauto.
+        apply agree_regs_set_reg. apply agree_regs_set_reg. auto. auto. erewrite agree_incoming by eauto. exact B.
+        apply agree_locs_set_reg; auto. ss. eapply agree_locs_set_reg; eauto. ss. rewrite MAINARGS. eauto.
       - reflexivity.
     }
   }
   subst s cs'.
   assert(exists P, m' |= frame_contents f0 j sp'0 ls (parent_locset cs) (parent_sp cs'0) (parent_ra cs'0) ** P).
-  {
-  destruct main_args eqn:MAINARGS; eexists.
-  apply sep_proj2 in SEP. simpl in SEP. des_ifs; try (by (inv STK; clarify; inv MAINARGS0)). rewrite sep_assoc in SEP. eexact SEP.
-  apply sep_proj2 in SEP. simpl in SEP. rewrite sep_assoc in SEP. eexact SEP.
+  { destruct main_args eqn:MAINARGS; eexists.
+    apply sep_proj2 in SEP. simpl in SEP. des_ifs; try (by (inv STK; clarify; inv MAINARGS0)). rewrite sep_assoc in SEP. eexact SEP.
+    apply sep_proj2 in SEP. simpl in SEP. rewrite sep_assoc in SEP. eexact SEP.
   } des.
-  exploit frame_get_outgoing.
-  eauto.
+  exploit frame_get_outgoing. eauto.
   eapply ARGS; eauto.
   eapply slot_outgoing_argument_valid; eauto.
   intros (v & A & B).
@@ -2139,17 +2079,15 @@ Proof.
   apply plus_one. eapply exec_Mgetparam; eauto.
   rewrite (unfold_transf_function _ _ TRANSL). unfold fn_link_ofs.
   eapply frame_get_parent. eexact SEP.
-  SimMemInj.spl.
-  econstructor; eauto with coqlib. econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto with coqlib. econstructor; eauto.
   apply agree_regs_set_reg. apply agree_regs_set_reg. auto. auto.
   erewrite agree_incoming by eauto. exact B.
   apply agree_locs_set_reg; auto. apply agree_locs_undef_locs; auto.
-  + (* Lgetstack, outgoing *)
++ (* Lgetstack, outgoing *)
   exploit frame_get_outgoing; eauto. intros (v & A & B).
   econstructor; split.
   apply plus_one. apply exec_Mgetstack. exact A.
-  SimMemInj.spl.
-  econstructor; eauto with coqlib.
+  SimMemInj.spl. econstructor; eauto with coqlib.
   apply agree_regs_set_reg; auto.
   apply agree_locs_set_reg; auto.
 
@@ -2185,8 +2123,7 @@ Proof.
     - eapply SimMemInj.frozen_refl.
     - ii. ss. unfold store_stack, Mem.storev in *. ss. eapply Mem.perm_store_2; eauto.
   }
-  SimMemInj.spl_approx sm0.
-  econstructor.
+  SimMemInj.spl_approx sm0. econstructor.
   { SimMemInj.compat_tac. }
   { eapply spvalid_le; eauto. }
   { inv MCOMPAT. inv MWF. econs; ss; eauto.
@@ -2194,14 +2131,13 @@ Proof.
     - etransitivity; eauto. unfold SimMemInj.tgt_private. ii. ss. des. split; eauto.
       unfold SimMemInj.valid_blocks, Mem.valid_block, store_stack, Mem.storev in *. ss.
       erewrite Mem.nextblock_store; eauto.
-    - unfold store_stack, Mem.storev in *. ss.
-      erewrite Mem.nextblock_store; eauto.
+    - unfold store_stack, Mem.storev in *. ss. erewrite Mem.nextblock_store; eauto.
   }
   { inv MCOMPAT. ii. unfold SimMemInj.tgt_private, loc_out_of_reach in *. ss. exploit PRIV; eauto. intros [X Y]. split; eauto.
     unfold store_stack, Mem.storev in *. inv STORE. eapply Mem.store_valid_block_1; eauto.
   }
   { inv MCOMPAT. eapply match_stacks_le; eauto. }
-  eauto. eauto. eauto.
+  eauto. eauto.
   apply agree_regs_set_slot. apply agree_regs_undef_regs. auto.
   apply agree_locs_set_slot. apply agree_locs_undef_locs. auto. apply destroyed_by_setstack_caller_save. auto.
   eauto. eauto with coqlib. eauto.
@@ -2219,8 +2155,7 @@ Proof.
   apply plus_one. econstructor.
   instantiate (1 := v'). rewrite <- A. apply eval_operation_preserved.
   exact symbols_preserved. eauto.
-  SimMemInj.spl.
-  econstructor; eauto with coqlib.
+  SimMemInj.spl. econstructor; eauto with coqlib.
   apply agree_regs_set_reg; auto.
   rewrite transl_destroyed_by_op.  apply agree_regs_undef_regs; auto.
   apply agree_locs_set_reg; auto. apply agree_locs_undef_locs. auto. apply destroyed_by_op_caller_save.
@@ -2242,8 +2177,7 @@ Proof.
   apply plus_one. econstructor.
   instantiate (1 := a'). rewrite <- A. apply eval_addressing_preserved. exact symbols_preserved.
   eexact C. eauto.
-  SimMemInj.spl.
-  econstructor; eauto with coqlib.
+  SimMemInj.spl. econstructor; eauto with coqlib.
   apply agree_regs_set_reg. rewrite transl_destroyed_by_load. apply agree_regs_undef_regs; auto. auto.
   apply agree_locs_set_reg. apply agree_locs_undef_locs. auto. apply destroyed_by_load_caller_save. auto.
 
@@ -2264,11 +2198,8 @@ Proof.
   apply plus_one. econstructor.
   instantiate (1 := a'). rewrite <- A. apply eval_addressing_preserved. exact symbols_preserved.
   eexact C. eauto.
-  inv MCOMPAT.
-  exploit SimMemInj.storev_mapped; eauto. i; des.
-  SimMemInj.spl_exact sm1.
-  econstructor.
-  SimMemInj.compat_tac.
+  inv MCOMPAT. exploit SimMemInj.storev_mapped; eauto. i; des. SimMemInj.spl_exact sm1.
+  econstructor. SimMemInj.compat_tac.
   { eapply spvalid_le; eauto. }
   eauto.
   { ii. unfold SimMemInj.tgt_private, loc_out_of_reach, Mem.storev in *. des_ifs_safe. exploit PRIV; eauto. intros [X Y]. split.
@@ -2293,8 +2224,7 @@ Proof.
   exploit return_address_offset_exists. { rewrite Genv.find_funct_find_funct_ptr. eauto. } eexact IST. intros [ra D].
   econstructor; split.
   apply plus_one. econstructor; eauto. econs; eauto.
-  SimMemInj.spl.
-  econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto.
   econstructor; eauto with coqlib.
   apply Val.Vptr_has_type.
   intros; red.
@@ -2317,8 +2247,7 @@ Proof.
   i; des.
   econstructor; split.
   eapply plus_right. eexact S. econstructor; eauto. econs; eauto. traceEq.
-  inv MCOMPAT.
-  exploit SimMemInj.free_left; eauto. i; des.
+  inv MCOMPAT. exploit SimMemInj.free_left; eauto. i; des.
   exploit SimMemInj.free_right; eauto.
   { rewrite MTGT. eauto. }
   { ii. red. esplits.
@@ -2341,8 +2270,7 @@ Proof.
     - rewrite MTGT. red. exploit Mem.free_range_perm; eauto.
   }
   { ii. eapply SPVALID1. inv MLE. rewrite TGTPARENTEQ. eauto. }
-  i; des.
-  SimMemInj.spl_exact sm2.
+  i; des. SimMemInj.spl_exact sm2.
   econstructor; eauto.
   { SimMemInj.compat_tac. }
   apply match_stacks_change_sig with (Linear.fn_sig f); auto.
@@ -2406,15 +2334,13 @@ Proof.
 - (* Llabel *)
   econstructor; split.
   apply plus_one; apply exec_Mlabel.
-  SimMemInj.spl.
-  econstructor; eauto with coqlib.
+  SimMemInj.spl. econstructor; eauto with coqlib.
 
 - (* Lgoto *)
   econstructor; split.
   apply plus_one; eapply exec_Mgoto; eauto.
   apply transl_find_label; eauto.
-  SimMemInj.spl.
-  econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto.
   eapply find_label_tail; eauto.
 
 - (* Lcond, true *)
@@ -2460,8 +2386,7 @@ Proof.
   intros (rs' & m1' & A & B & C & D & E & F & G).
   econstructor; split.
   eapply plus_right. eexact D. econstructor; eauto. traceEq.
-  inv MCOMPAT.
-  exploit SimMemInj.free_left; eauto. i; des.
+  inv MCOMPAT. exploit SimMemInj.free_left; eauto. i; des.
   exploit SimMemInj.free_right; eauto.
   { rewrite MTGT. eauto. }
   { ii. red. esplits.
@@ -2484,8 +2409,7 @@ Proof.
     - rewrite MTGT. red. exploit Mem.free_range_perm; eauto.
   }
   { ii. eapply SPVALID1. inv MLE. rewrite TGTPARENTEQ. eauto. }
-  i; des.
-  SimMemInj.spl_exact sm2.
+  i; des. SimMemInj.spl_exact sm2.
   econstructor; eauto.
   { SimMemInj.compat_tac. }
   { eapply match_stacks_le; eauto; try congruence. eapply match_stacks_le; eauto; try congruence.
@@ -2543,8 +2467,7 @@ Proof.
       eapply MAX; eauto. unfold Mem.valid_block in *. erewrite Mem.nextblock_store; try eapply C.
       erewrite Mem.nextblock_store; try eapply B. erewrite Mem.nextblock_alloc; try eapply A. xomega.
   }
-  SimMemInj.spl_approx sm0.
-  eapply match_states_intro with (j := j'); eauto with coqlib.
+  SimMemInj.spl_approx sm0. eapply match_states_intro with (j := j'); eauto with coqlib.
   SimMemInj.compat_tac.
   { des. ss. inv MCOMPAT. (* inv LE. ss. *) esplits; eauto.
     - exploit Mem.valid_new_block; eauto. i; clarify. eapply Mem.valid_block_unchanged_on; eauto. unfold store_stack in *. ss.
@@ -2605,8 +2528,7 @@ Proof.
   econstructor; split.
   apply plus_one. eapply exec_function_external; eauto.
   exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto).
-  { eapply C. } i; des.
-  SimMemInj.spl_exact sm1.
+  { eapply C. } i; des. SimMemInj.spl_exact sm1.
   eapply match_states_return with (j := j').
   SimMemInj.compat_tac.
   { eauto. }
@@ -2640,8 +2562,7 @@ Proof.
   ss. }
   econstructor; split.
   apply plus_one. apply exec_return.
-  SimMemInj.spl.
-  econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto.
   apply agree_locs_return with rs0; auto.
   apply frame_contents_exten with rs0 (parent_locset s); auto.
   intros; apply Val.lessdef_same; apply AGCS; red; congruence.
@@ -2737,14 +2658,12 @@ Proof.
   exists st2; split; auto. split; auto.
   apply wt_initial_state with (prog := prog); auto.
 - intros. destruct H. eapply transf_final_states; eauto.
-- intros. destruct H0.
-  des.
+- intros. destruct H0. des.
   exploit transf_step_correct; eauto. intros [s2' [A B]].
   exists s2'; split. exact A. split.
   eapply step_type_preservation; eauto.
   { ii. ss. eapply Genv.find_funct_inversion; eauto. }
-  eexact wt_prog.
-  des. esplits; eauto.
+  eexact wt_prog. des. esplits; eauto.
 Qed.
 
 End WHOLE.

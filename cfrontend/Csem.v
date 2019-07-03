@@ -499,8 +499,7 @@ Definition is_call_cont_strong (k: cont) : Prop :=
   match k with
   | Kcall _ _ _ _ _ => True
   | _ => False
-  end
-.
+  end.
 
 (** Execution states of the program are grouped in 4 classes corresponding
   to the part of the program we are currently executing.  It can be
@@ -751,8 +750,7 @@ Inductive sstep: state -> trace -> state -> Prop :=
 
   | step_internal_function: forall fptr tyf f vargs k m e m1 m2
       (FPTR: Genv.find_funct ge fptr = Some (Internal f))
-      (TYPE: type_of_fundef (Internal f) = tyf)
-    ,
+      (TYPE: type_of_fundef (Internal f) = tyf),
       list_norepet (var_names (fn_params f) ++ var_names (fn_vars f)) ->
       alloc_variables empty_env m (f.(fn_params) ++ f.(fn_vars)) e m1 ->
       bind_parameters e m1 f.(fn_params) vargs m2 ->
@@ -761,8 +759,7 @@ Inductive sstep: state -> trace -> state -> Prop :=
 
   | step_external_function: forall fptr tyf ef targs tres cc vargs k m vres t m'
       (FPTR: Genv.find_funct ge fptr = Some (External ef targs tres cc))
-      (TYPE: type_of_fundef (External ef targs tres cc) = tyf)
-    ,
+      (TYPE: type_of_fundef (External ef targs tres cc) = tyf),
       external_call ef  se vargs m t vres m' ->
       sstep (Callstate fptr tyf vargs k m)
           t (Returnstate vres k m')

@@ -172,10 +172,8 @@ Lemma tailcall_size_aux
           | S _ _ _ => False
           end)
       (IRBOUND: (ir - 1) < list_length_z int_param_regs)
-      (FRBOUND: (fr - 1) < list_length_z float_param_regs)
-  :
-    <<SZ: size_arguments_64 tys ir fr 0 = 0>>
-.
+      (FRBOUND: (fr - 1) < list_length_z float_param_regs):
+    <<SZ: size_arguments_64 tys ir fr 0 = 0>>.
 Proof.
   ginduction tys; ii; ss.
   destruct a; des_ifs; ss;
@@ -187,10 +185,8 @@ Qed.
 
 Lemma tailcall_size
       sg
-      (TAIL: tailcall_possible sg)
-  :
-    size_arguments sg = 0
-.
+      (TAIL: tailcall_possible sg):
+    size_arguments sg = 0.
 Proof. eapply tailcall_size_aux; eauto; cbn; xomega. Qed.
 
 Class main_args_ctx: Type := { main_args: bool }.

@@ -452,8 +452,7 @@ Proof.
   destruct (H Stuckstate).
   apply star_one. left. econstructor; eauto.
   destruct H2 as [r F]. inv F.
-  destruct H2 as [[t [s' S]]|PP]. inv S. inv H2. inv H2.
-  ss.
+  destruct H2 as [[t [s' S]]|PP]; ss. inv S. inv H2. inv H2.
 Qed.
 
 (** Safe expressions are well-formed with respect to l-values and r-values. *)
@@ -1415,7 +1414,7 @@ Theorem progress:
   forall S,
   safe S -> (exists r, final_state S r) \/ (exists t, exists S', step S t S') \/ PROP S.
 Proof.
-  intros. exploit H. apply star_refl. intros [FIN | [[t [S' STEP]]|PP]].
+  intros. exploit H. apply star_refl. intros [FIN | [[t [S' STEP]]|PP]]; [| |eauto].
   (* 1. Finished. *)
   auto.
   right. destruct STEP.
@@ -1430,13 +1429,11 @@ Proof.
     eapply can_estep; eauto. inv H2; auto. inv H1; auto.
     (* stuck *)
     exploit (H Stuckstate). apply star_one. left. econstructor; eauto.
-    intros [[r F] | [[t [S' R]]|PP]]. inv F. inv R. inv H0. inv H0.
-    { ss. }
+    intros [[r F] | [[t [S' R]]|PP]]; ss. inv F. inv R. inv H0. inv H0.
   destruct H1 as [t' [S'' ESTEP]].
   left. exists t'; exists S''; left; auto.
   (* 3. Other step. *)
   left. exists t; exists S'; right; auto.
-  { eauto. }
 Qed.
 
 End STRATEGY.

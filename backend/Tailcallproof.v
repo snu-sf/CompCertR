@@ -271,13 +271,9 @@ Qed.
 Lemma find_funct_lessdef
       fptr tfptr f
       (FPTR: Genv.find_funct ge fptr = Some f)
-      (LD: Val.lessdef fptr tfptr)
-  :
-    <<EQ: fptr = tfptr>>
-.
-Proof.
-  exploit Genv.find_funct_inv; eauto. i; des. clarify. inv LD; ss.
-Qed.
+      (LD: Val.lessdef fptr tfptr):
+    <<EQ: fptr = tfptr>>.
+Proof. exploit Genv.find_funct_inv; eauto. i; des. clarify. inv LD; ss. Qed.
 
 (** Consider an execution of a call/move/nop/return sequence in the
   original code and the corresponding tailcall in the transformed code.
@@ -463,8 +459,7 @@ Proof.
   econstructor; eauto.
 
 - (* call *)
-  clear H1.
-  exploit find_function_ptr_translated; eauto. i; des.
+  clear H1. exploit find_function_ptr_translated; eauto. i; des.
   TransfInstr.
 + (* call turned tailcall *)
   assert ({ m'' | Mem.free m' sp0 0 (fn_stacksize (transf_function f)) = Some m''}).
@@ -622,8 +617,7 @@ Proof.
   apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  apply transf_step_correct; auto.
-  eapply (Genv.senv_match TRANSL); eauto.
+  apply transf_step_correct; auto. eapply (Genv.senv_match TRANSL); eauto.
 Qed.
 
 End WHOLE.

@@ -1108,16 +1108,12 @@ Definition to_mreg (pr: preg): option mreg :=
     | XMM14 => Some X14
     | XMM15 => Some X15
     end
-  end
-.
+  end.
 
 Definition to_preg := preg_of.
 
-Lemma to_preg_to_mreg
-      mr0
-  :
-    mr0.(to_preg).(to_mreg) = Some mr0
-.
+Lemma to_preg_to_mreg: forall mr0,
+    mr0.(to_preg).(to_mreg) = Some mr0.
 Proof. destruct mr0; eauto. Qed.
 
 (** Extract the values of the arguments of an external call.
@@ -1161,13 +1157,10 @@ Definition regset_after_external (rs0: regset): regset :=
       | RSP => rs0 pr
       | _ => Vundef
       end
-    end
-.
+    end.
 
-Lemma regset_after_external_eq
-  :
-    regset_after_external = undef_caller_save_regs
-.
+Lemma regset_after_external_eq:
+    regset_after_external = undef_caller_save_regs.
 Proof.
   apply Axioms.functional_extensionality. intro.
   apply Axioms.functional_extensionality. intro.

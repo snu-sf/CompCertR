@@ -190,8 +190,7 @@ Definition find_function_ptr (ros: mreg + ident) (rs: locset) : val :=
     | Some b => (Vptr b Ptrofs.zero)
     | None => Vundef
     end
-  end
-.
+  end.
 
 (** [parent_locset cs] returns the mapping of values for locations
   of the caller function. *)
@@ -233,15 +232,13 @@ Inductive step: state -> trace -> state -> Prop :=
       step (Block s f sp (Lstore chunk addr args src :: bb) rs m)
         E0 (Block s f sp bb rs' m')
   | exec_Lcall: forall s f sp sig ros bb rs m fptr
-      (FPTR: find_function_ptr ros rs m= fptr)
-      ,
+      (FPTR: find_function_ptr ros rs m= fptr),
       DUMMY_PROP ->
       DUMMY_PROP ->
       step (Block s f sp (Lcall sig ros :: bb) rs m)
         E0 (Callstate (Stackframe f sp rs bb :: s) fptr sig rs m)
   | exec_Ltailcall: forall s f sp sig ros bb rs m rs' m' fptr
-      (FPTR: find_function_ptr ros rs' m= fptr)
-      ,
+      (FPTR: find_function_ptr ros rs' m= fptr),
       rs' = return_regs (parent_locset s) rs ->
       DUMMY_PROP ->
       DUMMY_PROP ->
@@ -275,16 +272,14 @@ Inductive step: state -> trace -> state -> Prop :=
         E0 (Returnstate s (return_regs (parent_locset s) rs) m')
   | exec_function_internal: forall s fptr sg f rs m m' sp rs'
       (FPTR: Genv.find_funct ge fptr = Some (Internal f))
-      (SIG: funsig (Internal f) = sg)
-    ,
+      (SIG: funsig (Internal f) = sg),
       Mem.alloc m 0 f.(fn_stacksize) = (m', sp) ->
       rs' = undef_regs destroyed_at_function_entry (call_regs rs) ->
       step (Callstate s fptr sg rs m)
         E0 (State s f (Vptr sp Ptrofs.zero) f.(fn_entrypoint) rs' m')
   | exec_function_external: forall s fptr sg ef t args res rs m rs' m'
       (FPTR: Genv.find_funct ge fptr = Some (External ef))
-      (SIG: funsig (External ef) = sg)
-    ,
+      (SIG: funsig (External ef) = sg),
       args = map (fun p => Locmap.getpair p rs) (loc_arguments (ef_sig ef)) ->
       external_call ef se args m t res m' ->
       rs' = Locmap.setpair (loc_result (ef_sig ef)) res (undef_caller_save_regs rs) ->
@@ -336,10 +331,5 @@ Fixpoint successors_block (b: bblock) : list node :=
 
 Definition dummy_function (sig: signature) := (mkfunction sig 0 (PTree.empty _) 1%positive).
 
-Definition dummy_stack (sig: signature) (ls: locset) :=
-  Stackframe (dummy_function sig)
-             Vundef
-             ls
-             nil
-.
+Definition dummy_stack (sig: signature) (ls: locset) := Stackframe (dummy_function sig) Vundef ls nil.
 Hint Unfold dummy_stack.

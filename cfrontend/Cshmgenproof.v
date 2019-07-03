@@ -1387,8 +1387,7 @@ Inductive match_states: Clight.state -> Csharpminor.state -> Prop :=
       forall fptr ty args k m tk targs tres cconv ce
           (MK: match_cont ce Tvoid 0%nat 0%nat k tk)
           (ISCC: Clight.is_call_cont k)
-          (TYP: ty = (Tfunction targs tres cconv))
-      ,
+          (TYP: ty = (Tfunction targs tres cconv)),
       match_states (Clight.Callstate fptr ty args k m)
                    (Callstate fptr (signature_of_type targs tres cconv) args tk m)
   | match_returnstate:
@@ -1531,17 +1530,11 @@ Qed.
 
 Lemma function_type_implies_sig
       f targs tres cconv
-      (TYP: type_of_function f = Tfunction targs tres cconv)
-  :
-    <<SIG: signature_of_function f = signature_of_type targs tres cconv>>
-.
+      (TYP: type_of_function f = Tfunction targs tres cconv):
+    <<SIG: signature_of_function f = signature_of_type targs tres cconv>>.
 Proof.
-  red.
-  unfold signature_of_type, signature_of_function.
-  unfold type_of_function in *. clarify.
-  f_equal.
-  rewrite transl_params_types.
-  ss.
+  red. unfold signature_of_type, signature_of_function, type_of_function in *. clarify.
+  f_equal. rewrite transl_params_types. ss.
 Qed.
 
 (** The simulation proof *)
@@ -1748,8 +1741,7 @@ Proof.
             <<LINK: linkorder cu prog>> /\
             transl_function (prog_comp_env cu) f = OK tf /\
             <<FPTR: Genv.find_funct tge fptr = Some (AST.Internal tf)>>).
-  {
-    exploit functions_translated; eauto. i; des. inv H5. esplits; eauto.
+  { exploit functions_translated; eauto. i; des. inv H5. esplits; eauto.
   } i; des.
   monadInv H5.
   exploit match_cont_is_call_cont; eauto. intros [A B].
@@ -1831,8 +1823,7 @@ Proof.
   apply senv_preserved; auto.
   eexact transl_initial_states.
   eexact transl_final_states.
-  apply transl_step; auto.
-  eapply (Genv.senv_match TRANSL); eauto.
+  apply transl_step; auto. eapply (Genv.senv_match TRANSL); eauto.
 Qed.
 
 End WHOLE.

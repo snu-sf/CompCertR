@@ -366,8 +366,7 @@ Proof.
   destruct (expr_is_addrof_ident a) as [id|] eqn:EA; auto.
   exploit expr_is_addrof_ident_correct; eauto. intros EQ; subst a.
   inv H0. inv H3. unfold Genv.symbol_address in *.
-  destruct (Genv.find_symbol ge id) as [b|] eqn:FS; try discriminate.
-  clarify.
+  destruct (Genv.find_symbol ge id) as [b|] eqn:FS; try discriminate. clarify.
   assert (DFL: exists b1, Genv.find_symbol ge id = Some b1 /\ Vptr b Ptrofs.zero = Vptr b1 Ptrofs.zero) by (exists b; auto).
   unfold globdef; destruct (prog_defmap unit)!id as [[[f|ef] |gv] |] eqn:G; auto.
   destruct (ef_inline ef) eqn:INLINE; auto.
@@ -963,8 +962,7 @@ Proof.
   right; split. simpl. omega. split. auto.
   econstructor; eauto.
 - (* Stailcall *)
-  clear H2.
-  exploit Mem.free_parallel_extends; eauto. intros [m2' [P Q]].
+  clear H2. exploit Mem.free_parallel_extends; eauto. intros [m2' [P Q]].
   erewrite <- stackspace_function_translated in P by eauto.
   exploit sel_expr_correct; eauto. intros [vf' [A B]].
   exploit sel_exprlist_correct; eauto. intros [vargs' [C D]].
@@ -1066,8 +1064,7 @@ Proof.
   econstructor; eauto. eapply external_call_symbols_preserved; eauto.
   econstructor; eauto.
 - (* external call turned into a Sbuiltin *)
-  clarify.
-  exploit external_call_mem_extends; eauto.
+  clarify. exploit external_call_mem_extends; eauto.
   intros [vres' [m2 [A [B [C D]]]]].
   left; econstructor; split.
   econstructor. eauto. eapply external_call_symbols_preserved; eauto.
@@ -1105,10 +1102,9 @@ Lemma sel_initial_states:
 Proof.
   destruct 1.
   econstructor; split.
-  econstructor.
+  econstructor; auto.
   eapply (Genv.init_mem_match TRANSF); eauto.
   rewrite (match_program_main TRANSF). fold tge. erewrite symbols_preserved; eauto.
-  eauto. eauto.
   econstructor; eauto. red; intros; constructor. apply Mem.extends_refl.
 Qed.
 
@@ -1128,8 +1124,7 @@ Proof.
   apply senv_preserved; auto.
   apply sel_initial_states; auto.
   apply sel_final_states; auto.
-  apply sel_step_correct; auto.
-  apply senv_preserved; eauto.
+  apply sel_step_correct; auto. apply senv_preserved; eauto.
 Qed.
 
 End WHOLE.

@@ -2263,8 +2263,7 @@ Proof.
   constructor; auto.
 
 (* external function *)
-  exploit functions_translated; eauto. intros [tfd [J K]].
-  inv K.
+  exploit functions_translated; eauto. intros [tfd [J K]]. inv K.
   econstructor; split.
   left; apply plus_one. econstructor; eauto.
   eapply external_call_symbols_preserved; eauto.
@@ -2317,13 +2316,12 @@ Proof.
   intros. inv H.
   (* exploit function_ptr_translated; eauto. intros [tf [FIND TR]]. *)
   econstructor; split.
-  econstructor.
+  econstructor; eauto.
   eapply (Genv.init_mem_match (proj1 TRANSL)); eauto.
   replace (prog_main tprog) with (prog_main prog).
   assert (Genv.globalenv tprog = tge.(genv_genv)) by auto. rewrite H.
   erewrite symbols_preserved; eauto.
   destruct TRANSL. destruct H as (A & B & C). simpl in B. auto. 
-  eauto. eauto.
   constructor. auto. constructor.
 Qed.
 
@@ -2342,8 +2340,7 @@ Proof.
   eexact transl_initial_states.
   eexact transl_final_states.
   apply well_founded_ltof.
-  apply simulation; auto.
-  eapply senv_preserved; auto.
+  apply simulation; auto. eapply senv_preserved; auto.
 Qed.
 
 End WHOLE.

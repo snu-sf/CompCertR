@@ -220,8 +220,7 @@ Definition find_function_ptr (ge: genv) (ros: mreg + ident) (rs: regset) : val :
     | Some b => (Vptr b Ptrofs.zero)
     | None => Vundef
     end
-  end
-.
+  end.
 
 (** Extract the values of the arguments to an external call. *)
 
@@ -291,11 +290,8 @@ Definition parent_ra (s: list stackframe) : val :=
   end.
 
 Definition regset_after_external (rs0: regset): regset :=
-  fun mr =>
-    if is_callee_save mr
-    then rs0 mr
-    else Vundef
-.
+  fun mr => if is_callee_save mr
+         then rs0 mr else Vundef.
 
 Inductive step: state -> trace -> state -> Prop :=
   | exec_Mlabel:

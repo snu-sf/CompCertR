@@ -923,12 +923,9 @@ Hypothesis wt_p: wt_program p.
 Variable se: Senv.t.
 Variable ge: genv.
 
-Hypothesis CONTAINED: forall
-    fptr f
-    (FINDF: Genv.find_funct ge fptr = Some f)
-  ,
-    exists i, In (i, Gfun f) (prog_defs p)
-.
+Hypothesis CONTAINED: forall fptr f
+    (FINDF: Genv.find_funct ge fptr = Some f),
+    exists i, In (i, Gfun f) (prog_defs p).
 
 Lemma subject_reduction:
   forall st1 t st2, step se ge st1 t st2 ->
