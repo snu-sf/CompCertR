@@ -1,4 +1,3 @@
-
 (* *********************************************************************)
 (*                                                                     *)
 (*              The Compcert verified compiler                         *)
@@ -583,7 +582,7 @@ Qed.
 
 (** Injections that preserve used globals. *)
 
-Record meminj_preserves_globals (f: meminj) : Prop := {
+Record meminj_preserves_globals (invar: block -> Prop) (f: meminj): Prop := {
   symbols_inject_1: forall id b b' delta,
     f b = Some(b', delta) -> Genv.find_symbol ge id = Some b ->
     delta = 0 /\ Genv.find_symbol tge id = Some b' /\ kept id;
@@ -593,6 +592,8 @@ Record meminj_preserves_globals (f: meminj) : Prop := {
   symbols_inject_3: forall id b',
     Genv.find_symbol tge id = Some b' ->
     exists b, Genv.find_symbol ge id = Some b /\ f b = Some(b', 0);
+  symbols_inject_4: forall id b,
+    ~ kept id -> Genv.find_symbol ge id = Some b -> invar b;
   defs_inject: forall b b' delta gd,
     f b = Some(b', delta) -> Genv.find_def ge b = Some gd ->
     Genv.find_def tge b' = Some (map_globdef kept gd) /\ delta = 0 /\
@@ -603,8 +604,8 @@ Record meminj_preserves_globals (f: meminj) : Prop := {
   public_eq: Genv.genv_public ge = prog_public p /\ Genv.genv_public tge = prog_public tp;
 }.
 
-Lemma globals_symbols_inject:
-  forall j, meminj_preserves_globals j -> symbols_inject j ge tge.
+Lemma globals_symbols_inject invar:
+  forall j, meminj_preserves_globals invar j -> symbols_inject j ge tge.
 Proof.
   intros.
   assert (E1: Genv.genv_public ge = p.(prog_public)).
@@ -641,9 +642,9 @@ Proof.
     rewrite <- Genv.find_var_info_iff in A. congruence.
 Qed.
 
-Lemma symbol_address_inject:
+Lemma symbol_address_inject invar:
   forall j id ofs,
-  meminj_preserves_globals j -> kept id ->
+  meminj_preserves_globals invar j -> kept id ->
   Val.inject j (Genv.symbol_address ge id ofs) (Genv.symbol_address tge id ofs).
 Proof.
   intros. unfold Genv.symbol_address. destruct (Genv.find_symbol ge id) as [b|] eqn:FS; auto.
@@ -699,47 +700,47 @@ Proof.
   apply set_reg_inject; auto.
 Qed.
 
-Inductive match_stacks (j: meminj):
+Inductive match_stacks (invar: block -> Prop) (j: meminj):
         list stackframe -> list stackframe -> block -> block -> Prop :=
   | match_stacks_nil: forall bound tbound,
       forall (SYMBINJ: symbols_inject j se tse),
-      meminj_preserves_globals j ->
+      meminj_preserves_globals invar j ->
       Ple (Genv.genv_next ge) bound -> Ple (Genv.genv_next tge) tbound ->
-      match_stacks j nil nil bound tbound
+      match_stacks invar j nil nil bound tbound
   | match_stacks_cons: forall res f sp pc rs s tsp trs ts bound tbound
          tf (TRANF: tf = (transf_function (fun _ i => filter_instr kept i) f))
-         (STACKS: match_stacks j s ts sp tsp)
+         (STACKS: match_stacks invar j s ts sp tsp)
          (KEPT: forall id, ref_function f id -> kept id)
          (SPINJ: j sp = Some(tsp, 0))
          (REGINJ: regset_inject j rs trs)
          (BELOW: Plt sp bound)
          (TBELOW: Plt tsp tbound),
-      match_stacks j (Stackframe res f (Vptr sp Ptrofs.zero) pc rs :: s)
+      match_stacks invar j (Stackframe res f (Vptr sp Ptrofs.zero) pc rs :: s)
                      (Stackframe res tf (Vptr tsp Ptrofs.zero) pc trs :: ts)
                      bound tbound.
 
-Lemma match_stacks_symbols_inject:
+Lemma match_stacks_symbols_inject invar:
   forall j s ts bound tbound,
-  match_stacks j s ts bound tbound ->
+  match_stacks invar j s ts bound tbound ->
   symbols_inject j se tse.
 Proof.
   induction 1; auto.
 Qed.
 
-Lemma match_stacks_preserves_globals:
+Lemma match_stacks_preserves_globals invar:
   forall j s ts bound tbound,
-  match_stacks j s ts bound tbound ->
-  meminj_preserves_globals j.
+  match_stacks invar j s ts bound tbound ->
+  meminj_preserves_globals invar j.
 Proof.
   induction 1; auto.
 Qed.
 
-Lemma match_stacks_incr:
+Lemma match_stacks_incr invar:
   forall j j', inject_incr j j' ->
-  forall s ts bound tbound, match_stacks j s ts bound tbound ->
+  forall s ts bound tbound, match_stacks invar j s ts bound tbound ->
   (forall b1 b2 delta,
       j b1 = None -> j' b1 = Some(b2, delta) -> Ple bound b1 /\ Ple tbound b2) ->
-  match_stacks j' s ts bound tbound.
+  match_stacks invar j' s ts bound tbound.
 Proof.
   induction 2; intros.
 - assert (SAME: forall b b' delta, Plt b (Genv.genv_next ge) ->
@@ -766,6 +767,7 @@ Proof.
     exists b'; auto.
   + exploit symbols_inject_3; eauto. intros (b & A & B).
     exists b; auto.
+  + exploit symbols_inject_4; eauto.
   + eapply defs_inject; eauto. apply SAME; auto.
     eapply Genv.genv_defs_range; eauto.
   + eapply defs_rev_inject; eauto. apply SAME'; auto.
@@ -778,11 +780,11 @@ Proof.
   apply regset_inject_incr with j; auto.
 Qed.
 
-Lemma match_stacks_bound:
+Lemma match_stacks_bound invar:
   forall j s ts bound tbound bound' tbound',
-  match_stacks j s ts bound tbound ->
+  match_stacks invar j s ts bound tbound ->
   Ple bound bound' -> Ple tbound tbound' ->
-  match_stacks j s ts bound' tbound'.
+  match_stacks invar j s ts bound' tbound'.
 Proof.
   induction 1; intros.
 - constructor; auto. eapply Ple_trans; eauto. eapply Ple_trans; eauto.
@@ -793,8 +795,9 @@ Inductive match_states: state -> state -> SimMemInjInv.t' -> Prop :=
   | match_states_regular: forall s f sp pc rs m ts tsp trs tm j
          tf (TRANF: tf = (transf_function (fun _ i => filter_instr kept i) f))
          sm0 (MCOMPAT: SimMemInjInv.mcompat sm0 m tm j)
-         (MWF: SimMemInjInv.wf' (fun _ => True) sm0)
-         (STACKS: match_stacks j s ts sp tsp)
+         invar (INV: sm0.(SimMemInjInv.mem_inv_src) = invar)
+         (MWF: SimMemInjInv.wf' SimMemInjInv.top_inv SimMemInjInv.top_inv sm0)
+         (STACKS: match_stacks invar j s ts sp tsp)
          (KEPT: forall id, ref_function f id -> kept id)
          (SPINJ: j sp = Some(tsp, 0))
          (REGINJ: regset_inject j rs trs)
@@ -803,8 +806,9 @@ Inductive match_states: state -> state -> SimMemInjInv.t' -> Prop :=
                    (State ts tf (Vptr tsp Ptrofs.zero) pc trs tm) sm0
   | match_states_call: forall s fptr sg args m ts tfptr targs tm j
          sm0 (MCOMPAT: SimMemInjInv.mcompat sm0 m tm j)
-         (MWF: SimMemInjInv.wf' (fun _ => True) sm0)
-         (STACKS: match_stacks j s ts (Mem.nextblock m) (Mem.nextblock tm))
+         invar (INV: sm0.(SimMemInjInv.mem_inv_src) = invar)
+         (MWF: SimMemInjInv.wf' SimMemInjInv.top_inv SimMemInjInv.top_inv sm0)
+         (STACKS: match_stacks invar j s ts (Mem.nextblock m) (Mem.nextblock tm))
          (FPTR: Val.inject j fptr tfptr)
          (ARGINJ: Val.inject_list j args targs)
          (MEMINJ: Mem.inject j m tm),
@@ -812,8 +816,9 @@ Inductive match_states: state -> state -> SimMemInjInv.t' -> Prop :=
                    (Callstate ts tfptr sg targs tm) sm0
   | match_states_return: forall s res m ts tres tm j
          sm0 (MCOMPAT: SimMemInjInv.mcompat sm0 m tm j)
-         (MWF: SimMemInjInv.wf' (fun _ => True) sm0)
-         (STACKS: match_stacks j s ts (Mem.nextblock m) (Mem.nextblock tm))
+         invar (INV: sm0.(SimMemInjInv.mem_inv_src) = invar)
+         (MWF: SimMemInjInv.wf' SimMemInjInv.top_inv SimMemInjInv.top_inv sm0)
+         (STACKS: match_stacks invar j s ts (Mem.nextblock m) (Mem.nextblock tm))
          (RESINJ: Val.inject j res tres)
          (MEMINJ: Mem.inject j m tm),
       match_states (Returnstate s res m)
@@ -836,9 +841,9 @@ Proof.
   intros. eapply external_call_mem_inject_gen; eauto.
 Qed.
 
-Lemma find_function_inject:
+Lemma find_function_inject invar:
   forall j ros rs fptr trs,
-  meminj_preserves_globals j ->
+  meminj_preserves_globals invar j ->
   find_function_ptr ge ros rs = fptr ->
   match ros with inl r => regset_inject j rs trs | inr id => kept id end ->
   exists tfptr, find_function_ptr tge ros trs = tfptr /\ Val.inject j fptr tfptr.
@@ -850,11 +855,11 @@ Proof.
   + destruct (Genv.find_symbol tge id); eauto.
 Qed.
 
-Lemma eval_builtin_arg_inject:
+Lemma eval_builtin_arg_inject invar:
   forall rs sp m j rs' sp' m' a v,
   eval_builtin_arg ge (fun r => rs#r) (Vptr sp Ptrofs.zero) m a v ->
   j sp = Some(sp', 0) ->
-  meminj_preserves_globals j ->
+  meminj_preserves_globals invar j ->
   regset_inject j rs rs' ->
   Mem.inject j m m' ->
   (forall id, In id (globals_of_builtin_arg a) -> kept id) ->
@@ -892,11 +897,11 @@ Proof.
   destruct Archi.ptr64; auto using Val.add_inject, Val.addl_inject.
 Qed.
 
-Lemma eval_builtin_args_inject:
+Lemma eval_builtin_args_inject invar:
   forall rs sp m j rs' sp' m' al vl,
   eval_builtin_args ge (fun r => rs#r) (Vptr sp Ptrofs.zero) m al vl ->
   j sp = Some(sp', 0) ->
-  meminj_preserves_globals j ->
+  meminj_preserves_globals invar j ->
   regset_inject j rs rs' ->
   Mem.inject j m m' ->
   (forall id, In id (globals_of_builtin_args al) -> kept id) ->
@@ -944,7 +949,7 @@ Proof.
     intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
     intros; eapply Mem.weak_valid_pointer_inject_no_overflow; eauto.
     intros; eapply Mem.different_pointers_inject; eauto.
-    intros. apply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
+    intros. eapply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
     apply KEPT. red. exists pc, (Iop op args res pc'); auto.
     econstructor; eauto.
     apply regs_inject; auto.
@@ -959,7 +964,7 @@ Proof.
                eval_addressing tge (Vptr tsp Ptrofs.zero) addr trs##args = Some ta
             /\ Val.inject j a ta).
   { apply eval_addressing_inj with (ge1 := ge) (sp1 := Vptr sp0 Ptrofs.zero) (vl1 := rs##args).
-    intros. apply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
+    intros. eapply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
     apply KEPT. red. exists pc, (Iload chunk addr args dst pc'); auto.
     econstructor; eauto.
     apply regs_inject; auto.
@@ -997,7 +1002,7 @@ Proof.
       - unfold Genv.symbol_address in *. des_ifs. esplits; eauto.
         ii.
         exploit match_stacks_preserves_globals; eauto. intro GEINJ. inv GEINJ.
-        exploit symbols_inject_5; eauto. i; des. clarify.
+        exploit symbols_inject_6; eauto. i; des. clarify.
     }
     replace (filter_instr kept (Istore chunk addr args src pc')) with (Inop pc') in CODETGT; cycle 1.
     { ss. des_ifs. rewrite forallb_forall in *. des. clarify. ss. specialize (Heq gid). tauto. }
@@ -1005,15 +1010,39 @@ Proof.
   eapply exec_Inop; eauto.
 
   des.
-  exploit Mem.store_unmapped_inject; eauto. intro INJ; des.
-  SimMemInjInv.spl_exact (SimMemInjInv.mk m' tm j sm0.(SimMemInjInv.mem_inv)); inv MCOMPAT.
-  - econstructor; ss; eauto.
-    + inv MWF. econs; ss; eauto. ii. exploit INVRANGE; eauto. i; des. esplits; eauto.
-      ii. eapply H2; eauto. eapply Mem.perm_store_2; eauto.
-  - inv MWF. econs; ss; eauto with mem.
-    + erewrite <- Mem.nextblock_store; eauto. xomega.
-    + xomega.
-    + econs; eauto; clarify.
+  assert (INVAR: SimMemInjInv.mem_inv_src sm0 b).
+  { unfold eval_addressing in *. des_ifs. ss. des_ifs.
+    unfold Genv.symbol_address in *. des_ifs.
+    exploit match_stacks_preserves_globals; eauto. intros GEINJ. inv GEINJ.
+    exploit symbols_inject_8; eauto. }
+  set (sm1 := (SimMemInj.mk
+                 m' tm j
+                 (SimMemInj.src_external sm0.(SimMemInjInv.minj))
+                 (SimMemInj.tgt_external sm0.(SimMemInjInv.minj))
+                 (SimMemInj.src_parent_nb sm0.(SimMemInjInv.minj))
+                 (SimMemInj.tgt_parent_nb sm0.(SimMemInjInv.minj)))).
+  assert (MWF1: SimMemInj.wf' sm1).
+  { inv MWF. inv WF. inv MCOMPAT. econs; ss; eauto.
+    - eapply Mem.store_unmapped_inject; eauto.
+    - etransitivity; eauto. unfold sm1, SimMemInj.src_private.
+      ss. ii. des. split; eauto. eapply Mem.store_valid_block_1; eauto.
+    - etransitivity; eauto. unfold sm1, SimMemInj.tgt_private, loc_out_of_reach.
+      ss. ii. des. split; eauto. ii. eapply PR; eauto.
+      eapply Mem.perm_store_2; eauto.
+    - eapply Mem.nextblock_store in H1. erewrite H1 in *. eauto. }
+  assert (MLE1: SimMemInj.le' sm0.(SimMemInjInv.minj) sm1).
+  { inv MCOMPAT. unfold sm1. econs; ss; eauto.
+    - eapply Mem.store_unchanged_on; eauto.
+      ii. inv MWF. exploit INVRANGESRC; eauto. i. des. eauto.
+    - eapply Mem.unchanged_on_refl.
+    - eapply SimMemInj.frozen_refl.
+    - ii. eapply Mem.perm_store_2; eauto. }
+  SimMemInjInv.spl_exact2 sm1.
+  econs; ss; eauto.
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
+  { ss. inv MWF1. auto. }
+  { econs; ss; eauto. }
   }
   assert(T: (forall id (IN: In id (globals_addressing addr)), kept id)).
   { i. destruct addr; ss. des; ss. clarify.
@@ -1022,7 +1051,7 @@ Proof.
     exploit match_stacks_preserves_globals; eauto. intro GEINJ. inv GEINJ.
     unfold Genv.symbol_address in *. des_ifs.
     destruct p0; ss.
-    exploit (symbols_inject_4 id b); eauto. i; des. clarify.
+    exploit (symbols_inject_5 id b); eauto. i; des. clarify.
   }
   replace (filter_instr kept (Istore chunk addr args src pc')) with (Istore chunk addr args src pc') in CODETGT; cycle 1.
   { ss. des_ifs. destruct addr; ss. rewrite andb_false_iff in Heq. des; ss. specialize (T i0). exploit T; eauto.
@@ -1032,7 +1061,7 @@ Proof.
                eval_addressing tge (Vptr tsp Ptrofs.zero) addr trs##args = Some ta
             /\ Val.inject j (Vptr b i) ta).
   { apply eval_addressing_inj with (ge1 := ge) (sp1 := Vptr sp0 Ptrofs.zero) (vl1 := rs##args).
-    intros. apply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
+    intros. eapply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
     eapply T; eauto.
     econstructor; eauto.
     apply regs_inject; auto.
@@ -1040,15 +1069,19 @@ Proof.
   destruct A as (ta & B & C).
   exploit Mem.storev_mapped_inject; eauto. intros (tm' & D & E).
   econstructor; split. eapply exec_Istore; eauto.
-  inv MCOMPAT. unfold Mem.storev in *. des_ifs.
-  SimMemInjInv.spl_approx sm0.
-  { econs; eauto. { SimMemInjInv.compat_tac. } econs; ss; eauto. ii. inv MWF. exploit INVRANGE; eauto.
-    i; des. esplits; eauto. ii. eapply H2; eauto. { eapply Mem.perm_store_2; eauto. } eauto with mem. }
-  { econs; ss; eauto with mem; try (erewrite <- Mem.nextblock_store; eauto; xomega). econs; eauto; clarify. }
+  inv MCOMPAT.
+  exploit SimMemInj.storev_mapped; eauto.
+  { inv MWF. eauto. } i; des.
+  SimMemInjInv.spl_exact2 sm1.
+  econstructor; eauto.
+  { SimMemInj.compat_tac. ss. clarify. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
+  { econs; eauto. }
 
 - (* call *)
   inversion FPTR.
-  exploit find_function_inject. 
+  exploit find_function_inject.
   eapply match_stacks_preserves_globals; eauto. eauto.
   destruct ros as [r|id]. eauto. apply KEPT. red. econstructor; econstructor; split; eauto. simpl; auto.
   intros (tfptr & A & B).
@@ -1070,20 +1103,22 @@ Proof.
   exploit Mem.free_parallel_inject; eauto. rewrite ! Z.add_0_r. intros (tm' & C & D).
   econstructor; split.
   eapply exec_Itailcall; eauto. constructor.
-  inv MCOMPAT.
-  (* exploit SimMemInjInv.free_parallel; eauto. i; des. *)
-  exploit Mem.nextblock_free; try apply H2; intro NB0.
-  exploit Mem.nextblock_free; try apply C; intro NB1.
-  SimMemInjInv.spl_approx sm0.
+  inv MCOMPAT. dup MWF. inv MWF.
+  exploit SimMemInj.free_parallel; eauto. i; des.
+  eexists (SimMemInjInv.mk sm1 _ _). split.
   econstructor; ss; eauto.
-  { econs; ss; eauto. ii. inv MWF. exploit INVRANGE; eauto. i; des. esplits; eauto with mem. ii. eapply H3; eauto. eapply Mem.perm_free_3; eauto. }
+  { SimMemInj.compat_tac. rewrite Z.add_0_r in FREETGT. rewrite C in FREETGT. clarify. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0).
+    instantiate (1:=SimMemInjInv.mem_inv_src sm0).
+    destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
   apply match_stacks_bound with stk tsp; auto.
   apply Plt_Ple.
   change (Mem.valid_block m' stk). eapply Mem.valid_block_inject_1; eauto.
   apply Plt_Ple.
   change (Mem.valid_block tm' tsp). eapply Mem.valid_block_inject_2; eauto.
   apply regs_inject; auto.
-  { econs; ss; eauto with mem. - rewrite NB0. xomega. - rewrite NB1. xomega. - econs; clarify. }
+  econs; eauto.
 
 - (* builtin *)
   exploit eval_builtin_args_inject; eauto.
@@ -1095,22 +1130,22 @@ Proof.
   intros (j' & tv & tm' & A & B & C & D & E & F & G).
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
-  SimMemInjInv.spl_approx sm0.
+
+  dup MWF. inv MWF.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInjInv.spl_exact2 sm1.
   eapply match_states_regular with (j := j'); eauto.
-  { SimMemInjInv.compat_tac. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto. ii. exploit INVRANGE; eauto. i; des. esplits; eauto.
-    - ii. destruct (SimMemInjInv.inj sm0 b0) eqn:T.
-      + destruct p0; ss. exploit F; try apply T; eauto. i; clarify. eapply H2; eauto.
-        eapply external_call_max_perm; eauto. eapply Mem.valid_block_inject_1; try apply T; eauto.
-      + exploit G; eauto. i; des. exploit Mem.valid_block_inject_1; eauto.
-    - eapply Plt_Ple_trans; eauto. eapply Mem.unchanged_on_nextblock; eauto. }
+  { SimMemInj.compat_tac. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0).
+    instantiate (1:=SimMemInjInv.mem_inv_src sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; ss; eauto. }
   apply match_stacks_incr with j; auto.
   intros. exploit G; eauto. intros [U V].
   assert (Mem.valid_block m sp0) by (eapply Mem.valid_block_inject_1; eauto).
   assert (Mem.valid_block tm tsp) by (eapply Mem.valid_block_inject_2; eauto).
   unfold Mem.valid_block in *; xomega.
   apply set_res_inject; auto. apply regset_inject_incr with j; auto.
-  { inv MCOMPAT. econs; ss; eauto; try (by eapply Mem.unchanged_on_nextblock; eauto); try (by ii; ss; eapply external_call_max_perm; eauto). }
+  econs; ss; eauto.
 
 - (* cond *)
   assert (C: eval_condition cond trs##args tm = Some b).
@@ -1131,26 +1166,28 @@ Proof.
   exploit Mem.free_parallel_inject; eauto. rewrite ! Z.add_0_r. intros (tm' & C & D).
   econstructor; split.
   eapply exec_Ireturn; eauto.
-  inv MCOMPAT.
-  (* exploit SimMemInjInv.free_parallel; eauto. i; des. *)
-  SimMemInjInv.spl_approx sm0.
+  inv MCOMPAT. dup MWF. inv MWF.
+  exploit SimMemInj.free_parallel; eauto. i; des.
+  SimMemInjInv.spl_exact2 sm1.
   econstructor; eauto.
-  { SimMemInjInv.compat_tac. }
-  { econs; ss; eauto. ii. inv MWF. exploit INVRANGE; eauto. i; des. esplits; eauto with mem. ii. eapply H1; eauto with mem. }
+  { SimMemInjInv.compat_tac. rewrite Z.add_0_r in FREETGT. ss. congruence. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0).
+    instantiate (1:=SimMemInjInv.mem_inv_src sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
   apply match_stacks_bound with stk tsp; auto.
   apply Plt_Ple.
   change (Mem.valid_block m' stk). eapply Mem.valid_block_inject_1; eauto.
   apply Plt_Ple.
   change (Mem.valid_block tm' tsp). eapply Mem.valid_block_inject_2; eauto.
   destruct or; simpl; auto.
-  { econs; ss; eauto with mem. - erewrite <- Mem.nextblock_free; eauto. xomega. - erewrite <- Mem.nextblock_free; eauto. xomega. - econs; clarify. }
+  econs; ss; eauto.
 
 - (* internal function *)
   exploit Mem.alloc_parallel_inject. eauto. eauto. apply Z.le_refl. apply Z.le_refl.
   intros (j' & tm' & tstk & C & D & E & F & G).
   assert (STK: stk = Mem.nextblock m) by (eapply Mem.alloc_result; eauto).
   assert (TSTK: tstk = Mem.nextblock tm) by (eapply Mem.alloc_result; eauto).
-  assert (STACKS': match_stacks j' s ts stk tstk).
+  assert (STACKS': match_stacks (SimMemInjInv.mem_inv_src sm0) j' s ts stk tstk).
   { rewrite STK, TSTK.
     apply match_stacks_incr with j; auto.
     intros. destruct (eq_block b1 stk).
@@ -1167,22 +1204,15 @@ Proof.
   { rewrite L. rewrite Genv.find_funct_find_funct_ptr. rewrite Genv.find_funct_ptr_iff. eauto. }
   { eauto. }
   { eauto. }
-  ss.
-  SimMemInjInv.spl_approx sm0.
+  ss. dup MWF. inv MWF.
+  exploit SimMemInj.alloc_parallel; eauto; try apply Z.le_refl. { inv MCOMPAT; eauto. }
+  intro SM. desH SM. SimMemInjInv.spl_exact2 sm1.
   eapply match_states_regular with (j := j'); eauto.
-  { inv MCOMPAT. SimMemInjInv.compat_tac. }
-  { inv MCOMPAT. econs; ss; eauto. ii. inv MWF.
-    exploit INVRANGE; eauto. i; des. esplits; eauto.
-    - ii. destruct (eq_block b0 (Mem.nextblock (SimMemInjInv.src sm0))); clarify; cycle 1.
-      + eapply H0. { rewrite <- G; eauto. } eapply Mem.perm_alloc_4; eauto.
-      + r in H1. xomega.
-    - unfold Mem.valid_block in *. exploit Mem.nextblock_alloc; eauto. intro T. rewrite T. xomega. }
+  { inv MCOMPAT. SimMemInj.compat_tac; ss. congruence. apply Axioms.functional_extensionality. i.
+    destruct (eq_block x (Mem.nextblock (SimMemInj.src sm0.(SimMemInjInv.minj)))); ss; try congruence. rewrite INJ0; ss. rewrite G; ss. }
+  { eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. econs; eauto. }
   apply init_regs_inject; auto. apply val_inject_list_incr with j; auto.
-  { inv MCOMPAT. econs; ss; eauto with mem. - exploit Mem.nextblock_alloc; try apply H. intro T. rewrite T. xomega.
-    - exploit Mem.nextblock_alloc; try apply C. intro T. rewrite T. xomega.
-    - ii. unfold Mem.valid_block. destruct (eq_block b1 (Mem.nextblock (SimMemInjInv.src sm0))); clarify.
-      + esplits; eauto; xomega.
-      + rewrite G in *; ss; clarify. }
+  econs; ss; eauto.
 
 - (* external function *)
   exploit external_call_inject; eauto.
@@ -1198,27 +1228,27 @@ Proof.
   eapply exec_function_external; eauto.
   { rewrite L. rewrite Genv.find_funct_find_funct_ptr. rewrite Genv.find_funct_ptr_iff. eauto. }
   { eauto. }
-  SimMemInjInv.spl_approx sm0.
+  dup MWF. inv MWF.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInjInv.spl_exact2 sm1.
   eapply match_states_return with (j := j'); eauto.
-  { SimMemInjInv.compat_tac. }
-  { inv MCOMPAT. inv MWF. econs; ss; eauto. ii. exploit INVRANGE; eauto. i; des. esplits; eauto.
-    - ii. destruct (SimMemInjInv.inj sm0 b0) eqn:T.
-      + destruct p0; ss. exploit F; try apply T; eauto. i; clarify. eapply H0; eauto.
-        eapply external_call_max_perm; eauto. eapply Mem.valid_block_inject_1; try apply T; eauto.
-      + exploit G; eauto. i; des. exploit Mem.valid_block_inject_1; eauto.
-    - eapply Plt_Ple_trans; eauto. eapply Mem.unchanged_on_nextblock; eauto. }
+  { SimMemInj.compat_tac. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0).
+    instantiate (1:=SimMemInjInv.mem_inv_src sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
   apply match_stacks_bound with (Mem.nextblock m) (Mem.nextblock tm).
   apply match_stacks_incr with j; auto.
   intros. exploit G; eauto. intros [P Q].
   unfold Mem.valid_block in *; xomega.
   eapply external_call_nextblock; eauto.
   eapply external_call_nextblock; eauto.
-  { inv MCOMPAT. econs; ss; eauto; try (by eapply Mem.unchanged_on_nextblock; eauto); try (by ii; ss; eapply external_call_max_perm; eauto). }
+  econs; ss; eauto.
+
 - (* return *)
   inv STACKS. econstructor; split.
   eapply exec_return.
-  SimMemInjInv.spl.
-  econstructor; eauto. apply set_reg_inject; auto.
+  esplits; eauto.
+  econstructor; eauto. apply set_reg_inject; auto. reflexivity.
 Qed.
 
 End CORELEMMA.
@@ -1289,8 +1319,18 @@ Proof.
   split. auto. exists id. split. apply Genv.invert_find_symbol; auto. auto.
 Qed.
 
+Definition invar (b: block): Prop :=
+  match Genv.invert_symbol ge b with
+  | Some id =>
+    match Genv.find_symbol tge id with
+    | Some b' => False
+    | None => True
+    end
+  | None => False
+  end.
+
 Lemma init_meminj_preserves_globals:
-  meminj_preserves_globals ge tge init_meminj.
+  meminj_preserves_globals ge tge invar init_meminj.
 Proof.
   constructor; intros.
 - exploit init_meminj_invert; eauto. intros (A & id1 & B & C).
@@ -1306,6 +1346,10 @@ Proof.
   eapply init_meminj_eq; eauto.
 - exploit transform_find_symbol_2; eauto. intros (K & b & F).
   exists b; split; auto. eapply init_meminj_eq; eauto.
+- destruct (Genv.find_symbol tge id) eqn:FIND.
+  + eapply transform_find_symbol_2 in FIND. des. clarify.
+  + unfold invar. eapply Genv.find_invert_symbol in H0.
+    rewrite H0. rewrite FIND. auto.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C).
   assert (kept id) by (eapply transform_find_symbol_2; eauto).
   assert (pm!id = Some gd).
@@ -1511,7 +1555,7 @@ Qed.
 Theorem init_mem_inject:
   forall m,
   Genv.init_mem p = Some m ->
-  exists f tm, Genv.init_mem tp = Some tm /\ Mem.inject f m tm /\ meminj_preserves_globals ge tge f.
+  exists f tm, Genv.init_mem tp = Some tm /\ Mem.inject f m tm /\ meminj_preserves_globals ge tge invar f.
 Proof.
   intros.
   exploit init_mem_exists; eauto. intros [tm INIT].
@@ -1529,10 +1573,18 @@ Proof.
   exists (Callstate nil (Vptr tb Ptrofs.zero) signature_main nil tm); split.
   econstructor; eauto.
   fold tge. erewrite match_prog_main by eauto. auto.
-  exists (SimMemInjInv.mk m0 tm j (fun _ => False)).
+  exists (SimMemInjInv.mk (SimMemInj.mk m0 tm j bot2 bot2 (Mem.nextblock m0) (Mem.nextblock tm)) invar (fun _ => False)).
   econstructor; eauto.
   { SimMemInjInv.compat_tac. }
-  { econs; ss; eauto; try xomega. }
+  { econs; ss.
+    - econs; ss; eauto; try xomega.
+    - ii. unfold invar in *. des_ifs. splits; ss.
+      + eapply Genv.invert_find_symbol in Heq.
+        destruct (j blk) eqn:BLK; auto. destruct p0.
+        inv C. exploit symbols_inject_5; eauto. i. des. clarify.
+      + eapply Genv.invert_find_symbol in Heq.
+        eapply Genv.genv_symb_range in Heq.
+        erewrite <- Genv.init_mem_genv_next; eauto. ss. }
   exploit globals_symbols_inject; eauto. intro T.
   constructor. auto.
   auto.
