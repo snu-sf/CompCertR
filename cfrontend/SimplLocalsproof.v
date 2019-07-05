@@ -2117,7 +2117,7 @@ Proof.
     inv MCOMPAT. inv MWF. econs; ss; eauto.
     - eapply Mem.store_unchanged_on; eauto.
     - eapply Mem.unchanged_on_refl.
-    - eapply SimMemInj.frozen_refl.
+    - eapply SimMemInj.frozen_refl. - eapply SimMemInj.frozen_refl.
     - ii. eapply Mem.perm_store_2; eauto.
   }
   des. SimMemInj.spl_exact sm1.
@@ -2163,7 +2163,7 @@ Proof.
       { rewrite <- Ptrofs.repr_unsigned with (i := ofs). rewrite Ptrofs.Ptrofs_add_repr.
         rewrite Ptrofs.unsigned_repr; [|xomega]. rewrite Ptrofs.unsigned_repr. xomega. eauto with ints. }
       xomega.
-    - eapply SimMemInj.frozen_refl.
+    - eapply SimMemInj.frozen_refl. - eapply SimMemInj.frozen_refl.
     - ii. eapply assign_loc_perm; eauto.
     - ii. eapply assign_loc_perm; eauto.
   }
@@ -2396,6 +2396,8 @@ Proof.
   { inv MCOMPAT. inv MWF. econs; ss; eauto.
     - eapply Mem.unchanged_on_trans. eapply alloc_variables_unchanged_on; eauto. eapply bind_parameters_unchanged_on; eauto.
     - eapply Mem.unchanged_on_trans; eauto. eapply alloc_variables_unchanged_on; eauto.
+    - eapply SimMemInj.frozen_shortened; eauto.
+      eapply SimMemInj.frozen_shortened; eauto. eapply SimMemInj.inject_separated_frozen; eauto.
     - eapply SimMemInj.frozen_shortened; eauto. eapply SimMemInj.inject_separated_frozen; eauto.
     - ii. eapply alloc_variables_perm; eauto. eapply bind_parameters_perm; eauto.
     - ii. eapply alloc_variables_perm; eauto. eapply MAX; eauto.
@@ -2456,7 +2458,7 @@ Proof.
   replace (prog_main tprog) with (prog_main prog). 
   instantiate (1 := b). rewrite <- H1. apply (symbols_preserved ge tge); auto.
   generalize (match_program_main (proj1 TRANSF)). simpl; auto.
-  exists (SimMemInj.mk m0 m0 (Mem.flat_inj (Mem.nextblock m0)) bot2 bot2 1%positive 1%positive).
+  exists (SimMemInj.mk m0 m0 (Mem.flat_inj (Mem.nextblock m0)) bot2 bot2 1%positive 1%positive 1%positive 1%positive).
   econstructor; eauto.
   { instantiate (1 := Mem.flat_inj (Mem.nextblock m0)). SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }

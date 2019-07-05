@@ -1337,7 +1337,7 @@ Proof.
   exists (Callstate nil (Vptr tb Ptrofs.zero) signature_main nil tm); split.
   econstructor; eauto.
   fold tge. erewrite match_prog_main by eauto. auto.
-  exists (SimMemInj.mk m0 tm j bot2 bot2 1%positive 1%positive).
+  exists (SimMemInj.mk m0 tm j bot2 bot2 1%positive 1%positive 1%positive 1%positive).
   econstructor; eauto.
   { SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. }

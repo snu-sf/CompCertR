@@ -2115,11 +2115,13 @@ Proof.
     econstructor. eexact STORE. eauto.
   assert(LE: SimMemInj.le' sm0
              (SimMemInj.mk m m'' j sm0.(SimMemInj.src_external) sm0.(SimMemInj.tgt_external)
-                           sm0.(SimMemInj.src_parent_nb) sm0.(SimMemInj.tgt_parent_nb))).
+                           sm0.(SimMemInj.src_parent_nb) sm0.(SimMemInj.tgt_parent_nb)
+                           sm0.(SimMemInj.src_ge_nb) sm0.(SimMemInj.tgt_ge_nb))).
   { inv MCOMPAT. inv MWF. econs; eauto.
     - eapply Mem.unchanged_on_refl.
     - unfold store_stack, Mem.storev in *. simpl in STORE. simpl.
       eapply Mem.store_unchanged_on; eauto. des. eauto.
+    - eapply SimMemInj.frozen_refl.
     - eapply SimMemInj.frozen_refl.
     - ii. ss. unfold store_stack, Mem.storev in *. ss. eapply Mem.perm_store_2; eauto.
   }
@@ -2451,7 +2453,8 @@ Proof.
   }
   assert(LE: SimMemInj.le' sm0
              (SimMemInj.mk m' m5' j' sm0.(SimMemInj.src_external) sm0.(SimMemInj.tgt_external)
-                           sm0.(SimMemInj.src_parent_nb) sm0.(SimMemInj.tgt_parent_nb))).
+                           sm0.(SimMemInj.src_parent_nb) sm0.(SimMemInj.tgt_parent_nb)
+                           sm0.(SimMemInj.src_ge_nb) sm0.(SimMemInj.tgt_ge_nb))).
 
   { inv MCOMPAT. inv MWF. econs; ss; eauto.
     - eapply Mem.alloc_unchanged_on; eauto.
@@ -2459,6 +2462,8 @@ Proof.
       eapply Mem.unchanged_on_trans with m3'; [|eapply Mem.unchanged_on_trans with m4'; [|eauto]].
       + eapply Mem.store_unchanged_on; eauto. ii. eapply Mem.fresh_block_alloc; eauto. eapply TGTEXT in H1. red in H1. des. eauto.
       + eapply Mem.store_unchanged_on; eauto. ii. eapply Mem.fresh_block_alloc; eauto. eapply TGTEXT in H1. red in H1. des. eauto.
+    - eapply SimMemInj.frozen_shortened; eauto.
+      eapply SimMemInj.frozen_shortened; eauto. eapply SimMemInj.inject_separated_frozen. eauto.
     - eapply SimMemInj.frozen_shortened; eauto. eapply SimMemInj.inject_separated_frozen. eauto.
     - ii. eapply Mem.perm_alloc_4; eauto. ii. subst b. eapply Mem.fresh_block_alloc. eapply H. eauto.
     - ii. unfold store_stack, Mem.storev in *. ss.
@@ -2601,7 +2606,7 @@ Proof.
   rewrite (match_program_main TRANSF).
   erewrite symbols_preserved; eauto.
   set (j := Mem.flat_inj (Mem.nextblock m0)).
-  exists (SimMemInj.mk m0 m0 j bot2 bot2 1%positive 1%positive).
+  exists (SimMemInj.mk m0 m0 j bot2 bot2 1%positive 1%positive 1%positive 1%positive).
   eapply match_states_call with (j := j); eauto.
   { SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }

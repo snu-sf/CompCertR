@@ -139,6 +139,8 @@ Record t' := mk {
   tgt_external: block -> Z -> Prop;
   src_parent_nb: block;
   tgt_parent_nb: block;
+  src_ge_nb: block;
+  tgt_ge_nb: block;
 }.
 
 Definition valid_blocks (m: mem): block -> Z -> Prop := fun b _ => m.(Mem.valid_block) b.
@@ -158,7 +160,10 @@ Inductive wf' (sm0: t'): Prop :=
     (SRCEXT: sm0.(src_external) <2= sm0.(src_private))
     (TGTEXT: sm0.(tgt_external) <2= sm0.(tgt_private))
     (SRCLE: (sm0.(src_parent_nb) <= sm0.(src).(Mem.nextblock))%positive)
-    (TGTLE: (sm0.(tgt_parent_nb) <= sm0.(tgt).(Mem.nextblock))%positive).
+    (TGTLE: (sm0.(tgt_parent_nb) <= sm0.(tgt).(Mem.nextblock))%positive)
+    (SRCLEGE: (sm0.(src_ge_nb) <= sm0.(src_parent_nb))%positive)
+    (TGTLEGE: (sm0.(tgt_ge_nb) <= sm0.(tgt_parent_nb))%positive)
+.
 
 Inductive le' (mrel0 mrel1: t'): Prop :=
 | le_intro
@@ -167,8 +172,12 @@ Inductive le' (mrel0 mrel1: t'): Prop :=
     (TGTUNCHANGED: Mem.unchanged_on mrel0.(tgt_external) mrel0.(tgt) mrel1.(tgt))
     (SRCPARENTEQ: mrel0.(src_external) = mrel1.(src_external))
     (SRCPARENTEQNB: mrel0.(src_parent_nb) = mrel1.(src_parent_nb))
+    (SRCGENB: mrel0.(src_ge_nb) = mrel1.(src_ge_nb))
     (TGTPARENTEQ: mrel0.(tgt_external) = mrel1.(tgt_external))
     (TGTPARENTEQNB: mrel0.(tgt_parent_nb) = mrel1.(tgt_parent_nb))
+    (TGTGENB: mrel0.(tgt_ge_nb) = mrel1.(tgt_ge_nb))
+    (FROZENLO: frozen mrel0.(inj) mrel1.(inj) (mrel0.(src_ge_nb))
+                                            (mrel0.(tgt_ge_nb)))
     (FROZEN: frozen mrel0.(inj) mrel1.(inj) (mrel0.(src_parent_nb))
                                             (mrel0.(tgt_parent_nb)))
     (MAXSRC: forall b ofs
@@ -181,7 +190,8 @@ Inductive le' (mrel0 mrel1: t'): Prop :=
 Global Program Instance le'_PreOrder: RelationClasses.PreOrder le'.
 Next Obligation.
   econs; eauto; try reflexivity; try apply Mem.unchanged_on_refl; eauto.
-  eapply frozen_refl; eauto.
+  - eapply frozen_refl; eauto.
+  - eapply frozen_refl; eauto.
 Qed.
 Next Obligation.
   ii. inv H; inv H0. des; clarify.
@@ -190,11 +200,14 @@ Next Obligation.
   + eapply Mem.unchanged_on_trans; eauto with congruence.
   + eapply Mem.unchanged_on_trans; eauto with congruence.
   + econs; eauto. ii; des. destruct (inj y b_src) eqn:T.
+    * destruct p. exploit INCR0; eauto. i; clarify. inv FROZENLO. hexploit NEW_IMPLIES_OUTSIDE; eauto.
+    * inv FROZENLO0. hexploit NEW_IMPLIES_OUTSIDE; eauto; []; i; des. split; ss; red; etransitivity; eauto.
+      { rewrite <- SRCGENB. reflexivity. }
+      { rewrite <- TGTGENB. reflexivity. }
+  + econs; eauto. ii; des. destruct (inj y b_src) eqn:T.
     * destruct p. exploit INCR0; eauto. i; clarify. inv FROZEN.
       hexploit NEW_IMPLIES_OUTSIDE; eauto.
-    * inv FROZEN0.
-      hexploit NEW_IMPLIES_OUTSIDE; eauto; []; i; des.
-      split; ss; red; etransitivity; eauto.
+    * inv FROZEN0. hexploit NEW_IMPLIES_OUTSIDE; eauto; []; i; des. split; ss; red; etransitivity; eauto.
       { rewrite <- SRCPARENTEQNB. reflexivity. }
       { rewrite <- TGTPARENTEQNB. reflexivity. }
   + i. r. etransitivity.
@@ -210,12 +223,16 @@ Qed.
 Definition lift' (mrel0: t'): t' :=
   (mk mrel0.(src) mrel0.(tgt) mrel0.(inj)
       mrel0.(src_private) mrel0.(tgt_private)
-      mrel0.(src).(Mem.nextblock) mrel0.(tgt).(Mem.nextblock)).
+      mrel0.(src).(Mem.nextblock) mrel0.(tgt).(Mem.nextblock)
+      mrel0.(src_ge_nb) mrel0.(tgt_ge_nb)
+  ).
 
 Definition unlift' (mrel0 mrel1: t'): t' :=
   (mk mrel1.(src) mrel1.(tgt) mrel1.(inj)
       mrel0.(src_external) mrel0.(tgt_external)
-      mrel0.(src_parent_nb) mrel0.(tgt_parent_nb)).
+      mrel0.(src_parent_nb) mrel0.(tgt_parent_nb)
+      mrel0.(src_ge_nb) mrel0.(tgt_ge_nb)
+  ).
 
 Lemma unlift_spec : forall mrel0 mrel1 : t',
                   le' (lift' mrel0) mrel1 -> wf' mrel0 -> le' mrel0 (unlift' mrel0 mrel1).
@@ -290,7 +307,7 @@ Lemma store_mapped
       /\ (<<MLE: le' sm0 sm1>>).
 Proof.
   exploit Mem.store_mapped_inject; try apply MWF; eauto. i; des. inv MWF.
-  eexists (mk _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
+  eexists (mk _ _ _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
   - econs; ss; eauto.
     + eapply Mem.store_unchanged_on; eauto.
       ii. apply SRCEXT in H2. red in H2. des. red in H2. clarify.
@@ -299,6 +316,7 @@ Proof.
       eapply H2; eauto. clear - STRSRC H1 H4.
       apply Mem.store_valid_access_3 in STRSRC. destruct STRSRC.
       eauto with mem xomega.
+    + eapply frozen_refl.
     + eapply frozen_refl.
     + ii. eapply Mem.perm_store_2; eauto.
     + ii. eapply Mem.perm_store_2; eauto.
@@ -352,7 +370,7 @@ Lemma free_parallel
       /\ (<<MLE: le' sm0 sm1>>).
 Proof.
   exploit Mem.free_parallel_inject; try apply MWF; eauto. i; des. inv MWF.
-  eexists (mk _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
+  eexists (mk _ _ _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
   - econs; ss; eauto.
     + eapply Mem.free_unchanged_on; eauto.
       ii. apply SRCEXT in H2. red in H2. des. red in H2. clarify.
@@ -360,6 +378,7 @@ Proof.
       ii. apply TGTEXT in H2. red in H2. des. red in H2.
       eapply H2; eauto. clear - FREESRC H1 H4.
       apply Mem.free_range_perm in FREESRC. eauto with mem xomega.
+    + eapply frozen_refl.
     + eapply frozen_refl.
     + ii. eapply Mem.perm_free_3; eauto.
     + ii. eapply Mem.perm_free_3; eauto.
@@ -386,11 +405,12 @@ Lemma free_left
       /\ (<<MLE: le' sm0 sm1>>).
 Proof.
   exploit Mem.free_left_inject; try apply MWF; eauto. i; des. inv MWF.
-  eexists (mk _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
+  eexists (mk _ _ _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
   - econs; ss; eauto.
     + eapply Mem.free_unchanged_on; eauto.
       ii. apply SRCEXT in H1. red in H1. des. red in H1. clarify.
     + eapply Mem.unchanged_on_refl.
+    + eapply frozen_refl.
     + eapply frozen_refl.
     + ii. eapply Mem.perm_free_3; eauto.
   - econs; ss; eauto.
@@ -419,10 +439,11 @@ Proof.
     replace (ofs + delta - delta) with ofs by omega. eauto with mem.
   }
   i; des. inv MWF.
-  eexists (mk _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
+  eexists (mk _ _ _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
   - econs; ss; eauto.
     + eapply Mem.unchanged_on_refl.
     + eapply Mem.free_unchanged_on; eauto.
+    + eapply frozen_refl.
     + eapply frozen_refl.
     + ii. eapply Mem.perm_free_3; eauto.
   - econs; ss; eauto.
@@ -445,16 +466,19 @@ Lemma alloc_parallel
       /\ (<<MLE: le' sm0 sm1>>).
 Proof.
   exploit Mem.alloc_parallel_inject; try apply MWF; eauto. i; des. inv MWF.
-  eexists (mk _ _ f' _ _ _ _). exists b2. esplits; ss; eauto; cycle 1.
+  assert(FROZEN: frozen (inj sm0) f' (src_parent_nb sm0) (tgt_parent_nb sm0)).
+  {
+    + econs. ii. des. destruct (eq_block b_src blk_src).
+      * subst. rewrite H2 in NEW0. clarify. eapply Mem.alloc_result in ALCSRC. rewrite ALCSRC.
+        eapply Mem.alloc_result in H. rewrite H. esplits; eauto.
+      * rewrite H3 in NEW0; eauto. clarify.
+  }
+  eexists (mk _ _ f' _ _ _ _ _ _). exists b2.
+  esplits; ss; eauto; cycle 1.
   - econs; ss; eauto.
     + eapply Mem.alloc_unchanged_on; eauto.
     + eapply Mem.alloc_unchanged_on; eauto.
-    + econs. ii. des.
-      destruct (eq_block b_src blk_src).
-      * subst. rewrite H2 in NEW0. clarify.
-        eapply Mem.alloc_result in ALCSRC. rewrite ALCSRC.
-        eapply Mem.alloc_result in H. rewrite H. esplits; eauto.
-      * rewrite H3 in NEW0; eauto. clarify.
+    + eapply frozen_shortened; eauto.
     + ii. eapply Mem.perm_alloc_4; eauto.
       ii. subst b. eapply Mem.fresh_block_alloc; try eapply ALCSRC; eauto.
     + ii. eapply Mem.perm_alloc_4; eauto.
@@ -494,15 +518,17 @@ Proof.
   inv MWF.
   assert (LE_LIFTED: le' sm0.(lift')
                                (mk m_src0 m_tgt0 f' sm0.(src_private) sm0.(tgt_private)
-                                                                            sm0.(src).(Mem.nextblock) sm0.(tgt).(Mem.nextblock))).
+                                   sm0.(src).(Mem.nextblock) sm0.(tgt).(Mem.nextblock)
+                                   sm0.(src_ge_nb) sm0.(tgt_ge_nb))).
   { econs; ss; eauto.
     - econs; i; eapply UNCHANGSRC; eauto; eapply H.
     - econs; i; eapply UNCHANGTGT; eauto; eapply H.
+    - eapply frozen_shortened; try eapply inject_separated_frozen; eauto; try xomega.
     - eapply inject_separated_frozen; eauto.
     - ii. eapply external_call_max_perm; eauto.
     - ii. eapply external_call_max_perm; eauto.
   }
-  eexists (mk _ _ _ sm0.(src_external) sm0.(tgt_external) sm0.(src_parent_nb) sm0.(tgt_parent_nb)); eauto.
+  eexists (mk _ _ _ sm0.(src_external) sm0.(tgt_external) sm0.(src_parent_nb) sm0.(tgt_parent_nb) _ _); eauto.
   esplits; ss; eauto.
   - econs; ss; eauto.
     + etransitivity; eauto. eapply (after_private_src _ LE_LIFTED).
@@ -529,11 +555,11 @@ Lemma free_list
       /\ (<<MWF: wf' sm1>>)
       /\ (<<MLE: le' sm0 sm1>>).
 Proof.
-  inv MWF. eexists (mk _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
+  inv MWF. eexists (mk _ _ _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
   - econs; ss; eauto.
     + eapply Mem.free_list_unchanged_on; eauto.
     + eapply Mem.free_list_unchanged_on; eauto.
-    + eapply frozen_refl.
+    + eapply frozen_refl. + eapply frozen_refl.
     + ii. eapply Mem.perm_free_list; eauto.
     + ii. eapply Mem.perm_free_list; eauto.      
   - econs; ss; eauto.
@@ -568,6 +594,8 @@ Proof.
     { unfold valid_blocks, Mem.valid_block in *. xomega. }
   - rewrite <- SRCPARENTEQNB. etransitivity; eauto.
   - rewrite <- TGTPARENTEQNB. etransitivity; eauto.
+  - congruence.
+  - congruence.
 Qed.
 
 End ORIGINALS.
@@ -587,6 +615,6 @@ Ltac compat_tac := ss; econs; eauto; try congruence.
 
 Ltac spl := esplits; [|reflexivity].
 Ltac spl_approx sm :=
-  eexists (mk _ _ _ sm.(src_external) sm.(tgt_external) sm.(src_parent_nb) sm.(tgt_parent_nb)); splits; eauto.
+  eexists (mk _ _ _ sm.(src_external) sm.(tgt_external) sm.(src_parent_nb) sm.(tgt_parent_nb) sm.(src_ge_nb) sm.(tgt_ge_nb)); splits; eauto.
 Ltac spl_exact sm :=
   exists sm; splits; [|try etransitivity; eauto; try reflexivity; eauto].

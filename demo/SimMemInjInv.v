@@ -121,7 +121,9 @@ Definition lift' (mrel0: t'): t' :=
         (SimMemInj.src_private mrel0 /2\ fun blk _ => ~ mrel0.(mem_inv_src) blk)
         (SimMemInj.tgt_private mrel0 /2\ fun blk _ => ~ mrel0.(mem_inv_tgt) blk)
         ((SimMemInj.src mrel0).(Mem.nextblock))
-        ((SimMemInj.tgt mrel0).(Mem.nextblock)))
+        ((SimMemInj.tgt mrel0).(Mem.nextblock))
+        ((SimMemInj.src_ge_nb mrel0))
+        ((SimMemInj.tgt_ge_nb mrel0)))
      (mem_inv_src mrel0)
      (mem_inv_tgt mrel0)
 .
@@ -134,7 +136,9 @@ Definition unlift' (mrel0 mrel1: t'): t' :=
         (SimMemInj.src_external mrel0)
         (SimMemInj.tgt_external mrel0)
         (SimMemInj.src_parent_nb mrel0)
-        (SimMemInj.tgt_parent_nb mrel0)) (mem_inv_src mrel0) (mem_inv_tgt mrel0).
+        (SimMemInj.tgt_parent_nb mrel0)
+        (SimMemInj.src_ge_nb mrel0)
+        (SimMemInj.tgt_ge_nb mrel0)) (mem_inv_src mrel0) (mem_inv_tgt mrel0).
 
 Lemma unlift_spec : forall mrel0 mrel1 : t',
                   le' (lift' mrel0) mrel1 -> wf' mrel0 -> le' mrel0 (unlift' mrel0 mrel1).
@@ -161,6 +165,8 @@ Proof.
     + ii. des. destruct PR. split; ss.
     + reflexivity.
     + reflexivity.
+    + xomega.
+    + xomega.
   - ii. exploit INVRANGESRC; eauto. i. des. splits; eauto.
     + ii. des. clarify.
     + eapply Plt_Ple_trans; eauto.
@@ -197,93 +203,6 @@ Proof.
   - ii. split.
     + eapply INVRANGETGT0. rewrite <- MINVEQTGT. auto.
     + eapply INVRANGETGT; eauto.
-Qed.
-
-Lemma unchanged_on_mle sm0 m_src1 m_tgt1 j1
-      (WF: wf' sm0)
-      (INJECT: Mem.inject j1 m_src1 m_tgt1)
-      (INCR: inject_incr sm0.(inj) j1)
-      (SEP: inject_separated sm0.(inj) j1 sm0.(src) sm0.(tgt))
-      (UNCHSRC: Mem.unchanged_on
-                  (loc_unmapped sm0.(inj))
-                  sm0.(src) m_src1)
-      (UNCHTGT: Mem.unchanged_on
-                  (loc_out_of_reach sm0.(inj) sm0.(src))
-                  sm0.(tgt) m_tgt1)
-      (MAXSRC: forall
-          b ofs
-          (VALID: Mem.valid_block sm0.(src) b)
-        ,
-          <<MAX: Mem.perm m_src1 b ofs Max <1= Mem.perm sm0.(src) b ofs Max>>)
-      (MAXTGT: forall
-          b ofs
-          (VALID: Mem.valid_block sm0.(tgt) b)
-        ,
-          <<MAX: Mem.perm m_tgt1 b ofs Max <1= Mem.perm sm0.(tgt) b ofs Max>>)
-  :
-    (<<MLE: le' sm0 (mk (SimMemInj.mk
-                           m_src1 m_tgt1 j1
-                           (SimMemInj.src_external sm0)
-                           (SimMemInj.tgt_external sm0)
-                           (SimMemInj.src_parent_nb sm0)
-                           (SimMemInj.tgt_parent_nb sm0)) sm0.(mem_inv_src) sm0.(mem_inv_tgt))>>) /\
-    (<<MWF: wf' (mk (SimMemInj.mk
-                       m_src1 m_tgt1 j1
-                       (SimMemInj.src_external sm0)
-                       (SimMemInj.tgt_external sm0)
-                       (SimMemInj.src_parent_nb sm0)
-                       (SimMemInj.tgt_parent_nb sm0)) sm0.(mem_inv_src) sm0.(mem_inv_tgt))>>).
-Proof.
-  split.
-  - econs; ss; eauto. econs; ss; eauto.
-    + eapply Mem.unchanged_on_implies; eauto. inv WF. inv WF0.
-      ii. eapply SRCEXT; eauto.
-    + eapply Mem.unchanged_on_implies; eauto. inv WF. inv WF0.
-      ii. eapply TGTEXT; eauto.
-    + econs. ii. des. exploit SEP; eauto. i. des. inv WF. inv WF0.
-      split.
-      * clear - H SRCLE. unfold Mem.valid_block in *. red. xomega.
-      * clear - H0 TGTLE. unfold Mem.valid_block in *. red. xomega.
-  - inv WF. inv WF0. econs; ss; eauto.
-    + econs; ss; eauto.
-      * etransitivity; eauto.
-        ii. destruct PR. split; ss.
-        { unfold loc_unmapped. destruct (j1 x0) eqn:BLK; eauto.
-          destruct p. exploit SEP; eauto. i. des. clarify. }
-        { eapply Plt_Ple_trans; eauto.
-          eapply Mem.unchanged_on_nextblock; eauto. }
-      * etransitivity; eauto.
-        ii. destruct PR. split; ss.
-        { ii. destruct (inj sm0 b0) eqn:BLK.
-          - destruct p. dup BLK. eapply INCR in BLK. clarify.
-            exploit H; eauto. eapply MAXSRC; eauto.
-            eapply Mem.valid_block_inject_1; eauto.
-          - exploit SEP; eauto. i. des. clarify. }
-        { eapply Plt_Ple_trans; eauto.
-          eapply Mem.unchanged_on_nextblock; eauto. }
-      * etransitivity; eauto. eapply Mem.unchanged_on_nextblock; eauto.
-      * etransitivity; eauto. eapply Mem.unchanged_on_nextblock; eauto.
-    + eapply private_unchanged_on_invariant; eauto.
-      * ii. eapply Plt_Ple_trans; eauto.
-        eapply INVRANGESRC; eauto. apply 0.
-      * eapply Mem.unchanged_on_implies; eauto.
-        i. eapply INVRANGESRC; eauto.
-    + eapply private_unchanged_on_invariant; eauto.
-      * ii. eapply Plt_Ple_trans; eauto.
-        eapply INVRANGETGT; eauto. apply 0.
-      * eapply Mem.unchanged_on_implies; eauto.
-        i. eapply INVRANGETGT; eauto.
-    + i. eapply INVRANGESRC in INV. des. split; eauto.
-      destruct (j1 blk) eqn:BLK; auto.
-      destruct p. exploit SEP; eauto. i. des.
-      exfalso. eapply H. eapply Plt_Ple_trans; eauto.
-    + i. eapply INVRANGETGT in INV. des. split; eauto.
-      ii. destruct (inj sm0 b0) eqn:BLK.
-      * destruct p. dup BLK. eapply INCR in BLK. clarify.
-        exploit INV; eauto. eapply MAXSRC; eauto.
-        eapply Mem.valid_block_inject_1; eauto.
-      * exploit SEP; eauto. i. des.
-        eapply H2; eauto. eapply Plt_Ple_trans; eauto.
 Qed.
 
 Lemma le_inj_wf_wf minj_old minj_new inv_src inv_tgt

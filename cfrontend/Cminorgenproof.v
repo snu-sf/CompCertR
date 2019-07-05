@@ -2055,6 +2055,7 @@ Proof.
     + eapply Mem.free_unchanged_on; eauto.
       inv MCS. ii. eapply NON_EXT_TGT; eauto.
     + eapply SimMemInj.frozen_refl.
+    + eapply SimMemInj.frozen_refl.
     + ii. eapply Mem.perm_free_list; eauto.
     + ii. eapply Mem.perm_free_3; eauto.
 Qed.
@@ -2319,6 +2320,8 @@ Opaque PTree.set.
     - econs; ss; eauto.
       + eapply alloc_variables_unchanged_on; eauto.
       + eapply Mem.alloc_unchanged_on; eauto.
+      + eapply SimMemInj.frozen_shortened; try apply SRCLEGE; try apply TGTLEGE; eauto.
+        eapply SimMemInj.frozen_shortened; eauto. eapply SimMemInj.inject_separated_frozen. eauto.
       + eapply SimMemInj.frozen_shortened; eauto. eapply SimMemInj.inject_separated_frozen. eauto.
       + ii. eapply alloc_variables_perm; eauto.
       + ii. eapply Mem.perm_alloc_4; eauto. exploit Mem.alloc_result; eauto. ii. subst. red in VALID. xomega.
@@ -2398,7 +2401,7 @@ Proof.
   replace (prog_main tprog) with (prog_main prog). eexact H0.
   symmetry. unfold transl_program in TRANSL.
   eapply match_program_main; eauto.
-  exists (SimMemInj.mk m0 m0 (Mem.flat_inj (Mem.nextblock m0)) bot2 bot2 1%positive 1%positive).
+  exists (SimMemInj.mk m0 m0 (Mem.flat_inj (Mem.nextblock m0)) bot2 bot2 1%positive 1%positive 1%positive 1%positive).
   eapply match_callstate with (f := Mem.flat_inj (Mem.nextblock m0)) (cs := @nil frame) (cenv := PTree.empty Z).
   { SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }

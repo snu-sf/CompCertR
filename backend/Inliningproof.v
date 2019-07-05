@@ -1367,16 +1367,20 @@ Proof.
   eapply plus_left. eapply exec_Inop; eauto. eexact P. traceEq.
   assert(MLE: SimMemInj.le' sm0
               (SimMemInj.mk m' m'0 F' sm0.(SimMemInj.src_external) sm0.(SimMemInj.tgt_external)
-                            sm0.(SimMemInj.src_parent_nb) sm0.(SimMemInj.tgt_parent_nb))).
-  { inv MCOMPAT. econs; ss; eauto.
-    - eapply Mem.alloc_unchanged_on; eauto.
-    - eapply Mem.unchanged_on_refl.
-    - econs; ss; eauto. ii. des.
+                            sm0.(SimMemInj.src_parent_nb) sm0.(SimMemInj.tgt_parent_nb) sm0.(SimMemInj.src_ge_nb) sm0.(SimMemInj.tgt_ge_nb))).
+  {
+    inv MCOMPAT.
+    assert(FROZEN: SimMemInj.frozen (SimMemInj.inj sm0) F' (SimMemInj.src_parent_nb sm0) (SimMemInj.tgt_parent_nb sm0)).
+    { - econs; ss; eauto. ii. des.
       assert(b_src = stk).
       { apply Classical_Prop.NNPP. ii. rewrite D in NEW0; ss. clarify. }
       clarify. esplits.
       + inv MWF. exploit Mem.alloc_result; eauto. i; clarify.
-      + inv MS0; ss.
+      + inv MS0; ss. }
+    econs; ss; eauto.
+    - eapply Mem.alloc_unchanged_on; eauto.
+    - eapply Mem.unchanged_on_refl.
+    - eapply SimMemInj.frozen_shortened; eauto; try apply MWF.
     - ii. eapply Mem.perm_alloc_4; eauto. ii. subst. eapply Mem.fresh_block_alloc; eauto.
   }
   SimMemInj.spl_approx sm0. econstructor.
@@ -1489,7 +1493,7 @@ Proof.
     eapply (Genv.init_mem_match TRANSF); eauto.
     erewrite symbols_preserved; eauto. replace (prog_main tprog) with (prog_main prog). eauto.
     symmetry; eapply match_program_main; eauto.
-  exists (SimMemInj.mk m0 m0 (Mem.flat_inj (Mem.nextblock m0)) bot2 bot2 1%positive 1%positive).
+  exists (SimMemInj.mk m0 m0 (Mem.flat_inj (Mem.nextblock m0)) bot2 bot2 1%positive 1%positive 1%positive 1%positive).
   econstructor; eauto.
   { SimMemInj.compat_tac. }
   { econs; ss; eauto; try xomega. eapply Genv.initmem_inject; eauto. }

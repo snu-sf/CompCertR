@@ -29,9 +29,9 @@ Coercion IS_to_idset: IS.t >-> Funclass.
 
 (** * Relational specification of the transformation *)
 
-(** The transformed program is obtained from the original program
-  by keeping only the global definitions that belong to a given
-  set [u] of names.  *)
+(** The transformed program is obtained from the original program *)
+(*   by keeping only the global definitions that belong to a given *)
+(*   set [u] of names.  *)
 
 Record match_prog_1 (used: ident -> bool) (p tp: program) : Prop := {
   match_prog_main:
@@ -45,8 +45,8 @@ Record match_prog_1 (used: ident -> bool) (p tp: program) : Prop := {
     list_norepet (prog_defs_names tp)
 }.
 
-(** This set [u] (as "used") must be closed under references, and
-  contain the entry point and the public identifiers of the program. *)
+(** This set [u] (as "used") must be closed under references, and *)
+(*   contain the entry point and the public identifiers of the program. *)
 
 Definition ref_function (f: function) (id: ident) : Prop :=
   exists pc i, f.(fn_code)!pc = Some i /\ In id (ref_instruction i).
@@ -1017,10 +1017,9 @@ Proof.
     exploit symbols_inject_8; eauto. }
   set (sm1 := (SimMemInj.mk
                  m' tm j
-                 (SimMemInj.src_external sm0.(SimMemInjInv.minj))
-                 (SimMemInj.tgt_external sm0.(SimMemInjInv.minj))
-                 (SimMemInj.src_parent_nb sm0.(SimMemInjInv.minj))
-                 (SimMemInj.tgt_parent_nb sm0.(SimMemInjInv.minj)))).
+                 (SimMemInj.src_external sm0.(SimMemInjInv.minj)) (SimMemInj.tgt_external sm0.(SimMemInjInv.minj))
+                 (SimMemInj.src_parent_nb sm0.(SimMemInjInv.minj)) (SimMemInj.tgt_parent_nb sm0.(SimMemInjInv.minj))
+                 (SimMemInj.src_ge_nb sm0.(SimMemInjInv.minj)) (SimMemInj.tgt_ge_nb sm0.(SimMemInjInv.minj)))).
   assert (MWF1: SimMemInj.wf' sm1).
   { inv MWF. inv WF. inv MCOMPAT. econs; ss; eauto.
     - eapply Mem.store_unmapped_inject; eauto.
@@ -1035,6 +1034,7 @@ Proof.
     - eapply Mem.store_unchanged_on; eauto.
       ii. inv MWF. exploit INVRANGESRC; eauto. i. des. eauto.
     - eapply Mem.unchanged_on_refl.
+    - eapply SimMemInj.frozen_refl.
     - eapply SimMemInj.frozen_refl.
     - ii. eapply Mem.perm_store_2; eauto. }
   SimMemInjInv.spl_exact2 sm1.
@@ -1374,24 +1374,24 @@ Qed.
 
 (** Relating initial memory states *)
 
-(*
-Remark genv_find_def_exists:
-  forall (F V: Type) (p: AST.program F V) b,
-  Plt b (Genv.genv_next (Genv.globalenv p)) ->
-  exists gd, Genv.find_def (Genv.globalenv p) b = Some gd.
-Proof.
-  intros until b.
-  set (P := fun (g: Genv.t F V) =>
-        Plt b (Genv.genv_next g) -> exists gd, (Genv.genv_defs g)!b = Some gd).
-  assert (forall l g, P g -> P (Genv.add_globals g l)).
-  { induction l as [ | [id1 g1] l]; simpl; intros.
-  - auto.
-  - apply IHl. unfold Genv.add_global, P; simpl. intros LT. apply Plt_succ_inv in LT. destruct LT.
-  + rewrite PTree.gso. apply H; auto. apply Plt_ne; auto.
-  + rewrite H0. rewrite PTree.gss. exists g1; auto. }
-  apply H. red; simpl; intros. exfalso; xomega.
-Qed.
-*)
+(* *)
+(* Remark genv_find_def_exists: *)
+(*   forall (F V: Type) (p: AST.program F V) b, *)
+(*   Plt b (Genv.genv_next (Genv.globalenv p)) -> *)
+(*   exists gd, Genv.find_def (Genv.globalenv p) b = Some gd. *)
+(* Proof. *)
+(*   intros until b. *)
+(*   set (P := fun (g: Genv.t F V) => *)
+(*         Plt b (Genv.genv_next g) -> exists gd, (Genv.genv_defs g)!b = Some gd). *)
+(*   assert (forall l g, P g -> P (Genv.add_globals g l)). *)
+(*   { induction l as [ | [id1 g1] l]; simpl; intros. *)
+(*   - auto. *)
+(*   - apply IHl. unfold Genv.add_global, P; simpl. intros LT. apply Plt_succ_inv in LT. destruct LT. *)
+(*   + rewrite PTree.gso. apply H; auto. apply Plt_ne; auto. *)
+(*   + rewrite H0. rewrite PTree.gss. exists g1; auto. } *)
+(*   apply H. red; simpl; intros. exfalso; xomega. *)
+(* Qed. *)
+(* *)
 
 Lemma init_meminj_invert_strong:
   forall b b' delta,
@@ -1573,7 +1573,7 @@ Proof.
   exists (Callstate nil (Vptr tb Ptrofs.zero) signature_main nil tm); split.
   econstructor; eauto.
   fold tge. erewrite match_prog_main by eauto. auto.
-  exists (SimMemInjInv.mk (SimMemInj.mk m0 tm j bot2 bot2 (Mem.nextblock m0) (Mem.nextblock tm)) invar (fun _ => False)).
+  exists (SimMemInjInv.mk (SimMemInj.mk m0 tm j bot2 bot2 (Mem.nextblock m0) (Mem.nextblock tm) 1%positive 1%positive) invar (fun _ => False)).
   econstructor; eauto.
   { SimMemInjInv.compat_tac. }
   { econs; ss.
