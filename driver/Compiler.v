@@ -52,6 +52,7 @@ Require Debugvar.
 Require Stacking.
 Require Asmgen.
 (** Proofs of semantic preservation. *)
+Require Cstrategyproof.
 Require SimplExprproof.
 Require SimplLocalsproof.
 Require Cshmgenproof.
@@ -436,7 +437,7 @@ Proof.
   apply compose_backward_simulation with (atomic (Cstrategy.semantics p)).
   eapply sd_traces; eapply Asm.semantics_determinate.
   apply factor_backward_simulation.
-  apply Cstrategy.strategy_simulation.
+  apply Cstrategyproof.strategy_simulation.
   apply Csem.semantics_single_events.
   eapply ssr_well_behaved; eapply Cstrategy.semantics_strongly_receptive.
   exact (proj2 (cstrategy_semantic_preservation _ _ H)).
