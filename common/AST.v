@@ -118,7 +118,8 @@ Global Opaque calling_convention_eq.
 Record signature : Type := mksignature {
   sig_args: list typ;
   sig_res: option typ;
-  sig_cc: calling_convention
+  sig_cc: calling_convention;
+  sig_cstyle: bool
 }.
 
 Definition proj_sig_res (s: signature) : typ :=
@@ -130,11 +131,12 @@ Definition proj_sig_res (s: signature) : typ :=
 Definition signature_eq: forall (s1 s2: signature), {s1=s2} + {s1<>s2}.
 Proof.
   generalize opt_typ_eq, list_typ_eq, calling_convention_eq; decide equality.
+  destruct sig_cstyle0, sig_cstyle1; decide equality.
 Defined.
 Global Opaque signature_eq.
 
 Definition signature_main :=
-  {| sig_args := nil; sig_res := Some Tint; sig_cc := cc_default |}.
+  {| sig_args := nil; sig_res := Some Tint; sig_cc := cc_default ; sig_cstyle := true |}.
 
 (** Memory accesses (load and store instructions) are annotated by
   a ``memory chunk'' indicating the type, size and signedness of the
@@ -477,15 +479,15 @@ Definition ef_sig (ef: external_function): signature :=
   | EF_external name sg => sg
   | EF_builtin name sg => sg
   | EF_runtime name sg => sg
-  | EF_vload chunk => mksignature (Tptr :: nil) (Some (type_of_chunk chunk)) cc_default
-  | EF_vstore chunk => mksignature (Tptr :: type_of_chunk chunk :: nil) None cc_default
-  | EF_malloc => mksignature (Tptr :: nil) (Some Tptr) cc_default
-  | EF_free => mksignature (Tptr :: nil) None cc_default
-  | EF_memcpy sz al => mksignature (Tptr :: Tptr :: nil) None cc_default
-  | EF_annot kind text targs => mksignature targs None cc_default
-  | EF_annot_val kind text targ => mksignature (targ :: nil) (Some targ) cc_default
+  | EF_vload chunk => mksignature (Tptr :: nil) (Some (type_of_chunk chunk)) cc_default true
+  | EF_vstore chunk => mksignature (Tptr :: type_of_chunk chunk :: nil) None cc_default true
+  | EF_malloc => mksignature (Tptr :: nil) (Some Tptr) cc_default true
+  | EF_free => mksignature (Tptr :: nil) None cc_default true
+  | EF_memcpy sz al => mksignature (Tptr :: Tptr :: nil) None cc_default true
+  | EF_annot kind text targs => mksignature targs None cc_default true
+  | EF_annot_val kind text targ => mksignature (targ :: nil) (Some targ) cc_default true
   | EF_inline_asm text sg clob => sg
-  | EF_debug kind text targs => mksignature targs None cc_default
+  | EF_debug kind text targs => mksignature targs None cc_default true
   end.
 
 (** Whether an external function should be inlined by the compiler. *)

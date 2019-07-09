@@ -851,7 +851,7 @@ Qed.
 Lemma volatile_load_ok:
   forall chunk,
   extcall_properties (volatile_load_sem chunk)
-                     (mksignature (Tptr :: nil) (Some (type_of_chunk chunk)) cc_default).
+                     (mksignature (Tptr :: nil) (Some (type_of_chunk chunk)) cc_default true).
 Proof.
   intros; constructor; intros.
 (* well typed *)
@@ -1006,7 +1006,7 @@ Qed.
 Lemma volatile_store_ok:
   forall chunk,
   extcall_properties (volatile_store_sem chunk)
-                     (mksignature (Tptr :: type_of_chunk chunk :: nil) None cc_default).
+                     (mksignature (Tptr :: type_of_chunk chunk :: nil) None cc_default true).
 Proof.
   intros; constructor; intros.
 (* well typed *)
@@ -1051,7 +1051,7 @@ Inductive extcall_malloc_sem (ge: Senv.t):
 
 Lemma extcall_malloc_ok:
   extcall_properties extcall_malloc_sem
-                     (mksignature (Tptr :: nil) (Some Tptr) cc_default).
+                     (mksignature (Tptr :: nil) (Some Tptr) cc_default true).
 Proof.
   assert (UNCHANGED:
     forall (P: block -> Z -> Prop) m lo hi v m' b m'',
@@ -1137,7 +1137,7 @@ Inductive extcall_free_sem (ge: Senv.t):
 
 Lemma extcall_free_ok:
   extcall_properties extcall_free_sem
-                     (mksignature (Tptr :: nil) None cc_default).
+                     (mksignature (Tptr :: nil) None cc_default true).
 Proof.
   constructor; intros.
 (* well typed *)
@@ -1231,7 +1231,7 @@ Inductive extcall_memcpy_sem (sz al: Z) (ge: Senv.t):
 Lemma extcall_memcpy_ok:
   forall sz al,
   extcall_properties (extcall_memcpy_sem sz al)
-                     (mksignature (Tptr :: Tptr :: nil) None cc_default).
+                     (mksignature (Tptr :: Tptr :: nil) None cc_default true).
 Proof.
   intros. constructor.
 - (* return type *)
@@ -1342,7 +1342,7 @@ Inductive extcall_annot_sem (text: string) (targs: list typ) (ge: Senv.t):
 Lemma extcall_annot_ok:
   forall text targs,
   extcall_properties (extcall_annot_sem text targs)
-                     (mksignature targs None cc_default).
+                     (mksignature targs None cc_default true).
 Proof.
   intros; constructor; intros.
 (* well typed *)
@@ -1387,7 +1387,7 @@ Inductive extcall_annot_val_sem (text: string) (targ: typ) (ge: Senv.t):
 Lemma extcall_annot_val_ok:
   forall text targ,
   extcall_properties (extcall_annot_val_sem text targ)
-                     (mksignature (targ :: nil) (Some targ) cc_default).
+                     (mksignature (targ :: nil) (Some targ) cc_default true).
 Proof.
   intros; constructor; intros.
 (* well typed *)
@@ -1431,7 +1431,7 @@ Inductive extcall_debug_sem (ge: Senv.t):
 Lemma extcall_debug_ok:
   forall targs,
   extcall_properties extcall_debug_sem
-                     (mksignature targs None cc_default).
+                     (mksignature targs None cc_default true).
 Proof.
   intros; constructor; intros.
 (* well typed *)
