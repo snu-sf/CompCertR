@@ -1388,7 +1388,7 @@ Local Transparent Linker_def Linker_fundef Linker_varinit Linker_vardef Linker_u
   destruct f1 as [f1|ef1], f2 as [f2|ef2]; simpl...
   destruct ef2; intuition congruence.
   destruct ef1; intuition congruence.
-  destruct (external_function_eq ef1 ef2); intuition congruence.
+  des_ifs; intuition congruence.
 (* Two vardefs *)
   simpl. unfold link_vardef. destruct v1 as [info1 init1 ro1 vo1], v2 as [info2 init2 ro2 vo2]; simpl.
   destruct (link_varinit init1 init2) as [init|] eqn:LI...

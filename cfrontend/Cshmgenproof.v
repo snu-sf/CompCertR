@@ -1851,10 +1851,7 @@ Local Transparent Linker_fundef Linking.Linker_fundef.
 + discriminate.
 + destruct ef; inv H2. econstructor; split. simpl; eauto. left; constructor; auto.
 + destruct ef; inv H2. econstructor; split. simpl; eauto. right; constructor; auto.
-+ destruct (external_function_eq ef ef0 && typelist_eq args args0 &&
-         type_eq res res0 && calling_convention_eq cc cc0) eqn:E'; inv H2.
-  InvBooleans. subst ef0. econstructor; split.
-  simpl; rewrite dec_eq_true; eauto.
++ des_ifs; eauto. InvBooleans. clarify. esplits; ss; des_ifs; eauto.
   left; constructor. congruence.
 - intros. exists tt. auto.
 - replace (program_of_program p) with pp. auto. inv E; destruct pp; auto.

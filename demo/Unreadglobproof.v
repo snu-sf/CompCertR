@@ -1633,7 +1633,7 @@ Local Transparent Linker_def Linker_fundef Linker_varinit Linker_vardef Linker_u
   destruct f1 as [f1|ef1], f2 as [f2|ef2]; simpl...
   destruct ef2; intuition congruence.
   destruct ef1; intuition congruence.
-  destruct (external_function_eq ef1 ef2); intuition congruence.
+  des_ifs; intuition congruence.
 (* Two vardefs *)
   simpl. unfold link_vardef. destruct v1 as [info1 init1 ro1 vo1], v2 as [info2 init2 ro2 vo2]; simpl.
   destruct (link_varinit init1 init2) as [init|] eqn:LI...
@@ -1731,27 +1731,6 @@ Proof.
   change id with (fst (id, g)). apply in_map. apply PTree.elements_correct.
   rewrite PTree.gcombine; auto.
 Qed.
-
-Lemma PTree_map_extensionality
-      X Y
-      (f0 f1: positive -> X -> Y)
-      px
-      (EQ: forall id x (IN: px ! id = Some x), f0 id x = f1 id x)
-  :
-    PTree.map f0 px = PTree.map f1 px
-.
-Proof.
-  (* unfold PTree.map. *)
-  (* generalize (1%positive) at 1 2 as id. *)
-  (* ginduction px; intros; ss. des_ifs; ss; eauto. *)
-  (* - rename x into xxx. f_equal. *)
-  (*   + eapply IHpx1; eauto. i. *)
-  (*     specialize (EQ (id0~0)%positive x). exploit EQ; eauto. i. *)
-      (* { rewrite <- PTree.gnode'. unfold PTree.Node'. ss. des_ifs; ss. *)
-      (* eapply EQ; eauto. rewrite <- PTree.gnode'. unfold PTree.Node'. des_ifs; ss. *)
-      (* erewrite IHpx1. eauto. *)
-Abort. (* TODO: Do this *)
-
 
 Lemma PTree_map_extensionality
       X Y

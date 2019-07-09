@@ -377,6 +377,7 @@ Proof.
   { unfold ef_inline, is_external_ef in *. des_ifs; apply Y; ss. }
   rewrite <- Genv.find_funct_ptr_iff in Y'. unfold Cminor.fundef in *. clarify.
 - simpl in INLINE. discriminate.
+- simpl in INLINE. discriminate.
 Qed.
 
 (** Translation of [switch] statements *)
@@ -1143,5 +1144,5 @@ Local Transparent Linker_fundef.
 - discriminate.
 - destruct e; inv H2. econstructor; eauto.
 - destruct e; inv H2. econstructor; eauto.
-- destruct (external_function_eq e e0); inv H2. econstructor; eauto.
+- des_ifs; esplits; eauto.
 Qed.
