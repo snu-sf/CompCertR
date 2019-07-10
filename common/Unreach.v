@@ -119,9 +119,11 @@ Qed.
 Next Obligation.
   ii. inv H. inv H0. econs; ss; eauto.
   - ii. eapply PERM; eauto. eapply PERM0; eauto. unfold Mem.valid_block in *. inv RO. xomega.
-  - eapply Mem_unchanged_on_trans_strong; eauto.
-    eapply Mem.unchanged_on_implies; try apply RO0; eauto.
-    ii. des. rr in H. eapply H; eauto.
+  - eapply Mem.unchanged_on_implies with (P:= fun blk ofs => loc_not_writable x blk ofs /\ Mem.valid_block x blk); ss.
+    eapply Mem.unchanged_on_trans.
+    + eapply Mem.unchanged_on_implies; try apply RO. i. des. ss.
+    + eapply Mem.unchanged_on_implies; try apply RO0; eauto.
+      ii. des. rr in H. eapply H; eauto.
   - eapply Mem.unchanged_on_trans; eauto.
 Qed.
 
