@@ -2604,7 +2604,6 @@ Proof.
   { eapply PTree_Properties.in_of_list; eauto. }
   inv CLASSIFY.
   econstructor; eauto.
-  (* admit "". *)
 - inv WTK. inv VAL. econs; eauto with ty; wtype_tac.
   { exploit types_of_context1; eauto. intro Y; des. eapply Y in IN. rewrite in_app_iff in *. des.
     - exploit Y0; eauto. { rewrite in_app_iff. left; eauto. } intro Z.

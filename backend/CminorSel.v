@@ -455,7 +455,7 @@ Inductive step: state -> trace -> state -> Prop :=
 End RELSEM.
 
 Inductive initial_state (p: program): state -> Prop :=
-  | initial_state_intro: forall b (* f *) m0,
+  | initial_state_intro: forall b m0,
       let ge := Genv.globalenv p in
       Genv.init_mem p = Some m0 ->
       Genv.find_symbol ge p.(prog_main) = Some b ->

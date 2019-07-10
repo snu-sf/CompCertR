@@ -8,34 +8,15 @@ Set Implicit Arguments.
 
 
 
-(* TODO: move to MemoryC *)
-Let Mem_unchanged_on_trans_strong: forall
-      P m0 m1 m2
-      (UNCH0: Mem.unchanged_on P m0 m1)
-      (UNCH1: Mem.unchanged_on (P /2\ (fun b _ => Mem.valid_block m0 b)) m1 m2),
-    <<UNCH2: Mem.unchanged_on P m0 m2>>.
-Proof. i.
-  inv UNCH0. inv UNCH1. econs; i; try xomega.
-  - etransitivity.
-    { eapply unchanged_on_perm; eauto. }
-    eapply unchanged_on_perm0; eauto. unfold Mem.valid_block in *. xomega.
-  - erewrite <- unchanged_on_contents; eauto. dup H0. apply Mem.perm_valid_block in H1. unfold Mem.valid_block in *.
-    erewrite <- unchanged_on_contents0; eauto. eapply unchanged_on_perm; eauto.
-Qed.
-
-
-
-
-
 Record t := mk {
   unreach:> block -> bool; (* for finiteness' `j` function. *)
   ge_nb: block;
   nb: block;
 }.
 
-Notation "'prange' '#' hi" := (fun blk => Plt blk hi) (at level 50, no associativity (* , only parsing *)).
-Notation "'prange' lo '#'" := (fun blk => Ple lo blk) (at level 50, no associativity (* , only parsing *)).
-Notation "'prange' lo hi" := (fun blk => Ple lo blk /\ Plt blk hi) (at level 50, no associativity (* , only parsing *)).
+Notation "'prange' '#' hi" := (fun blk => Plt blk hi) (at level 50, no associativity).
+Notation "'prange' lo '#'" := (fun blk => Ple lo blk) (at level 50, no associativity).
+Notation "'prange' lo hi" := (fun blk => Ple lo blk /\ Plt blk hi) (at level 50, no associativity).
 
 Inductive wf (su: t): Prop :=
 | wf_intro

@@ -31,8 +31,8 @@ Lemma transf_program_match:
 Proof.
   unfold transl_program; intros. monadInv H. split; auto.
   unfold program_of_program; simpl. destruct x; simpl.
-  eapply match_transform_partial_program_contextual. eexact EQ. 
-  intros. apply transl_fundef_spec; auto. 
+  eapply match_transform_partial_program_contextual. eexact EQ.
+  intros. apply transl_fundef_spec; auto.
 Qed.
 
 (** ** Semantic preservation *)
@@ -119,14 +119,14 @@ Proof.
   intros. unfold Ederef'; destruct a; auto using eval_Ederef.
   destruct (type_eq t (typeof a)); auto using eval_Ederef.
   inv H.
-- auto. 
+- auto.
 - inv H0.
 Qed.
 
 Lemma typeof_Ederef':
   forall a t, typeof (Ederef' a t) = t.
 Proof.
-  unfold Ederef'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto. 
+  unfold Ederef'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto.
 Qed.
 
 Lemma eval_Eaddrof':
@@ -142,7 +142,7 @@ Qed.
 Lemma typeof_Eaddrof':
   forall a t, typeof (Eaddrof' a t) = t.
 Proof.
-  unfold Eaddrof'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto. 
+  unfold Eaddrof'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto.
 Qed.
 
 (** Translation of simple expressions. *)
@@ -264,7 +264,7 @@ Opaque makeif.
   subst sl1; simpl.
   assert (eval_expr tge e le m (Eaddrof' a1 ty) (Vptr b ofs)) by (apply eval_Eaddrof'; auto).
   assert (typeof (Eaddrof' a1 ty) = ty) by (apply typeof_Eaddrof').
-  destruct dst; auto. simpl; econstructor; eauto.  
+  destruct dst; auto. simpl; econstructor; eauto.
 (* unop *)
   exploit H0; eauto. intros [A [B C]].
   subst sl1; simpl.
@@ -300,7 +300,7 @@ Opaque makeif.
     rewrite symbols_preserved; auto.
 (* deref *)
   exploit H0; eauto. intros [A [B C]]. subst sl1.
-  split; auto. split. rewrite typeof_Ederef'; auto. apply eval_Ederef'; auto. 
+  split; auto. split. rewrite typeof_Ederef'; auto. apply eval_Ederef'; auto.
 (* field struct *)
   rewrite <- comp_env_preserved in *.
   exploit H0; eauto. intros [A [B C]]. subst sl1.
@@ -790,7 +790,7 @@ Proof.
   destruct (Mem.weak_valid_pointer m1 b (Ptrofs.unsigned i)); inv H.
   destruct (Mem.weak_valid_pointer m2 b (Ptrofs.unsigned i)); inv H0.
   auto.
-- destruct v; try congruence. 
+- destruct v; try congruence.
   destruct (negb Archi.ptr64); try discriminate.
   destruct (Mem.weak_valid_pointer m1 b (Ptrofs.unsigned i)); inv H.
   destruct (Mem.weak_valid_pointer m2 b (Ptrofs.unsigned i)); inv H0.
@@ -813,7 +813,7 @@ Lemma static_bool_val_sound:
 Proof.
   assert (A: forall b ofs, Mem.weak_valid_pointer Mem.empty b ofs = false).
   { unfold Mem.weak_valid_pointer, Mem.valid_pointer, proj_sumbool; intros.
-    rewrite ! pred_dec_false by (apply Mem.perm_empty). auto. }  
+    rewrite ! pred_dec_false by (apply Mem.perm_empty). auto. }
   intros until b; unfold bool_val.
   destruct (classify_bool t); destruct v; destruct Archi.ptr64 eqn:SF; auto.
 - rewrite A; congruence.
@@ -1713,10 +1713,10 @@ Proof.
   subst; simpl Kseqlist.
   econstructor; split.
   left. eapply plus_left. constructor.
-  eapply star_left. constructor. econstructor. eauto. rewrite <- TY2; eauto. 
+  eapply star_left. constructor. econstructor. eauto. rewrite <- TY2; eauto.
   eapply star_left. constructor.
   apply star_one. eapply step_make_assign; eauto.
-  constructor. apply PTree.gss. simpl. eapply cast_idempotent; eauto. 
+  constructor. apply PTree.gss. simpl. eapply cast_idempotent; eauto.
   reflexivity. reflexivity. traceEq.
   econstructor. auto. apply S.
   apply tr_val_gen. auto. intros. constructor.
@@ -2314,14 +2314,13 @@ Lemma transl_initial_states:
   exists S', Clight.initial_state tprog S' /\ match_states tge S S'.
 Proof.
   intros. inv H.
-  (* exploit function_ptr_translated; eauto. intros [tf [FIND TR]]. *)
   econstructor; split.
   econstructor; eauto.
   eapply (Genv.init_mem_match (proj1 TRANSL)); eauto.
   replace (prog_main tprog) with (prog_main prog).
   assert (Genv.globalenv tprog = tge.(genv_genv)) by auto. rewrite H.
   erewrite symbols_preserved; eauto.
-  destruct TRANSL. destruct H as (A & B & C). simpl in B. auto. 
+  destruct TRANSL. destruct H as (A & B & C). simpl in B. auto.
   constructor. auto. constructor.
 Qed.
 
@@ -2351,7 +2350,7 @@ End PRESERVATION.
 
 Instance TransfSimplExprLink : TransfLink match_prog.
 Proof.
-  red; intros. eapply Ctypes.link_match_program; eauto. 
+  red; intros. eapply Ctypes.link_match_program; eauto.
 - intros.
 Local Transparent Linker_fundef.
   simpl in *; unfold link_fundef in *. inv H3; inv H4; try discriminate.
