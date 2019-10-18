@@ -17,7 +17,7 @@ This change affects only three passes, and except for the Stackingproof the chan
 (iv) Changing "step" relation to respect "symbol environment".  
 
 ## Installation Instructions
-Our development is tested with Coq 8.9.1. We only support x86_64 architecture.
+Our development is tested with Coq 8.9.1, linux. We only support x86_64 architecture.
 
 (i) Follow **2-2 Prerequisites** in [standard CompCert build process](http://compcert.inria.fr/man/manual002.html) to install required dependencies.  
 
