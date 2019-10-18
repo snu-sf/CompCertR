@@ -19,7 +19,15 @@ This change affects only three passes, and except for the Stackingproof the chan
 ## Installation Instructions
 Our development is tested with Coq 8.9.1 on Linux. We only support x86_64 architecture.
 
-(i) Follow **2-2 Prerequisites** in [standard CompCert build process](http://compcert.inria.fr/man/manual002.html) to install required dependencies.  
+(i) Follow _2-2 Prerequisites_ in [standard CompCert build process](http://compcert.inria.fr/man/manual002.html) to install prerequisites.  
+- Install [opam](https://opam.ocaml.org/) **>= [2.0.0](https://opam.ocaml.org/blog/opam-2-0-0/)**.
+- Install required dependencies.
+<pre>
+opam switch 4.07.1               # Use OCaml version 4.07.1
+eval `opam env`
+opam install coq=8.9.1           # Use Coq version 8.9.1
+opam install menhir=<b>20181113</b>     # Use Menhir version 20181113
+</pre>
 
 (ii) Install [Paco coq library](https://github.com/snu-sf/paco) via opam.  
    `opam repo add coq-released https://coq.inria.fr/opam/released; opam install coq-paco`  
