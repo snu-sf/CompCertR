@@ -11,7 +11,7 @@ We needed to prove additional properties for injection passes only.
 (ii) Changing "Callstate" of each language to carry function pointer, instead of function definition.  
 External module's function definition may not be visible in the local module, but it should be able to call it with function pointer.  
 
-(iii) Relax each translation's simulation relation so that first stack (main, in CompCert) may have called with arguments.  
+(iii) Relax each translation's simulation relation so that first stack (`main`, in CompCert) may have called with arguments.  
 This change affects only three passes, and except for the Stackingproof the change is very small.  
 
 (iv) Changing "step" relation to respect "symbol environment".  
