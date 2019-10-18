@@ -630,6 +630,7 @@ echo "-R lib compcert.lib \
 -R ${arch} compcert.${arch} \
 -R backend compcert.backend \
 -R cfrontend compcert.cfrontend \
+-R demo compcert.demo \
 -R driver compcert.driver \
 -R flocq compcert.flocq \
 -R exportclight compcert.exportclight \
