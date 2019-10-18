@@ -21,8 +21,7 @@ Our development is tested with Coq 8.9.1 on Linux. We only support x86_64 archit
 
 1) Follow _2-2 Prerequisites_ in [standard CompCert build process](http://compcert.inria.fr/man/manual002.html) to install prerequisites.  
 - Install [opam](https://opam.ocaml.org/) **>= [2.0.0](https://opam.ocaml.org/blog/opam-2-0-0/)**.
-- Install required dependencies.
-<pre>
+- Install required dependencies. <pre>
 opam switch 4.07.1               # Use OCaml version 4.07.1
 eval `opam env`
 opam install coq=8.9.1           # Use Coq version 8.9.1
