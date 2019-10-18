@@ -1339,7 +1339,7 @@ Proof.
   assert(GD0: exists gd_src, (prog_defmap p) ! id = Some gd_src).
   { unfold ge in *. exploit Genv.find_symbol_inversion; eauto. intro T. eapply prog_defmap_dom; eauto. }
   assert(GD1: exists gd_tgt, (prog_defmap tp) ! id = Some gd_tgt).
-  { unfold tge in *. exploit Genv.find_symbol_inversion; eauto. intro T. eapply prog_defmap_dom; eauto. }
+  { unfold tge in *. exploit (Genv.find_symbol_inversion tp); eauto. intro T. eapply prog_defmap_dom; eauto. }
   des.
   inv TRANSF. specialize (match_prog_def0 id). rewrite GD0, GD1 in *. des_ifs.
 - exploit transform_find_symbol_1; eauto. intros (b' & F). exists b'; split; auto.
@@ -1584,7 +1584,7 @@ Proof.
         inv C. exploit symbols_inject_5; eauto. i. des. clarify.
       + eapply Genv.invert_find_symbol in Heq.
         eapply Genv.genv_symb_range in Heq.
-        erewrite <- Genv.init_mem_genv_next; eauto. ss. }
+        erewrite <- Genv.init_mem_genv_next; eauto; ss. }
   exploit globals_symbols_inject; eauto. intro T.
   constructor. auto.
   auto.
