@@ -17,13 +17,13 @@ This change affects only three passes, and except for the Stackingproof the chan
 4) Changing "step" relation to respect "symbol environment".  
 
 ## Installation Instructions
-Our development is tested with Coq 8.9.1 on Linux. CompCertR only supports x86_64 architecture.
+Our development is tested with Coq 8.9.1. CompCertR only supports x86_64 architecture.
 
 1) Follow _2-2 Prerequisites_ in [standard CompCert build process](http://compcert.inria.fr/man/manual002.html) to install prerequisites.  
 - Install [opam](https://opam.ocaml.org/) **>= [2.0.0](https://opam.ocaml.org/blog/opam-2-0-0/)**.
 - Install required dependencies. <pre>
 opam switch 4.07.1               # Use OCaml version 4.07.1
-eval `opam env`
+eval \`opam env\`
 opam install coq=8.9.1           # Use Coq version 8.9.1
 opam install menhir=<b>20181113</b>     # Use Menhir version 20181113
 </pre>
