@@ -23,9 +23,9 @@ endif
 
 DIRS=lib common $(ARCHDIRS) backend cfrontend driver \
   flocq/Core flocq/Prop flocq/Calc flocq/Appli exportclight \
-  cparser cparser/MenhirLib demo
+  cparser cparser/MenhirLib demo compcertm
 
-RECDIRS=lib common $(ARCHDIRS) backend cfrontend driver flocq exportclight cparser demo
+RECDIRS=lib common $(ARCHDIRS) backend cfrontend driver flocq exportclight cparser demo compcertm
 
 COQINCLUDES=$(foreach d, $(RECDIRS), -R $(d) compcert.$(d))
 
@@ -98,7 +98,63 @@ BACKEND=\
   Debugvar.v Debugvarproof.v \
   Mach.v \
   Bounds.v Stacklayout.v Stacking.v Stackingproof.v \
-  Asm.v Asmgen.v Asmgenproof0.v Asmgenproof1.v Asmgenproof.v
+  Asm.v Asmgen.v Asmgenproof0.v Asmgenproof1.v Asmgenproof.v \
+
+COMPCERTM=\
+  ASTC.v CSEproofC.v CopC.v DemoHeader.v IdSimClight.v \
+  JunkBlock.v MachExtra.v ModSemProps.v Preservation.v \
+  SimMem.v SimSymbDrop.v \
+  StacklayoutC.v UpperBound_B.v \
+  AdequacyLocal.v CleanupLabelsproofC.v CoqlibC.v \
+  DemoSpec.v IdSimClightDropInv.v LTLC.v \
+  MutrecA.v \
+  RTLC.v \
+  SimMemExt.v \
+  SimSymbDropInv.v \
+  StoreArguments.v \
+  ValueAnalysisC.v \
+  AdequacySound.v \
+  ClightC.v \
+  CsemC.v \
+  DemoSpecProof.v IdSimClightExtra.v LiftDummy.v MutrecABproof.v \
+  RTLgenproofC.v SimMemId.v SimSymbId.v StoreArgumentsProps.v ValueDomainC.v \
+  AllocproofC.v ClightStepExt.v CsharpminorC.v DemoTarget.v IdSimClightIdInv.v \
+  LinearC.v MapsC.v \
+  MutrecABspec.v RTLtypingC.v SimMemInjC.v SimplExprproofC.v \
+  Syntax.v \
+  ValuesC.v \
+  AsmC.v ClightStepInj.v \
+  CshmgenproofC.v ErrorsC.v \
+  IdSimDemoSpec.v LinearizeproofC.v MatchSimModSem.v \
+  MutrecAproof.v RUSC.v SimMemInjInvC.v \
+  SimplLocalsproofC.v System.v \
+  AsmExtra.v       CminorC.v              CstrategyC.v       EventsC.v \
+  IdSimExtra.v          LineartypingC.v    MatchSimModSemExcl.v   MutrecAspec.v \
+  RenumberproofC.v   SimMemLift.v     Simulation.v         TailcallproofC.v       mktac.v \
+  AsmStepExt.v     CminorSelC.v           CstrategyproofC.v  GlobalenvsC.v \
+  IdSimInvExtra.v       LinkingC.v         MatchSimModSemExcl2.v  MutrecB.v \
+  SelectionproofC.v  SimMod.v         Skeleton.v           TunnelingproofC.v \
+  AsmStepInj.v     CminorgenproofC.v      CtypesC.v          IdSim.v \
+  IdSimMutrecAB.v       LinkingC2.v        MatchSimModSemSR.v     MutrecBproof.v      Sem.v \
+  SimModSem.v      SmallstepC.v         UnreachC.v \
+  AsmgenproofC.v   CompilerC.v            CtypingC.v         IdSimAsm.v \
+  IdSimMutrecAIdInv.v   LocationsC.v       MemdataC.v \
+  MutrecBspec.v       SemProps.v         SimModSemLift.v  Sound.v \
+  UnreadglobproofC.v \
+  AsmregsC.v       ConstpropproofC.v      DeadcodeproofC.v   IdSimAsmDropInv.v \
+  IdSimMutrecBIdInv.v   LowerBound.v       MemoryC.v \
+  MutrecHeader.v      SemiLattice.v      SimModSemSR.v    SoundProduct.v       UnusedglobproofC.v \
+  AxiomsC.v        Conventions1C.v \
+  DebugvarproofC.v   IdSimAsmExtra.v \
+  InliningproofC.v      LowerBoundExtra.v  Mod.v \
+  MutrecRefinement.v  SepComp.v          SimProg.v \
+  SoundTop.v           UpperBound_A.v \
+  BehaviorsC.v     ConventionsC.v \
+  DemoExtract.v      IdSimAsmIdInv.v \
+  IntegersC.v           MachC.v \
+  ModSem.v               Ord.v \
+  SeparationC.v      SimSymb.v \
+  StackingproofC.v     UpperBound_AExtra.v
 
 # C front-end modules (in cfrontend/)
 
@@ -126,7 +182,7 @@ DRIVER=Compopts.v Compiler.v Complements.v
 # All source files
 
 FILES=$(VLIB) $(COMMON) $(BACKEND) $(CFRONTEND) $(DRIVER) $(FLOCQ) \
-  $(PARSERVALIDATOR) $(PARSER) exportclight/Clightdefs.v
+  $(PARSERVALIDATOR) $(PARSER) $(COMPCERTM) exportclight/Clightdefs.v
 
 # Generated source files
 
