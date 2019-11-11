@@ -1,0 +1,88 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MutrecA</title>
+<meta name="description" content="Documentation of Coq module MutrecA" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MutrecA</h1>
+<div class="coq">
+<span class="id">From</span> <span class="id">Coq</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">String</span> <span class="id">List</span> <span class="id">ZArith</span>.<br/>
+<span class="id">From</span> <span class="id">compcert</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Coqlib</span> <span class="id">Integers</span> <span class="id">Floats</span> <span class="id">AST</span> <span class="id">Ctypes</span> <span class="id">Cop</span> <span class="id">Clight</span> <span class="id">Clightdefs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MutrecHeader</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">Z_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">_memoized</span> : <span class="id">ident</span> := 54%<span class="id">positive</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">_t</span> : <span class="id">ident</span> := 56%<span class="id">positive</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">_x</span> : <span class="id">ident</span> := 55%<span class="id">positive</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">_t</span>'1 : <span class="id">ident</span> := 59%<span class="id">positive</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">v_memoized</span> := {|<br/>
+&nbsp;&nbsp;<span class="id">gvar_info</span> := (<span class="id">tarray</span> <span class="id">tint</span> <span class="id">MAX</span>);<br/>
+&nbsp;&nbsp;<span class="id">gvar_init</span> := (<span class="id">Init_space</span> (4 * <span class="id">MAX</span>) :: <span class="id">nil</span>);<br/>
+&nbsp;&nbsp;<span class="id">gvar_readonly</span> := <span class="id">false</span>;<br/>
+&nbsp;&nbsp;<span class="id">gvar_volatile</span> := <span class="id">false</span><br/>
+|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">func_f</span> := {|<br/>
+&nbsp;&nbsp;<span class="id">fn_return</span> := <span class="id">tint</span>;<br/>
+&nbsp;&nbsp;<span class="id">fn_callconv</span> := <span class="id">cc_default</span>;<br/>
+&nbsp;&nbsp;<span class="id">fn_params</span> := ((<span class="id">_x</span>, <span class="id">tint</span>) :: <span class="id">nil</span>);<br/>
+&nbsp;&nbsp;<span class="id">fn_vars</span> := <span class="id">nil</span>;<br/>
+&nbsp;&nbsp;<span class="id">fn_temps</span> := ((<span class="id">_t</span>, <span class="id">tint</span>) :: (<span class="id">_t</span>'1, <span class="id">tint</span>) :: <span class="id">nil</span>);<br/>
+&nbsp;&nbsp;<span class="id">fn_body</span> :=<br/>
+(<span class="id">Ssequence</span><br/>
+&nbsp;&nbsp;(<span class="id">Sifthenelse</span> (<span class="id">Ebinop</span> <span class="id">Oeq</span> (<span class="id">Etempvar</span> <span class="id">_x</span> <span class="id">tint</span>) (<span class="id">Econst_int</span> (<span class="id">Int.repr</span> 0) <span class="id">tint</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tint</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Sreturn</span> (<span class="id">Some</span> (<span class="id">Econst_int</span> (<span class="id">Int.repr</span> 0) <span class="id">tint</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Sskip</span>)<br/>
+&nbsp;&nbsp;(<span class="id">Ssequence</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Sset</span> <span class="id">_t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ederef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ebinop</span> <span class="id">Oadd</span> (<span class="id">Evar</span> <span class="id">_memoized</span> (<span class="id">tarray</span> <span class="id">tint</span> 1000)) (<span class="id">Etempvar</span> <span class="id">_x</span> <span class="id">tint</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tptr</span> <span class="id">tint</span>)) <span class="id">tint</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ssequence</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Sifthenelse</span> (<span class="id">Ebinop</span> <span class="id">Oeq</span> (<span class="id">Etempvar</span> <span class="id">_t</span> <span class="id">tint</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Econst_int</span> (<span class="id">Int.repr</span> 0) <span class="id">tint</span>) <span class="id">tint</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ssequence</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ssequence</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Scall</span> (<span class="id">Some</span> <span class="id">_t</span>'1)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Evar</span> <span class="id">g_id</span> (<span class="id">Tfunction</span> (<span class="id">Tcons</span> <span class="id">tint</span> <span class="id">Tnil</span>) <span class="id">tint</span> <span class="id">cc_default</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">Ebinop</span> <span class="id">Osub</span> (<span class="id">Etempvar</span> <span class="id">_x</span> <span class="id">tint</span>) (<span class="id">Econst_int</span> (<span class="id">Int.repr</span> 1) <span class="id">tint</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tint</span>) :: <span class="id">nil</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Sset</span> <span class="id">_t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ebinop</span> <span class="id">Oadd</span> (<span class="id">Etempvar</span> <span class="id">_t</span>'1 <span class="id">tint</span>) (<span class="id">Etempvar</span> <span class="id">_x</span> <span class="id">tint</span>) <span class="id">tint</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Sassign</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ederef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Ebinop</span> <span class="id">Oadd</span> (<span class="id">Evar</span> <span class="id">_memoized</span> (<span class="id">tarray</span> <span class="id">tint</span> 1000))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Etempvar</span> <span class="id">_x</span> <span class="id">tint</span>) (<span class="id">tptr</span> <span class="id">tint</span>)) <span class="id">tint</span>) (<span class="id">Etempvar</span> <span class="id">_t</span> <span class="id">tint</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Sskip</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Sreturn</span> (<span class="id">Some</span> (<span class="id">Etempvar</span> <span class="id">_t</span> <span class="id">tint</span>))))))<br/>
+|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">composites</span> : <span class="id">list</span> <span class="id">composite_definition</span> := <span class="id">nil</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">global_definitions</span> : <span class="id">list</span> (<span class="id">ident</span> * <span class="id">globdef</span> <span class="id">fundef</span> <span class="id">type</span>) :=<br/>
+((<span class="id">g_id</span>,<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">Gfun</span>(<span class="id">External</span> (<span class="id">EF_external</span> "<span class="id">g</span>"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mksignature</span> (<span class="id">AST.Tint</span> :: <span class="id">nil</span>) (<span class="id">Some</span> <span class="id">AST.Tint</span>) <span class="id">cc_default</span> <span class="id">true</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Tcons</span> <span class="id">tint</span> <span class="id">Tnil</span>) <span class="id">tint</span> <span class="id">cc_default</span>)) :: (<span class="id">_memoized</span>, <span class="id">Gvar</span> <span class="id">v_memoized</span>) ::<br/>
+&nbsp;(<span class="id">f_id</span>, <span class="id">Gfun</span>(<span class="id">Internal</span> <span class="id">func_f</span>)) :: <span class="id">nil</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">public_idents</span> : <span class="id">list</span> <span class="id">ident</span> :=<br/>
+(<span class="id">f_id</span> :: <span class="id">g_id</span> :: <span class="id">nil</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">prog</span> : <span class="id">Clight.program</span> :=<br/>
+&nbsp;&nbsp;<span class="id">mkprogram</span> <span class="id">composites</span> <span class="id">global_definitions</span> <span class="id">public_idents</span> <span class="id">main_id</span> <span class="id">Logic.I</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

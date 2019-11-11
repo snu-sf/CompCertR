@@ -1,0 +1,78 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Conventions1C</title>
+<meta name="description" content="Documentation of Coq module Conventions1C" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Conventions1C</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Decidableplus</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ASTC</span> <span class="id">Machregs</span> <span class="id">Locations</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Conventions1</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_arguments_length_aux</span>: <span class="kwd">forall</span> <span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LEN</span>: <span class="id">length</span> (<span class="id">loc_arguments_64</span> <span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>) = <span class="id">length</span> <span class="id">tys</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7238')">Proof.</div>
+<div class="proofscript" id="proof7238">
+ <span class="id">i</span>. <span class="id">ginduction</span> <span class="id">tys</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>; <span class="id">s</span>; <span class="tactic">rewrite</span> <span class="id">IHtys</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_arguments_length</span>: <span class="kwd">forall</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LEN</span>: <span class="id">length</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>) = <span class="id">length</span> (<span class="id">sig_args</span> <span class="id">sg</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7239')">Proof.</div>
+<div class="proofscript" id="proof7239">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sg</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">loc_arguments</span>. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">loc_arguments_length_aux</span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Z.add</span> <span class="id">Z.mul</span> <span class="id">Z.sub</span> <span class="id">Z.div</span>.<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">list_nth_z</span>.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">size_arguments_loc_arguments_aux</span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tys</span> <span class="id">ofs</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">z</span> &lt;= <span class="id">ofs</span> &lt; <span class="id">size_arguments_64</span> <span class="id">tys</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">base</span> <span class="id">ty</span>, (&lt;&lt;<span class="id">IN</span>: <span class="id">In</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">base</span> <span class="id">ty</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments_64</span> <span class="id">tys</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span>))&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">RANGE</span>: <span class="id">base</span> &lt;= <span class="id">ofs</span> &lt; <span class="id">base</span> + (<span class="id">Memdata.size_chunk</span> (<span class="id">chunk_of_type</span> <span class="id">ty</span>))&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7240')">Proof.</div>
+<div class="proofscript" id="proof7240">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">tys</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">IHtys</span>; <span class="tactic">eauto</span>; []; <span class="id">i</span>; <span class="id">des</span>; []); <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">esplits</span>; <span class="tactic">eauto</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>; <span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">z</span> + 2 &lt;= <span class="id">ofs</span>)); <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">IHtys</span>; <span class="tactic">eauto</span>; []; <span class="id">i</span>; <span class="id">des</span>; []); <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">esplits</span>; <span class="tactic">eauto</span>); <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>; <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">size_arguments_loc_arguments</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sg</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: 0 &lt;= <span class="id">ofs</span> &lt; <span class="id">size_arguments</span> <span class="id">sg</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">base</span> <span class="id">ty</span>, (&lt;&lt;<span class="id">IN</span>: <span class="id">In</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">base</span> <span class="id">ty</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">RANGE</span>: <span class="id">base</span> &lt;= <span class="id">ofs</span> &lt; <span class="id">base</span> + (<span class="id">Memdata.size_chunk</span> (<span class="id">chunk_of_type</span> <span class="id">ty</span>))&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7241')">Proof.</div>
+<div class="proofscript" id="proof7241">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sg</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">size_arguments</span>, <span class="id">loc_arguments</span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">size_arguments_loc_arguments_aux</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_args_callee_save_disjoint</span> <span class="id">sg</span> <span class="id">mr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">In</span> (<span class="id">R</span> <span class="id">mr</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;~ <span class="id">Conventions1.is_callee_save</span> <span class="id">mr</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7242')">Proof.</div>
+<div class="proofscript" id="proof7242">
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">in_regs_of_rpairs_inv</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">loc_arguments_acceptable</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">forall_rpair</span>, <span class="id">loc_argument_acceptable</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

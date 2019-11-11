@@ -1,0 +1,58 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module StoreArguments</title>
+<meta name="description" content="Documentation of Coq module StoreArguments" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module StoreArguments</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Op</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Stacklayout</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Mach</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">only_args</span> (<span class="id">m</span>: <span class="id">mem</span>) (<span class="id">blk</span>: <span class="id">block</span>) (<span class="id">lo</span>: <span class="id">ptrofs</span>) (<span class="id">locs</span>: <span class="id">list</span> <span class="id">loc</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">UNDEF</span>: <span class="id">ZMap.get</span> <span class="id">ofs</span> (<span class="id">Mem.mem_contents</span> <span class="id">m</span>) !! <span class="id">blk</span> = <span class="id">Undef</span> &gt;&gt;) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INARGS</span>: <span class="id">exists</span> <span class="id">ofs0</span> <span class="id">ty</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">IN</span>: <span class="id">In</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs0</span> <span class="id">ty</span>) <span class="id">locs</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">RANGE</span>: 4 * <span class="id">ofs0</span> &lt;= <span class="id">ofs</span> &lt; 4 * <span class="id">ofs0</span> + <span class="id">size_chunk</span> (<span class="id">chunk_of_type</span> <span class="id">ty</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LOAD</span>: <span class="id">Mem.loadv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">chunk_of_type</span> <span class="id">ty</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Val.offset_ptr</span> (<span class="id">Vptr</span> <span class="id">blk</span> <span class="id">lo</span>) (<span class="id">Ptrofs.repr</span> (<span class="id">Stacklayout.fe_ofs_arg</span> + 4 * <span class="id">ofs0</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="id">Some</span> <span class="id">v</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">VDEF</span>: <span class="id">v</span> &lt;&gt; <span class="id">Vundef</span>&gt;&gt;)&gt;&gt;).<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">store_arguments</span> (<span class="id">m0</span>: <span class="id">mem</span>) (<span class="id">rs</span>: <span class="id">Mach.regset</span>) (<span class="id">vs</span>: <span class="id">list</span> <span class="id">val</span>) (<span class="id">sg</span>: <span class="id">signature</span>) (<span class="id">m2</span>: <span class="id">mem</span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id">store_arguments_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m1</span> <span class="id">blk</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ALC</span>: <span class="id">Mem.alloc</span> <span class="id">m0</span> 0 (4 * <span class="id">size_arguments</span> <span class="id">sg</span>) = (<span class="id">m1</span>, <span class="id">blk</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id">extcall_arguments</span> <span class="id">rs</span> <span class="id">m2</span> (<span class="id">Vptr</span> <span class="id">blk</span> <span class="id">Ptrofs.zero</span>) <span class="id">sg</span> <span class="id">vs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ONLYARGS</span>: <span class="id">only_args</span> <span class="id">m2</span> <span class="id">blk</span> <span class="id">Ptrofs.zero</span> (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNCH</span>: <span class="id">Mem.unchanged_on</span> (<span class="kwd">fun</span> <span class="id">b</span> <span class="id">ofs</span> =&gt; <span class="kwd">if</span> <span class="id">eq_block</span> <span class="id">b</span> <span class="id">blk</span> <span class="kwd">then</span> ~ (0 &lt;= <span class="id">ofs</span> &lt; 4 * <span class="id">size_arguments</span> <span class="id">sg</span>) <span class="kwd">else</span> <span class="id">True</span>) <span class="id">m1</span> <span class="id">m2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NB</span>: <span class="id">m1</span>.(<span class="id">Mem.nextblock</span>) = <span class="id">m2</span>.(<span class="id">Mem.nextblock</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PERM</span>: <span class="id">Mem.range_perm</span> <span class="id">m2</span> <span class="id">blk</span> 0 (4 * <span class="id">size_arguments</span> <span class="id">sg</span>) <span class="id">Cur</span> <span class="id">Freeable</span>).<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

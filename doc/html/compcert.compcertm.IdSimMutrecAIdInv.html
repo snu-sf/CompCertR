@@ -1,0 +1,198 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module IdSimMutrecAIdInv</title>
+<meta name="description" content="Documentation of Coq module IdSimMutrecAIdInv" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module IdSimMutrecAIdInv</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Program</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Sem</span> <span class="id">SimProg</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span> <span class="id">SimMod</span> <span class="id">SimModSem</span> <span class="id">SimSymb</span> <span class="id">SimMem</span> <span class="id">Sound</span> <span class="id">SimSymb</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Cop</span> <span class="id">Ctypes</span> <span class="id">ClightC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmC</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimMemInjInvC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MutrecA</span> <span class="id">MutrecAspec</span> <span class="id">MutrecAproof</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinkingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MapsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AxiomsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Ord</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SmallstepC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Preservation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span> <span class="id">Conventions</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions1C</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmregsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MatchSimModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">StoreArguments</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmStepInj</span> <span class="id">IntegersC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Coq.Logic.PropExtensionality</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CopC</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MatchSimModSem</span> <span class="id">ModSemProps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions1C</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IdSimExtra</span> <span class="id">IdSimInvExtra</span> <span class="id">IdSimClightExtra</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">mktac</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Z.mul</span> <span class="id">Z.add</span> <span class="id">Z.sub</span> <span class="id">Z.div</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">match_states_a_internal</span>:<br/>
+&nbsp;&nbsp;<span class="id">state</span> -&gt; <span class="id">state</span> -&gt; <span class="id">meminj</span> -&gt; <span class="id">mem</span> -&gt; <span class="id">mem</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">match_Callstate</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">j</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states_a_internal</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Callstate</span> <span class="id">i</span> <span class="id">m_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Callstate</span> <span class="id">i</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span><br/>
+| <span class="id">match_Interstate</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">j</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states_a_internal</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Interstate</span> <span class="id">i</span> <span class="id">m_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Interstate</span> <span class="id">i</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span><br/>
+| <span class="id">match_Returnstate</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">j</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states_a_internal</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Returnstate</span> <span class="id">i</span> <span class="id">m_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Returnstate</span> <span class="id">i</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span><br/>
+.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">INJINV</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">P</span>: <span class="id">SimMemInjInv.memblk_invariant</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Instance</span> <span class="id">SimMemP</span>: <span class="id">SimMem.class</span> := <span class="id">SimMemInjInvC.SimMemInjInv</span> <span class="id">SimMemInjInv.top_inv</span> <span class="id">P</span>.<br/>
+<span class="kwd">Local</span> <span class="kwd">Instance</span> <span class="id">SimSymbP</span>: <span class="id">SimSymb.class</span> <span class="id">SimMemP</span> := <span class="id">SimMemInjInvC.SimSymbIdInv</span> <span class="id">P</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="id">Existing</span> <span class="kwd">Instance</span> <span class="id">SoundTop.Top</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">match_states_a_inv</span><br/>
+&nbsp;&nbsp;: <span class="id">unit</span> -&gt; <span class="id">state</span> -&gt; <span class="id">state</span> -&gt; <span class="id">SimMem.t</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">match_states_a_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st_src</span> <span class="id">st_tgt</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">sm0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWFSRC</span>: <span class="id">m_src</span> = <span class="id">sm0</span>.(<span class="id">SimMem.src</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWFTGT</span>: <span class="id">m_tgt</span> = <span class="id">sm0</span>.(<span class="id">SimMem.tgt</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWFINJ</span>: <span class="id">j</span> = <span class="id">sm0</span>.(<span class="id">SimMemInjInv.minj</span>).(<span class="id">SimMemInj.inj</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCHST</span>: <span class="id">match_states_a_internal</span> <span class="id">st_src</span> <span class="id">st_tgt</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states_a_inv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tt</span> <span class="id">st_src</span> <span class="id">st_tgt</span> <span class="id">sm0</span><br/>
+.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">a_inj_inv_id</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="id">Sk.wf</span> (<span class="id">MutrecAspec.module</span>))<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">mp</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SIM</span>: <span class="id">ModPair.sim</span> <span class="id">mp</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">SRC</span>: <span class="id">mp</span>.(<span class="id">ModPair.src</span>) = (<span class="id">MutrecAspec.module</span>)&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">TGT</span>: <span class="id">mp</span>.(<span class="id">ModPair.tgt</span>) = (<span class="id">MutrecAspec.module</span>)&gt;&gt;)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7014')">Proof.</div>
+<div class="proofscript" id="proof7014">
+&nbsp;&nbsp;<span class="id">eexists</span> (<span class="id">ModPair.mk</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>); <span class="id">s</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">instantiate</span> (1:=<span class="id">SimMemInjInvC.mk</span> <span class="id">bot1</span> <span class="id">_</span> <span class="id">_</span>).<br/>
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ss</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">i</span>; <span class="id">clarify</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">match_states_sim</span> <span class="kwd">with</span> (<span class="id">match_states</span> := <span class="id">match_states_a_inv</span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">unit_ord_wf</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">SoundTop.sound_state_local_preservation</span>.<br/>
+<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">ss</span>. <span class="id">exploit</span> <span class="id">SimSymbIdInv_match_globals</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">ss</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">instantiate</span> (1 := <span class="id">prog</span>). <span class="tactic">intros</span> <span class="id">GEMATCH</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INITTGT</span>. <span class="id">inv</span> <span class="id">SAFESRC</span>. <span class="id">inv</span> <span class="id">SIMARGS</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">GEMATCH</span>. <span class="id">exploit</span> <span class="id">SYMBLE</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">i</span> = <span class="id">i0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">subst</span>. <span class="id">inv</span> <span class="id">VALS</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">ss</span>. <span class="id">exploit</span> <span class="id">SimSymbIdInv_match_globals</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">ss</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">instantiate</span> (1 := <span class="id">prog</span>). <span class="tactic">intros</span> <span class="id">GEMATCH</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="id">inv</span> <span class="id">SAFESRC</span>. <span class="id">inv</span> <span class="id">SIMARGS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">GEMATCH</span>. <span class="id">exploit</span> <span class="id">SYMBLE</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>. <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">clear</span> -<span class="id">MWF</span> <span class="id">INJ</span> <span class="id">FPTR</span> <span class="id">FPTR0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">FPTR</span> <span class="kwd">in</span> <span class="id">FPTR0</span>. <span class="id">inv</span> <span class="id">FPTR0</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H1</span> <span class="kwd">in</span> <span class="id">INJ</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id">VS</span> <span class="kwd">in</span> <span class="id">VALS</span>. <span class="id">inv</span> <span class="id">VALS</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H3</span>. <span class="id">inv</span> <span class="id">H1</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">ss</span>. <span class="id">inv</span> <span class="id">MATCH</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">ss</span>. <span class="tactic">clear</span> <span class="id">SOUND</span>. <span class="id">inv</span> <span class="id">CALLSRC</span>. <span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">inv</span> <span class="id">MATCHST</span>. <span class="tactic">inversion</span> <span class="id">SIMSKENV</span>; <span class="tactic">subst</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ss</span>. <span class="id">exploit</span> <span class="id">SimSymbIdInv_match_globals</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">ss</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">instantiate</span> (2 := <span class="id">prog</span>). <span class="tactic">intros</span> <span class="id">GEMATCH</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">GEMATCH</span>. <span class="id">exploit</span> <span class="id">SYMBLE</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">instantiate</span> (1:=<span class="id">top4</span>). <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">ss</span>. <span class="tactic">clear</span> <span class="id">SOUND</span> <span class="id">HISTORY</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">SimMemInjInvC.unlift</span>' <span class="id">sm_arg</span> <span class="id">sm_ret</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">AFTERSRC</span>. <span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">inv</span> <span class="id">MATCHST</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">SIMRET</span>; <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">INT</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">RETV</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">SIMRET</span>; <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">refl</span>.<br/>
+<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">ss</span>. <span class="id">inv</span> <span class="id">FINALSRC</span>. <span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">inv</span> <span class="id">MATCHST</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">refl</span>.<br/>
+<br/>
+&nbsp;&nbsp;- <span class="id">right</span>. <span class="id">ii</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">i</span>. <span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">inv</span> <span class="id">MATCHST</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">ModSem.is_step</span>. <span class="tactic">do</span> 2 <span class="id">eexists</span>. <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">safe_modsem</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">H</span>. <span class="tactic">eapply</span> <span class="id">star_refl</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">EVSTEP</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">ss</span>. <span class="id">exfalso</span>. <span class="tactic">eapply</span> <span class="id">NOTRET</span>. <span class="id">econs</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ii</span>. <span class="id">inv</span> <span class="id">STEPTGT</span>; <span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">inv</span> <span class="id">MATCHST</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">left</span>. <span class="tactic">eapply</span> <span class="id">plus_one</span>. <span class="id">econs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">left</span>. <span class="tactic">eapply</span> <span class="id">plus_one</span>. <span class="id">econs</span> 2. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">INJINV</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

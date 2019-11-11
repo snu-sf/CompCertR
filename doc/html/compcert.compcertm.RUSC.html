@@ -1,0 +1,175 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module RUSC</title>
+<meta name="description" content="Documentation of Coq module RUSC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module RUSC</h1>
+<div class="coq">
+<div class="doc">Libraries. </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">String</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Errors</span> <span class="id">ErrorsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Linking</span> <span class="id">Smallstep</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">BehaviorsC</span> <span class="id">Sem</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">program_relation</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Record</span> <span class="id">t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mk</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rel</span> :&gt; <span class="id">program</span> -&gt; <span class="id">program</span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">horizontal</span> : <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">p0_src</span> <span class="id">p1_src</span> <span class="id">p0_tgt</span> <span class="id">p1_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">REL0</span>: <span class="id">rel</span> <span class="id">p0_src</span> <span class="id">p0_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">REL1</span>: <span class="id">rel</span> <span class="id">p1_src</span> <span class="id">p1_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rel</span> (<span class="id">p0_src</span> ++ <span class="id">p1_src</span>) (<span class="id">p0_tgt</span> ++ <span class="id">p1_tgt</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">adequacy</span> : <span class="kwd">forall</span> <span class="id">p_src</span> <span class="id">p_tgt</span> (<span class="id">REL</span>: <span class="id">rel</span> <span class="id">p_src</span> <span class="id">p_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> <span class="id">p_src</span>) (<span class="id">sem</span> <span class="id">p_tgt</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">empty</span> : <span class="id">rel</span> [] [];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">program_relation</span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span> <span class="id">program_relation.horizontal</span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span> <span class="id">program_relation.adequacy</span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span> <span class="id">program_relation.empty</span>.<br/>
+<span class="kwd">Coercion</span> <span class="id">program_relation.rel</span> : <span class="id">program_relation.t</span> &gt;-&gt; <span class="id">Funclass</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">RUSC</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">R</span> : <span class="id">program_relation.t</span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">relate_R</span> (<span class="id">p_src</span> <span class="id">p_tgt</span>: <span class="id">program</span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span> (<span class="id">RELIN</span>: <span class="id">R</span> <span class="id">r</span>), <span class="id">r</span> <span class="id">p_src</span> <span class="id">p_tgt</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">self_related</span> (<span class="id">p</span>: <span class="id">program</span>) := <span class="id">relate_R</span> <span class="id">p</span> <span class="id">p</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">empty_self_related</span>: <span class="id">self_related</span> [].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6576')">Proof.</div>
+<div class="proofscript" id="proof6576">
+ <span class="id">ii</span>. <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">self_related_horizontal</span> (<span class="id">p0</span> <span class="id">p1</span>: <span class="id">program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF0</span>: <span class="id">self_related</span> <span class="id">p0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF1</span>: <span class="id">self_related</span> <span class="id">p1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> (<span class="id">p0</span> ++ <span class="id">p1</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6577')">Proof.</div>
+<div class="proofscript" id="proof6577">
+ <span class="id">ii</span>. <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">rusc</span> (<span class="id">p_src</span> <span class="id">p_tgt</span>: <span class="id">program</span>):=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">ctx0</span> <span class="id">ctx1</span>: <span class="id">program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF0</span>: <span class="id">self_related</span> <span class="id">ctx0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF1</span>: <span class="id">self_related</span> <span class="id">ctx1</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> (<span class="id">ctx0</span> ++ <span class="id">p_src</span> ++ <span class="id">ctx1</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sem</span> (<span class="id">ctx0</span> ++ <span class="id">p_tgt</span> ++ <span class="id">ctx1</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">rusc_PreOrder</span>: <span class="id">RelationClasses.PreOrder</span> <span class="id">rusc</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6578')">Next Obligation.</div>
+<div class="proofscript" id="proof6578">
+ <span class="tactic">unfold</span> <span class="id">rusc</span>, <span class="id">Reflexive</span>. <span class="id">i</span>. <span class="id">refl</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6579')">Next Obligation.</div>
+<div class="proofscript" id="proof6579">
+ <span class="tactic">unfold</span> <span class="id">rusc</span>, <span class="id">Transitive</span>. <span class="id">i</span>. <span class="id">etrans</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">rusc_incl</span> (<span class="id">p_src</span> <span class="id">p_tgt</span>: <span class="id">program</span>) (<span class="id">r</span>: <span class="id">program_relation.t</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">REL</span>: <span class="id">r</span> <span class="id">p_src</span> <span class="id">p_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RELIN</span>: <span class="id">R</span> <span class="id">r</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">p_src</span> <span class="id">p_tgt</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6580')">Proof.</div>
+<div class="proofscript" id="proof6580">
+ <span class="tactic">unfold</span> <span class="id">rusc</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">program_relation.adequacy</span>. <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">rusc_adequacy_left_ctx</span> <span class="id">ctx</span> (<span class="id">p_src</span> <span class="id">p_tgt</span>: <span class="id">program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RUSC</span>: <span class="id">rusc</span> <span class="id">p_src</span> <span class="id">p_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF</span>: <span class="id">self_related</span> <span class="id">ctx</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> (<span class="id">ctx</span> ++ <span class="id">p_src</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sem</span> (<span class="id">ctx</span> ++ <span class="id">p_tgt</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6581')">Proof.</div>
+<div class="proofscript" id="proof6581">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">RUSC</span> <span class="id">ctx</span> []).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">app_nil_r</span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> <span class="id">app_nil_r</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">RUSC</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">empty_self_related</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">rusc_adequacy_right_ctx</span> <span class="id">ctx</span> (<span class="id">p_src</span> <span class="id">p_tgt</span>: <span class="id">program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RUSC</span>: <span class="id">rusc</span> <span class="id">p_src</span> <span class="id">p_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF</span>: <span class="id">self_related</span> <span class="id">ctx</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> (<span class="id">p_src</span> ++ <span class="id">ctx</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sem</span> (<span class="id">p_tgt</span> ++ <span class="id">ctx</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6582')">Proof.</div>
+<div class="proofscript" id="proof6582">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">RUSC</span> [] <span class="id">ctx</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">RUSC</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">empty_self_related</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">rusc_adequacy</span> (<span class="id">p_src</span> <span class="id">p_tgt</span>: <span class="id">program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RUSC</span>: <span class="id">rusc</span> <span class="id">p_src</span> <span class="id">p_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> <span class="id">p_src</span>) (<span class="id">sem</span> <span class="id">p_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6583')">Proof.</div>
+<div class="proofscript" id="proof6583">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">RUSC</span> [] []). <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">app_nil_r</span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> <span class="id">app_nil_r</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">RUSC</span>; <span class="tactic">eapply</span> <span class="id">empty_self_related</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">rusc_horizontal</span> (<span class="id">p0_src</span> <span class="id">p1_src</span> <span class="id">p0_tgt</span> <span class="id">p1_tgt</span>: <span class="id">program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RUSC0</span>: <span class="id">rusc</span> <span class="id">p0_src</span> <span class="id">p0_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RUSC1</span>: <span class="id">rusc</span> <span class="id">p1_src</span> <span class="id">p1_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELFSRC0</span>: <span class="id">self_related</span> <span class="id">p0_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELFSRC1</span>: <span class="id">self_related</span> <span class="id">p1_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELFTGT0</span>: <span class="id">self_related</span> <span class="id">p0_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELFTGT1</span>: <span class="id">self_related</span> <span class="id">p1_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> (<span class="id">p0_src</span> ++ <span class="id">p1_src</span>) (<span class="id">p0_tgt</span> ++ <span class="id">p1_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6584')">Proof.</div>
+<div class="proofscript" id="proof6584">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">rusc</span> <span class="kwd">in</span> *. <span class="id">i</span>. <span class="id">erewrite</span> &lt;- <span class="id">app_assoc</span>. <span class="id">erewrite</span> &lt;- <span class="id">app_assoc</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">transitivity</span> (<span class="id">sem</span> (<span class="id">ctx0</span> ++ <span class="id">p0_tgt</span> ++ <span class="id">p1_src</span> ++ <span class="id">ctx1</span>)); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">RUSC0</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">self_related_horizontal</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">app_assoc</span>. <span class="tactic">replace</span> (<span class="id">ctx0</span> ++ <span class="id">p0_tgt</span> ++ <span class="id">p1_tgt</span> ++ <span class="id">ctx1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">with</span> ((<span class="id">ctx0</span> ++ <span class="id">p0_tgt</span>) ++ <span class="id">p1_tgt</span> ++ <span class="id">ctx1</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">RUSC1</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">self_related_horizontal</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">app_assoc</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">rusc_vertical</span> (<span class="id">p0</span> <span class="id">p1</span> <span class="id">p2</span>: <span class="id">program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RUSC0</span>: <span class="id">rusc</span> <span class="id">p0</span> <span class="id">p1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RUSC1</span>: <span class="id">rusc</span> <span class="id">p1</span> <span class="id">p2</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">p0</span> <span class="id">p2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6585')">Proof.</div>
+<div class="proofscript" id="proof6585">
+ <span class="tactic">unfold</span> <span class="id">rusc</span> <span class="kwd">in</span> *. <span class="id">i</span>. <span class="id">etrans</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">RUSC</span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span> <span class="id">self_related_horizontal</span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span> <span class="id">empty_self_related</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">self_related_mon</span> <span class="id">R0</span> <span class="id">R1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id">R0</span> &lt;1= <span class="id">R1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">R1</span> &lt;1= <span class="id">self_related</span> <span class="id">R0</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6586')">Proof.</div>
+<div class="proofscript" id="proof6586">
+ <span class="id">ii</span>. <span class="tactic">eauto</span>. Qed.</div>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span> <span class="id">self_related_mon</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">rusc_mon</span> <span class="id">R0</span> <span class="id">R1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id">R0</span> &lt;1= <span class="id">R1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">R0</span> &lt;2= <span class="id">rusc</span> <span class="id">R1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6587')">Proof.</div>
+<div class="proofscript" id="proof6587">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">p_src</span> <span class="id">p_tgt</span> <span class="id">RU</span> <span class="id">ctx0</span> <span class="id">ctx1</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">RU</span>; <span class="tactic">eauto</span>; <span class="tactic">eapply</span> <span class="id">self_related_mon</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span> <span class="id">rusc_mon</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

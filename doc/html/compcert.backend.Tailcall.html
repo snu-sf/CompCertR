@@ -1,0 +1,114 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Tailcall</title>
+<meta name="description" content="Documentation of Coq module Tailcall" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Tailcall</h1>
+<div class="coq">
+<br/>
+<div class="doc">Recognition of tail calls. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span> <span class="id"><a href="compcert.common.AST.html">AST</a></span> <span class="id"><a href="compcert.backend.Registers.html">Registers</a></span> <span class="id"><a href="compcert.x86.Op.html">Op</a></span> <span class="id"><a href="compcert.backend.RTL.html">RTL</a></span> <span class="id"><a href="compcert.backend.Conventions.html">Conventions</a></span>.<br/>
+<br/>
+<div class="doc">An <span class="bracket"><span class="id">Icall</span></span> instruction that stores its result in register <span class="bracket"><span class="id">rreg</span></span>
+  can be turned into a tail call if:
+<ul>
+<li>
+ its successor is a <span class="bracket"><span class="id">Ireturn</span> <span class="id">None</span></span> or <span class="bracket"><span class="id">Ireturn</span> (<span class="id">Some</span> <span class="id">rreg</span>)</span> instruction;
+</li>
+<li>
+ the stack block of the current function is empty: <span class="bracket"><span class="id">stacksize</span> = 0</span>.
+</li>
+</ul>
+If the current function had a non-empty stack block, it could be that
+the called function accesses it, for instance if a pointer into the
+stack block is passed as an argument.  In this case, it would be
+semantically incorrect to deallocate the stack block before the call,
+as <span class="bracket"><span class="id">Itailcall</span></span> does.  Therefore, the optimization can only be performed if
+the stack block of the current function is empty, in which case it makes
+no semantic difference to deallocate it before or after the call.
+Another complication is that the <span class="bracket"><span class="id">Ireturn</span></span> instruction does not, in general,
+follow immediately the <span class="bracket"><span class="id">Icall</span></span> instruction: the RTL code generator
+can have inserted moves and no-ops between these instructions.
+The general pattern we recognize is therefore:
+<pre>
+       r1 &lt;- call(....)
+       nop
+       r2 &lt;- r1
+       r3 &lt;- r2
+       return r3</pre>
+The <span class="bracket"><span class="id">is_return</span></span> function below recognizes this pattern.
+</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="is_return">is_return</a></span> (<span class="id">n</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) (<span class="id">f</span>: <span class="id"><a href="compcert.backend.RTL.html#function">function</a></span>) (<span class="id">pc</span>: <span class="id"><a href="compcert.backend.RTL.html#node">node</a></span>) (<span class="id">rret</span>: <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="kwd">struct</span> <span class="id">n</span>}: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Tailcall.html#n">n</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">n</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.RTL.html#fn_code">fn_code</a></span>)!<span class="id"><a href="compcert.backend.Tailcall.html#pc">pc</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span>(<span class="id"><a href="compcert.backend.RTL.html#Ireturn">Ireturn</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>) =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span>(<span class="id"><a href="compcert.backend.RTL.html#Ireturn">Ireturn</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">r</span>)) =&gt; <span class="id"><a href="compcert.backend.Registers.html#Reg.eq">Reg.eq</a></span> <span class="id">r</span> <span class="id"><a href="compcert.backend.Tailcall.html#rret">rret</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span>(<span class="id"><a href="compcert.backend.RTL.html#Inop">Inop</a></span> <span class="id">s</span>) =&gt; <span class="id"><a href="compcert.backend.Tailcall.html#is_return">is_return</a></span> <span class="id">n</span>' <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span> <span class="id">s</span> <span class="id"><a href="compcert.backend.Tailcall.html#rret">rret</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span>(<span class="id"><a href="compcert.backend.RTL.html#Iop">Iop</a></span> <span class="id">op</span> <span class="id">args</span> <span class="id">dst</span> <span class="id">s</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.x86.Op.html#is_move_operation">is_move_operation</a></span> <span class="id">op</span> <span class="id">args</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">src</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Registers.html#Reg.eq">Reg.eq</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#rret">rret</a></span> <span class="id">src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="compcert.backend.Tailcall.html#is_return">is_return</a></span> <span class="id">n</span>' <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span> <span class="id">s</span> <span class="id">dst</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">To ensure termination, we bound arbitrarily the number of iterations
+of the <span class="bracket"><span class="id">is_return</span></span> function: we look ahead for a nop/move/return of length
+at most <span class="bracket"><span class="id">niter</span></span> instructions. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="niter">niter</a></span> := 5%<span class="id">nat</span>.<br/>
+<br/>
+<div class="doc">The code transformation is straightforward: call instructions
+  followed by an appropriate nop/move/return sequence become
+  tail calls; other instructions are unchanged.
+  To ensure that the resulting RTL code is well typed, we
+  restrict the transformation to the cases where a tail call is
+  allowed by the calling conventions, and where the result signatures
+  match. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_instr">transf_instr</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.RTL.html#function">function</a></span>) (<span class="id">pc</span>: <span class="id"><a href="compcert.backend.RTL.html#node">node</a></span>) (<span class="id">instr</span>: <span class="id"><a href="compcert.backend.RTL.html#instruction">instruction</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Tailcall.html#instr">instr</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Icall">Icall</a></span> <span class="id">sig</span> <span class="id">ros</span> <span class="id">args</span> <span class="id">res</span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Tailcall.html#is_return">is_return</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#niter">niter</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span> <span class="id">s</span> <span class="id">res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;&amp; <span class="id"><a href="compcert.backend.Conventions.html#tailcall_is_possible">tailcall_is_possible</a></span> <span class="id">sig</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;&amp; <span class="id"><a href="compcert.common.AST.html#opt_typ_eq">opt_typ_eq</a></span> <span class="id">sig</span>.(<span class="id"><a href="compcert.common.AST.html#sig_res">sig_res</a></span>) <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.RTL.html#fn_sig">fn_sig</a></span>).(<span class="id"><a href="compcert.common.AST.html#sig_res">sig_res</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="compcert.backend.RTL.html#Itailcall">Itailcall</a></span> <span class="id">sig</span> <span class="id">ros</span> <span class="id">args</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="compcert.backend.Tailcall.html#instr">instr</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.backend.Tailcall.html#instr">instr</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">A function is transformed only if its stack block is empty,
+    as explained above.  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_function">transf_function</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.RTL.html#function">function</a></span>) : <span class="id"><a href="compcert.backend.RTL.html#function">function</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.lib.Coqlib.html#zeq">zeq</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.RTL.html#fn_stacksize">fn_stacksize</a></span>) 0<br/>
+&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="compcert.backend.RTL.html#transf_function">RTL.transf_function</a></span> (<span class="id"><a href="compcert.backend.Tailcall.html#transf_instr">transf_instr</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span>) <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="compcert.backend.Tailcall.html#f">f</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_fundef">transf_fundef</a></span> (<span class="id">fd</span>: <span class="id"><a href="compcert.backend.RTL.html#fundef">fundef</a></span>) : <span class="id"><a href="compcert.backend.RTL.html#fundef">fundef</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.AST.html#transf_fundef">AST.transf_fundef</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#transf_function">transf_function</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#fd">fd</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_program">transf_program</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.backend.RTL.html#program">program</a></span>) : <span class="id"><a href="compcert.backend.RTL.html#program">program</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.AST.html#transform_program">transform_program</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#transf_fundef">transf_fundef</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#p">p</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

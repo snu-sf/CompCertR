@@ -1,0 +1,92 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module AsmExtra</title>
+<meta name="description" content="Documentation of Coq module AsmExtra" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module AsmExtra</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span> <span class="id">ModSem</span> .<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">ValuesC</span> <span class="id">MemoryC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span> <span class="id">Conventions</span> <span class="id">AsmregsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmC</span> <span class="id">StoreArguments</span> <span class="id">StoreArgumentsProps</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_external_result_one</span> <span class="id">sg</span>:<br/>
+&nbsp;&nbsp;<span class="id">is_one</span> (<span class="id">loc_external_result</span> <span class="id">sg</span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6629')">Proof.</div>
+<div class="proofscript" id="proof6629">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">loc_external_result</span>. <span class="tactic">generalize</span> (<span class="id">loc_result_one</span> <span class="id">sg</span>); <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">loc_result</span> <span class="id">sg</span>) <span class="id">eqn</span>:<span class="id">T</span>; <span class="id">ss</span>. <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">asm_initial_frame_succeed</span> (<span class="id">asm</span>: <span class="id">Asm.program</span>) <span class="id">args</span> <span class="id">fptr</span> <span class="id">vs</span> <span class="id">m</span> <span class="id">skenv_link</span> <span class="id">fd</span> <span class="id">sg</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id">args</span> = <span class="id">Args.Cstyle</span> <span class="id">fptr</span> <span class="id">vs</span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id">Datatypes.length</span> <span class="id">vs</span> = <span class="id">Datatypes.length</span> (<span class="id">sig_args</span> <span class="id">sg</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIZE</span>: 4 * <span class="id">size_arguments</span> <span class="id">sg</span> &lt;= <span class="id">Ptrofs.max_unsigned</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FPTR</span>: <span class="id">Genv.find_funct</span> (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link</span> (<span class="id">Sk.of_program</span> <span class="id">fn_sig</span> <span class="id">asm</span>)) <span class="id">asm</span>) <span class="id">fptr</span> =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIG</span>: <span class="id">fd</span>.(<span class="id">fn_sig</span>) = <span class="id">sg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">sg</span>.(<span class="id">sig_cstyle</span>) = <span class="id">true</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">st_init</span>, <span class="id">initial_frame</span> <span class="id">skenv_link</span> <span class="id">asm</span> <span class="id">args</span> <span class="id">st_init</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6630')">Proof.</div>
+<div class="proofscript" id="proof6630">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">SIG</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">store_arguments_progress</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">typify_has_type_list</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">instantiate</span> (1:=<span class="id">m</span>) <span class="kwd">in</span> <span class="id">STR</span>. <span class="id">instantiate</span> (1:=0%<span class="id">nat</span>) <span class="kwd">in</span> <span class="id">PTRFREE</span>.<br/>
+&nbsp;&nbsp;<span class="id">eexists</span> (<span class="id">mkstate</span> <span class="id">_</span> (<span class="id">Asm.State</span> <span class="id">_</span> <span class="id">_</span>)).<br/>
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">ARGS</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">instantiate</span> (1:= ((<span class="id">to_pregset</span> <span class="id">rs</span>) #<span class="id">PC</span> &lt;- <span class="id">fptr</span> # <span class="id">RSP</span> &lt;- (<span class="id">Vptr</span> (<span class="id">Mem.nextblock</span> <span class="id">m</span>) <span class="id">Ptrofs.zero</span>) #<span class="id">RA</span> &lt;- <span class="id">Vnullptr</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id">Pregmap.gss</span>. <span class="id">ii</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">repeat</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [|<span class="id">clarify</span>; <span class="tactic">fail</span>]). <span class="tactic">eapply</span> <span class="id">Pregmap.gss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">STR</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">extcall_arguments_same</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">to_mregset</span>, <span class="id">to_pregset</span>, <span class="id">Pregmap.set</span>, <span class="id">to_preg</span>, <span class="id">preg_of</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;- <span class="id">instantiate</span> (1:=0%<span class="id">nat</span>). <span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">Pregmap.set</span>, <span class="id">to_pregset</span> <span class="kwd">in</span> <span class="id">PTR</span>. <span class="id">des_ifs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exfalso</span>. <span class="tactic">apply</span> <span class="id">PTR</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">left</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id">NNPP</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exfalso</span>. <span class="tactic">apply</span> <span class="id">PTR</span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">asm_initial_frame_succeed_asmstyle</span> (<span class="id">asm</span>: <span class="id">Asm.program</span>) <span class="id">args</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">skenv_link</span> <span class="id">fd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id">args</span> = <span class="id">Args.Asmstyle</span> <span class="id">rs</span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FPTR</span>: <span class="id">Genv.find_funct</span> (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link</span> (<span class="id">Sk.of_program</span> <span class="id">fn_sig</span> <span class="id">asm</span>)) <span class="id">asm</span>) (<span class="id">rs</span> <span class="id">PC</span>) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ASMSTYLE</span>: <span class="id">fd</span>.(<span class="id">fn_sig</span>).(<span class="id">sig_cstyle</span>) = <span class="id">false</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">st_init</span>, <span class="id">initial_frame</span> <span class="id">skenv_link</span> <span class="id">asm</span> <span class="id">args</span> <span class="id">st_init</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6631')">Proof.</div>
+<div class="proofscript" id="proof6631">
+&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">AsmC.mkstate</span> (<span class="id">rs</span> # <span class="id">RA</span> &lt;- <span class="id">Vnullptr</span>) (<span class="id">Asm.State</span> (<span class="id">rs</span> # <span class="id">RA</span> &lt;- <span class="id">Vnullptr</span>) (<span class="id">JunkBlock.assign_junk_blocks</span> <span class="id">m</span> 0%<span class="id">nat</span>))).<br/>
+&nbsp;&nbsp;<span class="id">econs</span> 2; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">set_regset</span> (<span class="id">rs0</span> <span class="id">rs1</span>: <span class="id">Mach.regset</span>) (<span class="id">sg</span>: <span class="id">signature</span>) (<span class="id">mr</span>: <span class="id">mreg</span>) : <span class="id">val</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">Loc.notin_dec</span> (<span class="id">R</span> <span class="id">mr</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))<br/>
+&nbsp;&nbsp;<span class="kwd">then</span> <span class="id">rs1</span> <span class="id">mr</span> <span class="kwd">else</span> <span class="id">rs0</span> <span class="id">mr</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">set_regset_undef</span> (<span class="id">rs</span>: <span class="id">Mach.regset</span>) (<span class="id">sg</span>: <span class="id">signature</span>) (<span class="id">mr</span>: <span class="id">mreg</span>) : <span class="id">val</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">Loc.notin_dec</span> (<span class="id">R</span> <span class="id">mr</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))<br/>
+&nbsp;&nbsp;<span class="kwd">then</span> <span class="id">Vundef</span> <span class="kwd">else</span> <span class="id">rs</span> <span class="id">mr</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

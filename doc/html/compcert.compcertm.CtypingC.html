@@ -1,0 +1,117 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CtypingC</title>
+<meta name="description" content="Documentation of Coq module CtypingC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CtypingC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">String</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span> <span class="id">Integers</span> <span class="id">Floats</span> <span class="id">Errors</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Linking</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span> <span class="id">Memory</span> <span class="id">Globalenvs</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypesC</span> <span class="id">Cop</span> <span class="id">Csyntax</span> <span class="id">Csem</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Ctyping</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">error_monad_scope</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">typify_c</span> (<span class="id">v</span>: <span class="id">val</span>) (<span class="id">ty</span>: <span class="id">type</span>): <span class="id">val</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">typify_c_ok</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id">wt_retval</span> <span class="id">v</span> <span class="id">ty</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">v</span><br/>
+| <span class="id">typify_c_no</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NWT</span>: ~ <span class="id">wt_retval</span> <span class="id">v</span> <span class="id">ty</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">Vundef</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">typify_c_dtm</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span> <span class="id">tv0</span> <span class="id">tv1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY0</span>: <span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">tv0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY1</span>: <span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">tv1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tv0</span> = <span class="id">tv1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6998')">Proof.</div>
+<div class="proofscript" id="proof6998">
+ <span class="id">inv</span> <span class="id">TY0</span>; <span class="id">inv</span> <span class="id">TY1</span>; <span class="id">des</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">typify_c_ex</span>: <span class="kwd">forall</span> <span class="id">v</span> <span class="id">ty</span>,<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tv</span>, &lt;&lt;<span class="id">TYP</span>: <span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">tv</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6999')">Proof.</div>
+<div class="proofscript" id="proof6999">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">wt_retval</span> <span class="id">v</span> <span class="id">ty</span>)).<br/>
+&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="id">econs</span> 1; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="id">econs</span> 2; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">typify_c_spec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span> <span class="id">tv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY</span>: <span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">tv</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WT</span>: <span class="id">wt_retval</span> <span class="id">tv</span> <span class="id">ty</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7000')">Proof.</div>
+<div class="proofscript" id="proof7000">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TY</span>; <span class="id">des</span>; <span class="id">ss</span>. <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;- <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">wt_initial_frame</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">cp</span>: <span class="id">Csyntax.program</span>) <span class="id">fptr</span> <span class="id">vs_arg</span> <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ge</span>: <span class="id">genv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INT</span>: <span class="id">exists</span> <span class="id">fd</span>, <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">fptr</span> = <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WTLOCALS</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fd</span>, <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">fptr</span> = <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Forall</span> (<span class="kwd">fun</span> <span class="id">t</span> : <span class="id">type</span> =&gt; <span class="id">wt_type</span> <span class="id">ge</span> <span class="id">t</span>) (<span class="id">map</span> <span class="id">snd</span> (<span class="id">fn_params</span> <span class="id">fd</span> ++ <span class="id">fn_vars</span> <span class="id">fd</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WTARGS</span>: <span class="id">Forall2</span> <span class="id">val_casted</span> <span class="id">vs_arg</span> (<span class="id">typelist_to_listtype</span> <span class="id">targs</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id">Forall</span> (<span class="kwd">fun</span> <span class="id">ty</span> : <span class="id">type</span> =&gt; <span class="id">ty</span> &lt;&gt; <span class="id">Tvoid</span>) (<span class="id">typelist_to_listtype</span> <span class="id">targs</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_state</span> <span class="id">cp</span> <span class="id">ge</span> (<span class="id">Csem.Callstate</span> <span class="id">fptr</span> (<span class="id">Tfunction</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span>) <span class="id">vs_arg</span> <span class="id">Kstop</span> <span class="id">m</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7001')">Proof.</div>
+<div class="proofscript" id="proof7001">
+&nbsp;&nbsp;<span class="id">des</span>. <span class="id">econs</span>; <span class="id">et</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">econs</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">exfalso</span>. <span class="tactic">eapply</span> <span class="id">EXT</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">wt_val_has_type</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id">wt_val</span> <span class="id">v</span> <span class="id">ty</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id">ty</span> &lt;&gt; <span class="id">Tvoid</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TY</span>: <span class="id">Val.has_type</span> <span class="id">v</span> <span class="id">ty</span>.(<span class="id">typ_of_type</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7002')">Proof.</div>
+<div class="proofscript" id="proof7002">
+ <span class="id">inv</span> <span class="id">WT</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">wt_retval_has_type</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id">wt_retval</span> <span class="id">v</span> <span class="id">ty</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TY</span>: <span class="id">Val.has_type</span> <span class="id">v</span> <span class="id">ty</span>.(<span class="id">typ_of_type</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7003')">Proof.</div>
+<div class="proofscript" id="proof7003">
+ <span class="id">inv</span> <span class="id">WT</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">WTV</span>; <span class="id">ss</span>. <span class="id">erewrite</span> <span class="id">NVOID</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">typify_inject</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v_src</span> <span class="id">ty</span> <span class="id">tv_src</span> <span class="id">v_tgt</span> <span class="id">j</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">typify_c</span> <span class="id">v_src</span> <span class="id">ty</span> <span class="id">tv_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">tv_src</span> (<span class="id">typify</span> <span class="id">v_tgt</span> (<span class="id">typ_of_type</span> <span class="id">ty</span>))&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7004')">Proof.</div>
+<div class="proofscript" id="proof7004">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TYP</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">wt_retval_has_type</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id">typify</span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ss</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

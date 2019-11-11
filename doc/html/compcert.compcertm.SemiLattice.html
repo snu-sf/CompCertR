@@ -1,0 +1,271 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SemiLattice</title>
+<meta name="description" content="Documentation of Coq module SemiLattice" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SemiLattice</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MapsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">FinFun</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">nat_scope</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">greatest</span> <span class="id">A</span> (<span class="id">le</span>: <span class="id">A</span> -&gt; <span class="id">A</span> -&gt; <span class="kwd">Prop</span>) (<span class="id">P</span>: <span class="id">A</span> -&gt; <span class="kwd">Prop</span>) (<span class="id">max</span>: <span class="id">A</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&lt;&lt;<span class="id">PROP</span>: <span class="id">P</span> <span class="id">max</span>&gt;&gt; /\ &lt;&lt;<span class="id">MAX</span>: <span class="kwd">forall</span> <span class="id">a</span> (<span class="id">PROP</span>: <span class="id">P</span> <span class="id">a</span>), <span class="id">le</span> <span class="id">a</span> <span class="id">max</span>&gt;&gt;<br/>
+.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">TRIAL1</span>.<br/>
+<br/>
+<span class="kwd">Class</span> <span class="id">FSL</span>: <span class="kwd">Type</span> := {<br/>
+&nbsp;&nbsp;<span class="id">t</span>: <span class="kwd">Type</span>;<br/>
+&nbsp;&nbsp;<span class="id">finite</span>: <span class="id">Finite</span> <span class="id">t</span>;<br/>
+&nbsp;&nbsp;<span class="id">le</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;<span class="id">le_PreOrder</span> :&gt; <span class="id">PreOrder</span> <span class="id">le</span>;<br/>
+&nbsp;&nbsp;<span class="id">lub</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="id">t</span>;<br/>
+&nbsp;&nbsp;<span class="id">lub_spec</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> ,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">x</span> (<span class="id">lub</span> <span class="id">x</span> <span class="id">y</span>)&gt;&gt;) /\ (&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">y</span> (<span class="id">lub</span> <span class="id">x</span> <span class="id">y</span>)&gt;&gt;);<br/>
+&nbsp;&nbsp;<span class="id">greatest</span> <span class="id">P</span> := <span class="id">greatest</span> <span class="id">le</span> <span class="id">P</span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SemiLatticeProps</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id">FSL</span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">P</span>: <span class="id">t</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">CLOSED</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id">P</span> <span class="id">y</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PXY</span>: <span class="id">P</span> (<span class="id">lub</span> <span class="id">x</span> <span class="id">y</span>)&gt;&gt;.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">find_greatest_aux</span>: <span class="kwd">forall</span> <span class="id">l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id">P</span> <span class="id">inhab</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PROP</span>: <span class="id">P</span> <span class="id">max</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="kwd">forall</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROP</span>: <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">List.In</span> <span class="id">x</span> <span class="id">l</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">x</span> <span class="id">max</span>&gt;&gt;&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7207')">Proof.</div>
+<div class="proofscript" id="proof7207">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">P</span> <span class="id">a</span>)); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">lub</span> <span class="id">max</span> <span class="id">a</span>). <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">CLOSED</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">lub_spec</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etrans</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">lub_spec</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">find_greatest</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id">P</span> <span class="id">inhab</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>, &lt;&lt;<span class="id">MAX</span>: <span class="id">greatest</span> <span class="id">P</span> <span class="id">max</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7208')">Proof.</div>
+<div class="proofscript" id="proof7208">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexpl</span> <span class="id">finite</span> <span class="id">FIN</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">FIN</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id">find_greatest_aux</span> <span class="id">l</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SemiLatticeProps</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">TRIAL1</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">FSL</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Class</span> <span class="id">class</span> (<span class="id">t</span>: <span class="kwd">Type</span>) (<span class="id">le</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="kwd">Prop</span>) (<span class="id">lub</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="id">t</span>): <span class="kwd">Type</span> := {<br/>
+&nbsp;&nbsp;<span class="id">le_PreOrder</span> :&gt; <span class="id">PreOrder</span> <span class="id">le</span>;<br/>
+&nbsp;&nbsp;<span class="id">lub_spec</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">x</span> (<span class="id">lub</span> <span class="id">x</span> <span class="id">y</span>)&gt;&gt;) /\ (&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">y</span> (<span class="id">lub</span> <span class="id">x</span> <span class="id">y</span>)&gt;&gt;);<br/>
+&nbsp;&nbsp;<span class="id">greatest</span> <span class="id">P</span> := <span class="id">greatest</span> <span class="id">le</span> <span class="id">P</span>;<br/>
+}.<br/>
+<span class="kwd">Section</span> <span class="id">SemiLatticeProps</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">t</span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">le</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">lub</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="id">t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id">class</span> <span class="id">t</span> <span class="id">le</span> <span class="id">lub</span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">P</span>: <span class="id">t</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">FIN</span>: <span class="id">Finite</span> <span class="id">t</span>. <br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">CLOSED</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id">P</span> <span class="id">y</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PXY</span>: <span class="id">P</span> (<span class="id">lub</span> <span class="id">x</span> <span class="id">y</span>)&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">find_greatest_aux</span>: <span class="kwd">forall</span> <span class="id">l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id">P</span> <span class="id">inhab</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PROP</span>: <span class="id">P</span> <span class="id">max</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="kwd">forall</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROP</span>: <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">List.In</span> <span class="id">x</span> <span class="id">l</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">x</span> <span class="id">max</span>&gt;&gt;&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7209')">Proof.</div>
+<div class="proofscript" id="proof7209">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">P</span> <span class="id">a</span>)); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">lub</span> <span class="id">max</span> <span class="id">a</span>). <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">CLOSED</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">lub_spec</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etrans</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">lub_spec</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">find_greatest</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id">P</span> <span class="id">inhab</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>, &lt;&lt;<span class="id">MAX</span>: <span class="id">greatest</span> <span class="id">P</span> <span class="id">max</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7210')">Proof.</div>
+<div class="proofscript" id="proof7210">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">FIN</span>. <span class="tactic">destruct</span> <span class="id">FIN</span> <span class="kwd">as</span> [<span class="id">l</span> ?].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id">find_greatest_aux</span> <span class="id">l</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SemiLatticeProps</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">FSL</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SemiLatticeProps</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">t</span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">le</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">lub</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="id">option</span> <span class="id">t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">P</span>: <span class="id">t</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">LEORD</span>: <span class="id">PreOrder</span> <span class="id">le</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">LUBSUCC</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id">P</span> <span class="id">y</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">z</span>, <span class="id">lub</span> <span class="id">x</span> <span class="id">y</span> = <span class="id">Some</span> <span class="id">z</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">LUBSPEC</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LUB</span>: <span class="id">lub</span> <span class="id">x</span> <span class="id">y</span> = <span class="id">Some</span> <span class="id">z</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">x</span> <span class="id">z</span>&gt;&gt;) /\ (&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">y</span> <span class="id">z</span>&gt;&gt;).<br/>
+ <br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">FIN</span>: <span class="id">exists</span> <span class="id">l</span>, <span class="kwd">forall</span> <span class="id">x</span> (<span class="id">PROP</span>: <span class="id">P</span> <span class="id">x</span>), <span class="id">In</span> <span class="id">x</span> <span class="id">l</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">CLOSED</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id">P</span> <span class="id">y</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LUB</span>: <span class="id">lub</span> <span class="id">x</span> <span class="id">y</span> = <span class="id">Some</span> <span class="id">z</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PXY</span>: <span class="id">P</span> <span class="id">z</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">find_greatest_aux</span>: <span class="kwd">forall</span> <span class="id">l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id">P</span> <span class="id">inhab</span>) ,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PROP</span>: <span class="id">P</span> <span class="id">max</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="kwd">forall</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROP</span>: <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">List.In</span> <span class="id">x</span> <span class="id">l</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">x</span> <span class="id">max</span>&gt;&gt;&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7211')">Proof.</div>
+<div class="proofscript" id="proof7211">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">P</span> <span class="id">a</span>)); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id">LUBSUCC</span> <span class="id">max</span> <span class="id">a</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id">CLOSED</span> <span class="id">max</span> <span class="id">a</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">z</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">LUBSPEC</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etrans</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">find_greatest</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id">P</span> <span class="id">inhab</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>, &lt;&lt;<span class="id">MAX</span>: <span class="id">greatest</span> <span class="id">le</span> <span class="id">P</span> <span class="id">max</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7212')">Proof.</div>
+<div class="proofscript" id="proof7212">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">FIN</span>. <span class="tactic">destruct</span> <span class="id">FIN</span> <span class="kwd">as</span> [<span class="id">l</span> ?]. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;set&nbsp;(l'&nbsp;:=&nbsp;map&nbsp;(@proj1_sig&nbsp;_&nbsp;P)&nbsp;l).&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id">find_greatest_aux</span> <span class="id">l</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;eapply&nbsp;in_map_iff.&nbsp;unshelve&nbsp;eexists&nbsp;(exist&nbsp;_&nbsp;_&nbsp;_);&nbsp;ss.&nbsp;*)</span><br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SemiLatticeProps</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">GRLE</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">t</span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">le</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">lub</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="id">option</span> <span class="id">t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">P</span>: <span class="id">t</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">LEORD</span>: <span class="id">PreOrder</span> <span class="id">le</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">LUBSUCC</span>: <span class="kwd">forall</span> <span class="id">su0</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id">le</span> <span class="id">su0</span> <span class="id">x</span> /\ <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id">le</span> <span class="id">su0</span> <span class="id">y</span> /\ <span class="id">P</span> <span class="id">y</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">z</span>, <span class="id">lub</span> <span class="id">x</span> <span class="id">y</span> = <span class="id">Some</span> <span class="id">z</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">LUBSPEC</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LUB</span>: <span class="id">lub</span> <span class="id">x</span> <span class="id">y</span> = <span class="id">Some</span> <span class="id">z</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">x</span> <span class="id">z</span>&gt;&gt;) /\ (&lt;&lt;<span class="id">LE</span>: <span class="id">le</span> <span class="id">y</span> <span class="id">z</span>&gt;&gt;).<br/>
+ <br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">FIN</span>: <span class="id">exists</span> <span class="id">l</span>, <span class="kwd">forall</span> <span class="id">x</span> (<span class="id">PROP</span>: <span class="id">P</span> <span class="id">x</span>), <span class="id">In</span> <span class="id">x</span> <span class="id">l</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">CLOSED</span>: <span class="kwd">forall</span> <span class="id">su0</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id">le</span> <span class="id">su0</span> <span class="id">x</span> /\ <span class="id">P</span> <span class="id">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id">le</span> <span class="id">su0</span> <span class="id">y</span> /\ <span class="id">P</span> <span class="id">y</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LUB</span>: <span class="id">lub</span> <span class="id">x</span> <span class="id">y</span> = <span class="id">Some</span> <span class="id">z</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PXY</span>: <span class="id">P</span> <span class="id">z</span>&gt;&gt;.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">greatest_le_irr</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a0</span> <span class="id">a1</span> <span class="id">max</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id">le</span> <span class="id">a0</span> <span class="id">a1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">P1</span>: <span class="id">P</span> <span class="id">a1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GR</span>: <span class="id">greatest</span> <span class="id">le</span> (<span class="kwd">fun</span> <span class="id">a</span> =&gt; <span class="id">le</span> <span class="id">a1</span> <span class="id">a</span> /\ <span class="id">P</span> <span class="id">a</span>) <span class="id">max</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">GR</span>: <span class="id">greatest</span> <span class="id">le</span> (<span class="kwd">fun</span> <span class="id">a</span> =&gt; <span class="id">le</span> <span class="id">a0</span> <span class="id">a</span> /\ <span class="id">P</span> <span class="id">a</span>) <span class="id">max</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7213')">Proof.</div>
+<div class="proofscript" id="proof7213">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">r</span> <span class="kwd">in</span> <span class="id">GR</span>. <span class="id">rr</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">etrans</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id">LUBSUCC</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="id">cycle</span> 1. <span class="tactic">eapply</span> <span class="id">P1</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="id">cycle</span> 1. <span class="tactic">eapply</span> <span class="id">PROP2</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">LUB</span>; <span class="id">des</span>. <span class="id">exploit</span> <span class="id">LUBSPEC</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">exploit</span> <span class="id">CLOSED</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">LUB</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">MAX</span> <span class="id">z</span>). <span class="id">exploit</span> <span class="id">MAX</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">etrans</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">GRLE</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

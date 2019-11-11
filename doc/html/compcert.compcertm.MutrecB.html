@@ -1,0 +1,86 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MutrecB</title>
+<meta name="description" content="Documentation of Coq module MutrecB" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MutrecB</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Coqlib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Asm</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmC</span> <span class="id">Mod</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MutrecHeader</span> <span class="id">Integers</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">_memoized</span> : <span class="id">ident</span> := 60%<span class="id">positive</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">lb0</span>: <span class="id">label</span> := 1%<span class="id">positive</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">lb1</span>: <span class="id">label</span> := 2%<span class="id">positive</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">lb2</span>: <span class="id">label</span> := 3%<span class="id">positive</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">v_memoized</span> := {|<br/>
+&nbsp;&nbsp;<span class="id">gvar_info</span> := <span class="id">tt</span>;<br/>
+&nbsp;&nbsp;<span class="id">gvar_init</span> := (<span class="id">Init_int32</span> (<span class="id">Int.zero</span>) :: <span class="id">Init_int32</span> (<span class="id">Int.zero</span>) :: <span class="id">nil</span>);<br/>
+&nbsp;&nbsp;<span class="id">gvar_readonly</span> := <span class="id">false</span>;<br/>
+&nbsp;&nbsp;<span class="id">gvar_volatile</span> := <span class="id">false</span><br/>
+|}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">code</span>: <span class="id">list</span> <span class="id">instruction</span> :=<br/>
+&nbsp;[<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">Pallocframe</span> 24 (<span class="id">Ptrofs.repr</span> 16) <span class="id">Ptrofs.zero</span> ; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pmov_mr_a</span> (<span class="id">Addrmode</span> (<span class="id">Some</span> <span class="id">RSP</span>) <span class="id">None</span> (<span class="id">inl</span> 8)) <span class="id">RBX</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pmov_rr</span> <span class="id">RBX</span> <span class="id">RDI</span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Ptestl_rr</span> <span class="id">RBX</span> <span class="id">RBX</span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pjcc</span> <span class="id">Cond_ne</span> <span class="id">lb0</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pxorl_r</span> <span class="id">RAX</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pjmp_l</span> <span class="id">lb1</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Plabel</span> <span class="id">lb0</span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pmovl_rm</span> <span class="id">RAX</span> (<span class="id">Addrmode</span> <span class="id">None</span> <span class="id">None</span> (<span class="id">inr</span> (<span class="id">_memoized</span>, <span class="id">Ptrofs.zero</span>)));<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pcmpl_rr</span> <span class="id">RBX</span> <span class="id">RAX</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pjcc</span> <span class="id">Cond_e</span> <span class="id">lb2</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pleal</span> <span class="id">RDI</span> (<span class="id">Addrmode</span> (<span class="id">Some</span> <span class="id">RBX</span>) <span class="id">None</span> (<span class="id">inl</span> (- 1)));<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pcall_s</span> <span class="id">f_id</span> (<span class="id">mksignature</span> [<span class="id">Tint</span>] (<span class="id">Some</span> <span class="id">Tint</span>) <span class="id">cc_default</span> <span class="id">true</span>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pleal</span> <span class="id">RAX</span> (<span class="id">Addrmode</span> (<span class="id">Some</span> <span class="id">RAX</span>) (<span class="id">Some</span> (<span class="id">RBX</span>, 1)) (<span class="id">inl</span> 0));<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pmovl_mr</span> (<span class="id">Addrmode</span> <span class="id">None</span> <span class="id">None</span> (<span class="id">inr</span> (<span class="id">_memoized</span>, <span class="id">Ptrofs.zero</span>))) <span class="id">RBX</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pmovl_mr</span> (<span class="id">Addrmode</span> <span class="id">None</span> <span class="id">None</span> (<span class="id">inr</span> (<span class="id">_memoized</span>, <span class="id">Ptrofs.repr</span> 4))) <span class="id">RAX</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pjmp_l</span> <span class="id">lb1</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Plabel</span> <span class="id">lb2</span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pmovl_rm</span> <span class="id">RAX</span> (<span class="id">Addrmode</span> <span class="id">None</span> <span class="id">None</span> (<span class="id">inr</span> (<span class="id">_memoized</span>, <span class="id">Ptrofs.repr</span> 4)));<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Plabel</span> <span class="id">lb1</span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pmov_rm_a</span> <span class="id">RBX</span> (<span class="id">Addrmode</span> (<span class="id">Some</span> <span class="id">RSP</span>) <span class="id">None</span> (<span class="id">inl</span> 8));<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pfreeframe</span> 24 (<span class="id">Ptrofs.repr</span> 16) <span class="id">Ptrofs.zero</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Pret</span><br/>
+&nbsp;].<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">func_g</span>: <span class="id">function</span> :=<br/>
+&nbsp;&nbsp;<span class="id">mkfunction</span> (<span class="id">mksignature</span> [<span class="id">Tint</span>] (<span class="id">Some</span> <span class="id">Tint</span>) <span class="id">cc_default</span> <span class="id">true</span>) <span class="id">code</span><br/>
+.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">global_definitions</span> : <span class="id">list</span> (<span class="id">ident</span> * <span class="id">globdef</span> <span class="id">fundef</span> <span class="id">unit</span>) :=<br/>
+((<span class="id">f_id</span>,<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">Gfun</span>(<span class="id">External</span> (<span class="id">EF_external</span> "<span class="id">f</span>"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mksignature</span> (<span class="id">AST.Tint</span> :: <span class="id">nil</span>) (<span class="id">Some</span> <span class="id">AST.Tint</span>) <span class="id">cc_default</span> <span class="id">true</span>)))) :: (<span class="id">_memoized</span>, <span class="id">Gvar</span> <span class="id">v_memoized</span>) ::<br/>
+&nbsp;(<span class="id">g_id</span>, <span class="id">Gfun</span>(<span class="id">Internal</span> <span class="id">func_g</span>)) :: <span class="id">nil</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">public_idents</span> : <span class="id">list</span> <span class="id">ident</span> :=<br/>
+(<span class="id">f_id</span> :: <span class="id">g_id</span> :: <span class="id">nil</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">prog</span>: <span class="id">program</span> := <span class="id">mkprogram</span> <span class="id">global_definitions</span> <span class="id">public_idents</span> <span class="id">main_id</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">md</span>: <span class="id">Mod.t</span> := <span class="id">AsmC.module</span> <span class="id">prog</span>.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

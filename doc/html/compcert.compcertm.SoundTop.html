@@ -1,0 +1,74 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SoundTop</title>
+<meta name="description" content="Documentation of Coq module SoundTop" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SoundTop</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">RelationClasses</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">FSets</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Ordered</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSem</span> <span class="id">Skeleton</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Sound</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SemiLattice</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">FinFun</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">Top</span>: <span class="id">Sound.class</span> := {<br/>
+&nbsp;&nbsp;<span class="id">t</span> := <span class="id">unit</span>;<br/>
+&nbsp;&nbsp;<span class="id">lepriv</span> := <span class="id">top2</span>;<br/>
+&nbsp;&nbsp;<span class="kwd">wf</span> := <span class="id">top1</span>;<br/>
+&nbsp;&nbsp;<span class="id">val</span> := <span class="id">top2</span>;<br/>
+&nbsp;&nbsp;<span class="id">mem</span> := <span class="id">top2</span>;<br/>
+&nbsp;&nbsp;<span class="id">mle</span> := <span class="id">top3</span>;<br/>
+&nbsp;&nbsp;<span class="id">skenv</span> := <span class="id">top3</span>;<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7302')">Next Obligation.</div>
+<div class="proofscript" id="proof7302">
+ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof7303')">Next Obligation.</div>
+<div class="proofscript" id="proof7303">
+ <span class="id">esplits</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Preservation</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">sound_state</span> {<span class="id">STATE</span>: <span class="kwd">Type</span>}: <span class="id">Sound.t</span> -&gt; <span class="id">mem</span> -&gt; <span class="id">STATE</span> -&gt; <span class="kwd">Prop</span> := <span class="id">top3</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sound_state_local_preservation</span>: <span class="kwd">forall</span> <span class="id">ms</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PRSV</span>: <span class="id">local_preservation</span> <span class="id">ms</span> <span class="id">sound_state</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7304')">Proof.</div>
+<div class="proofscript" id="proof7304">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">des_ifs</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="tactic">rewrite</span> <span class="id">Forall_forall</span>. <span class="id">ii</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">des_ifs</span>. }<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

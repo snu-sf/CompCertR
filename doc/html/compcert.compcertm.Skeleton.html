@@ -1,0 +1,556 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Skeleton</title>
+<meta name="description" content="Documentation of Coq module Skeleton" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Skeleton</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">GlobalenvsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">ASTC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MapsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Linking</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions1</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="id">Generalizable</span> <span class="kwd">Variables</span> <span class="id">F</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">skdef_of_gdef</span> {<span class="id">F</span> <span class="id">V</span>} (<span class="id">get_sg</span>: <span class="id">F</span> -&gt; <span class="id">signature</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">gdef</span>: <span class="id">globdef</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>): <span class="id">globdef</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">gdef</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">Gfun</span> (<span class="id">Internal</span> <span class="id">f</span>) =&gt; <span class="id">Gfun</span> (<span class="id">Internal</span> <span class="id">f</span>.(<span class="id">get_sg</span>))<br/>
+&nbsp;&nbsp;| <span class="id">Gfun</span> (<span class="id">External</span> <span class="id">ef</span>) =&gt; <span class="id">Gfun</span> (<span class="id">External</span> <span class="id">ef</span>)<br/>
+&nbsp;&nbsp;| <span class="id">Gvar</span> <span class="id">v</span> =&gt; <span class="id">Gvar</span> (<span class="id">mkglobvar</span> <span class="id">tt</span> <span class="id">v</span>.(<span class="id">gvar_init</span>) <span class="id">v</span>.(<span class="id">gvar_readonly</span>) <span class="id">v</span>.(<span class="id">gvar_volatile</span>))<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">skdef_of_gdef_is_external_gd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> <span class="id">get_sg</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">gdef</span>: <span class="id">globdef</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_external_gd</span> (<span class="id">skdef_of_gdef</span> <span class="id">get_sg</span> <span class="id">gdef</span>) = <span class="id">is_external_gd</span> <span class="id">gdef</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6805')">Proof.</div>
+<div class="proofscript" id="proof6805">
+ <span class="id">u</span>. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="id">clarify</span>. Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">skdefs_of_gdefs</span> {<span class="id">F</span> <span class="id">V</span>} (<span class="id">get_sg</span>: <span class="id">F</span> -&gt; <span class="id">signature</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">gdefs</span>: <span class="id">list</span> (<span class="id">ident</span> * <span class="id">globdef</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>)):<br/>
+&nbsp;&nbsp;<span class="id">list</span> (<span class="id">ident</span> * <span class="id">globdef</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">map</span> (<span class="id">update_snd</span> (<span class="id">skdef_of_gdef</span> <span class="id">get_sg</span>)) <span class="id">gdefs</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">Sk</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">t</span> := <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">load_skenv</span>: <span class="id">t</span> -&gt; <span class="id">Genv.t</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span> := @<span class="id">Genv.globalenv</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">load_mem</span>: <span class="id">t</span> -&gt; <span class="id">option</span> <span class="id">mem</span> := @<span class="id">Genv.init_mem</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">of_program</span> {<span class="id">F</span> <span class="id">V</span>} (<span class="id">get_sg</span>: <span class="id">F</span> -&gt; <span class="id">signature</span>) (<span class="id">prog</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>): <span class="id">t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mkprogram</span> (<span class="id">skdefs_of_gdefs</span> <span class="id">get_sg</span> <span class="id">prog</span>.(<span class="id">prog_defs</span>)) <span class="id">prog</span>.(<span class="id">prog_public</span>) <span class="id">prog</span>.(<span class="id">prog_main</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">wf_match_fundef</span> <span class="id">CTX</span> <span class="id">F1</span> <span class="id">F2</span> (<span class="id">match_fundef</span>: <span class="id">CTX</span> -&gt; <span class="id">fundef</span> <span class="id">F1</span> -&gt; <span class="id">fundef</span> <span class="id">F2</span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">fn_sig1</span>: <span class="id">F1</span> -&gt; <span class="id">signature</span>) (<span class="id">fn_sig2</span>: <span class="id">F2</span> -&gt; <span class="id">signature</span>): <span class="kwd">Prop</span> := <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ctx</span> <span class="id">f1</span> <span class="id">f2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_fundef</span> <span class="id">ctx</span> <span class="id">f1</span> <span class="id">f2</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EXT</span>: <span class="id">exists</span> <span class="id">ef</span>, <span class="id">f1</span> = <span class="id">External</span> <span class="id">ef</span> /\ <span class="id">f2</span> = <span class="id">External</span> <span class="id">ef</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\/ (&lt;&lt;<span class="id">INT</span>: <span class="id">exists</span> <span class="id">fd1</span> <span class="id">fd2</span>, <span class="id">f1</span> = <span class="id">Internal</span> <span class="id">fd1</span> /\ <span class="id">f2</span> = <span class="id">Internal</span> <span class="id">fd2</span> /\ &lt;&lt;<span class="id">SIG</span>: <span class="id">fn_sig1</span> <span class="id">fd1</span> = <span class="id">fn_sig2</span> <span class="id">fd2</span>&gt;&gt; &gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">is_external_weak</span> <span class="id">F</span> (<span class="id">f</span>: <span class="id">AST.fundef</span> <span class="id">F</span>): <span class="id">bool</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">f</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Internal</span> <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">External</span> <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">match_program_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F1</span> <span class="id">V1</span> <span class="id">F2</span> <span class="id">V2</span> <span class="id">fn_sig1</span> <span class="id">fn_sig2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">Linker</span> (<span class="id">fundef</span> <span class="id">F1</span>)} `{<span class="id">Linker</span> <span class="id">V1</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_fundef</span> <span class="id">match_varinfo</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">p1</span>: <span class="id">AST.program</span> (<span class="id">fundef</span> <span class="id">F1</span>) <span class="id">V1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">p2</span>: <span class="id">AST.program</span> (<span class="id">fundef</span> <span class="id">F2</span>) <span class="id">V2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_program</span> <span class="id">match_fundef</span> <span class="id">match_varinfo</span> <span class="id">p1</span> <span class="id">p2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="id">wf_match_fundef</span> <span class="id">match_fundef</span> <span class="id">fn_sig1</span> <span class="id">fn_sig2</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">Sk.of_program</span> <span class="id">fn_sig1</span> <span class="id">p1</span> = <span class="id">Sk.of_program</span> <span class="id">fn_sig2</span> <span class="id">p2</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6806')">Proof.</div>
+<div class="proofscript" id="proof6806">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">MATCH</span>. <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id">of_program</span>. <span class="id">r</span>. <span class="tactic">f_equal</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">MATCH</span>. <span class="tactic">generalize</span> <span class="id">p1</span> <span class="tactic">at</span> 1 <span class="kwd">as</span> <span class="id">CTX</span>. <span class="id">i</span>. <span class="tactic">destruct</span> <span class="id">p1</span>, <span class="id">p2</span>; <span class="id">ss</span>. <span class="tactic">clear</span> - <span class="id">MATCH</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">prog_defs</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">IHprog_defs</span>; <span class="tactic">eauto</span>. <span class="tactic">f_equal</span>; <span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">H3</span>. <span class="tactic">destruct</span> <span class="id">a</span>, <span class="id">b1</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">H2</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">update_snd</span>. <span class="id">exploit</span> <span class="id">WF</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>; <span class="id">clarify</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">repeat</span> <span class="tactic">f_equal</span>. <span class="id">exploit</span> <span class="id">WF</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H1</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">match_fundef</span> <span class="id">F0</span> <span class="id">F1</span> (<span class="id">get_sig</span>: <span class="id">F0</span> -&gt; <span class="id">F1</span>) (<span class="id">_</span>: <span class="id">unit</span>): <span class="id">AST.fundef</span> <span class="id">F0</span> -&gt; <span class="id">AST.fundef</span> <span class="id">F1</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">f0</span> <span class="id">f1</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">f0</span>, <span class="id">f1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Internal</span> <span class="id">func1</span>, <span class="id">Internal</span> <span class="id">func2</span> =&gt; <span class="id">get_sig</span> <span class="id">func1</span> = <span class="id">func2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">External</span> <span class="id">ef0</span>, <span class="id">External</span> <span class="id">ef1</span> =&gt; <span class="id">external_function_eq</span> <span class="id">ef0</span> <span class="id">ef1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">of_program_prog_defmap</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">p</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>) <span class="id">get_sg</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIM</span>: <span class="kwd">forall</span> <span class="id">id</span>, <span class="id">option_rel</span> (@<span class="id">Linking.match_globdef</span> <span class="id">unit</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(@<span class="id">match_fundef</span> <span class="id">_</span> <span class="id">_</span> <span class="id">get_sg</span>) <span class="id">top2</span> <span class="id">tt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">p</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span>) ((<span class="id">of_program</span> <span class="id">get_sg</span> <span class="id">p</span>).(<span class="id">prog_defmap</span>) ! <span class="id">id</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6807')">Proof.</div>
+<div class="proofscript" id="proof6807">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">prog_defmap</span>, <span class="id">of_program</span>, <span class="id">skdefs_of_gdefs</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">prog_defmap_update_snd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> ((<span class="id">PTree_Properties.of_list</span> (<span class="id">prog_defs</span> <span class="id">p</span>)) ! <span class="id">id</span>) <span class="id">eqn</span>:<span class="id">T</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="id">et</span>. <span class="tactic">unfold</span> <span class="id">skdef_of_gdef</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">et</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">et</span>; <span class="tactic">try</span> <span class="id">refl</span>. <span class="id">r</span>. <span class="id">des_sumbool</span>. <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">et</span>. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">of_program_defs_names</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> <span class="id">get_sg</span> (<span class="id">p</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">of_program</span> <span class="id">get_sg</span> <span class="id">p</span>).(<span class="id">prog_defs_names</span>) = <span class="id">p</span>.(<span class="id">prog_defs_names</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6808')">Proof.</div>
+<div class="proofscript" id="proof6808">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">in_dec</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">in_dec</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">map_map</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">of_program_defs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> <span class="id">get_sg</span> (<span class="id">p</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">of_program</span> <span class="id">get_sg</span> <span class="id">p</span>).(<span class="id">defs</span>) = <span class="id">p</span>.(<span class="id">defs</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6809')">Proof.</div>
+<div class="proofscript" id="proof6809">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">defs</span>. <span class="tactic">rewrite</span> <span class="id">of_program_defs_names</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">prog_defmap</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">of_program_internals</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> <span class="id">get_sg</span> (<span class="id">p</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">of_program</span> <span class="id">get_sg</span> <span class="id">p</span>).(<span class="id">internals</span>) = <span class="id">p</span>.(<span class="id">internals</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6810')">Proof.</div>
+<div class="proofscript" id="proof6810">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">internals</span>. <span class="tactic">destruct</span> <span class="id">p</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="tactic">intro</span> <span class="id">id</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span>. <span class="id">exploit</span> (<span class="id">of_program_prog_defmap</span>). <span class="id">i</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">rewrite</span> &lt;- <span class="id">H2</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">H1</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">des_ifs_safe</span>. <span class="id">inv</span> <span class="id">H2</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">match_fundef</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="id">des_sumbool</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">prog_defmap</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">of_program_internals</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> <span class="id">get_sg</span> (<span class="id">p</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">of_program</span> <span class="id">get_sg</span> <span class="id">p</span>).(<span class="id">internals</span>') = <span class="id">p</span>.(<span class="id">internals</span>').<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6811')">Proof.</div>
+<div class="proofscript" id="proof6811">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">internals</span>', <span class="id">of_program</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="tactic">intro</span> <span class="id">id</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">skdefs_of_gdefs</span>. <span class="tactic">rewrite</span> <span class="id">find_map</span>. <span class="tactic">unfold</span> <span class="id">compose</span>. <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">ident</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="kwd">fun</span> (<span class="id">x</span>: <span class="id">positive</span> * <span class="id">globdef</span> (<span class="id">fundef</span> <span class="id">F</span>) <span class="id">V</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ident_eq</span> <span class="id">id</span> (<span class="id">fst</span> <span class="id">x</span>) &amp;&amp; <span class="id">is_external_gd</span> (<span class="id">skdef_of_gdef</span> <span class="id">get_sg</span> (<span class="id">snd</span> <span class="id">x</span>))) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> (<span class="id">x</span>: <span class="id">positive</span> * <span class="id">globdef</span> (<span class="id">fundef</span> <span class="id">F</span>) <span class="id">V</span>) =&gt; <span class="id">ident_eq</span> <span class="id">id</span> (<span class="id">fst</span> <span class="id">x</span>) &amp;&amp; <span class="id">is_external</span> (<span class="id">snd</span> <span class="id">x</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">u</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="id">i</span>; <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">skdef_of_gdef_is_external_gd</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">of_program_prog_defmap_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> <span class="id">get_sg</span> (<span class="id">p</span> <span class="id">tp</span> : <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>) <span class="id">id</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: (<span class="id">prog_defmap</span> <span class="id">p</span>) ! <span class="id">id</span> = (<span class="id">prog_defmap</span> <span class="id">tp</span>) ! <span class="id">id</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: (<span class="id">prog_defmap</span> (<span class="id">Sk.of_program</span> <span class="id">get_sg</span> <span class="id">p</span>)) ! <span class="id">id</span> = (<span class="id">prog_defmap</span> (<span class="id">Sk.of_program</span> <span class="id">get_sg</span> <span class="id">tp</span>)) ! <span class="id">id</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6812')">Proof.</div>
+<div class="proofscript" id="proof6812">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Sk.of_program</span>. <span class="tactic">unfold</span> <span class="id">prog_defmap</span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">skdefs_of_gdefs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id">prog_defmap_update_snd</span>. <span class="tactic">rewrite</span> <span class="id">EQ</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">empty</span>: <span class="id">t</span> := (<span class="id">mkprogram</span> [] [] 1%<span class="id">positive</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">get_csig</span> (<span class="id">skdef</span>: (<span class="id">AST.fundef</span> <span class="id">signature</span>)): <span class="id">option</span> <span class="id">signature</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">skdef</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Internal</span> <span class="id">sg0</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">sg0</span>.(<span class="id">sig_cstyle</span>) <span class="kwd">then</span> <span class="id">Some</span> <span class="id">sg0</span> <span class="kwd">else</span> <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">External</span> <span class="id">ef</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">ef</span>.(<span class="id">ef_sig</span>).(<span class="id">sig_cstyle</span>) <span class="kwd">then</span> <span class="id">Some</span> <span class="id">ef</span>.(<span class="id">ef_sig</span>) <span class="kwd">else</span> <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">get_sig</span> (<span class="id">skdef</span>: (<span class="id">AST.fundef</span> <span class="id">signature</span>)): <span class="id">signature</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">skdef</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Internal</span> <span class="id">sg0</span> =&gt; <span class="id">sg0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">External</span> <span class="id">ef</span> =&gt; <span class="id">ef</span>.(<span class="id">ef_sig</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="kwd">wf</span> (<span class="id">sk</span>: <span class="id">t</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">wf_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NODUP</span>: <span class="id">NoDup</span> <span class="id">sk</span>.(<span class="id">prog_defs_names</span>)) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFPTR</span>: <span class="kwd">forall</span> <span class="id">id_fr</span> <span class="id">gv</span> <span class="id">id_to</span> <span class="id">_ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">In</span> (<span class="id">id_fr</span>, (<span class="id">Gvar</span> <span class="id">gv</span>)) <span class="id">sk</span>.(<span class="id">prog_defs</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INDAT</span>: <span class="id">In</span> (<span class="id">Init_addrof</span> <span class="id">id_to</span> <span class="id">_ofs</span>) <span class="id">gv</span>.(<span class="id">gvar_init</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">IN</span>: <span class="id">In</span> <span class="id">id_to</span> <span class="id">sk</span>.(<span class="id">prog_defs_names</span>)&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PUBINCL</span>: <span class="id">incl</span> <span class="id">sk</span>.(<span class="id">prog_public</span>) <span class="id">sk</span>.(<span class="id">prog_defs_names</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFPARAM</span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">skd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">In</span> (<span class="id">id</span>, (<span class="id">Gfun</span> <span class="id">skd</span>)) <span class="id">sk</span>.(<span class="id">prog_defs</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4 * <span class="id">size_arguments</span> (<span class="id">get_sig</span> <span class="id">skd</span>) &lt;= <span class="id">Ptrofs.max_unsigned</span>).<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">Sk</span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">skdef_of_gdef</span> <span class="id">skdefs_of_gdefs</span> <span class="id">Sk.load_skenv</span> <span class="id">Sk.load_mem</span> <span class="id">Sk.empty</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">SkEnv</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">t</span> := <span class="id">Genv.t</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="kwd">wf</span> (<span class="id">skenv</span>: <span class="id">t</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">wf_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMBDEF</span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">blk</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMB</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span> = <span class="id">Some</span> <span class="id">blk</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DEF</span>: <span class="id">exists</span> <span class="id">skd</span>, <span class="id">skenv</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">skd</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFSYMB</span>: <span class="kwd">forall</span> <span class="id">blk</span> <span class="id">skd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEF</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">skd</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SYMB</span>: <span class="id">exists</span> <span class="id">id</span>, <span class="id">skenv</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span> = <span class="id">Some</span> <span class="id">blk</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFPARAM</span>: <span class="kwd">forall</span> <span class="id">blk</span> <span class="id">skd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEF</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> (<span class="id">Gfun</span> <span class="id">skd</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIZE</span>: 4 * <span class="id">size_arguments</span> (<span class="id">Sk.get_sig</span> <span class="id">skd</span>) &lt;= <span class="id">Ptrofs.max_unsigned</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">wf_mem</span> (<span class="id">skenv</span>: <span class="id">t</span>) (<span class="id">sk</span>: <span class="id">Sk.t</span>) (<span class="id">m0</span>: <span class="id">mem</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">wf_mem_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFPTR</span>: <span class="kwd">forall</span> <span class="id">blk_fr</span> <span class="id">_ofs_fr</span> <span class="id">blk_to</span> <span class="id">_ofs_to</span> <span class="id">id_fr</span> <span class="id">_q</span> <span class="id">_n</span> <span class="id">gv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMB</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id_fr</span> = <span class="id">Some</span> <span class="id">blk_fr</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">In</span> (<span class="id">id_fr</span>, (<span class="id">Gvar</span> <span class="id">gv</span>)) <span class="id">sk</span>.(<span class="id">prog_defs</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NONVOL</span>: <span class="id">gv</span>.(<span class="id">gvar_volatile</span>) = <span class="id">false</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFINITIVE</span>: <span class="id">classify_init</span> <span class="id">gv</span>.(<span class="id">gvar_init</span>) = <span class="id">Init_definitive</span> <span class="id">gv</span>.(<span class="id">gvar_init</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOAD</span>: <span class="id">Mem.loadbytes</span> <span class="id">m0</span> <span class="id">blk_fr</span> <span class="id">_ofs_fr</span> 1 = <span class="id">Some</span> [<span class="id">Fragment</span> (<span class="id">Vptr</span> <span class="id">blk_to</span> <span class="id">_ofs_to</span>) <span class="id">_q</span> <span class="id">_n</span>]),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">id_to</span>, (&lt;&lt;<span class="id">SYMB</span>: <span class="id">skenv</span>.(<span class="id">Genv.invert_symbol</span>) <span class="id">blk_to</span> = <span class="id">Some</span> <span class="id">id_to</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">IN</span>: <span class="id">In</span> <span class="id">id_to</span> <span class="id">sk</span>.(<span class="id">prog_defs_names</span>)&gt;&gt;)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">load_skenv_wf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sk</span> (<span class="id">WF</span>: <span class="id">Sk.wf</span> <span class="id">sk</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WF</span>: <span class="id">SkEnv.wf</span> <span class="id">sk</span>.(<span class="id">Sk.load_skenv</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6813')">Proof.</div>
+<div class="proofscript" id="proof6813">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Sk.load_skenv</span>. <span class="id">u</span>. <span class="id">econs</span>; <span class="tactic">try</span> <span class="id">r</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">Genv.globalenv</span>, <span class="id">Genv.find_symbol</span>, <span class="id">Genv.find_def</span>. <span class="tactic">eapply</span> <span class="id">Genv.add_globals_preserves</span>; <span class="id">i</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id">peq</span> <span class="id">id0</span> <span class="id">id</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">subst</span> <span class="id">id0</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gss</span> <span class="kwd">in</span> <span class="id">SYMB</span>. <span class="id">inv</span> <span class="id">SYMB</span>. <span class="id">exists</span> <span class="id">g</span>. <span class="tactic">eapply</span> <span class="id">PTree.gss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">PTree.gso</span> <span class="kwd">in</span> <span class="id">SYMB</span>; <span class="tactic">eauto</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gso</span>; <span class="tactic">eauto</span>. <span class="id">exploit</span> <span class="id">Genv.genv_symb_range</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">xomega</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id">PTree.gempty</span> <span class="kwd">in</span> <span class="id">SYMB</span>. <span class="id">inv</span> <span class="id">SYMB</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">intros</span> <span class="id">blk</span> <span class="id">skd</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">P</span> := <span class="kwd">fun</span> <span class="id">ge</span> =&gt; <span class="id">Genv.find_def</span> <span class="id">ge</span> <span class="id">blk</span> = <span class="id">Some</span> <span class="id">skd</span> -&gt; <span class="id">exists</span> <span class="id">id</span>, <span class="id">Genv.find_symbol</span> <span class="id">ge</span> <span class="id">id</span> = <span class="id">Some</span> <span class="id">blk</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">REC</span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">ge</span>, <span class="id">P</span> <span class="id">ge</span> -&gt; <span class="id">NoDup</span> (<span class="id">map</span> <span class="id">fst</span> <span class="id">l</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">id</span>, <span class="id">In</span> <span class="id">id</span> (<span class="id">map</span> <span class="id">fst</span> <span class="id">l</span>) -&gt; <span class="id">Genv.find_symbol</span> <span class="id">ge</span> <span class="id">id</span> = <span class="id">None</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> (<span class="id">Genv.add_globals</span> <span class="id">ge</span> <span class="id">l</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">induction</span> <span class="id">l</span> <span class="kwd">as</span> [| [<span class="id">id1</span> <span class="id">g1</span>] <span class="id">l</span>]; <span class="tactic">auto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">IHl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">P</span>, <span class="id">Genv.add_global</span>, <span class="id">Genv.find_def</span>, <span class="id">Genv.find_symbol</span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">peq</span> (<span class="id">Genv.genv_next</span> <span class="id">ge</span>) <span class="id">blk</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">subst</span> <span class="id">blk</span>. <span class="id">exists</span> <span class="id">id1</span>. <span class="tactic">eapply</span> <span class="id">PTree.gss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id">PTree.gso</span> <span class="kwd">in</span> <span class="id">H2</span>; <span class="tactic">eauto</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">id</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gso</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">subst</span>. <span class="id">exploit</span> <span class="id">H1</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">Genv.add_global</span>, <span class="id">Genv.find_symbol</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gso</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">H1</span>. <span class="id">right</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ii</span>. <span class="tactic">subst</span>. <span class="id">inv</span> <span class="id">H0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">REC</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">P</span>, <span class="id">Genv.find_def</span>. <span class="id">i</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gempty</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">WF</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">Genv.find_symbol</span>. <span class="id">ss</span>. <span class="tactic">eapply</span> <span class="id">PTree.gempty</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">WF</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">Genv.find_def_inversion</span> <span class="kwd">in</span> <span class="id">DEF</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id">WFPARAM</span> <span class="kwd">in</span> <span class="id">DEF</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">includes</span> (<span class="id">skenv</span>: <span class="id">SkEnv.t</span>) (<span class="id">sk</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">includes_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFS</span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">gd0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEF</span>: <span class="id">sk</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">gd0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">blk</span> <span class="id">gd1</span>, (&lt;&lt;<span class="id">SYMB</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span> = <span class="id">Some</span> <span class="id">blk</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">DEF</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">linkorder</span> <span class="id">gd0</span> <span class="id">gd1</span>&gt;&gt;))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PUBS</span>: <span class="id">incl</span> <span class="id">sk</span>.(<span class="id">prog_public</span>) <span class="id">skenv</span>.(<span class="id">Genv.genv_public</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">project_spec</span> (<span class="id">skenv</span>: <span class="id">t</span>) (<span class="id">prog</span>: <span class="id">Sk.t</span>) (<span class="id">skenv_proj</span>: <span class="id">t</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">project_spec_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NEXT</span>: <span class="id">skenv</span>.(<span class="id">Genv.genv_next</span>) = <span class="id">skenv_proj</span>.(<span class="id">Genv.genv_next</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMBKEEP</span>: <span class="kwd">forall</span> <span class="id">id</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">KEEP</span>: <span class="id">prog</span>.(<span class="id">defs</span>) <span class="id">id</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">KEEP</span>: <span class="id">skenv_proj</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span> = <span class="id">skenv</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span>&gt;&gt;))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMBDROP</span>: <span class="kwd">forall</span> <span class="id">id</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DROP</span>: ~ <span class="id">prog</span>.(<span class="id">defs</span>) <span class="id">id</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">NONE</span>: <span class="id">skenv_proj</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span> = <span class="id">None</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFKEEP</span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">blk</span> <span class="id">gd_big</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INV</span>: <span class="id">skenv</span>.(<span class="id">Genv.invert_symbol</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">id</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">KEEP</span>: <span class="id">prog</span>.(<span class="id">internals</span>) <span class="id">id</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">BIG</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd_big</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">gd_small</span>, &lt;&lt;<span class="id">DEFSMALL</span>: <span class="id">skenv_proj</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd_small</span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">INTERNAL</span>: ~<span class="id">is_external</span> <span class="id">gd_small</span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">LO</span>: <span class="id">linkorder</span> <span class="id">gd_small</span> <span class="id">gd_big</span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">PROG</span>: <span class="id">prog</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">gd_small</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFKEPT</span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">blk</span> <span class="id">gd_small</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INV</span>: <span class="id">skenv</span>.(<span class="id">Genv.invert_symbol</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">id</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SMALL</span>: <span class="id">skenv_proj</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd_small</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">KEEP</span>: <span class="id">prog</span>.(<span class="id">internals</span>) <span class="id">id</span>&gt;&gt; /\ &lt;&lt;<span class="id">INTERNAL</span>: ~<span class="id">is_external</span> <span class="id">gd_small</span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">PROG</span>: <span class="id">prog</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">gd_small</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">gd_big</span>, &lt;&lt;<span class="id">DEFBIG</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd_big</span>&gt;&gt; /\ &lt;&lt;<span class="id">LO</span>: <span class="id">linkorder</span> <span class="id">gd_small</span> <span class="id">gd_big</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFORPHAN</span>: <span class="kwd">forall</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">blk</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INV</span>: <span class="id">skenv</span>.(<span class="id">Genv.invert_symbol</span>) <span class="id">blk</span> = <span class="id">None</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SMALL</span>: <span class="id">skenv_proj</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">None</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PUBLIC</span>: <span class="id">prog</span>.(<span class="id">prog_public</span>) = <span class="id">skenv_proj</span>.(<span class="id">Genv.genv_public</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">project</span> (<span class="id">skenv</span>: <span class="id">t</span>) (<span class="id">prog</span>: <span class="id">Sk.t</span>): <span class="id">t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">Genv_update_publics</span> <span class="id">skenv</span> <span class="id">prog</span>.(<span class="id">prog_public</span>)).(<span class="id">Genv_filter_symb</span>) (<span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id">prog</span>.(<span class="id">defs</span>) <span class="id">id</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;.(<span class="id">Genv_map_defs</span>) (<span class="kwd">fun</span> <span class="id">blk</span> <span class="id">gd</span> =&gt; (<span class="tactic">do</span> <span class="id">id</span> &lt;- <span class="id">skenv</span>.(<span class="id">Genv.invert_symbol</span>) <span class="id">blk</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">assertion</span>(<span class="id">prog</span>.(<span class="id">internals</span>) <span class="id">id</span>);<br/>
+ <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> <span class="id">gd</span> &lt;- <span class="id">prog</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Some</span> <span class="id">gd</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">match_globdef_is_external_gd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">gd1</span> <span class="id">gd2</span>: <span class="id">globdef</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) <span class="id">unit</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_globdef</span> (@<span class="id">Sk.match_fundef</span> <span class="id">_</span> <span class="id">_</span> <span class="id">id</span>) <span class="id">top2</span> <span class="id">tt</span> <span class="id">gd1</span> <span class="id">gd2</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_external_gd</span> <span class="id">gd1</span> = <span class="id">is_external_gd</span> <span class="id">gd2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6814')">Proof.</div>
+<div class="proofscript" id="proof6814">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="id">des_sumbool</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">project_impl_spec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv</span> (<span class="id">prog</span>: <span class="id">Sk.t</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCL</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv</span> <span class="id">prog</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PROJ</span>: <span class="id">project_spec</span> <span class="id">skenv</span> <span class="id">prog</span> (<span class="id">project</span> <span class="id">skenv</span> <span class="id">prog</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6815')">Proof.</div>
+<div class="proofscript" id="proof6815">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span>. <span class="tactic">unfold</span> <span class="id">project</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="tactic">unfold</span> <span class="id">Genv.find_symbol</span>, <span class="id">Genv.find_def</span>, <span class="id">Genv_map_defs</span> <span class="kwd">in</span> *; <span class="id">ss</span>; <span class="id">ii</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">by</span> <span class="tactic">rewrite</span> <span class="id">PTree_filter_key_spec</span>; <span class="id">des_ifs</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id">PTree_filter_map_spec</span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">INCL</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">exists</span> <span class="id">gd_big</span>, (<span class="id">prog_defmap</span> <span class="id">prog</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">gd_big</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">u</span> <span class="kwd">in</span> <span class="id">KEEP</span>. <span class="id">des_ifs</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="id">exploit</span> <span class="id">DEFS</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">u</span>. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">blk</span> = <span class="id">blk0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">Genv.invert_find_symbol</span> <span class="kwd">in</span> <span class="id">Heq0</span>. <span class="id">clarify</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clarify</span>. <span class="id">uge</span>. <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="id">et</span>. <span class="id">i</span>. <span class="id">des_ifs</span>. <span class="tactic">unfold</span> <span class="id">internals</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="id">bsimpl</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id">PTree_filter_map_spec</span> <span class="kwd">in</span> *. <span class="id">u</span> <span class="kwd">in</span> *. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">LO</span>: <span class="id">linkorder</span> <span class="id">gd_small</span> <span class="id">g</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">INCL</span>. <span class="id">exploit</span> <span class="id">DEFS</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">apply_all_once</span> <span class="id">Genv.invert_find_symbol</span>. <span class="id">clarify</span>. <span class="id">uge</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="id">et</span>. <span class="id">des_ifs_safe</span>. <span class="id">bsimpl</span>. <span class="id">i</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id">PTree_filter_map_spec</span>. <span class="id">des_ifs</span>. <span class="id">u</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">wf_proj</span> (<span class="id">skenv</span>: <span class="id">t</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">wf_proj_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFSYMB</span>: <span class="kwd">forall</span> <span class="id">blk</span> <span class="id">skd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEF</span>: <span class="id">skenv</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">skd</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SYMB</span>: <span class="id">exists</span> <span class="id">id</span>, <span class="id">skenv</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span> = <span class="id">Some</span> <span class="id">blk</span>&gt;&gt; /\ &lt;&lt;<span class="id">INTERNAL</span>: ~<span class="id">is_external</span> <span class="id">skd</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">project_spec_preserves_wf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id">skenv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">prog</span>: <span class="id">Sk.t</span>) <span class="id">skenv_proj</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROJ</span>: <span class="id">project_spec</span> <span class="id">skenv</span> <span class="id">prog</span> <span class="id">skenv_proj</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WF</span>: <span class="id">wf_proj</span> <span class="id">skenv_proj</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6816')">Proof.</div>
+<div class="proofscript" id="proof6816">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">WF</span>. <span class="id">inv</span> <span class="id">PROJ</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">skenv</span> <span class="id">blk</span>) <span class="id">eqn</span>:<span class="id">T</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">DEFORPHAN</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rename</span> <span class="id">i</span> <span class="id">into</span> <span class="id">id</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Genv.invert_find_symbol</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">TT</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">DEFKEPT</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">des_ifs_safe</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">erewrite</span> <span class="id">SYMBKEEP</span>; <span class="tactic">eauto</span>. <span class="id">u</span>. <span class="id">des_sumbool</span>. <span class="tactic">eapply</span> <span class="id">prog_defmap_image</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">internals</span> (<span class="id">skenv</span>: <span class="id">t</span>): <span class="id">list</span> <span class="id">block</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">List.map</span> <span class="id">fst</span> (<span class="id">skenv</span>.(<span class="id">Genv.genv_defs</span>).(<span class="id">PTree.elements</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">filter_symbols</span> (<span class="id">skenv</span>: <span class="id">t</span>) (<span class="id">symbols</span>: <span class="id">list</span> <span class="id">ident</span>): <span class="id">t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv</span>.(<span class="id">Genv_filter_symb</span>) (<span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id">List.in_dec</span> <span class="id">ident_eq</span> <span class="id">id</span> <span class="id">symbols</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">revive</span> `{<span class="id">HasExternal</span> <span class="id">F</span>} {<span class="id">V</span>} (<span class="id">skenv</span>: <span class="id">SkEnv.t</span>) (<span class="id">prog</span>: <span class="id">AST.program</span> <span class="id">F</span> <span class="id">V</span>): <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">skenv</span>.(<span class="id">Genv_map_defs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">blk</span> <span class="id">gd</span> =&gt; (<span class="tactic">do</span> <span class="id">id</span> &lt;- <span class="id">skenv</span>.(<span class="id">Genv.invert_symbol</span>) <span class="id">blk</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> <span class="id">gd</span> &lt;- <span class="id">prog</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Some</span> <span class="id">gd</span>))).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">genv_precise</span> `{<span class="id">HasExternal</span> <span class="id">F</span>} {<span class="id">V</span>} (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>) (<span class="id">p</span>: <span class="id">program</span> <span class="id">F</span> <span class="id">V</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">genv_compat_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">P2GE</span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">g</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROG</span>: <span class="id">p</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">g</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">exists</span> <span class="id">b</span>, &lt;&lt;<span class="id">SYMB</span>: <span class="id">Genv.find_symbol</span> <span class="id">ge</span> <span class="id">id</span> = <span class="id">Some</span> <span class="id">b</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DEF</span>: <span class="id">Genv.find_def</span> <span class="id">ge</span> <span class="id">b</span> = <span class="kwd">if</span> <span class="id">negb</span> (<span class="id">is_external</span> <span class="id">g</span>) <span class="kwd">then</span> <span class="id">Some</span> <span class="id">g</span> <span class="kwd">else</span> <span class="id">None</span>&gt;&gt;))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GE2P</span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">g</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEF</span>: <span class="id">Genv.find_def</span> <span class="id">ge</span> <span class="id">b</span> = <span class="id">Some</span> <span class="id">g</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">id</span>, &lt;&lt;<span class="id">SYMB</span>: <span class="id">Genv.find_symbol</span> <span class="id">ge</span> <span class="id">id</span> = <span class="id">Some</span> <span class="id">b</span>&gt;&gt; /\ &lt;&lt;<span class="id">PROG</span>: <span class="id">p</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">g</span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">INTERNAL</span>: ~ (<span class="id">is_external</span> <span class="id">g</span>)&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMB2P</span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">blk</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMB</span>: <span class="id">Genv.find_symbol</span> <span class="id">ge</span> <span class="id">id</span> = <span class="id">Some</span> <span class="id">blk</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">IN</span>: <span class="id">p</span>.(<span class="id">defs</span>) <span class="id">id</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">project_revive_precise</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv</span> (<span class="id">prog</span>: <span class="id">AST.program</span> (<span class="id">fundef</span> <span class="id">F</span>) <span class="id">V</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv_link</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">get_sg</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROJ</span>: <span class="id">SkEnv.project_spec</span> <span class="id">skenv_link</span> <span class="id">prog</span>.(<span class="id">Sk.of_program</span> <span class="id">get_sg</span>) <span class="id">skenv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCL</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv_link</span> <span class="id">prog</span>.(<span class="id">Sk.of_program</span> <span class="id">get_sg</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PRECISE</span>: <span class="id">SkEnv.genv_precise</span> (<span class="id">SkEnv.revive</span> <span class="id">skenv</span> <span class="id">prog</span>) <span class="id">prog</span>&gt;&gt;<br/>
+&nbsp;&nbsp;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6817')">Proof.</div>
+<div class="proofscript" id="proof6817">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">H</span>: <span class="id">DUMMY_PROP</span>) <span class="tactic">by</span> <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">DEFS</span>: <span class="id">prog</span>.(<span class="id">defs</span>) &lt;1= <span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id">is_some</span> (<span class="id">skenv</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">u</span>. <span class="id">des_ifs</span>. <span class="id">exfalso</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bar</span>. <span class="id">inv</span> <span class="id">PROJ</span>. <span class="id">bar</span>. <span class="id">inv</span> <span class="id">INCL</span>. <span class="id">bar</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SYMBKEEP</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">Sk.of_program_defs</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">EQ</span>. <span class="id">des</span>. <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *. <span class="tactic">symmetry</span> <span class="kwd">in</span> <span class="id">EQ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span> <span class="kwd">in</span> <span class="id">PR</span>. <span class="id">des_sumbool</span>. <span class="tactic">apply</span> <span class="id">prog_defmap_spec</span> <span class="kwd">in</span> <span class="id">PR</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">Sk.of_program_prog_defmap</span> <span class="id">prog</span> <span class="id">get_sg</span> <span class="id">x0</span>). <span class="tactic">intro</span> <span class="id">REL</span>. <span class="tactic">rewrite</span> <span class="id">PR</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">REL</span>. <span class="tactic">symmetry</span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">DEFS</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">i</span>; <span class="id">ss</span>; <span class="id">swap</span> 1 2.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id">SkEnv.revive</span> <span class="kwd">in</span> *. <span class="id">apply_all_once</span> <span class="id">Genv_map_defs_def</span>. <span class="id">des</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">uo</span>. <span class="id">des_ifs</span>. <span class="id">esplits</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id">Genv_map_defs_symb</span>. <span class="tactic">eapply</span> <span class="id">Genv.invert_find_symbol</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">PROJ</span>. <span class="tactic">rewrite</span> <span class="id">Sk.of_program_defs</span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> <span class="id">Sk.of_program_internals</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">DEF</span>: <span class="id">defs</span> <span class="id">prog</span> <span class="id">i</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">u</span>. <span class="id">des_sumbool</span>. <span class="tactic">eapply</span> <span class="id">prog_defmap_spec</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">DEFKEPT</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">Genv.find_invert_symbol</span>; <span class="id">et</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">SYMBKEEP</span>; <span class="id">et</span>. <span class="tactic">eapply</span> <span class="id">Genv.invert_find_symbol</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>. <span class="id">ss</span>. <span class="tactic">rename</span> <span class="id">g</span> <span class="id">into</span> <span class="id">gg</span>. <span class="tactic">rename</span> <span class="id">gd1</span> <span class="id">into</span> <span class="id">gg1</span>. <span class="id">bsimpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">ASTC.internals</span> <span class="kwd">in</span> <span class="id">T</span>. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">NW</span> <span class="kwd">in</span> *. <span class="id">bsimpl</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">dup</span> <span class="id">H</span>. <span class="id">u</span> <span class="kwd">in</span> <span class="id">DEFS</span>. <span class="tactic">unfold</span> <span class="id">ident</span> <span class="kwd">in</span> *. <span class="id">spc</span> <span class="id">DEFS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">DEFS</span>; <span class="tactic">clear</span> <span class="id">DEFS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">proj_sumbool</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>. <span class="id">exfalso</span>. <span class="tactic">apply</span> <span class="id">n</span>. <span class="tactic">eapply</span> <span class="id">prog_defmap_spec</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>. <span class="id">des_ifs_safe</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">SkEnv.revive</span>. <span class="id">u</span>. <span class="tactic">unfold</span> <span class="id">Genv.find_def</span>, <span class="id">Genv_map_defs</span>. <span class="id">cbn</span>. <span class="tactic">rewrite</span> <span class="id">PTree_filter_map_spec</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">o_bind_ignore</span>. <span class="id">exploit</span> <span class="id">Genv.find_invert_symbol</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">INV</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bar</span>. <span class="id">inv</span> <span class="id">PROJ</span>. <span class="id">inv</span> <span class="id">INCL</span>. <span class="id">bar</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">defs</span> (<span class="id">Sk.of_program</span> <span class="id">get_sg</span> <span class="id">prog</span>) <span class="id">id</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">NNPP</span>. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">SYMBDROP</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SYMBKEEP</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">SYMBLINK</span>; <span class="id">des</span>. <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *. <span class="tactic">symmetry</span> <span class="kwd">in</span> <span class="id">SYMBLINK</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Genv.find_invert_symbol</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">INVLINK</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">Sk.of_program_prog_defmap</span> <span class="id">prog</span> <span class="id">get_sg</span> <span class="id">id</span>); <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">REL</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PROG</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">REL</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rename</span> <span class="id">H2</span> <span class="id">into</span> <span class="id">MATCHGD</span>. <span class="tactic">rename</span> <span class="id">H1</span> <span class="id">into</span> <span class="id">PROG1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">DEFS</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCHGD</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">exploit</span> <span class="id">DEFKEEP</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">Sk.of_program_internals</span>. <span class="id">u</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>. <span class="id">uge</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">MATCH</span>. <span class="tactic">destruct</span> (<span class="id">is_external_fd</span> <span class="id">f1</span>) <span class="id">eqn</span>:<span class="id">T</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">etrans</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:= <span class="id">None</span>). <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">is_external</span> <span class="id">f2</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>. <span class="id">des_sumbool</span>. <span class="id">clarify</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rename</span> <span class="id">fd2</span> <span class="id">into</span> <span class="id">fd_big</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rename</span> <span class="id">f2</span> <span class="id">into</span> <span class="id">fd_small</span>. <span class="tactic">rename</span> <span class="id">f1</span> <span class="id">into</span> <span class="id">fd_small2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;if&nbsp;(Genv.genv_defs&nbsp;skenv)&nbsp;is&nbsp;some,&nbsp;then&nbsp;it&nbsp;should&nbsp;be&nbsp;fd_big&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;fd_big&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">bar</span>. <span class="id">des_ifs</span>. <span class="id">uge</span>. <span class="id">exploit</span> <span class="id">DEFKEPT</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Sk.of_program_internals</span> <span class="kwd">in</span> *. <span class="id">u</span> <span class="kwd">in</span> <span class="id">H4</span>. <span class="id">des_ifs</span>. <span class="id">bsimpl</span>. <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">etrans</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:= <span class="id">Some</span> (<span class="id">Gfun</span> <span class="id">f1</span>)). <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>. <span class="id">exfalso</span>. <span class="id">exploit</span> <span class="id">DEFKEEP</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">Sk.of_program_internals</span> <span class="kwd">in</span> *. <span class="id">u</span>. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="id">bsimpl</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">GD</span>; <span class="id">des</span>. <span class="id">uge</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">revive</span> <span class="kwd">in</span> *. <span class="id">erewrite</span> <span class="id">Genv_map_defs_symb</span> <span class="kwd">in</span> <span class="id">SYMB</span>. <span class="id">inv</span> <span class="id">PROJ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">NNPP</span>; <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">SYMBDROP</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">Sk.of_program_defs</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">project_revive_no_external</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">prog</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>) <span class="id">skenv_link</span> <span class="id">get_sg</span> <span class="id">blk</span> <span class="id">gd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEF</span>: <span class="id">Genv.find_def</span> (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link</span> (<span class="id">Sk.of_program</span> <span class="id">get_sg</span> <span class="id">prog</span>)) <span class="id">prog</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXTERNAL</span>: <span class="id">is_external</span> <span class="id">gd</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCL</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv_link</span> (<span class="id">Sk.of_program</span> <span class="id">get_sg</span> <span class="id">prog</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="id">SkEnv.wf</span> <span class="id">skenv_link</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">False</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6818')">Proof.</div>
+<div class="proofscript" id="proof6818">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">H</span>: <span class="id">DUMMY_PROP</span>) <span class="tactic">by</span> <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (@<span class="id">project_impl_spec</span> <span class="id">skenv_link</span> (<span class="id">Sk.of_program</span> <span class="id">get_sg</span> <span class="id">prog</span>)); <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">PROJ</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">project_revive_precise</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">GEP</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">project_spec_preserves_wf</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">WF0</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">WF0</span>. <span class="id">dup</span> <span class="id">DEF</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">revive</span> <span class="kwd">in</span> <span class="id">DEF</span>. <span class="tactic">apply</span> <span class="id">Genv_map_defs_def</span> <span class="kwd">in</span> <span class="id">DEF</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">DEFSYMB</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">GEP</span>. <span class="id">exploit</span> <span class="id">GE2P</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">id0</span> = <span class="id">id</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">revive</span> <span class="kwd">in</span> <span class="id">SYMB0</span>. <span class="tactic">rewrite</span> <span class="id">Genv_map_defs_symb</span> <span class="kwd">in</span> *. <span class="id">apply_all_once</span> <span class="id">Genv.find_invert_symbol</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">privs</span> (<span class="id">skenv</span>: <span class="id">SkEnv.t</span>): <span class="id">ident</span> -&gt; <span class="id">bool</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">skenv</span>.(<span class="id">Genv.find_symbol</span>) <span class="id">id</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">_</span> =&gt; <span class="id">negb</span> (<span class="id">proj_sumbool</span> (<span class="id">in_dec</span> <span class="id">ident_eq</span> <span class="id">id</span> <span class="id">skenv</span>.(<span class="id">Genv.genv_public</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">empty</span>: <span class="id">t</span> := @<span class="id">Genv.empty_genv</span> <span class="id">_</span> <span class="id">_</span> [].<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">senv_genv_compat</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">skenv_link</span>: <span class="id">t</span>) <span class="id">fn_sig</span> (<span class="id">prog</span>: <span class="id">program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCL</span>: <span class="id">includes</span> <span class="id">skenv_link</span> (<span class="id">Sk.of_program</span> <span class="id">fn_sig</span> <span class="id">prog</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">senv_genv_compat</span> <span class="id">skenv_link</span> (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link</span> (<span class="id">Sk.of_program</span> <span class="id">fn_sig</span> <span class="id">prog</span>)) <span class="id">prog</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6819')">Proof.</div>
+<div class="proofscript" id="proof6819">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SkEnv.project_revive_precise</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">SkEnv.project_impl_spec</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">PREC</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>. <span class="id">uge</span>. <span class="tactic">unfold</span> <span class="id">SkEnv.revive</span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">MapsC.PTree_filter_key_spec</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">revive_incl_skenv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">skenv</span>:<span class="id">t</span>) <span class="id">fn_sig</span> (<span class="id">prog</span>: <span class="id">program</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) <span class="id">V</span>) <span class="id">fptr</span> <span class="id">fd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCL</span> : <span class="id">includes</span> <span class="id">skenv</span> (<span class="id">Sk.of_program</span> <span class="id">fn_sig</span> <span class="id">prog</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span> : <span class="kwd">wf</span> <span class="id">skenv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDF</span> : <span class="id">Genv.find_funct</span> (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv</span> (<span class="id">Sk.of_program</span> <span class="id">fn_sig</span> <span class="id">prog</span>)) <span class="id">prog</span>) <span class="id">fptr</span> =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">blk</span>, <span class="id">Genv.find_def</span> <span class="id">skenv</span> <span class="id">blk</span> = <span class="id">Some</span> (<span class="id">Gfun</span> (<span class="id">Internal</span> (<span class="id">fn_sig</span> <span class="id">fd</span>))).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6820')">Proof.</div>
+<div class="proofscript" id="proof6820">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SkEnv.project_revive_precise</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">SkEnv.project_impl_spec</span>. <span class="tactic">eauto</span>. <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_funct</span> <span class="kwd">in</span> <span class="id">FINDF</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Genv.find_funct_ptr_iff</span> <span class="kwd">in</span> <span class="id">FINDF</span>. <span class="tactic">eapply</span> <span class="id">GE2P</span> <span class="kwd">in</span> <span class="id">FINDF</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INCL</span>. <span class="id">ss</span>. <span class="id">exploit</span> (<span class="id">Sk.of_program_prog_defmap</span> <span class="id">prog</span> <span class="id">fn_sig</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">instantiate</span> (1 := <span class="id">id</span>). <span class="id">i</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">rewrite</span> <span class="id">PROG</span> <span class="kwd">in</span> *; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H2</span>. <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="tactic">symmetry</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">eapply</span> <span class="id">DEFS</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="id">des</span>. <span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">inv</span> <span class="id">H1</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SkEnv</span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">SkEnv.empty</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

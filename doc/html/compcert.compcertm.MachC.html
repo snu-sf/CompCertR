@@ -1,0 +1,274 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MachC</title>
+<meta name="description" content="Documentation of Coq module MachC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MachC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">EventsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Op</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Stacklayout</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Mach</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">StoreArguments</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">JunkBlock</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Obligation</span> <span class="kwd">Tactic</span> := <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">inv_all_once</span>; <span class="id">des</span>; <span class="id">ss</span>; <span class="id">clarify</span>; <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="tactic">congruence</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">NEWSTEP</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">return_address_offset</span>: <span class="id">function</span> -&gt; <span class="id">code</span> -&gt; <span class="id">ptrofs</span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">se</span>: <span class="id">Senv.t</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">ge</span>: <span class="id">genv</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">get_stack</span> (<span class="id">st</span>: <span class="id">state</span>): <span class="id">list</span> <span class="id">stackframe</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">st</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">State</span> <span class="id">stk</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">stk</span><br/>
+&nbsp;&nbsp;| <span class="id">Callstate</span> <span class="id">stk</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">stk</span><br/>
+&nbsp;&nbsp;| <span class="id">Returnstate</span> <span class="id">stk</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">stk</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">step</span>: <span class="id">state</span> -&gt; <span class="id">trace</span> -&gt; <span class="id">state</span> -&gt; <span class="kwd">Prop</span> := <span class="kwd">fun</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span> =&gt;<br/>
+&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Mach.step</span> <span class="id">return_address_offset</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt; /\ &lt;&lt;<span class="id">NOTDUMMY</span>: <span class="id">st1</span>.(<span class="id">get_stack</span>) &lt;&gt; []&gt;&gt;.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">NEWSTEP</span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">step</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">locset_copy</span> (<span class="id">diff</span>: <span class="id">Z</span>) (<span class="id">rs</span>: <span class="id">Mach.regset</span>): <span class="id">locset</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">loc</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">loc</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">S</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">Vundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">R</span> <span class="id">r</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">rs</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Vptr</span> <span class="id">blk</span> <span class="id">ofs</span> =&gt; <span class="id">Vptr</span> (<span class="id">blk</span>.(<span class="id">Zpos</span>) + <span class="id">diff</span>).(<span class="id">Z.to_pos</span>) <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">rs</span> <span class="id">r</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">locset_copy</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">get_mem</span> (<span class="id">st</span>: <span class="id">state</span>): <span class="id">mem</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">st</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">State</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m0</span> =&gt; <span class="id">m0</span><br/>
+&nbsp;&nbsp;| <span class="id">Callstate</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m0</span> =&gt; <span class="id">m0</span><br/>
+&nbsp;&nbsp;| <span class="id">Returnstate</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m0</span> =&gt; <span class="id">m0</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">MODSEM</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">rao</span>: <span class="id">function</span> -&gt; <span class="id">code</span> -&gt; <span class="id">ptrofs</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">rao_dtm</span>: <span class="kwd">forall</span> <span class="id">f</span> <span class="id">c</span> <span class="id">ofs</span> <span class="id">ofs</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rao</span> <span class="id">f</span> <span class="id">c</span> <span class="id">ofs</span> -&gt; <span class="id">rao</span> <span class="id">f</span> <span class="id">c</span> <span class="id">ofs</span>' -&gt; <span class="id">ofs</span> = <span class="id">ofs</span>'.<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">skenv_link</span>: <span class="id">SkEnv.t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">p</span>: <span class="id">program</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">skenv</span>: <span class="id">SkEnv.t</span> := <span class="id">skenv_link</span>.(<span class="id">SkEnv.project</span>) <span class="id">p</span>.(<span class="id">Sk.of_program</span> <span class="id">fn_sig</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">ge</span>: <span class="id">genv</span> := <span class="id">skenv</span>.(<span class="id">SkEnv.revive</span>) <span class="id">p</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Record</span> <span class="id">state</span> := <span class="id">mkstate</span> {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">init_rs</span>: <span class="id">Mach.regset</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">init_sg</span>: <span class="id">signature</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st</span>: <span class="id">Mach.state</span>;<br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">at_external</span>: <span class="id">state</span> -&gt; <span class="id">Args.t</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">at_external_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack</span> <span class="id">rs</span> <span class="id">m0</span> <span class="id">m1</span> <span class="id">fptr</span> <span class="id">sg</span> <span class="id">vs</span> <span class="id">blk</span> <span class="id">ofs</span> <span class="id">init_rs</span> <span class="id">init_sg</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXTERNAL</span>: <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">fptr</span> = <span class="id">None</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIG</span>: <span class="id">exists</span> <span class="id">skd</span>, <span class="id">skenv_link</span>.(<span class="id">Genv.find_funct</span>) <span class="id">fptr</span> = <span class="id">Some</span> <span class="id">skd</span> /\ <span class="id">Sk.get_csig</span> <span class="id">skd</span> = <span class="id">Some</span> <span class="id">sg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id">Mach.extcall_arguments</span> <span class="id">rs</span> <span class="id">m0</span> (<span class="id">parent_sp</span> <span class="id">stack</span>) <span class="id">sg</span> <span class="id">vs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGSRANGE</span>: <span class="id">Ptrofs.unsigned</span> <span class="id">ofs</span> + 4 * <span class="id">size_arguments</span> <span class="id">sg</span> &lt;= <span class="id">Ptrofs.max_unsigned</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RSP</span>: (<span class="id">parent_sp</span> <span class="id">stack</span>) = <span class="id">Vptr</span> <span class="id">blk</span> <span class="id">ofs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ALIGN</span>: <span class="kwd">forall</span> <span class="id">chunk</span> (<span class="id">CHUNK</span>: <span class="id">size_chunk</span> <span class="id">chunk</span> &lt;= 4 * (<span class="id">size_arguments</span> <span class="id">sg</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">align_chunk</span> <span class="id">chunk</span> | <span class="id">ofs</span>.(<span class="id">Ptrofs.unsigned</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FREE</span>: <span class="id">Mem.free</span> <span class="id">m0</span> <span class="id">blk</span> <span class="id">ofs</span>.(<span class="id">Ptrofs.unsigned</span>) (<span class="id">ofs</span>.(<span class="id">Ptrofs.unsigned</span>) + 4 * (<span class="id">size_arguments</span> <span class="id">sg</span>)) = <span class="id">Some</span> <span class="id">m1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">at_external</span> (<span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> (<span class="id">Callstate</span> <span class="id">stack</span> <span class="id">fptr</span> <span class="id">rs</span> <span class="id">m0</span>)) (<span class="id">Args.mk</span> <span class="id">fptr</span> <span class="id">vs</span> <span class="id">m1</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">initial_frame</span> (<span class="id">args</span>: <span class="id">Args.t</span>) : <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">initial_frame_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fd</span> <span class="id">m0</span> <span class="id">rs</span> <span class="id">sg</span> <span class="id">ra</span> <span class="id">targs</span> <span class="id">n</span> <span class="id">m1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">Args.is_cstyle</span> <span class="id">args</span> /\ <span class="id">fd</span>.(<span class="id">fn_sig</span>).(<span class="id">sig_cstyle</span>) = <span class="id">true</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RAPTR</span>: <span class="id">Val.has_type</span> <span class="id">ra</span> <span class="id">Tptr</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIG</span>: <span class="id">sg</span> = <span class="id">fd</span>.(<span class="id">fn_sig</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDF</span>: <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">args</span>.(<span class="id">Args.fptr</span>) = <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">typecheck</span> <span class="id">args</span>.(<span class="id">Args.vs</span>) <span class="id">sg</span> <span class="id">targs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STORE</span>: <span class="id">store_arguments</span> <span class="id">args</span>.(<span class="id">Args.m</span>) <span class="id">rs</span> <span class="id">targs</span> <span class="id">sg</span> <span class="id">m0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">JUNK</span>: <span class="id">assign_junk_blocks</span> <span class="id">m0</span> <span class="id">n</span> = <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PTRFREE</span>: <span class="kwd">forall</span> <span class="id">mr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTIN</span>: ~<span class="id">In</span> (<span class="id">R</span> <span class="id">mr</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PTRFREE</span>: <span class="id">is_junk_value</span> <span class="id">m0</span> <span class="id">m1</span> (<span class="id">rs</span> <span class="id">mr</span>)&gt;&gt;):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">initial_frame</span> <span class="id">args</span> (<span class="id">mkstate</span> <span class="id">rs</span> <span class="id">sg</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Callstate</span> [<span class="id">dummy_stack</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Vptr</span> <span class="id">args</span>.(<span class="id">Args.m</span>).(<span class="id">Mem.nextblock</span>) <span class="id">Ptrofs.zero</span>) <span class="id">ra</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">args</span>.(<span class="id">Args.fptr</span>) <span class="id">rs</span> <span class="id">m1</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">final_frame</span>: <span class="id">state</span> -&gt; <span class="id">Retv.t</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">final_frame_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">init_rs</span> <span class="id">rs</span>: <span class="id">regset</span>) <span class="id">init_sp</span> <span class="id">m0</span> <span class="id">m1</span> <span class="id">blk</span> <span class="id">init_sg</span> <span class="id">mr</span> <span class="id">ra</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALLEESAVE</span>: <span class="kwd">forall</span> <span class="id">mr</span>, <span class="id">Conventions1.is_callee_save</span> <span class="id">mr</span> -&gt; <span class="id">Val.lessdef</span> (<span class="id">init_rs</span> <span class="id">mr</span>) (<span class="id">rs</span> <span class="id">mr</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INITRSP</span>: <span class="id">init_sp</span> = <span class="id">Vptr</span> <span class="id">blk</span> <span class="id">Ptrofs.zero</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FREE</span>: <span class="id">Mem.free</span> <span class="id">m0</span> <span class="id">blk</span> 0 (4 * <span class="id">size_arguments</span> <span class="id">init_sg</span>) = <span class="id">Some</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RETV</span>: <span class="id">loc_result</span> <span class="id">init_sg</span> = <span class="id">One</span> <span class="id">mr</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_frame</span> (<span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> (<span class="id">Returnstate</span> [<span class="id">dummy_stack</span> <span class="id">init_sp</span> <span class="id">ra</span>] <span class="id">rs</span> <span class="id">m0</span>)) (<span class="id">Retv.mk</span> (<span class="id">rs</span> <span class="id">mr</span>) <span class="id">m1</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">after_external</span>: <span class="id">state</span> -&gt; <span class="id">Retv.t</span> -&gt; <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">after_external_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">init_rs</span> <span class="id">init_sg</span> <span class="id">stack</span> <span class="id">fptr</span> <span class="id">ls0</span> <span class="id">m0</span> <span class="id">ls1</span> <span class="id">m1</span> <span class="id">retv</span> <span class="id">sg</span> <span class="id">blk</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">Retv.is_cstyle</span> <span class="id">retv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIG</span>: <span class="id">exists</span> <span class="id">skd</span>, <span class="id">skenv_link</span>.(<span class="id">Genv.find_funct</span>) <span class="id">fptr</span> = <span class="id">Some</span> <span class="id">skd</span> /\ <span class="id">Sk.get_csig</span> <span class="id">skd</span> = <span class="id">Some</span> <span class="id">sg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">REGSET</span>: <span class="id">ls1</span> = (<span class="id">set_pair</span> (<span class="id">loc_result</span> <span class="id">sg</span>) <span class="id">retv</span>.(<span class="id">Retv.v</span>) (<span class="id">regset_after_external</span> <span class="id">ls0</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RSP</span>: (<span class="id">parent_sp</span> <span class="id">stack</span>) = <span class="id">Vptr</span> <span class="id">blk</span> <span class="id">ofs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MEMWF</span>: <span class="id">Ple</span> (<span class="id">Senv.nextblock</span> <span class="id">skenv_link</span>) <span class="id">retv</span>.(<span class="id">Retv.m</span>).(<span class="id">Mem.nextblock</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNFREE</span>: <span class="id">Mem_unfree</span> <span class="id">retv</span>.(<span class="id">Retv.m</span>) <span class="id">blk</span> <span class="id">ofs</span>.(<span class="id">Ptrofs.unsigned</span>) (<span class="id">ofs</span>.(<span class="id">Ptrofs.unsigned</span>) + 4 * (<span class="id">size_arguments</span> <span class="id">sg</span>)) = <span class="id">Some</span> <span class="id">m1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">after_external</span> (<span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> (<span class="id">Callstate</span> <span class="id">stack</span> <span class="id">fptr</span> <span class="id">ls0</span> <span class="id">m0</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">retv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> (<span class="id">Returnstate</span> <span class="id">stack</span> <span class="id">ls1</span> <span class="id">m1</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">step</span>' (<span class="id">se</span>: <span class="id">Senv.t</span>) (<span class="id">ge</span>: <span class="id">genv</span>) (<span class="id">st0</span>: <span class="id">state</span>) (<span class="id">tr</span>: <span class="id">trace</span>) (<span class="id">st1</span>: <span class="id">state</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">step</span>'<span class="id">_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">Mach.step</span> <span class="id">rao</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span>.(<span class="id">st</span>) <span class="id">tr</span> <span class="id">st1</span>.(<span class="id">st</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INITRS</span>: <span class="id">st0</span>.(<span class="id">init_rs</span>) = <span class="id">st1</span>.(<span class="id">init_rs</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INITFPTR</span>: <span class="id">st0</span>.(<span class="id">init_sg</span>) = <span class="id">st1</span>.(<span class="id">init_sg</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTDUMMY</span>: <span class="id">st1</span>.(<span class="id">st</span>).(<span class="id">get_stack</span>) &lt;&gt; []).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">extcall_arguments_dtm</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">sg</span> <span class="id">vs0</span> <span class="id">vs1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS0</span>: <span class="id">Mach.extcall_arguments</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">sg</span> <span class="id">vs0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS1</span>: <span class="id">Mach.extcall_arguments</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">sg</span> <span class="id">vs1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vs0</span> = <span class="id">vs1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7350')">Proof.</div>
+<div class="proofscript" id="proof7350">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">vs1</span>. <span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">vs0</span>. <span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">sg</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">A</span>: <span class="kwd">forall</span> <span class="id">l</span> <span class="id">v1</span> <span class="id">v2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mach.extcall_arg</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">l</span> <span class="id">v1</span> -&gt; <span class="id">Mach.extcall_arg</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">l</span> <span class="id">v2</span> -&gt; <span class="id">v1</span> = <span class="id">v2</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="tactic">congruence</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">B</span>: <span class="kwd">forall</span> <span class="id">p</span> <span class="id">v1</span> <span class="id">v2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mach.extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">p</span> <span class="id">v1</span> -&gt; <span class="id">Mach.extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">p</span> <span class="id">v2</span> -&gt; <span class="id">v1</span> = <span class="id">v2</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">A</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">f_equal</span>; <span class="tactic">eapply</span> <span class="id">A</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">C</span>: <span class="kwd">forall</span> <span class="id">ll</span> <span class="id">vl1</span>, <span class="id">list_forall2</span> (<span class="id">Mach.extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span>) <span class="id">ll</span> <span class="id">vl1</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">vl2</span>, <span class="id">list_forall2</span> (<span class="id">Mach.extcall_arg_pair</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span>) <span class="id">ll</span> <span class="id">vl2</span> -&gt; <span class="id">vl1</span> = <span class="id">vl2</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">vl2</span> <span class="id">EA</span>; <span class="id">inv</span> <span class="id">EA</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">f_equal</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id">C</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">extcall_arguments_length</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">sg</span> <span class="id">vs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id">extcall_arguments</span> <span class="id">rs</span> <span class="id">m</span> <span class="id">rsp</span> <span class="id">sg</span> <span class="id">vs</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">length</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>) = <span class="id">length</span> <span class="id">vs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7351')">Proof.</div>
+<div class="proofscript" id="proof7351">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">extcall_arguments</span> <span class="kwd">in</span> *. <span class="id">abstr</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>) <span class="id">locs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">vs</span>; <span class="id">ii</span>; <span class="id">inv</span> <span class="id">ARGS</span>; <span class="id">ss</span>. <span class="tactic">f_equal</span>. <span class="id">erewrite</span> <span class="id">IHvs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">modsem</span>: <span class="id">ModSem.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{| <span class="id">ModSem.step</span> := <span class="id">step</span>';<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.at_external</span> := <span class="id">at_external</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.initial_frame</span> := <span class="id">initial_frame</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.final_frame</span> := <span class="id">final_frame</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.after_external</span> := <span class="id">after_external</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.globalenv</span> := <span class="id">ge</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.skenv</span> := <span class="id">skenv</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.skenv_link</span> := <span class="id">skenv_link</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7352')">Next Obligation.</div>
+<div class="proofscript" id="proof7352">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">RSP</span> <span class="kwd">in</span> *. <span class="id">clarify</span>. <span class="id">determ_tac</span> <span class="id">extcall_arguments_dtm</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof7353')">Next Obligation.</div>
+<div class="proofscript" id="proof7353">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">STEP</span>; <span class="id">clarify</span>. <span class="tactic">unfold</span> <span class="id">Genv.find_funct</span> <span class="kwd">in</span> *. <span class="id">des_ifs_safe</span> <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof7354')">Next Obligation.</div>
+<div class="proofscript" id="proof7354">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">STEP</span>; <span class="id">clarify</span>. <span class="tactic">destruct</span> <span class="id">st1</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">st0</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">modsem_receptive</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id">receptive_at</span> <span class="id">modsem</span> <span class="id">st</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7355')">Proof.</div>
+<div class="proofscript" id="proof7355">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">st0</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">s1</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">STEP</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_receptive</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="tactic">try</span> <span class="tactic">by</span> (<span class="id">inv_match_traces</span>; (<span class="id">eexists</span> (<span class="id">mkstate</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>); <span class="id">econs</span>; [<span class="id">econs</span>| | |]; <span class="tactic">eauto</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">STEP</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_trace_length</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">modsem_determinate</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id">determinate_at</span> <span class="id">modsem</span> <span class="id">st</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7356')">Proof.</div>
+<div class="proofscript" id="proof7356">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">destruct</span> <span class="id">st0</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">s1</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">s2</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">STEP</span>; <span class="id">inv</span> <span class="id">STEP0</span>; <span class="id">clarify_meq</span>; <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">rao_dtm</span>; <span class="id">check_safe</span>); <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">extcall_arguments_dtm</span>; <span class="id">check_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_builtin_args_determ</span>; <span class="id">check_safe</span>); <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">external_call_determ</span>; <span class="id">check_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>); <span class="tactic">try</span> (<span class="tactic">by</span> <span class="tactic">rewrite</span> <span class="id">Genv.find_funct_find_funct_ptr</span> <span class="kwd">in</span> *; <span class="tactic">congruence</span>); <span class="id">ii</span>; <span class="id">eq_closure_tac</span>; <span class="id">clarify_meq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">STEP</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_trace_length</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">MODSEM</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">PROPS</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">rao</span>: <span class="id">function</span> -&gt; <span class="id">code</span> -&gt; <span class="id">ptrofs</span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">lift_star</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span> <span class="id">init_sg</span> <span class="id">init_rs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">star</span> (<span class="id">step</span> <span class="id">rao</span>) <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> (<span class="id">step</span>' <span class="id">rao</span>) <span class="id">se</span> <span class="id">ge</span> (<span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> <span class="id">st0</span>) <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> <span class="id">st1</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7357')">Proof.</div>
+<div class="proofscript" id="proof7357">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>. <span class="id">econs</span>; <span class="id">et</span>. <span class="id">econs</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">lift_plus</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span> <span class="id">init_sg</span> <span class="id">init_rs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">plus</span> (<span class="id">step</span> <span class="id">rao</span>) <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">plus</span> (<span class="id">step</span>' <span class="id">rao</span>) <span class="id">se</span> <span class="id">ge</span> (<span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> <span class="id">st0</span>) <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> <span class="id">st1</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7358')">Proof.</div>
+<div class="proofscript" id="proof7358">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">econs</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:= <span class="id">mkstate</span> <span class="id">init_rs</span> <span class="id">init_sg</span> <span class="id">s2</span>). <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">lift_star</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">PROPS</span>.<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">module</span> (<span class="id">p</span>: <span class="id">program</span>) (<span class="id">rao</span>: <span class="id">function</span> -&gt; <span class="id">code</span> -&gt; <span class="id">ptrofs</span> -&gt; <span class="kwd">Prop</span>): <span class="id">Mod.t</span> :=<br/>
+&nbsp;&nbsp;{| <span class="id">Mod.data</span> := <span class="id">p</span>; <span class="id">Mod.get_sk</span> := <span class="id">Sk.of_program</span> <span class="id">fn_sig</span>; <span class="id">Mod.get_modsem</span> := <span class="id">modsem</span> <span class="id">rao</span>; |}.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

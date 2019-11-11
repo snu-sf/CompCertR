@@ -1,0 +1,158 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Liveness</title>
+<meta name="description" content="Documentation of Coq module Liveness" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Liveness</h1>
+<div class="coq">
+<br/>
+<div class="doc">Liveness analysis over RTL </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Lattice.html">Lattice</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.x86.Op.html">Op</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.Registers.html">Registers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.RTL.html">RTL</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.Kildall.html">Kildall</a></span>.<br/>
+<br/>
+<div class="doc">A register <span class="bracket"><span class="id">r</span></span> is live at a point <span class="bracket"><span class="id">p</span></span> if there exists a path
+  from <span class="bracket"><span class="id">p</span></span> to some instruction that uses <span class="bracket"><span class="id">r</span></span> as argument,
+  and <span class="bracket"><span class="id">r</span></span> is not redefined along this path.
+  Liveness can be computed by a backward dataflow analysis.
+  The analysis operates over sets of (live) pseudo-registers. </div>
+<br/>
+<span class="kwd">Notation</span> <span class="id"><a name="reg_live">reg_live</a></span> := <span class="id"><a href="compcert.backend.Registers.html#Regset.add">Regset.add</a></span>.<br/>
+<span class="kwd">Notation</span> <span class="id"><a name="reg_dead">reg_dead</a></span> := <span class="id"><a href="compcert.backend.Registers.html#Regset.remove">Regset.remove</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="reg_option_live">reg_option_live</a></span> (<span class="id">or</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>) (<span class="id">lv</span>: <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Liveness.html#or">or</a></span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#lv">lv</a></span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#reg_live">reg_live</a></span> <span class="id">r</span> <span class="id"><a href="compcert.backend.Liveness.html#lv">lv</a></span> <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="reg_sum_live">reg_sum_live</a></span> (<span class="id">ros</span>: <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span> + <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span>) (<span class="id">lv</span>: <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Liveness.html#ros">ros</a></span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#reg_live">reg_live</a></span> <span class="id">r</span> <span class="id"><a href="compcert.backend.Liveness.html#lv">lv</a></span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">s</span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#lv">lv</a></span> <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="reg_list_live">reg_list_live</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">rl</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>) (<span class="id">lv</span>: <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span>) {<span class="kwd">struct</span> <span class="id">rl</span>} : <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Liveness.html#rl">rl</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#lv">lv</a></span><br/>
+&nbsp;&nbsp;| <span class="id">r1</span> :: <span class="id">rs</span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#reg_list_live">reg_list_live</a></span> <span class="id">rs</span> (<span class="id"><a href="compcert.backend.Liveness.html#reg_live">reg_live</a></span> <span class="id">r1</span> <span class="id"><a href="compcert.backend.Liveness.html#lv">lv</a></span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="reg_list_dead">reg_list_dead</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">rl</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>) (<span class="id">lv</span>: <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span>) {<span class="kwd">struct</span> <span class="id">rl</span>} : <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Liveness.html#rl">rl</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#lv">lv</a></span><br/>
+&nbsp;&nbsp;| <span class="id">r1</span> :: <span class="id">rs</span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#reg_list_dead">reg_list_dead</a></span> <span class="id">rs</span> (<span class="id"><a href="compcert.backend.Liveness.html#reg_dead">reg_dead</a></span> <span class="id">r1</span> <span class="id"><a href="compcert.backend.Liveness.html#lv">lv</a></span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">Here is the transfer function for the dataflow analysis.
+  Since this is a backward dataflow analysis, it takes as argument
+  the abstract register set ``after'' the given instruction,
+  i.e. the registers that are live after; and it returns as result
+  the abstract register set ``before'' the given instruction,
+  i.e. the registers that must be live before.
+  The general relation between ``live before'' and ``live after''
+  an instruction is that a register is live before if either
+  it is one of the arguments of the instruction, or it is not the result
+  of the instruction and it is live after.
+  However, if the result of a side-effect-free instruction is not
+  live ``after'', the whole instruction will be removed later
+  (since it computes a useless result), thus its arguments need not
+  be live ``before''. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transfer">transfer</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">f</span>: <span class="id"><a href="compcert.backend.RTL.html#function">function</a></span>) (<span class="id">pc</span>: <span class="id"><a href="compcert.backend.RTL.html#node">node</a></span>) (<span class="id">after</span>: <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span>) : <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Liveness.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.RTL.html#fn_code">fn_code</a></span>)!<span class="id"><a href="compcert.backend.Liveness.html#pc">pc</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Registers.html#Regset.empty">Regset.empty</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">i</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">i</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Inop">Inop</a></span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Iop">Iop</a></span> <span class="id">op</span> <span class="id">args</span> <span class="id">res</span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Registers.html#Regset.mem">Regset.mem</a></span> <span class="id">res</span> <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_list_live">reg_list_live</a></span> <span class="id">args</span> (<span class="id"><a href="compcert.backend.Liveness.html#reg_dead">reg_dead</a></span> <span class="id">res</span> <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Iload">Iload</a></span> <span class="id">chunk</span> <span class="id">addr</span> <span class="id">args</span> <span class="id">dst</span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Registers.html#Regset.mem">Regset.mem</a></span> <span class="id">dst</span> <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_list_live">reg_list_live</a></span> <span class="id">args</span> (<span class="id"><a href="compcert.backend.Liveness.html#reg_dead">reg_dead</a></span> <span class="id">dst</span> <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Istore">Istore</a></span> <span class="id">chunk</span> <span class="id">addr</span> <span class="id">args</span> <span class="id">src</span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_list_live">reg_list_live</a></span> <span class="id">args</span> (<span class="id"><a href="compcert.backend.Liveness.html#reg_live">reg_live</a></span> <span class="id">src</span> <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Icall">Icall</a></span> <span class="id">sig</span> <span class="id">ros</span> <span class="id">args</span> <span class="id">res</span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_list_live">reg_list_live</a></span> <span class="id">args</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.Liveness.html#reg_sum_live">reg_sum_live</a></span> <span class="id">ros</span> (<span class="id"><a href="compcert.backend.Liveness.html#reg_dead">reg_dead</a></span> <span class="id">res</span> <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Itailcall">Itailcall</a></span> <span class="id">sig</span> <span class="id">ros</span> <span class="id">args</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_list_live">reg_list_live</a></span> <span class="id">args</span> (<span class="id"><a href="compcert.backend.Liveness.html#reg_sum_live">reg_sum_live</a></span> <span class="id">ros</span> <span class="id"><a href="compcert.backend.Registers.html#Regset.empty">Regset.empty</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Ibuiltin">Ibuiltin</a></span> <span class="id">ef</span> <span class="id">args</span> <span class="id">res</span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_list_live">reg_list_live</a></span> (<span class="id"><a href="compcert.common.AST.html#params_of_builtin_args">params_of_builtin_args</a></span> <span class="id">args</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.Liveness.html#reg_list_dead">reg_list_dead</a></span> (<span class="id"><a href="compcert.common.AST.html#params_of_builtin_res">params_of_builtin_res</a></span> <span class="id">res</span>) <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Icond">Icond</a></span> <span class="id">cond</span> <span class="id">args</span> <span class="id">ifso</span> <span class="id">ifnot</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_list_live">reg_list_live</a></span> <span class="id">args</span> <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Ijumptable">Ijumptable</a></span> <span class="id">arg</span> <span class="id">tbl</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_live">reg_live</a></span> <span class="id">arg</span> <span class="id"><a href="compcert.backend.Liveness.html#after">after</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.RTL.html#Ireturn">Ireturn</a></span> <span class="id">optarg</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#reg_option_live">reg_option_live</a></span> <span class="id">optarg</span> <span class="id"><a href="compcert.backend.Registers.html#Regset.empty">Regset.empty</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">The liveness analysis is then obtained by instantiating the
+  general framework for backward dataflow analysis provided by
+  module <span class="bracket"><span class="id">Kildall</span></span>.  </div>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="RegsetLat">RegsetLat</a></span> := <span class="id"><a href="compcert.lib.Lattice.html#LFSet">LFSet</a></span>(<span class="id"><a href="compcert.backend.Registers.html#Regset">Regset</a></span>).<br/>
+<span class="kwd">Module</span> <span class="id"><a name="DS">DS</a></span> := <span class="id"><a href="compcert.backend.Kildall.html#Backward_Dataflow_Solver">Backward_Dataflow_Solver</a></span>(<span class="id"><a href="compcert.backend.Liveness.html#RegsetLat">RegsetLat</a></span>)(<span class="id"><a href="compcert.backend.Kildall.html#NodeSetBackward">NodeSetBackward</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="analyze">analyze</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.RTL.html#function">function</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="compcert.lib.Maps.html#PMap.t">PMap.t</a></span> <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#fixpoint">DS.fixpoint</a></span> <span class="id"><a href="compcert.backend.Liveness.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.RTL.html#fn_code">fn_code</a></span>) <span class="id"><a href="compcert.backend.RTL.html#successors_instr">successors_instr</a></span> (<span class="id"><a href="compcert.backend.Liveness.html#transfer">transfer</a></span> <span class="id"><a href="compcert.backend.Liveness.html#f">f</a></span>).<br/>
+<br/>
+<div class="doc">Basic property of the liveness information computed by <span class="bracket"><span class="id">analyze</span></span>. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="analyze_solution">analyze_solution</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">live</span> <span class="id">n</span> <span class="id">i</span> <span class="id">s</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#analyze">analyze</a></span> <span class="id"><a href="compcert.backend.Liveness.html#f">f</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.backend.Liveness.html#live">live</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Liveness.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.RTL.html#fn_code">fn_code</a></span>)!<span class="id"><a href="compcert.backend.Liveness.html#n">n</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.backend.Liveness.html#i">i</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.backend.Liveness.html#s">s</a></span> (<span class="id"><a href="compcert.backend.RTL.html#successors_instr">successors_instr</a></span> <span class="id"><a href="compcert.backend.Liveness.html#i">i</a></span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Registers.html#Regset.Subset">Regset.Subset</a></span> (<span class="id"><a href="compcert.backend.Liveness.html#transfer">transfer</a></span> <span class="id"><a href="compcert.backend.Liveness.html#f">f</a></span> <span class="id"><a href="compcert.backend.Liveness.html#s">s</a></span> <span class="id"><a href="compcert.backend.Liveness.html#live">live</a></span>!!<span class="id"><a href="compcert.backend.Liveness.html#s">s</a></span>) <span class="id"><a href="compcert.backend.Liveness.html#live">live</a></span>!!<span class="id"><a href="compcert.backend.Liveness.html#n">n</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2900')">Proof.</div>
+<div class="proofscript" id="proof2900">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.backend.Liveness.html#analyze">analyze</a></span>; <span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Liveness.html#fixpoint_solution">DS.fixpoint_solution</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.backend.Liveness.html#transfer">transfer</a></span>; <span class="tactic">rewrite</span> <span class="id">H2</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.backend.Liveness.html#eq_refl">DS.L.eq_refl</a></span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Given an RTL function, compute (for every PC) the list of
+  pseudo-registers that are used for the last time in the instruction
+  at PC.  These are the registers that are used or defined by the instruction
+  and dead afterwards.  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="last_uses_at">last_uses_at</a></span> (<span class="id">live</span>: <span class="id"><a href="compcert.lib.Maps.html#PMap.t">PMap.t</a></span> <span class="id"><a href="compcert.backend.Registers.html#Regset.t">Regset.t</a></span>) (<span class="id">pc</span>: <span class="id"><a href="compcert.backend.RTL.html#node">node</a></span>) (<span class="id">i</span>: <span class="id"><a href="compcert.backend.RTL.html#instruction">instruction</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">l</span> := <span class="id"><a href="compcert.backend.Liveness.html#live">live</a></span>!!<span class="id"><a href="compcert.backend.Liveness.html#pc">pc</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">lu</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#filter">List.filter</a></span> (<span class="kwd">fun</span> <span class="id">r</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="compcert.backend.Registers.html#Regset.mem">Regset.mem</a></span> <span class="id"><a href="compcert.backend.Liveness.html#r">r</a></span> <span class="id"><a href="compcert.backend.Liveness.html#l">l</a></span>)) (<span class="id"><a href="compcert.backend.RTL.html#instr_uses">instr_uses</a></span> <span class="id"><a href="compcert.backend.Liveness.html#i">i</a></span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.RTL.html#instr_defs">instr_defs</a></span> <span class="id"><a href="compcert.backend.Liveness.html#i">i</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="compcert.backend.Liveness.html#lu">lu</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">r</span> =&gt; <span class="kwd">if</span> <span class="id"><a href="compcert.backend.Registers.html#Regset.mem">Regset.mem</a></span> <span class="id">r</span> <span class="id"><a href="compcert.backend.Liveness.html#l">l</a></span> <span class="kwd">then</span> <span class="id"><a href="compcert.backend.Liveness.html#lu">lu</a></span> <span class="kwd">else</span> <span class="id">r</span> :: <span class="id"><a href="compcert.backend.Liveness.html#lu">lu</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="last_uses">last_uses</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.RTL.html#function">function</a></span>) : <span class="id"><a href="compcert.lib.Maps.html#PTree.t">PTree.t</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Liveness.html#analyze">analyze</a></span> <span class="id"><a href="compcert.backend.Liveness.html#f">f</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="compcert.lib.Maps.html#PTree.empty">PTree.empty</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">live</span> =&gt; <span class="id"><a href="compcert.lib.Maps.html#PTree.map">PTree.map</a></span> (<span class="id"><a href="compcert.backend.Liveness.html#last_uses_at">last_uses_at</a></span> <span class="id">live</span>) <span class="id"><a href="compcert.backend.Liveness.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.RTL.html#fn_code">fn_code</a></span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

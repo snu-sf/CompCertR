@@ -1,0 +1,180 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SimSymb</title>
+<meta name="description" content="Documentation of Coq module SimSymb" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SimSymb</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ASTC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinkingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SimMem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">System</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSem</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">SimSymb</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">skenv_func_bisim</span> (<span class="id">sim_val</span>: <span class="id">val</span> -&gt; <span class="id">val</span> -&gt; <span class="kwd">Prop</span>) (<span class="id">skenv_src</span> <span class="id">skenv_tgt</span>: <span class="id">SkEnv.t</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">skenv_func_bisim_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FUNCFSIM</span>: <span class="kwd">forall</span> <span class="id">fptr_src</span> <span class="id">fptr_tgt</span> <span class="id">def_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMFPTR</span>: <span class="id">sim_val</span> <span class="id">fptr_src</span> <span class="id">fptr_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FUNCSRC</span>: <span class="id">skenv_src</span>.(<span class="id">Genv.find_funct</span>) <span class="id">fptr_src</span> = <span class="id">Some</span> <span class="id">def_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">def_tgt</span>, &lt;&lt;<span class="id">FUNCSRC</span>: <span class="id">skenv_tgt</span>.(<span class="id">Genv.find_funct</span>) <span class="id">fptr_tgt</span> = <span class="id">Some</span> <span class="id">def_tgt</span>&gt;&gt; /\ &lt;&lt;<span class="id">SIM</span>: <span class="id">def_src</span> = <span class="id">def_tgt</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Class</span> <span class="id">class</span> (<span class="id">SM</span>: <span class="id">SimMem.class</span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">t</span>: <span class="kwd">Type</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">le</span>: <span class="id">t</span> -&gt; <span class="id">t</span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span>: <span class="id">t</span> -&gt; <span class="id">Sk.t</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tgt</span>: <span class="id">t</span> -&gt; <span class="id">Sk.t</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">le_PreOrder</span> :&gt; <span class="id">PreOrder</span> <span class="id">le</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">wf</span>: <span class="id">t</span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wf_preserves_wf</span>: <span class="kwd">forall</span> <span class="id">ss0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFSRC</span>: <span class="id">Sk.wf</span> <span class="id">ss0</span>.(<span class="id">src</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WFTGT</span>: <span class="id">Sk.wf</span> <span class="id">ss0</span>.(<span class="id">tgt</span>)&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wf_link</span>: <span class="kwd">forall</span> <span class="id">ss0</span> <span class="id">ss1</span> <span class="id">sk_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINKSRC</span>: <span class="id">link</span> <span class="id">ss0</span>.(<span class="id">src</span>) <span class="id">ss1</span>.(<span class="id">src</span>) = <span class="id">Some</span> <span class="id">sk_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFSRC0</span>: <span class="id">Sk.wf</span> <span class="id">ss0</span>.(<span class="id">src</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFSRC1</span>: <span class="id">Sk.wf</span> <span class="id">ss1</span>.(<span class="id">src</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFTGT0</span>: <span class="id">Sk.wf</span> <span class="id">ss0</span>.(<span class="id">tgt</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFTGT1</span>: <span class="id">Sk.wf</span> <span class="id">ss1</span>.(<span class="id">tgt</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">ss</span> <span class="id">sk_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LINKTGT</span>: <span class="id">link</span> <span class="id">ss0</span>.(<span class="id">tgt</span>) <span class="id">ss1</span>.(<span class="id">tgt</span>) = <span class="id">Some</span> <span class="id">sk_tgt</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SKSRC</span>: <span class="id">ss</span>.(<span class="id">src</span>) = <span class="id">sk_src</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SKTGT</span>: <span class="id">ss</span>.(<span class="id">tgt</span>) = <span class="id">sk_tgt</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE0</span>: <span class="id">le</span> <span class="id">ss0</span> <span class="id">ss</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE1</span>: <span class="id">le</span> <span class="id">ss1</span> <span class="id">ss</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss</span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sim_skenv</span>: <span class="id">SimMem.t</span> -&gt; <span class="id">t</span> -&gt; <span class="id">SkEnv.t</span> -&gt; <span class="id">SkEnv.t</span> -&gt; <span class="kwd">Prop</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sim_skenv_public_symbols</span>: <span class="kwd">forall</span> <span class="id">sm0</span> <span class="id">ss0</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKE</span>: <span class="id">sim_skenv</span> <span class="id">sm0</span> <span class="id">ss0</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv_src</span>.(<span class="id">Genv.public_symbol</span>) = <span class="id">skenv_tgt</span>.(<span class="id">Genv.public_symbol</span>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wf_load_sim_skenv</span>: <span class="kwd">forall</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span> <span class="id">m_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADSRC</span>: <span class="id">ss</span>.(<span class="id">src</span>).(<span class="id">Sk.load_skenv</span>) = <span class="id">skenv_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADTGT</span>: <span class="id">ss</span>.(<span class="id">tgt</span>).(<span class="id">Sk.load_skenv</span>) = <span class="id">skenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADMEMSRC</span>: <span class="id">ss</span>.(<span class="id">src</span>).(<span class="id">Sk.load_mem</span>) = <span class="id">Some</span> <span class="id">m_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">m_tgt</span> <span class="id">sm</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LOADMEMTGT</span>: <span class="id">ss</span>.(<span class="id">tgt</span>).(<span class="id">Sk.load_mem</span>) = <span class="id">Some</span> <span class="id">m_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEMSRC</span>: <span class="id">sm</span>.(<span class="id">SimMem.src</span>) = <span class="id">m_src</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEMTGT</span>: <span class="id">sm</span>.(<span class="id">SimMem.tgt</span>) = <span class="id">m_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MWF</span>: <span class="id">sm</span>.(<span class="id">SimMem.wf</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MAINSIM</span>: <span class="id">SimMem.sim_val</span> <span class="id">sm</span> (<span class="id">Genv.symbol_address</span> <span class="id">skenv_src</span> <span class="id">ss</span>.(<span class="id">src</span>).(<span class="id">prog_main</span>) <span class="id">Ptrofs.zero</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Genv.symbol_address</span> <span class="id">skenv_tgt</span> <span class="id">ss</span>.(<span class="id">tgt</span>).(<span class="id">prog_main</span>) <span class="id">Ptrofs.zero</span>)&gt;&gt;);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mlepriv_preserves_sim_skenv</span>: <span class="kwd">forall</span> <span class="id">sm0</span> <span class="id">sm1</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id">SimMem.lepriv</span> <span class="id">sm0</span> <span class="id">sm1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm0</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm1</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sim_skenv_monotone</span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm</span> <span class="id">ss_link</span> <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFSRC</span>: <span class="id">SkEnv.wf</span> <span class="id">skenv_link_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFTGT</span>: <span class="id">SkEnv.wf</span> <span class="id">skenv_link_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm</span> <span class="id">ss_link</span> <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id">le</span> <span class="id">ss</span> <span class="id">ss_link</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCLSRC</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv_link_src</span> <span class="id">ss</span>.(<span class="id">src</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCLTGT</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv_link_tgt</span> <span class="id">ss</span>.(<span class="id">tgt</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LESRC</span>: <span class="id">SkEnv.project</span> <span class="id">skenv_link_src</span> <span class="id">ss</span>.(<span class="id">src</span>) = <span class="id">skenv_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LETGT</span>: <span class="id">SkEnv.project</span> <span class="id">skenv_link_tgt</span> <span class="id">ss</span>.(<span class="id">tgt</span>) = <span class="id">skenv_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sim_skenv_func_bisim</span>: <span class="kwd">forall</span> <span class="id">sm</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DEF</span>: <span class="id">skenv_func_bisim</span> <span class="id">sm</span>.(<span class="id">SimMem.sim_val</span>) <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">system_sim_skenv</span>: <span class="kwd">forall</span> <span class="id">sm</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm</span> <span class="id">ss</span> <span class="id">skenv_src</span>.(<span class="id">System.skenv</span>) <span class="id">skenv_tgt</span>.(<span class="id">System.skenv</span>)&gt;&gt;;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">system_axiom</span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm0</span> <span class="id">ss_sys</span> <span class="id">skenv_sys_src</span> <span class="id">skenv_sys_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">tr</span> <span class="id">retv_src</span> <span class="id">ef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm0</span> <span class="id">ss_sys</span> <span class="id">skenv_sys_src</span> <span class="id">skenv_sys_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">Args.is_cstyle</span> <span class="id">args_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">Retv.is_cstyle</span> <span class="id">retv_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id">SimMem.sim_args</span> <span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYSSRC</span>: <span class="id">external_call</span> <span class="id">ef</span> <span class="id">skenv_sys_src</span> (<span class="id">args_src</span>.(<span class="id">Args.vs</span>)) (<span class="id">args_src</span>.(<span class="id">Args.m</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">retv_src</span>.(<span class="id">Retv.v</span>)) (<span class="id">retv_src</span>.(<span class="id">Retv.m</span>))),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm1</span> <span class="id">retv_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SYSTGT</span>: <span class="id">external_call</span> <span class="id">ef</span> <span class="id">skenv_sys_tgt</span> (<span class="id">args_tgt</span>.(<span class="id">Args.vs</span>)) (<span class="id">args_tgt</span>.(<span class="id">Args.m</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">retv_tgt</span>.(<span class="id">Retv.v</span>)) (<span class="id">retv_tgt</span>.(<span class="id">Retv.m</span>))&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">RETV</span>: <span class="id">SimMem.sim_retv</span> <span class="id">retv_src</span> <span class="id">retv_tgt</span> <span class="id">sm1</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">MLE0</span>: <span class="id">SimMem.le</span> <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm1</span>&gt;&gt;);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">mle_preserves_sim_skenv</span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">SM</span>: <span class="id">SimMem.class</span>} `{<span class="id">SS</span>: @<span class="id">class</span> <span class="id">SM</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm0</span> <span class="id">sm1</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id">SimMem.le</span> <span class="id">sm0</span> <span class="id">sm1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm0</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm1</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7407')">Proof.</div>
+<div class="proofscript" id="proof7407">
+ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">mlepriv_preserves_sim_skenv</span>; <span class="id">et</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">mfuture_preserves_sim_skenv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">SM</span>: <span class="id">SimMem.class</span>} `{<span class="id">SS</span>: @<span class="id">class</span> <span class="id">SM</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm0</span> <span class="id">sm1</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MFUTURE</span>: <span class="id">SimMem.future</span> <span class="id">sm0</span> <span class="id">sm1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm0</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm1</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7408')">Proof.</div>
+<div class="proofscript" id="proof7408">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">MFUTURE</span>; <span class="id">ss</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHMFUTURE</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">mlepriv_preserves_sim_skenv</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHMFUTURE</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">mle_preserves_sim_skenv</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">simskenv_func_fsim</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">SM</span>: <span class="id">SimMem.class</span>} `{<span class="id">SS</span>: @<span class="id">class</span> <span class="id">SM</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss0</span> <span class="id">sm0</span> <span class="id">skd</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">sm0</span> <span class="id">ss0</span> <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMV</span>: <span class="id">sm0</span>.(<span class="id">SimMem.sim_val</span>) <span class="id">v_src</span> <span class="id">v_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FIND</span>: <span class="id">Genv.find_funct</span> <span class="id">skenv_link_src</span> <span class="id">v_src</span> = <span class="id">Some</span> <span class="id">skd</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_funct</span> <span class="id">skenv_link_tgt</span> <span class="id">v_tgt</span> = <span class="id">Some</span> <span class="id">skd</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7409')">Proof.</div>
+<div class="proofscript" id="proof7409">
+ <span class="id">exploit</span> <span class="id">SimSymb.sim_skenv_func_bisim</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">exploit</span> <span class="id">FUNCFSIM</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SimSymb</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

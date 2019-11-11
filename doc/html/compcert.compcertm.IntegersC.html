@@ -1,0 +1,64 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module IntegersC</title>
+<meta name="description" content="Documentation of Coq module IntegersC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module IntegersC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Eqdep_dec</span> <span class="id">Zquot</span> <span class="id">Zwf</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Archi</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Integers</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">Ptrofs_add_repr</span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: (<span class="id">Ptrofs.add</span> (<span class="id">Ptrofs.repr</span> <span class="id">x</span>) (<span class="id">Ptrofs.repr</span> <span class="id">y</span>)) = <span class="id">Ptrofs.repr</span> (<span class="id">x</span> + <span class="id">y</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7346')">Proof.</div>
+<div class="proofscript" id="proof7346">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">apply</span> <span class="id">Ptrofs.eqm_repr_eq</span>. <span class="tactic">eapply</span> <span class="id">Ptrofs.eqm_sym</span>. <span class="tactic">eapply</span> <span class="id">Ptrofs.eqm_trans</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Ptrofs.eqm_sym</span>. <span class="tactic">apply</span> <span class="id">Ptrofs.eqm_unsigned_repr</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Ptrofs.eqm_add</span>; <span class="tactic">apply</span> <span class="id">Ptrofs.eqm_unsigned_repr</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">max_unsigned_zero</span>: 0 &lt;= <span class="id">Ptrofs.max_unsigned</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7347')">Proof.</div>
+<div class="proofscript" id="proof7347">
+&nbsp;&nbsp;<span class="id">etransitivity</span>; <span class="tactic">try</span> <span class="id">unshelve</span> <span class="tactic">apply</span> <span class="id">Ptrofs.unsigned_range_2</span>. <span class="tactic">apply</span> <span class="id">Ptrofs.zero</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">mul_le_div</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> <span class="id">b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: 4 * <span class="id">a</span> &lt;= <span class="id">b</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id">a</span> &lt;= <span class="id">b</span> / 4&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7348')">Proof.</div>
+<div class="proofscript" id="proof7348">
+&nbsp;&nbsp;<span class="tactic">red</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span>(4 * <span class="id">a</span> / 4 = <span class="id">a</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">Z.mul_comm</span>. <span class="tactic">rewrite</span> <span class="id">Z.div_mul</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">H</span>. <span class="tactic">eapply</span> <span class="id">Z_div_le</span>; <span class="tactic">eauto</span>. <span class="id">xomega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">Z2Nat_range</span> <span class="id">n</span>:<br/>
+&nbsp;&nbsp;<span class="id">Z.of_nat</span> (<span class="id">Z.to_nat</span> <span class="id">n</span>) = <span class="kwd">if</span> (<span class="id">zle</span> 0 <span class="id">n</span>) <span class="kwd">then</span> <span class="id">n</span> <span class="kwd">else</span> 0.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7349')">Proof.</div>
+<div class="proofscript" id="proof7349">
+ <span class="tactic">destruct</span> <span class="id">n</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">nia</span>. Qed.</div>
+<br/>
+<span class="kwd">Hint</span> <span class="id">Rewrite</span> <span class="id">Ptrofs.unsigned_zero</span> <span class="id">Ptrofs.add_zero</span> <span class="id">Ptrofs.add_zero_l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Ptrofs.repr_unsigned</span> <span class="id">Ptrofs_add_repr</span> : <span class="id">psimpl</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">psimpl</span> := <span class="tactic">repeat</span> (<span class="id">autorewrite</span> <span class="kwd">with</span> <span class="id">psimpl</span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">rewrite</span> <span class="id">Ptrofs.unsigned_repr</span> <span class="kwd">in</span> *; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>; [])).<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

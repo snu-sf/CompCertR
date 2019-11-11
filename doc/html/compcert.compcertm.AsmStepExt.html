@@ -1,0 +1,657 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module AsmStepExt</title>
+<meta name="description" content="Documentation of Coq module AsmStepExt" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module AsmStepExt</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ASTC</span> <span class="id">Integers</span> <span class="id">Floats</span> <span class="id">Values</span> <span class="id">MemoryC</span> <span class="id">Events</span> <span class="id">Globalenvs</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Locations</span> <span class="id">Stacklayout</span> <span class="id">Conventions</span> <span class="id">Linking</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Asm</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span> <span class="id">Memory</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span> <span class="id">ModSem</span> <span class="id">Mod</span> <span class="id">sflib</span> <span class="id">Sem</span> <span class="kwd">Syntax</span> <span class="id">LinkingC</span> <span class="kwd">Program</span> <span class="id">SemProps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">GlobalenvsC</span> <span class="id">Lia</span> <span class="id">IntegersC</span> <span class="id">SimMemInj</span> <span class="id">AsmStepInj</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">mktac</span>.<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">ASMSTEP</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">agree</span> (<span class="id">rs_src</span> <span class="id">rs_tgt</span>: <span class="id">regset</span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">pr</span>, <span class="id">Val.lessdef</span> (<span class="id">rs_src</span> <span class="id">pr</span>) (<span class="id">rs_tgt</span> <span class="id">pr</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">agree_step</span> <span class="id">rs0</span> <span class="id">rs1</span> <span class="id">pr</span> <span class="id">v0</span> <span class="id">v1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs0</span> <span class="id">rs1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.lessdef</span> <span class="id">v0</span> <span class="id">v1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree</span> (<span class="id">rs0</span> # <span class="id">pr</span> &lt;- <span class="id">v0</span>) (<span class="id">rs1</span> # <span class="id">pr</span> &lt;- <span class="id">v1</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6718')">Proof.</div>
+<div class="proofscript" id="proof6718">
+ <span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">Pregmap.set</span>. <span class="id">des_ifs</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">extcall_arg_extends</span> <span class="id">rs1</span> <span class="id">rs2</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">l</span> <span class="id">arg1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs1</span> <span class="id">rs2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m1</span> <span class="id">m2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id">extcall_arg</span> <span class="id">rs1</span> <span class="id">m1</span> <span class="id">l</span> <span class="id">arg1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">arg2</span> : <span class="id">val</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ARGEXT</span>: <span class="id">Val.lessdef</span> <span class="id">arg1</span> <span class="id">arg2</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ARGS</span>: <span class="id">extcall_arg</span> <span class="id">rs2</span> <span class="id">m2</span> <span class="id">l</span> <span class="id">arg2</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6719')">Proof.</div>
+<div class="proofscript" id="proof6719">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">ARGS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">Mem.loadv_extends</span>; <span class="tactic">try</span> <span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">instantiate</span> (1:=<span class="id">Val.offset_ptr</span> (<span class="id">rs2</span> <span class="id">RSP</span>) (<span class="id">Ptrofs.repr</span> (<span class="id">fe_ofs_arg</span> + 4 * <span class="id">ofs</span>))).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">inject_id</span> <span class="kwd">in</span> *. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RSP</span>); <span class="tactic">try</span> <span class="id">econs</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">extcall_arg_pair_extends</span> <span class="id">rs1</span> <span class="id">rs2</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">l</span> <span class="id">arg1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs1</span> <span class="id">rs2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m1</span> <span class="id">m2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id">extcall_arg_pair</span> <span class="id">rs1</span> <span class="id">m1</span> <span class="id">l</span> <span class="id">arg1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">arg2</span> : <span class="id">val</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ARGEXT</span>: <span class="id">Val.lessdef</span> <span class="id">arg1</span> <span class="id">arg2</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ARGS</span>: <span class="id">extcall_arg_pair</span> <span class="id">rs2</span> <span class="id">m2</span> <span class="id">l</span> <span class="id">arg2</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6720')">Proof.</div>
+<div class="proofscript" id="proof6720">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">ARGS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">extcall_arg_extends</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">extcall_arg_extends</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">extcall_arg_extends</span> <span class="kwd">in</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">des</span>. <span class="id">esplits</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">Val.longofwords_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">extcall_arguments_extends</span> <span class="id">rs1</span> <span class="id">rs2</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">sg</span> <span class="id">args1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs1</span> <span class="id">rs2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m1</span> <span class="id">m2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id">extcall_arguments</span> <span class="id">rs1</span> <span class="id">m1</span> <span class="id">sg</span> <span class="id">args1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">args2</span> : <span class="id">list</span> <span class="id">val</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ARGEXT</span>: <span class="id">Val.lessdef_list</span> <span class="id">args1</span> <span class="id">args2</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ARGS</span>: <span class="id">extcall_arguments</span> <span class="id">rs2</span> <span class="id">m2</span> <span class="id">sg</span> <span class="id">args2</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6721')">Proof.</div>
+<div class="proofscript" id="proof6721">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">extcall_arguments</span> <span class="kwd">in</span> *. <span class="id">revert</span> <span class="id">args1</span> <span class="id">ARGS</span>. <span class="tactic">induction</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>); <span class="id">ss</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">ARGS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IHl</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">extcall_arg_pair_extends</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">arg2</span>::<span class="id">args2</span>). <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Remark</span> <span class="id">mull_lessdef</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v1</span> <span class="id">v1</span>' <span class="id">v2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.lessdef</span> <span class="id">v1</span> <span class="id">v1</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.lessdef</span> (<span class="id">Val.mull</span> <span class="id">v1</span> <span class="id">v2</span>) (<span class="id">Val.mull</span> <span class="id">v1</span>' <span class="id">v2</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6722')">Proof.</div>
+<div class="proofscript" id="proof6722">
+ <span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id">Val.mull</span>. <span class="id">des_ifs</span>; <span class="id">inv</span> <span class="id">H</span>. <span class="id">econs</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_addrmode_extends</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span> <span class="id">a</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.lessdef</span> (<span class="id">eval_addrmode</span> <span class="id">ge</span> <span class="id">a</span> <span class="id">rs_src0</span>) (<span class="id">eval_addrmode</span> <span class="id">ge</span> <span class="id">a</span> <span class="id">rs_tgt0</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6723')">Proof.</div>
+<div class="proofscript" id="proof6723">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">eval_addrmode</span>, <span class="id">eval_addrmode64</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">Val.addl_lessdef</span>; <span class="tactic">eauto</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">mull_lessdef</span>; <span class="tactic">eauto</span>); <span class="tactic">try</span> (<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">i</span>); <span class="id">econs</span>).<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">exec_load_extends</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge</span> <span class="id">chunk</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span> <span class="id">m_src1</span> <span class="id">a</span> <span class="id">rd</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span> <span class="id">rs_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXEC</span>: <span class="id">exec_load</span> <span class="id">ge</span> <span class="id">chunk</span> <span class="id">m_src0</span> <span class="id">a</span> <span class="id">rs_src0</span> <span class="id">rd</span> = <span class="kwd">Next</span> <span class="id">rs_src1</span> <span class="id">m_src1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">rs_tgt1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEMSAME</span>: <span class="id">m_src0</span> = <span class="id">m_src1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src1</span> <span class="id">rs_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src1</span> <span class="id">m_tgt0</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EXEC</span>: <span class="id">exec_load</span> <span class="id">ge</span> <span class="id">chunk</span> <span class="id">m_tgt0</span> <span class="id">a</span> <span class="id">rs_tgt0</span> <span class="id">rd</span> = <span class="kwd">Next</span> <span class="id">rs_tgt1</span> <span class="id">m_tgt0</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6724')">Proof.</div>
+<div class="proofscript" id="proof6724">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_addrmode_extends</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">ADDR</span>. <span class="id">instantiate</span> (1:=<span class="id">a</span>) <span class="kwd">in</span> <span class="id">ADDR</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">exec_load</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Mem.loadv_extends</span> <span class="kwd">in</span> <span class="id">Heq0</span>; <span class="tactic">eauto</span>; <span class="id">des</span>; <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>). <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">Pregmap.set</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">Heq1</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Mem.loadv_extends</span> <span class="kwd">in</span> <span class="id">Heq0</span>; <span class="tactic">eauto</span>; <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">undef_regs_agree</span> <span class="id">l</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span> : <span class="id">agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree</span> (<span class="id">undef_regs</span> <span class="id">l</span> <span class="id">rs_src</span>) (<span class="id">undef_regs</span> <span class="id">l</span> <span class="id">rs_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6725')">Proof.</div>
+<div class="proofscript" id="proof6725">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span> <span class="id">AGREE</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ss</span>; <span class="id">i</span>. <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Pregmap.set</span> <span class="kwd">in</span> *. <span class="tactic">eapply</span> <span class="id">IHl</span>. <span class="id">ii</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">nextinstr_agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree</span> (<span class="id">nextinstr</span> <span class="id">rs_src</span>) (<span class="id">nextinstr</span> <span class="id">rs_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6726')">Proof.</div>
+<div class="proofscript" id="proof6726">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">nextinstr</span>. <span class="tactic">apply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">exec_store_extends</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge</span> <span class="id">chunk</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span> <span class="id">m_src1</span> <span class="id">a</span> <span class="id">rd</span> <span class="id">l</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span> <span class="id">rs_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXEC</span>: <span class="id">exec_store</span> <span class="id">ge</span> <span class="id">chunk</span> <span class="id">m_src0</span> <span class="id">a</span> <span class="id">rs_src0</span> <span class="id">rd</span> <span class="id">l</span> = <span class="kwd">Next</span> <span class="id">rs_src1</span> <span class="id">m_src1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">rs_tgt1</span> <span class="id">m_tgt1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src1</span> <span class="id">rs_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src1</span> <span class="id">m_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EXEC</span>: <span class="id">exec_store</span> <span class="id">ge</span> <span class="id">chunk</span> <span class="id">m_tgt0</span> <span class="id">a</span> <span class="id">rs_tgt0</span> <span class="id">rd</span> <span class="id">l</span> = <span class="kwd">Next</span> <span class="id">rs_tgt1</span> <span class="id">m_tgt1</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6727')">Proof.</div>
+<div class="proofscript" id="proof6727">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_addrmode_extends</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">ADDR</span>. <span class="id">instantiate</span> (1:=<span class="id">a</span>) <span class="kwd">in</span> <span class="id">ADDR</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id">undef_regs_agree</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">UAGREE</span>. <span class="tactic">unfold</span> <span class="id">exec_store</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">Mem.storev_extends</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Heq0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>, <span class="id">nextinstr</span>. <span class="id">ss</span>. <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Pregmap.set</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="id">cinv</span> (<span class="id">UAGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Mem.storev_extends</span> <span class="kwd">in</span> <span class="id">Heq0</span>; <span class="id">cycle</span> 1; <span class="tactic">eauto</span>; <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">regset_after_external_extends</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree</span> (<span class="id">regset_after_external</span> <span class="id">rs_src</span>) (<span class="id">regset_after_external</span> <span class="id">rs_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6728')">Proof.</div>
+<div class="proofscript" id="proof6728">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">regset_after_external</span> <span class="kwd">in</span> *. <span class="id">ii</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">set_pair_extends</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span> <span class="id">l</span> <span class="id">v_src</span> <span class="id">v_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL</span>: <span class="id">Val.lessdef</span> <span class="id">v_src</span> <span class="id">v_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree</span> (<span class="id">set_pair</span> <span class="id">l</span> <span class="id">v_src</span> <span class="id">rs_src</span>) (<span class="id">set_pair</span> <span class="id">l</span> <span class="id">v_tgt</span> <span class="id">rs_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6729')">Proof.</div>
+<div class="proofscript" id="proof6729">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">set_pair</span>. <span class="id">des_ifs</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Val.hiword_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Val.loword_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_builtin_arg_extends</span> <span class="id">A</span> <span class="id">F</span> <span class="id">V</span> (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>) <span class="id">e1</span> <span class="id">e2</span> <span class="id">sp1</span> <span class="id">sp2</span> <span class="id">m1</span> <span class="id">m2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="kwd">forall</span> <span class="id">x</span> : <span class="id">A</span>, <span class="id">Val.lessdef</span> (<span class="id">e1</span> <span class="id">x</span>) (<span class="id">e2</span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m1</span> <span class="id">m2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">a</span> : <span class="id">builtin_arg</span> <span class="id">A</span>) (<span class="id">v1</span> : <span class="id">val</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EVAL</span>: <span class="id">eval_builtin_arg</span> <span class="id">ge</span> <span class="id">e1</span> <span class="id">sp1</span> <span class="id">m1</span> <span class="id">a</span> <span class="id">v1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SPEXT</span>: <span class="id">Val.lessdef</span> <span class="id">sp1</span> <span class="id">sp2</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">v2</span> : <span class="id">val</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVAL</span>: <span class="id">eval_builtin_arg</span> <span class="id">ge</span> <span class="id">e2</span> <span class="id">sp2</span> <span class="id">m2</span> <span class="id">a</span> <span class="id">v2</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">VAL</span>: <span class="id">Val.lessdef</span> <span class="id">v1</span> <span class="id">v2</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6730')">Proof.</div>
+<div class="proofscript" id="proof6730">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">v1</span> <span class="id">EVAL</span>. <span class="tactic">induction</span> <span class="id">a</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">EVAL</span>; <span class="id">ss</span>; <span class="tactic">try</span> (<span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="tactic">fail</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">Mem.loadv_extends</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>; <span class="id">i</span>. <span class="id">inv</span> <span class="id">SPEXT</span>; <span class="id">ss</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">econs</span>. <span class="id">inv</span> <span class="id">SPEXT</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">Mem.loadv_extends</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>; <span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHa1</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">eapply</span> <span class="id">IHa2</span> <span class="kwd">in</span> <span class="id">H3</span>. <span class="id">des</span>. <span class="id">esplits</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">Val.longofwords_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHa1</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">eapply</span> <span class="id">IHa2</span> <span class="kwd">in</span> <span class="id">H3</span>. <span class="id">des</span>. <span class="id">esplits</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">des_ifs</span>. <span class="tactic">eapply</span> <span class="id">Val.addl_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_builtin_args_extends</span> <span class="id">A</span> <span class="id">F</span> <span class="id">V</span> (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>) <span class="id">e1</span> <span class="id">e2</span> <span class="id">sp1</span> <span class="id">sp2</span> <span class="id">m1</span> <span class="id">m2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="kwd">forall</span> <span class="id">x</span> : <span class="id">A</span>, <span class="id">Val.lessdef</span> (<span class="id">e1</span> <span class="id">x</span>) (<span class="id">e2</span> <span class="id">x</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m1</span> <span class="id">m2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">al</span> : <span class="id">list</span> (<span class="id">builtin_arg</span> <span class="id">A</span>)) (<span class="id">vl1</span> : <span class="id">list</span> <span class="id">val</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EVAL</span>: <span class="id">eval_builtin_args</span> <span class="id">ge</span> <span class="id">e1</span> <span class="id">sp1</span> <span class="id">m1</span> <span class="id">al</span> <span class="id">vl1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SPEXT</span>: <span class="id">Val.lessdef</span> <span class="id">sp1</span> <span class="id">sp2</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">vl2</span> : <span class="id">list</span> <span class="id">val</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVAL</span>: <span class="id">eval_builtin_args</span> <span class="id">ge</span> <span class="id">e2</span> <span class="id">sp2</span> <span class="id">m2</span> <span class="id">al</span> <span class="id">vl2</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">VALLIST</span>: <span class="id">Val.lessdef_list</span> <span class="id">vl1</span> <span class="id">vl2</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6731')">Proof.</div>
+<div class="proofscript" id="proof6731">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">al</span> <span class="id">EVAL</span>. <span class="tactic">induction</span> <span class="id">vl1</span>; <span class="id">ss</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">EVAL</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IHvl1</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_builtin_arg_extends</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">v2</span>::<span class="id">vl2</span>). <span class="id">splits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">set_res_agree</span> <span class="id">res</span> <span class="id">vres</span> <span class="id">vres</span>' <span class="id">rs_src</span> <span class="id">rs_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Val.lessdef</span> <span class="id">vres</span> <span class="id">vres</span>'):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree</span> (<span class="id">set_res</span> <span class="id">res</span> <span class="id">vres</span> <span class="id">rs_src</span>) (<span class="id">set_res</span> <span class="id">res</span> <span class="id">vres</span>' <span class="id">rs_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6732')">Proof.</div>
+<div class="proofscript" id="proof6732">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span> <span class="id">AGREE</span> <span class="id">vres</span> <span class="id">vres</span>' <span class="id">EXT</span>. <span class="tactic">induction</span> <span class="id">res</span>; <span class="id">ss</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHres2</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">IHres1</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">Val.hiword_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">Val.loword_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">cmplu_extends</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span> <span class="id">v1_src</span> <span class="id">v2_src</span> <span class="id">v1_tgt</span> <span class="id">v2_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">c</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL1</span>: <span class="id">Val.lessdef</span> <span class="id">v1_src</span> <span class="id">v1_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL2</span>: <span class="id">Val.lessdef</span> <span class="id">v2_src</span> <span class="id">v2_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.lessdef</span> (<span class="id">Val.maketotal</span> (<span class="id">Val.cmplu</span> (<span class="id">Mem.valid_pointer</span> <span class="id">m_src</span>) <span class="id">c</span> <span class="id">v1_src</span> <span class="id">v2_src</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Val.maketotal</span> (<span class="id">Val.cmplu</span> (<span class="id">Mem.valid_pointer</span> <span class="id">m_tgt</span>) <span class="id">c</span> <span class="id">v1_tgt</span> <span class="id">v2_tgt</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6733')">Proof.</div>
+<div class="proofscript" id="proof6733">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Val.cmplu</span>, <span class="id">Val.maketotal</span>, <span class="id">option_map</span>. <span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Val.cmplu_bool</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Val.cmplu_bool</span> (<span class="id">Mem.valid_pointer</span> <span class="id">m_src</span>) <span class="id">c</span> <span class="id">v1_src</span> <span class="id">v2_src</span>) <span class="id">eqn</span>:<span class="id">EQ</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">Val.cmplu_bool_lessdef</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">EQ</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">Mem.valid_pointer</span>, <span class="id">proj_sumbool</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="id">exfalso</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.perm_extends</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">compare_longs_extends</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span> <span class="id">v1_src</span> <span class="id">v2_src</span> <span class="id">v1_tgt</span> <span class="id">v2_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL1</span>: <span class="id">Val.lessdef</span> <span class="id">v1_src</span> <span class="id">v1_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL2</span>: <span class="id">Val.lessdef</span> <span class="id">v2_src</span> <span class="id">v2_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">compare_longs</span> <span class="id">v1_src</span> <span class="id">v2_src</span> <span class="id">rs_src</span> <span class="id">m_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">compare_longs</span> <span class="id">v1_tgt</span> <span class="id">v2_tgt</span> <span class="id">rs_tgt</span> <span class="id">m_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6734')">Proof.</div>
+<div class="proofscript" id="proof6734">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compare_longs</span>. <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">VAL1</span>; <span class="id">inv</span> <span class="id">VAL2</span>; <span class="id">clarify</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">Val.subl_overflow</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">VAL1</span>; <span class="id">inv</span> <span class="id">VAL2</span>; <span class="id">clarify</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">Val.subl</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">cmplu_extends</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">cmplu_extends</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">tac_sl</span> := <span class="tactic">try</span> (<span class="id">esplits</span>; [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>, <span class="id">nextinstr</span>; <span class="id">ss</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">u</span>; <span class="tactic">unfold</span> <span class="id">Val.offset_ptr</span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Pregmap.set</span> <span class="kwd">in</span> *; <span class="id">des_ifs</span>; <span class="id">eq_closure_tac</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="tactic">rewrite</span> <span class="id">Ptrofs.add_zero</span>; <span class="id">refl</span>|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">refl</span>|<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">inject_separated_refl</span>]).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">tac_ld</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">all_once_fast</span> <span class="id">ltac</span>:(<span class="kwd">fun</span> <span class="id">H</span> =&gt; <span class="tactic">try</span> (<span class="tactic">eapply</span> <span class="id">exec_load_extends</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="id">eassumption</span>; <span class="id">check_safe</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>; <span class="id">des</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>)));<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fail</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">tac_st</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">all_once_fast</span> <span class="id">ltac</span>:(<span class="kwd">fun</span> <span class="id">H</span> =&gt; <span class="tactic">try</span> (<span class="tactic">eapply</span> <span class="id">exec_store_extends</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="id">eassumption</span>; <span class="id">check_safe</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>; <span class="id">des</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>;<span class="id">econs</span>; <span class="tactic">eauto</span>)));<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">fail</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">agree_inv</span> <span class="id">AGREE</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [|- <span class="id">context</span>[(?<span class="id">rs</span>: <span class="id">regset</span> -&gt; <span class="id">val</span>) (?<span class="id">pr</span>: <span class="id">preg</span>)]] =&gt; <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">pr</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>; <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">agree_inv_strong</span> <span class="id">AGREE</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [|- <span class="id">context</span>[(?<span class="id">rs</span>: <span class="id">regset</span> -&gt; <span class="id">val</span>) (?<span class="id">pr</span>: <span class="id">preg</span>)]] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">X</span> := <span class="tactic">fresh</span> <span class="kwd">in</span> <span class="tactic">set</span> (<span class="id">X</span> := <span class="id">AGREE</span> <span class="id">pr</span>); <span class="tactic">apply</span> <span class="id">val_inject_id</span> <span class="kwd">in</span> <span class="id">X</span>; <span class="id">inv</span> <span class="id">X</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">inject_id</span> <span class="kwd">in</span> *; <span class="id">clarify</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>; <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">agree_invs</span> <span class="id">AGREE</span> := <span class="tactic">repeat</span> (<span class="id">agree_inv_strong</span> <span class="id">AGREE</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">propagate_eq_typ</span> <span class="id">TYP</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="id">multimatch</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">H1</span>: @<span class="id">eq</span> <span class="id">TYP</span> ?<span class="id">A</span> ?<span class="id">B</span>, <span class="id">H2</span>: @<span class="id">eq</span> <span class="id">TYP</span> ?<span class="id">B</span> ?<span class="id">C</span> |- <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tryif</span> (<span class="id">check_equal</span> <span class="id">A</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="tactic">fail</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tryif</span> (<span class="id">exists_prop</span> (<span class="id">A</span> = <span class="id">C</span>) + <span class="id">exists_prop</span> (<span class="id">C</span> = <span class="id">A</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id">idtac</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">name</span> := <span class="tactic">fresh</span> "<span class="id">EQ_CLOSURE_TAC</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id">eq_trans</span>; [<span class="tactic">exact</span> <span class="id">H1</span>|<span class="tactic">exact</span> <span class="id">H2</span>|]; <span class="tactic">intro</span> <span class="id">name</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">H1</span>: ?<span class="id">B</span> = ?<span class="id">A</span>, <span class="id">H2</span>: ?<span class="id">B</span> = ?<span class="id">C</span> |- <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tryif</span> (<span class="id">check_equal</span> <span class="id">A</span> <span class="id">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="tactic">fail</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tryif</span> (<span class="id">exists_prop</span> (<span class="id">A</span> = <span class="id">C</span>) + <span class="id">exists_prop</span> (<span class="id">C</span> = <span class="id">A</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id">idtac</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">name</span> := <span class="tactic">fresh</span> "<span class="id">EQ_CLOSURE_TAC</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id">eq_trans</span>; [<span class="tactic">exact</span> (<span class="id">eq_sym</span> <span class="id">H1</span>)|<span class="tactic">exact</span> <span class="id">H2</span>|]; <span class="tactic">intro</span> <span class="id">name</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">eq_closure_tac_typ</span> <span class="id">TYP</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="id">propagate_eq_typ</span> <span class="id">TYP</span>; <span class="id">clarify</span>).<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">tac_cal</span> <span class="id">AGREE</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">progress</span> (<span class="tactic">unfold</span> <span class="id">goto_label</span> <span class="kwd">in</span> *); <span class="id">des_ifs_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">esplits</span>; <span class="tactic">eauto</span>; [<span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>; <span class="tactic">try</span> (<span class="tactic">unfold</span> <span class="id">goto_label</span> <span class="kwd">in</span> *; <span class="id">des_ifs</span>; <span class="tactic">fail</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">ss</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">fail</span>|| <span class="id">idtac</span>; [.. |<span class="tactic">unfold</span> <span class="id">Val.offset_ptr</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">try</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gss</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">try</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [| <span class="id">ii</span>; <span class="id">clarify</span>; <span class="tactic">fail</span>]))); <span class="id">des_ifs</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">econs</span>; <span class="id">ss</span>; <span class="id">tac_p</span>)]);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">try</span> ((<span class="id">agree_invs</span> <span class="id">AGREE</span>); <span class="id">ss</span>; <span class="tactic">unfold</span> <span class="id">option_map</span>, <span class="id">Val.maketotal</span>; <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">tac_p</span>; <span class="id">check_safe</span>))]).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_testcond_ext</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span> <span class="id">c</span> <span class="id">v</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src</span> <span class="id">rs_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EVAL</span>: <span class="id">eval_testcond</span> <span class="id">c</span> <span class="id">rs_src</span> = <span class="id">Some</span> <span class="id">v</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eval_testcond</span> <span class="id">c</span> <span class="id">rs_tgt</span> = <span class="id">Some</span> <span class="id">v</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6735')">Proof.</div>
+<div class="proofscript" id="proof6735">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">eval_testcond</span> <span class="kwd">in</span> *. <span class="tactic">destruct</span> <span class="id">c</span>; <span class="id">revert</span> <span class="id">EVAL</span>; <span class="id">agree_invs</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Val_offset_ptr_lessdef</span> <span class="id">v</span> <span class="id">v</span>' <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Val.lessdef</span> <span class="id">v</span> <span class="id">v</span>'):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Val.lessdef</span> (<span class="id">Val.offset_ptr</span> <span class="id">v</span> <span class="id">ofs</span>) (<span class="id">Val.offset_ptr</span> <span class="id">v</span>' <span class="id">ofs</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6736')">Proof.</div>
+<div class="proofscript" id="proof6736">
+ <span class="id">inv</span> <span class="id">EXT</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Mem.storev</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">asm_step_preserve_extension</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rs_src0</span> <span class="id">rs_src1</span> <span class="id">m_src0</span> <span class="id">m_src1</span> <span class="id">tr</span> <span class="id">rs_tgt0</span> <span class="id">m_tgt0</span> <span class="id">se</span> <span class="id">ge</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">Asm.step</span> <span class="id">se</span> <span class="id">ge</span> (<span class="id">Asm.State</span> <span class="id">rs_src0</span> <span class="id">m_src0</span>) <span class="id">tr</span> (<span class="id">Asm.State</span> <span class="id">rs_src1</span> <span class="id">m_src1</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">rs_tgt1</span> <span class="id">m_tgt1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">STEP</span>: <span class="id">Asm.step</span> <span class="id">se</span> <span class="id">ge</span> (<span class="id">Asm.State</span> <span class="id">rs_tgt0</span> <span class="id">m_tgt0</span>) <span class="id">tr</span> (<span class="id">Asm.State</span> <span class="id">rs_tgt1</span> <span class="id">m_tgt1</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">AGREE</span>: <span class="id">agree</span> <span class="id">rs_src1</span> <span class="id">rs_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src1</span> <span class="id">m_tgt1</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6737')">Proof.</div>
+<div class="proofscript" id="proof6737">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">STEP</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="id">eq_closure_tac</span>. <span class="tactic">unfold</span> <span class="id">exec_instr</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">clarify</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">eval_addrmode32</span>. <span class="id">des_ifs</span>; <span class="id">agree_invs</span> <span class="id">AGREE</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">eval_addrmode64</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">agree_invs</span> <span class="id">AGREE</span>; <span class="id">ss</span>; (<span class="tactic">replace</span> <span class="id">Archi.ptr64</span> <span class="kwd">with</span> <span class="id">true</span>; [|<span class="tactic">eauto</span>]);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">Val.addl_inject</span>); <span class="tactic">eauto</span>); <span class="tactic">try</span> <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">tac_p</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">try</span> (<span class="tactic">by</span> <span class="tactic">apply</span> <span class="id">Val.lessdef_same</span>; <span class="tactic">f_equal</span>; <span class="id">psimpl</span>; <span class="tactic">auto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">Val.addl_lessdef</span>); <span class="tactic">eauto</span>; <span class="tactic">eapply</span> <span class="id">mull_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>. <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">Val.addl_lessdef</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree_invs</span> <span class="id">AGREE</span>; <span class="id">des_ifs</span>; <span class="tactic">unfold</span> <span class="id">andb</span>, <span class="id">proj_sumbool</span> <span class="kwd">in</span> *; <span class="id">des_ifs</span>; <span class="id">clarify</span>; <span class="tactic">apply</span> <span class="id">Val.lessdef_same</span>; <span class="id">psimpl</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RDX</span>); <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RAX</span>); <span class="tactic">rewrite</span> <span class="id">Heq0</span> <span class="kwd">in</span> *; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r1</span>); <span class="tactic">rewrite</span> <span class="id">Heq1</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="tactic">rewrite</span> <span class="id">Heq2</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>, <span class="id">nextinstr</span>; <span class="id">ss</span>. <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [| <span class="id">ii</span>; <span class="id">clarify</span>; <span class="tactic">fail</span>]). <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RDX</span>); <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RAX</span>); <span class="tactic">rewrite</span> <span class="id">Heq0</span> <span class="kwd">in</span> *; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r1</span>); <span class="tactic">rewrite</span> <span class="id">Heq1</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="tactic">rewrite</span> <span class="id">Heq2</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>, <span class="id">nextinstr</span>; <span class="id">ss</span>. <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [| <span class="id">ii</span>; <span class="id">clarify</span>; <span class="tactic">fail</span>]). <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RDX</span>); <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RAX</span>); <span class="tactic">rewrite</span> <span class="id">Heq0</span> <span class="kwd">in</span> *; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r1</span>); <span class="tactic">rewrite</span> <span class="id">Heq1</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="tactic">rewrite</span> <span class="id">Heq2</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>, <span class="id">nextinstr</span>; <span class="id">ss</span>. <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [| <span class="id">ii</span>; <span class="id">clarify</span>; <span class="tactic">fail</span>]). <span class="tactic">eauto</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RDX</span>); <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RAX</span>); <span class="tactic">rewrite</span> <span class="id">Heq0</span> <span class="kwd">in</span> *; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r1</span>); <span class="tactic">rewrite</span> <span class="id">Heq1</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="tactic">rewrite</span> <span class="id">Heq2</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>, <span class="id">nextinstr</span>; <span class="id">ss</span>. <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [| <span class="id">ii</span>; <span class="id">clarify</span>; <span class="tactic">fail</span>]). <span class="tactic">eauto</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-- <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">rd</span>); <span class="id">ss</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">rd</span>); <span class="id">ss</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r1</span>); <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">Val.shl</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-- <span class="tactic">repeat</span> (<span class="tactic">try</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gss</span>); (<span class="tactic">try</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [| <span class="id">ii</span>; <span class="id">clarify</span>; <span class="tactic">fail</span>]))); <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">unfold</span> <span class="id">compare_ints</span>. (<span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">agree_invs</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">eapply</span> <span class="id">compare_longs_extends</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">unfold</span> <span class="id">compare_ints</span>. (<span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">agree_invs</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">apply</span> <span class="id">compare_longs_extends</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">unfold</span> <span class="id">compare_ints</span>. (<span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">agree_invs</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">unfold</span> <span class="id">compare_ints</span>. (<span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">agree_invs</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">unfold</span> <span class="id">compare_ints</span>. (<span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">agree_invs</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">unfold</span> <span class="id">compare_longs</span>. (<span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">agree_invs</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">erewrite</span> (@<span class="id">eval_testcond_ext</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>); <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">goto_label</span>, <span class="id">nextinstr</span>. <span class="tactic">repeat</span> <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">Pregmap.set</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">erewrite</span> (@<span class="id">eval_testcond_ext</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>); <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">goto_label</span>, <span class="id">nextinstr</span>. <span class="tactic">repeat</span> <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">instantiate</span> (1 := <span class="kwd">match</span> <span class="id">eval_testcond</span> <span class="id">c</span> <span class="id">rs_tgt0</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">true</span> =&gt; (<span class="id">nextinstr</span> <span class="id">rs_tgt0</span> # <span class="id">rd</span> &lt;- (<span class="id">rs_tgt0</span> <span class="id">r1</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">false</span> =&gt;  (<span class="id">nextinstr</span> <span class="id">rs_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; (<span class="id">nextinstr</span> <span class="id">rs_tgt0</span> # <span class="id">rd</span> &lt;- <span class="id">Vundef</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">nextinstr</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">by</span> <span class="tactic">repeat</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [| <span class="id">ii</span>; <span class="id">clarify</span>]); <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Pregmap.set</span>. <span class="id">ii</span>. <span class="id">des_ifs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-- <span class="tactic">unfold</span> <span class="id">Val.of_optbool</span>. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">econs</span>; <span class="id">erewrite</span> <span class="id">eval_testcond_ext</span> <span class="kwd">in</span> <span class="id">Heq0</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-- <span class="tactic">unfold</span> <span class="id">Pregmap.set</span>. <span class="id">des_ifs</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-- <span class="tactic">unfold</span> <span class="id">compare_floats</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r1</span>); <span class="id">ss</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++ <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r2</span>); <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++ <span class="id">des_ifs</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-- <span class="tactic">apply</span> <span class="id">Val_offset_ptr_lessdef</span>. <span class="tactic">unfold</span> <span class="id">compare_floats</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r1</span>); <span class="id">ss</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++ <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r2</span>); <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++ <span class="id">des_ifs</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">nextinstr</span>. <span class="tactic">apply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-- <span class="tactic">unfold</span> <span class="id">compare_floats32</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">agree_inv</span> <span class="id">AGREE</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++ <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r2</span>); <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">unfold</span> <span class="id">Val.of_bool</span>; <span class="id">des_ifs</span>; <span class="id">econs</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++ <span class="id">des_ifs</span>; <span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">unfold</span> <span class="id">Val.of_bool</span>; <span class="id">des_ifs</span>; <span class="id">econs</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-- <span class="tactic">apply</span> <span class="id">Val_offset_ptr_lessdef</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">compare_floats32</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r1</span>); <span class="id">ss</span>; <span class="tactic">unfold</span> <span class="id">Pregmap.set</span>; <span class="id">des_ifs</span>; <span class="id">clarify</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">eval_testcond_ext</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">goto_label</span>, <span class="id">nextinstr</span>. <span class="id">des_ifs</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">eval_testcond_ext</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">goto_label</span>, <span class="id">nextinstr</span>. <span class="tactic">repeat</span> <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">erewrite</span> (@<span class="id">eval_testcond_ext</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>); <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">goto_label</span>, <span class="id">nextinstr</span>. <span class="id">des_ifs</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">erewrite</span> (@<span class="id">eval_testcond_ext</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>); <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">goto_label</span>, <span class="id">nextinstr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="id">erewrite</span> (@<span class="id">eval_testcond_ext</span> <span class="id">rs_src0</span> <span class="id">rs_tgt0</span>); <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">goto_label</span>, <span class="id">nextinstr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">rs_tgt0</span> <span class="id">r</span>) <span class="kwd">with</span> (<span class="id">Vint</span> <span class="id">i</span>); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">r</span>); <span class="id">eq_closure_tac_typ</span> <span class="id">val</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Heq0</span>. <span class="tactic">unfold</span> <span class="id">goto_label</span>. <span class="tactic">rewrite</span> <span class="id">Heq1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">rewrite</span> <span class="id">Pregmap.gso</span>; [| <span class="id">ii</span>; <span class="id">clarify</span>; <span class="tactic">fail</span>]).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">EQ_CLOSURE_TAC</span>. <span class="tactic">repeat</span> <span class="tactic">f_equal</span>. <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="id">eq_closure_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_ld</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_st</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">tac_cal</span> <span class="id">AGREE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exploit</span> <span class="id">Mem.alloc_result</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.alloc_extends</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">refl</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.storev_extends</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Heq0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.storev_extends</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Heq1</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">EXT2</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">H</span>. <span class="id">psimpl</span>. <span class="tactic">rewrite</span> <span class="id">H1</span>. <span class="tactic">rewrite</span> <span class="id">H7</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">eapply</span> <span class="id">nextinstr_agree</span>; <span class="tactic">eauto</span>. <span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">RSP</span>); <span class="tactic">rewrite</span> <span class="id">Heq1</span> <span class="kwd">in</span> *; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.free_parallel_extends</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Heq2</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.load_extends</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Heq</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.load_extends</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Heq0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">H4</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">H1</span>. <span class="tactic">rewrite</span> <span class="id">H8</span>. <span class="tactic">rewrite</span> <span class="id">H</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">eapply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">repeat</span> <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">eval_builtin_args_extends</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">ec_mem_extends</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">external_call_spec</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="id">eq_closure_tac_typ</span> <span class="id">val</span>. <span class="id">econs</span> 2; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">unfold</span> <span class="id">nextinstr_nf</span>. <span class="tactic">eapply</span> <span class="id">nextinstr_agree</span>. <span class="tactic">eapply</span> <span class="id">undef_regs_agree</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">set_res_agree</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">undef_regs_agree</span>. <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">extcall_arguments_extends</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">ec_mem_extends</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">external_call_spec</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">cinv</span> (<span class="id">AGREE</span> <span class="id">PC</span>); <span class="id">eq_closure_tac_typ</span> <span class="id">val</span>. <span class="id">econs</span> 3; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">agree_step</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">set_pair_extends</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">regset_after_external_extends</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">ASMSTEP</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

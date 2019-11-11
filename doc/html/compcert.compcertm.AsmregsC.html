@@ -1,0 +1,82 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module AsmregsC</title>
+<meta name="description" content="Documentation of Coq module AsmregsC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module AsmregsC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span> <span class="id">Stacklayout</span> <span class="id">Conventions</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span> <span class="id">Integers</span> <span class="id">AST</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Asm</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Locations</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Mach</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">to_mreg_injective</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pr0</span> <span class="id">pr1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOME</span>: <span class="id">is_some</span> (<span class="id">pr0</span>.(<span class="id">to_mreg</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="id">pr0</span>.(<span class="id">to_mreg</span>) = <span class="id">pr1</span>.(<span class="id">to_mreg</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">pr0</span> = <span class="id">pr1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7079')">Proof.</div>
+<div class="proofscript" id="proof7079">
+ <span class="tactic">destruct</span> <span class="id">pr0</span>; <span class="id">ss</span>; <span class="tactic">destruct</span> <span class="id">pr1</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">preg_of_injective</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mr0</span> <span class="id">mr1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="id">preg_of</span> <span class="id">mr0</span> = <span class="id">preg_of</span> <span class="id">mr1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">mr0</span> = <span class="id">mr1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7080')">Proof.</div>
+<div class="proofscript" id="proof7080">
+ <span class="tactic">destruct</span> <span class="id">mr0</span>, <span class="id">mr1</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">to_mreg_to_preg</span>: <span class="kwd">forall</span> <span class="id">pr0</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">o_map</span> (<span class="id">pr0</span>.(<span class="id">to_mreg</span>)) (<span class="id">to_preg</span>) = <span class="id">Some</span> <span class="id">pr0</span> \/ <span class="id">pr0</span>.(<span class="id">to_mreg</span>) = <span class="id">None</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7081')">Proof.</div>
+<div class="proofscript" id="proof7081">
+ <span class="tactic">destruct</span> <span class="id">pr0</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Corollary</span> <span class="id">to_mreg_some_to_preg</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pr0</span> <span class="id">mr0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOME</span>: <span class="id">pr0</span>.(<span class="id">to_mreg</span>) = <span class="id">Some</span> <span class="id">mr0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">mr0</span>.(<span class="id">to_preg</span>) = <span class="id">pr0</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7082')">Proof.</div>
+<div class="proofscript" id="proof7082">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">to_mreg_injective</span> <span class="kwd">with</span> (<span class="id">pr0</span> := <span class="id">mr0</span>.(<span class="id">to_preg</span>)) (<span class="id">pr1</span> := <span class="id">pr0</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">to_preg_to_mreg</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">to_preg_to_mreg</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">to_pregset</span> (<span class="id">mrs</span>: <span class="id">Mach.regset</span>): <span class="id">regset</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">pr</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">pr</span>.(<span class="id">to_mreg</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">mr</span> =&gt; <span class="id">mrs</span> <span class="id">mr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">Vundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">to_mregset</span> (<span class="id">prs</span>: <span class="id">regset</span>): <span class="id">Mach.regset</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">mr</span> =&gt; <span class="id">prs</span> (<span class="id">to_preg</span> <span class="id">mr</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">to_mreg_preg_of</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pr</span> <span class="id">mr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MR</span>: <span class="id">Asm.to_mreg</span> <span class="id">pr</span> = <span class="id">Some</span> <span class="id">mr</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PR</span>: <span class="id">preg_of</span> <span class="id">mr</span> = <span class="id">pr</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7083')">Proof.</div>
+<div class="proofscript" id="proof7083">
+ <span class="tactic">destruct</span> <span class="id">mr</span>, <span class="id">pr</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>. Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

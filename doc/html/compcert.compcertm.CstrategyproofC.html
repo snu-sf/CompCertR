@@ -1,0 +1,145 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CstrategyproofC</title>
+<meta name="description" content="Documentation of Coq module CstrategyproofC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CstrategyproofC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Axioms</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Classical</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ErrorsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MapsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IntegersC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Floats</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ASTC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">EventsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">GlobalenvsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SmallstepC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CopC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Csyntax</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CsemC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CstrategyC</span> <span class="id">Cstrategyproof</span>.<br/>
+<div class="doc">newly added </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span> <span class="id">SimMod</span> <span class="id">SimModSem</span> <span class="id">SimSymb</span> <span class="id">SimMem</span> <span class="id">AsmregsC</span> <span class="id">MatchSimModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimMemId</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SoundTop</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SIMMODSEM</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">skenv_link</span>: <span class="id">SkEnv.t</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">sm_link</span>: <span class="id">SimMem.t</span>.<br/>
+<span class="kwd">Variables</span> <span class="id">prog</span>: <span class="id">program</span>.<br/>
+<span class="kwd">Let</span> <span class="id">md_src</span>: <span class="id">Mod.t</span> := (<span class="id">CsemC.module</span> <span class="id">prog</span>).<br/>
+<span class="kwd">Let</span> <span class="id">md_tgt</span>: <span class="id">Mod.t</span> := (<span class="id">module</span> <span class="id">prog</span>).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id">INCLSRC</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv_link</span> <span class="id">md_src</span>.(<span class="id">Mod.sk</span>)).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id">INCLTGT</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv_link</span> <span class="id">md_tgt</span>.(<span class="id">Mod.sk</span>)).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id">WF</span>: <span class="id">SkEnv.wf</span> <span class="id">skenv_link</span>).<br/>
+<span class="kwd">Let</span> <span class="id">ge</span>: <span class="id">genv</span> := <span class="id">Build_genv</span> (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link</span> <span class="id">md_src</span>.(<span class="id">Mod.sk</span>)) <span class="id">prog</span>) <span class="id">prog</span>.(<span class="id">prog_comp_env</span>).<br/>
+<span class="kwd">Let</span> <span class="id">tge</span>: <span class="id">genv</span> := <span class="id">Build_genv</span> (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link</span> <span class="id">md_tgt</span>.(<span class="id">Mod.sk</span>)) <span class="id">prog</span>) <span class="id">prog</span>.(<span class="id">prog_comp_env</span>).<br/>
+<span class="kwd">Definition</span> <span class="id">msp</span>: <span class="id">ModSemPair.t</span> := <span class="id">ModSemPair.mk</span> (<span class="id">md_src</span> <span class="id">skenv_link</span>) (<span class="id">md_tgt</span> <span class="id">skenv_link</span>) (<span class="id">SimSymbId.mk</span> <span class="id">md_src</span> <span class="id">md_tgt</span>) <span class="id">sm_link</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">match_states</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">idx</span>: <span class="id">nat</span>) (<span class="id">st_src0</span>: <span class="id">Csem.state</span>) (<span class="id">st_tgt0</span>: <span class="id">Csem.state</span>) (<span class="id">sm0</span>: <span class="id">SimMem.t</span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id">match_states_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCHST</span>: <span class="id">st_src0</span> = <span class="id">st_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm0</span>).<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Classes.Equivalence</span>. <span class="kwd">Ltac</span> <span class="id">inv</span> <span class="id">H</span> := <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">clear</span> <span class="id">H</span>; <span class="tactic">subst</span> *.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">sim_modsem</span>: <span class="id">ModSemPair.sim</span> <span class="id">msp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6745')">Proof.</div>
+<div class="proofscript" id="proof6745">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">match_states_sim</span> <span class="kwd">with</span> (<span class="id">match_states</span> := <span class="id">match_states</span>) (<span class="id">match_states_at</span> := <span class="id">top4</span>) (<span class="id">sound_state</span> := <span class="id">SoundTop.sound_state</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">instantiate</span> (1:= <span class="id">Nat.lt</span>). <span class="tactic">apply</span> <span class="id">lt_wf</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">SoundTop.sound_state_local_preservation</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;init&nbsp;bsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sm_arg</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INITTGT</span>. <span class="id">inv</span> <span class="id">SIMARGS</span>; <span class="id">ss</span>. <span class="tactic">subst</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eexists</span>. <span class="id">eexists</span> (<span class="id">SimMemId.mk</span> <span class="id">_</span> <span class="id">_</span>). <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;init&nbsp;progress&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="id">inv</span> <span class="id">SAFESRC</span>. <span class="id">inv</span> <span class="id">SIMARGS</span>; <span class="id">ss</span>. <span class="tactic">subst</span> *. <span class="id">inv</span> <span class="id">TYP</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;call&nbsp;wf&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;call&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">sm0</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">CALLSRC</span>. <span class="id">ss</span>. <span class="id">des</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">folder</span>. <span class="id">eexists</span> <span class="id">_</span>, (<span class="id">SimMemId.mk</span> <span class="id">_</span> <span class="id">_</span>). <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;after&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">AFTERSRC</span>. <span class="id">inv</span> <span class="id">SIMRET</span>; <span class="id">ss</span>. <span class="id">exists</span> <span class="id">sm_ret</span>. <span class="tactic">destruct</span> <span class="id">sm_ret</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="id">des</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;final&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">inv</span> <span class="id">FINALSRC</span>. <span class="id">ss</span>. <span class="id">des</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eexists</span> (<span class="id">SimMemId.mk</span> <span class="id">_</span> <span class="id">_</span>). <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;step&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">right</span>; <span class="id">i</span>. <span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="id">splits</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">Cstrategyproof.progress</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:= <span class="id">ModSem.is_call</span> (<span class="id">CsemC.modsem</span> <span class="id">skenv_link</span> <span class="id">prog</span>) \1/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.is_return</span> (<span class="id">CsemC.modsem</span> <span class="id">skenv_link</span> <span class="id">prog</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>. <span class="tactic">intro</span> <span class="id">T</span>. <span class="id">des</span>; <span class="id">inv</span> <span class="id">T</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>. <span class="id">contradict</span> <span class="id">NOTRET</span>. <span class="id">rr</span>. <span class="id">esplits</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>. <span class="id">contradict</span> <span class="id">NOTCALL</span>. <span class="id">rr</span>. <span class="id">esplits</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>. <span class="id">contradict</span> <span class="id">NOTRET</span>. <span class="id">rr</span>. <span class="id">esplits</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">folder</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Cstrategyproof.step_simulation</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">instantiate</span> (1:= <span class="id">sm0</span>). <span class="id">ss</span>. }<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">econs</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SIMMODSEM</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SIMMOD</span>.<br/>
+<br/>
+<span class="kwd">Variables</span> <span class="id">prog</span>: <span class="id">program</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">mp</span>: <span class="id">ModPair.t</span> := <span class="id">SimSymbId.mk_mp</span> (<span class="id">CsemC.module</span> <span class="id">prog</span>) (<span class="id">module</span> <span class="id">prog</span>).(<span class="id">Mod.Atomic.trans</span>).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">sim_mod</span>: <span class="id">ModPair.sim</span> <span class="id">mp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6746')">Proof.</div>
+<div class="proofscript" id="proof6746">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">SIMSKENVLINK</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">factor_simmodsem_target</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">CsemC.single_events_at</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">ss</span>. <span class="id">hexploit</span> (@<span class="id">modsem_strongly_receptive</span> <span class="id">skenv_link_tgt</span> <span class="id">prog</span> <span class="id">s</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SR</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SR</span>. <span class="id">exploit</span> <span class="id">ssr_traces_at</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">sim_modsem</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SIMMOD</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

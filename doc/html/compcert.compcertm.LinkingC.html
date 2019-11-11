@@ -1,0 +1,232 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module LinkingC</title>
+<meta name="description" content="Documentation of Coq module LinkingC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module LinkingC</h1>
+<div class="coq">
+<div class="doc">copied &amp;&amp; added "C" *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span> <span class="id">Errors</span> <span class="id">ASTC</span>.<br/>
+<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Linking</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Axioms</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">link_res</span> (<span class="id">A</span>: <span class="kwd">Type</span>): <span class="kwd">Type</span> :=<br/>
+| <span class="id">empty</span><br/>
+| <span class="tactic">fail</span><br/>
+| <span class="id">success</span>: <span class="id">A</span> -&gt; <span class="id">link_res</span> <span class="id">A</span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id">empty</span> [<span class="id">A</span>].<br/>
+<span class="id">Arguments</span> <span class="tactic">fail</span> [<span class="id">A</span>].<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">link_list_aux</span> <span class="id">X</span> `{<span class="id">Linker</span> <span class="id">X</span>} (<span class="id">xs</span>: <span class="id">list</span> <span class="id">X</span>): <span class="id">link_res</span> <span class="id">X</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">xs</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [] =&gt; <span class="id">empty</span><br/>
+&nbsp;&nbsp;| <span class="id">x0</span> :: <span class="id">tl</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">link_list_aux</span> <span class="id">tl</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">empty</span> =&gt; <span class="id">success</span> <span class="id">x0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="tactic">fail</span> =&gt; <span class="tactic">fail</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">success</span> <span class="id">x1</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">link</span> <span class="id">x0</span> <span class="id">x1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">x</span> =&gt; <span class="id">success</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="tactic">fail</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">link_list</span> <span class="id">X</span> `{<span class="id">Linker</span> <span class="id">X</span>} (<span class="id">xs</span>: <span class="id">list</span> <span class="id">X</span>): <span class="id">option</span> <span class="id">X</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">link_list_aux</span> <span class="id">xs</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">empty</span> =&gt; <span class="id">None</span> <br/>
+&nbsp;&nbsp;| <span class="id">success</span> <span class="id">x</span> =&gt; <span class="id">Some</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;| <span class="tactic">fail</span> =&gt; <span class="id">None</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">link_list_cons</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id">Linker</span> <span class="id">X</span>} <span class="id">hd</span> <span class="id">tl</span> <span class="id">restl</span> <span class="id">res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TL</span>: <span class="id">link_list</span> <span class="id">tl</span> = <span class="id">Some</span> <span class="id">restl</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HD</span>: <span class="id">link</span> <span class="id">hd</span> <span class="id">restl</span> = <span class="id">Some</span> <span class="id">res</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LINK</span>: <span class="id">link_list</span> (<span class="id">hd</span> :: <span class="id">tl</span>) = <span class="id">Some</span> <span class="id">res</span>&gt;&gt; /\ &lt;&lt;<span class="id">LINKORDER</span>: <span class="id">Forall</span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">linkorder</span> <span class="id">x</span> <span class="id">res</span>) (<span class="id">hd</span> :: <span class="id">tl</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6789')">Proof.</div>
+<div class="proofscript" id="proof6789">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">red</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">link_list</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">link_linkorder</span> <span class="kwd">in</span> <span class="id">HD</span>. <span class="id">des</span>. <span class="id">econs</span>; <span class="tactic">auto</span>. <span class="tactic">clear</span> <span class="id">HD</span>. <span class="tactic">unfold</span> <span class="id">link_list</span> <span class="kwd">in</span> <span class="id">TL</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">restl</span>. <span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">res</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">tl</span> <span class="kwd">as</span> [|<span class="id">h</span> <span class="id">l</span>]; <span class="tactic">auto</span>. <span class="id">i</span>. <span class="id">econs</span>; <span class="tactic">unfold</span> <span class="id">link_list_aux</span> <span class="kwd">in</span> *; <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">link_linkorder</span> <span class="kwd">in</span> <span class="id">Heq1</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id">linkorder_trans</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">l</span>; <span class="tactic">auto</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">IHl</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">link_linkorder</span> <span class="kwd">in</span> <span class="id">Heq1</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id">linkorder_trans</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">link_list_linkorder</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id">Linker</span> <span class="id">X</span>} <span class="id">xs</span> <span class="id">xs_res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id">link_list</span> <span class="id">xs</span> = <span class="id">Some</span> <span class="id">xs_res</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LINKORDER</span>: <span class="id">Forall</span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">linkorder</span> <span class="id">x</span> <span class="id">xs_res</span>) <span class="id">xs</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6790')">Proof.</div>
+<div class="proofscript" id="proof6790">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">xs</span> <span class="kwd">as</span> [| <span class="id">hd</span> <span class="id">tl</span>]; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">link_list</span> <span class="kwd">in</span> <span class="id">LINK</span>. <span class="id">des_ifs</span>. <span class="tactic">unfold</span> <span class="id">link_list_aux</span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="id">des_ifs</span>; <span class="id">fold</span> <span class="id">link_list_aux</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">tl</span>; <span class="id">ss</span>. <span class="id">econs</span>. <span class="tactic">apply</span> <span class="id">linkorder_refl</span>. <span class="id">econs</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;<span class="id">econs</span>. { <span class="tactic">eapply</span> <span class="id">link_linkorder</span> <span class="kwd">in</span> <span class="id">Heq1</span>. <span class="id">des</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">link_list</span> <span class="id">tl</span> = <span class="id">Some</span> <span class="id">x</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">link_list</span>. <span class="tactic">rewrite</span> <span class="id">Heq0</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">link_list_cons</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">LINKORDER</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">link_list_cons_inv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id">Linker</span> <span class="id">X</span>} <span class="id">hd</span> <span class="id">tl</span> <span class="id">res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id">link_list</span> (<span class="id">hd</span> :: <span class="id">tl</span>) = <span class="id">Some</span> <span class="id">res</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id">tl</span> &lt;&gt; []):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">restl</span>, &lt;&lt;<span class="id">TL</span>: <span class="id">link_list</span> <span class="id">tl</span> = <span class="id">Some</span> <span class="id">restl</span>&gt;&gt; /\ &lt;&lt;<span class="id">HD</span>: <span class="id">link</span> <span class="id">hd</span> <span class="id">restl</span> = <span class="id">Some</span> <span class="id">res</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6791')">Proof.</div>
+<div class="proofscript" id="proof6791">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">link_list</span> <span class="kwd">in</span> <span class="id">LINK</span>. <span class="id">des_ifs</span>. <span class="tactic">unfold</span> <span class="id">link_list_aux</span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="id">des_ifs</span>; <span class="id">fold</span> <span class="id">link_list_aux</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">tl</span>; <span class="id">ss</span>. <span class="id">econs</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">unfold</span> <span class="id">link_list</span>. <span class="tactic">rewrite</span> <span class="id">Heq0</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">Unshelve</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">link_list_aux_empty_inv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id">Linker</span> <span class="id">X</span>} <span class="id">xs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EMPTY</span>: <span class="id">link_list_aux</span> <span class="id">xs</span>  = <span class="id">empty</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">NIL</span>: <span class="id">xs</span> = []&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6792')">Proof.</div>
+<div class="proofscript" id="proof6792">
+ <span class="id">ginduction</span> <span class="id">xs</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">link_list_snoc_commut</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id">Linker</span> <span class="id">X</span>} <span class="id">x0</span> <span class="id">x1</span> <span class="id">x_link</span> <span class="id">xs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id">link</span> <span class="id">x0</span> <span class="id">x1</span> = <span class="id">Some</span> <span class="id">x_link</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">CMT</span>: <span class="id">link_list</span> (<span class="id">xs</span> ++ [<span class="id">x0</span> ; <span class="id">x1</span>]) = <span class="id">link_list</span> (<span class="id">xs</span> ++ [<span class="id">x_link</span>])&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6793')">Proof.</div>
+<div class="proofscript" id="proof6793">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">xs</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">link_list</span>. <span class="id">ss</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHxs</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">IH</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">link_list</span> <span class="kwd">in</span> <span class="id">IH</span>. <span class="tactic">unfold</span> <span class="id">link_list</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">apply_all_once</span> <span class="id">link_list_aux_empty_inv</span>; <span class="id">clarify</span>; <span class="id">ss</span>; <span class="tactic">destruct</span> <span class="id">xs</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_program_refl</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">Linker</span> <span class="id">F</span>} `{<span class="id">Linker</span> <span class="id">V</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">prog</span>: <span class="id">AST.program</span> <span class="id">F</span> <span class="id">V</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_program</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">eq</span>) <span class="id">eq</span> <span class="id">prog</span> <span class="id">prog</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6794')">Proof.</div>
+<div class="proofscript" id="proof6794">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">prog</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">prog_defs</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">g</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">linkorder_refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">rpapply</span> <span class="id">IHprog_defs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 2 (<span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>; <span class="id">i</span>; <span class="tactic">destruct</span> <span class="id">x</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">AxiomsC.prop_ext</span>. <span class="tactic">split</span>; <span class="id">ii</span>; <span class="id">inv</span> <span class="id">H1</span>; <span class="id">ss</span>; <span class="id">clarify</span>; <span class="id">inv</span> <span class="id">H3</span>; <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="tactic">apply</span> <span class="id">linkorder_refl</span>.<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">match_globdef_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">C</span> <span class="id">F</span> <span class="id">V</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">Linker</span> <span class="id">C</span>} <span class="id">ctx</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_globdef</span> ((<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">eq</span>): <span class="id">C</span> -&gt; <span class="id">F</span> -&gt; <span class="id">F</span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">eq</span>: <span class="id">V</span> -&gt; <span class="id">V</span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ctx</span> = <span class="id">eq</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6795')">Proof.</div>
+<div class="proofscript" id="proof6795">
+&nbsp;&nbsp;<span class="tactic">do</span> 2 (<span class="tactic">eapply</span> <span class="id">Axioms.functional_extensionality</span>; <span class="id">i</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">AxiomsC.prop_ext</span>. <span class="tactic">split</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H1</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">clarify</span>. <span class="tactic">destruct</span> <span class="id">x0</span>; <span class="id">econs</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">linkorder_refl</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">Linker_def</span> <span class="id">Linker_vardef</span> <span class="id">Linker_varinit</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">link_unit_same</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> (<span class="id">g</span> <span class="id">g0</span>: <span class="id">globdef</span> <span class="id">F</span> <span class="id">unit</span>) (<span class="id">gv</span>: <span class="id">globvar</span> <span class="id">unit</span>) `{<span class="id">Linker</span> <span class="id">F</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id">link</span> <span class="id">g</span> <span class="id">g0</span> = <span class="id">Some</span> (<span class="id">Gvar</span> <span class="id">gv</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">g</span> = <span class="id">Gvar</span> <span class="id">gv</span> \/ <span class="id">g0</span> = <span class="id">Gvar</span> <span class="id">gv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6796')">Proof.</div>
+<div class="proofscript" id="proof6796">
+&nbsp;&nbsp;<span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">link_def</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">link_vardef</span> <span class="kwd">in</span> *. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">bsimpl</span>; <span class="id">des</span>; <span class="id">des_sumbool</span>; <span class="tactic">rewrite</span> <span class="id">eqb_true_iff</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">gvar_info</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">v0</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">gvar_info</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">u</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">link_varinit</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Linker_def</span> <span class="id">Linker_vardef</span> <span class="id">Linker_varinit</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">link_skfundef</span> (<span class="id">fd1</span> <span class="id">fd2</span>: <span class="id">AST.fundef</span> <span class="id">signature</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fd1</span>, <span class="id">fd2</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">Internal</span> <span class="id">_</span>, <span class="id">Internal</span> <span class="id">_</span> =&gt; <span class="id">None</span><br/>
+&nbsp;&nbsp;| <span class="id">External</span> <span class="id">ef1</span>, <span class="id">External</span> <span class="id">ef2</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">ef1</span>, <span class="id">ef2</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">EF_external</span> <span class="id">_</span> <span class="id">sg1</span>, <span class="id">EF_external</span> <span class="id">_</span> <span class="id">sg2</span> =&gt; <span class="kwd">if</span> <span class="id">signature_eq</span> <span class="id">sg1</span> <span class="id">sg2</span> <span class="kwd">then</span> <span class="id">Some</span> (<span class="id">External</span> <span class="id">ef1</span>) <span class="kwd">else</span> <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="kwd">if</span> <span class="id">external_function_eq</span> <span class="id">ef1</span> <span class="id">ef2</span> <span class="kwd">then</span> <span class="id">Some</span> (<span class="id">External</span> <span class="id">ef1</span>) <span class="kwd">else</span> <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id">Internal</span> <span class="id">f</span>, <span class="id">External</span> <span class="id">ef</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">ef</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">EF_external</span> <span class="id">id</span> <span class="id">sg</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">signature_eq</span> <span class="id">f</span> <span class="id">sg</span> <span class="kwd">then</span> <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">f</span>) <span class="kwd">else</span> <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id">External</span> <span class="id">ef</span>, <span class="id">Internal</span> <span class="id">f</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">ef</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">EF_external</span> <span class="id">id</span> <span class="id">sg</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">signature_eq</span> <span class="id">f</span> <span class="id">sg</span> <span class="kwd">then</span> <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">f</span>) <span class="kwd">else</span> <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">linkorder_skfundef</span>: <span class="id">AST.fundef</span> <span class="id">signature</span> -&gt; <span class="id">AST.fundef</span> <span class="id">signature</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">linkorder_skfundef_refl</span>: <span class="kwd">forall</span> <span class="id">fd</span>, <span class="id">linkorder_skfundef</span> <span class="id">fd</span> <span class="id">fd</span><br/>
+&nbsp;&nbsp;| <span class="id">linkorder_fundef_ext_ext</span>: <span class="kwd">forall</span> <span class="id">name0</span> <span class="id">name1</span> <span class="id">sg</span>, <span class="id">linkorder_skfundef</span> (<span class="id">External</span> (<span class="id">EF_external</span> <span class="id">name0</span> <span class="id">sg</span>)) (<span class="id">External</span> (<span class="id">EF_external</span> <span class="id">name1</span> <span class="id">sg</span>))<br/>
+&nbsp;&nbsp;| <span class="id">linkorder_skfundef_ext_int</span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">sg</span>, <span class="id">linkorder_skfundef</span> (<span class="id">External</span> (<span class="id">EF_external</span> <span class="id">id</span> <span class="id">sg</span>)) (<span class="id">Internal</span> <span class="id">sg</span>).<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">Linker_skfundef</span>: <span class="id">Linker</span> (<span class="id">AST.fundef</span> <span class="id">signature</span>) :=<br/>
+{| <span class="id">link</span> := <span class="id">link_skfundef</span>;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">linkorder</span> := <span class="id">linkorder_skfundef</span>;<br/>
+|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6797')">Next Obligation.</div>
+<div class="proofscript" id="proof6797">
+ <span class="tactic">destruct</span> <span class="id">x</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6798')">Next Obligation.</div>
+<div class="proofscript" id="proof6798">
+ <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">econs</span>; <span class="id">et</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6799')">Next Obligation.</div>
+<div class="proofscript" id="proof6799">
+&nbsp;&nbsp;<span class="id">pose</span> <span class="id">x</span> <span class="kwd">as</span> <span class="id">X</span>. <span class="id">pose</span> <span class="id">y</span> <span class="kwd">as</span> <span class="id">Y</span>. <span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="id">econs</span>; <span class="id">et</span>).<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

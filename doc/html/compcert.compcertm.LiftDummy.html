@@ -1,0 +1,89 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module LiftDummy</title>
+<meta name="description" content="Documentation of Coq module LiftDummy" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module LiftDummy</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">FSets</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span> <span class="id">Ordered</span> <span class="id">Errors</span> <span class="id">Lattice</span> <span class="id">Kildall</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Linking</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span> <span class="id">Memory</span> <span class="id">Events</span> <span class="id">Globalenvs</span> <span class="id">SmallstepC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">LIFTDUMMY</span>.<br/>
+<br/>
+<span class="kwd">Context</span> {<span class="id">G</span> <span class="id">ST</span>: <span class="kwd">Type</span>}.<br/>
+<span class="kwd">Variable</span> <span class="id">step</span>: <span class="id">Senv.t</span> -&gt; <span class="id">G</span> -&gt; <span class="id">ST</span> -&gt; <span class="id">trace</span> -&gt; <span class="id">ST</span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">wf_tgt</span>: <span class="id">ST</span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">strong_wf_tgt</span>: <span class="id">ST</span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id">strong_wf_tgt_strong</span>: <span class="id">strong_wf_tgt</span> &lt;1= <span class="id">wf_tgt</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id">strong_wf_tgt_spec</span>: <span class="kwd">forall</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">st1</span> <span class="id">tr0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HSWF</span>: <span class="id">strong_wf_tgt</span> <span class="id">st0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HSTEP</span>: <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr0</span> <span class="id">st1</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">HSWF</span>: <span class="id">strong_wf_tgt</span> <span class="id">st1</span>&gt;&gt; \/ &lt;&lt;<span class="id">STUCK</span>: <span class="kwd">forall</span> <span class="id">tr1</span> <span class="id">st2</span> (<span class="id">HSTEP0</span>: <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st1</span> <span class="id">tr1</span> <span class="id">st2</span>), <span class="id">False</span>&gt;&gt;.<br/>
+<span class="kwd">Hypothesis</span> <span class="id">wf_tgt_strengthen</span>: <span class="kwd">forall</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HWF0</span>: <span class="id">strong_wf_tgt</span> <span class="id">st0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HSTEP</span>: <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HWF1</span>: <span class="id">wf_tgt</span> <span class="id">st1</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WFTGT1</span>: <span class="id">strong_wf_tgt</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">strong_wf_tgt_spec_starN</span>: <span class="kwd">forall</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">n</span> <span class="id">st0</span> <span class="id">st1</span> <span class="id">tr0</span> <span class="id">tr1</span> <span class="id">st2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr0</span> <span class="id">st1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">starN</span> (<span class="id">step</span>) <span class="id">se</span> <span class="id">ge</span> <span class="id">n</span> <span class="id">st1</span> <span class="id">tr1</span> <span class="id">st2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DUMMYTGT</span>: <span class="id">strong_wf_tgt</span> <span class="id">st0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STKAFTER</span>: <span class="id">wf_tgt</span> <span class="id">st2</span>) ,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WF</span>: <span class="id">strong_wf_tgt</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6339')">Proof.</div>
+<div class="proofscript" id="proof6339">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">exploit</span> <span class="id">strong_wf_tgt_spec</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">P</span>. <span class="tactic">destruct</span> <span class="id">n</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">STAR</span>. <span class="id">des</span>; <span class="id">ss</span>. <span class="tactic">eapply</span> <span class="id">wf_tgt_strengthen</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">ss</span>. <span class="id">exfalso</span>. <span class="id">inv</span> <span class="id">STAR</span>. <span class="tactic">eapply</span> <span class="id">STUCK</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Let</span> <span class="id">wf_step</span> (<span class="id">se</span>: <span class="id">Senv.t</span>) (<span class="id">ge</span>: <span class="id">G</span>) (<span class="id">st0</span>: <span class="id">ST</span>) (<span class="id">tr</span>: <span class="id">trace</span>) (<span class="id">st1</span>: <span class="id">ST</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span> /\ <span class="id">wf_tgt</span> <span class="id">st1</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">lift_starN</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cnt</span> <span class="id">tse</span> <span class="id">tge</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">starN</span> <span class="id">step</span> <span class="id">tse</span> <span class="id">tge</span> <span class="id">cnt</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DUMMYTGT</span>: <span class="id">strong_wf_tgt</span> <span class="id">st_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STKAFTER</span>: <span class="id">wf_tgt</span> <span class="id">st_tgt1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">starN</span> <span class="id">wf_step</span> <span class="id">tse</span> <span class="id">tge</span> <span class="id">cnt</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span>&gt;&gt; /\ &lt;&lt;<span class="id">DUMMYTGT</span>: <span class="id">strong_wf_tgt</span> <span class="id">st_tgt1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6340')">Proof.</div>
+<div class="proofscript" id="proof6340">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;<span class="id">pose</span> <span class="id">s</span> <span class="kwd">as</span> <span class="id">S1</span>. <span class="id">pose</span> <span class="id">s</span>' <span class="kwd">as</span> <span class="id">S2</span>. <span class="id">pose</span> <span class="id">s</span>'' <span class="kwd">as</span> <span class="id">S3</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">strong_wf_tgt_spec_starN</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">lift_plus</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se</span> <span class="id">ge</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">plus</span> <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DUMMYTGT</span>: <span class="id">strong_wf_tgt</span> <span class="id">st_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STKAFTER</span>: <span class="id">wf_tgt</span> <span class="id">st_tgt1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">plus</span> <span class="id">wf_step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span>&gt;&gt; /\ &lt;&lt;<span class="id">DUMMYTGT</span>: <span class="id">strong_wf_tgt</span> <span class="id">st_tgt1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6341')">Proof.</div>
+<div class="proofscript" id="proof6341">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">starN_plus_iff</span> <span class="kwd">in</span> <span class="id">PLUS</span>. <span class="id">des</span>. <span class="tactic">apply</span> <span class="id">lift_starN</span> <span class="kwd">in</span> <span class="id">PLUS</span>; <span class="id">et</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="id">et</span>. <span class="tactic">apply</span> <span class="id">starN_plus_iff</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">LIFTDUMMY</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

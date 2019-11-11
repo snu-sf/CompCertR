@@ -1,0 +1,296 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module UnusedglobproofC</title>
+<meta name="description" content="Documentation of Coq module UnusedglobproofC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module UnusedglobproofC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">FSets</span> <span class="id">CoqlibC</span> <span class="id">Maps</span> <span class="id">Ordered</span> <span class="id">Iteration</span> <span class="id">Errors</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Linking</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IntegersC</span> <span class="id">ValuesC</span> <span class="id">Memory</span> <span class="id">Globalenvs</span> <span class="id">Events</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Op</span> <span class="id">Registers</span> <span class="id">RTLC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Unusedglob</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimMemInj</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Unusedglobproof</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span> <span class="id">SimMod</span> <span class="id">SimModSem</span> <span class="id">SimSymb</span> <span class="id">SimMem</span> <span class="id">AsmregsC</span> <span class="id">MatchSimModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimMemInjC</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimSymbDrop</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SoundTop</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSemProps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">JunkBlock</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SIMMODSEM</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span>: <span class="id">SkEnv.t</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">sm_link</span>: <span class="id">SimMem.t</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">prog</span> <span class="id">tprog</span>: <span class="id">RTL.program</span>.<br/>
+<span class="kwd">Let</span> <span class="id">md_src</span>: <span class="id">Mod.t</span> := (<span class="id">RTLC.module</span> <span class="id">prog</span>).<br/>
+<span class="kwd">Let</span> <span class="id">md_tgt</span>: <span class="id">Mod.t</span> := (<span class="id">RTLC.module2</span> <span class="id">tprog</span>).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id">INCLSRC</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv_link_src</span> <span class="id">md_src</span>.(<span class="id">Mod.sk</span>)).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id">INCLTGT</span>: <span class="id">SkEnv.includes</span> <span class="id">skenv_link_tgt</span> <span class="id">md_tgt</span>.(<span class="id">Mod.sk</span>)).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id">WFSRC</span>: <span class="id">SkEnv.wf</span> <span class="id">skenv_link_src</span>).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id">WFTGT</span>: <span class="id">SkEnv.wf</span> <span class="id">skenv_link_tgt</span>).<br/>
+<span class="kwd">Hypothesis</span> <span class="id">TRANSL</span>: <span class="id">match_prog</span> <span class="id">prog</span> <span class="id">tprog</span>.<br/>
+<span class="kwd">Let</span> <span class="id">ge</span> := (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link_src</span> <span class="id">md_src</span>.(<span class="id">Mod.sk</span>)) <span class="id">prog</span>).<br/>
+<span class="kwd">Let</span> <span class="id">tge</span> := (<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link_tgt</span> <span class="id">md_tgt</span>.(<span class="id">Mod.sk</span>)) <span class="id">tprog</span>).<br/>
+<span class="kwd">Definition</span> <span class="id">msp</span>: <span class="id">ModSemPair.t</span> :=<br/>
+&nbsp;&nbsp;<span class="id">ModSemPair.mk</span> (<span class="id">md_src</span>.(<span class="id">Mod.modsem</span>) <span class="id">skenv_link_src</span>) (<span class="id">md_tgt</span>.(<span class="id">Mod.modsem</span>) <span class="id">skenv_link_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SimSymbDrop.mk</span> ((<span class="id">prog</span>.(<span class="id">defs</span>) -1 <span class="id">tprog</span>.(<span class="id">defs</span>) -1 (<span class="id">Pos.eq_dec</span> <span class="id">tprog</span>.(<span class="id">prog_main</span>))): <span class="id">ident</span> -&gt; <span class="kwd">Prop</span>) <span class="id">md_src</span> <span class="id">md_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm_link</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">match_states</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">idx</span>: <span class="id">nat</span>) (<span class="id">st_src0</span>: <span class="id">RTL.state</span>) (<span class="id">st_tgt0</span>: <span class="id">RTL.state</span>) (<span class="id">sm0</span>: <span class="id">SimMem.t</span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id">match_states_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCHST</span>: <span class="id">Unusedglobproof.match_states</span> <span class="id">prog</span> <span class="id">tprog</span> (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span> <span class="id">ge</span> <span class="id">tge</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">find_funct_inject</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">used</span> <span class="id">fptr</span> <span class="id">tfptr</span> <span class="id">fd</span> <span class="id">j</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMGE</span>: <span class="id">meminj_preserves_globals</span> <span class="id">prog</span> <span class="id">tprog</span> <span class="id">used</span> <span class="id">ge</span> <span class="id">tge</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDSRC</span>: <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">fptr</span> = <span class="id">Some</span> <span class="id">fd</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">fptr</span> <span class="id">tfptr</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">FINDTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">tge</span> <span class="id">tfptr</span> = <span class="id">Some</span> <span class="id">fd</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7234')">Proof.</div>
+<div class="proofscript" id="proof7234">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SIMGE</span>. <span class="id">uge0</span>. <span class="id">des_ifs_safe</span>. <span class="id">inv</span> <span class="id">INJ</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">defs_inject</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">psimpl</span>. <span class="id">des_ifs</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">sim_skenv_meminj_preserves_globals</span>: <span class="kwd">forall</span> <span class="id">sm_arg</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">SimSymbDrop.sim_skenv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm_arg</span> (<span class="id">SimSymbDrop.mk</span> ((<span class="id">prog</span>.(<span class="id">defs</span>) -1 <span class="id">tprog</span>.(<span class="id">defs</span>) -1 (<span class="id">Pos.eq_dec</span> <span class="id">tprog</span>.(<span class="id">prog_main</span>))): <span class="id">ident</span> -&gt; <span class="kwd">Prop</span>) <span class="id">md_src</span> <span class="id">md_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SkEnv.project</span> <span class="id">skenv_link_src</span> <span class="id">md_src</span>.(<span class="id">Mod.sk</span>)) (<span class="id">SkEnv.project</span> <span class="id">skenv_link_tgt</span> <span class="id">md_tgt</span>.(<span class="id">Mod.sk</span>))),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMGE</span>: <span class="id">meminj_preserves_globals</span> <span class="id">prog</span> <span class="id">tprog</span> (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">ge</span> <span class="id">tge</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm_arg</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7235')">Proof.</div>
+<div class="proofscript" id="proof7235">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">ss</span>. <span class="id">bar</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">TRANSL</span> <span class="kwd">as</span> [<span class="id">used0</span> <span class="id">TRANSL0</span>]. <span class="id">desH</span> <span class="id">TRANSL0</span>. <span class="id">clarify</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">exploit</span> <span class="id">SIMSYMB1</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">exploit</span> <span class="id">SIMSYMB2</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id">used_set</span>, <span class="id">defs</span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="id">des_sumbool</span>. <span class="id">align_bool</span>; <span class="id">bsimpl</span>. <span class="id">des_sumbool</span>. <span class="id">des</span>; <span class="id">clarify</span>. }<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">ge</span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="id">exploit</span> <span class="id">Genv_map_defs_def</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SIMDEF</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">psimpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">uo</span>. <span class="id">des_ifs_safe</span>. <span class="id">exploit</span> <span class="id">Genv.invert_find_symbol</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">SYMBSRC</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SIMSYMB1</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">psimpl</span>. <span class="id">clear_tac</span>. <span class="id">exploit</span> <span class="id">Genv.find_invert_symbol</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">SYMBTGT</span>; <span class="id">des</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">defs</span> <span class="id">prog</span> <span class="id">i</span>)); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">clear</span> - <span class="id">Heq1</span> <span class="id">H1</span>. <span class="id">contradict</span> <span class="id">H1</span>. <span class="tactic">unfold</span> <span class="id">defs</span> <span class="kwd">in</span> *. <span class="id">des_sumbool</span>. <span class="tactic">apply</span> <span class="id">prog_defmap_spec</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">KEPT0</span>: (<span class="id">defs</span> <span class="id">tprog</span> <span class="id">i</span> \/ <span class="id">Pos.eq_dec</span> (<span class="id">prog_main</span> <span class="id">tprog</span>) <span class="id">i</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">tauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">KEPT</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">IN</span>: (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">i</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">clarify</span>. <span class="tactic">unfold</span> <span class="id">used_set</span>. <span class="tactic">repeat</span> (<span class="id">des_sumbool</span>; <span class="id">des</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>). <span class="id">right</span>. <span class="tactic">unfold</span> <span class="id">defs</span> <span class="kwd">in</span> *. <span class="id">des_sumbool</span>; <span class="id">ss</span>. }<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">unfold</span> <span class="id">tge</span>, <span class="id">SkEnv.revive</span>. <span class="id">erewrite</span> <span class="id">Genv_map_defs_def_inv</span>; <span class="id">et</span>. <span class="id">uo</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs_safe</span>. <span class="id">erewrite</span> <span class="id">match_prog_def</span>; <span class="id">et</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">used_closed</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">tge</span>. <span class="id">i</span>. <span class="id">exploit</span> <span class="id">Genv_map_defs_def</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">uo</span>. <span class="id">des_ifs</span>. <span class="id">bsimpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SIMDEFINV</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">psimpl</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Genv.invert_find_symbol</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">SYMBTGT</span>; <span class="id">des</span>. <span class="id">exploit</span> <span class="id">SIMSYMB3</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Genv.find_invert_symbol</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">SYMBSRC</span>. <span class="id">esplits</span>; <span class="id">et</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">used_set</span> <span class="id">tprog</span> <span class="id">i</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">hexploit</span> (<span class="id">match_prog_def</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">TRANSL1</span> <span class="id">i</span>); <span class="id">et</span>. <span class="id">i</span>. <span class="id">des_ifs</span>. }<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SIMSYMB2</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">used_set</span> <span class="kwd">in</span> *. <span class="tactic">clear</span> - <span class="id">H1</span>. <span class="id">des_sumbool</span>. <span class="id">ii</span>. <span class="id">des</span>. <span class="id">align_bool</span>; <span class="id">bsimpl</span>. <span class="id">des_sumbool</span>. <span class="id">ss</span>. <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">defs</span> <span class="kwd">in</span> *. <span class="id">des_sumbool</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">clear_tac</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">blk_src</span> = <span class="id">b</span>) <span class="tactic">by</span> (<span class="tactic">eapply</span> <span class="id">DISJ</span>; <span class="id">et</span>). <span class="id">clarify</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">ge</span>. <span class="tactic">unfold</span> <span class="id">SkEnv.revive</span>. <span class="id">erewrite</span> <span class="id">Genv_map_defs_def_inv</span>; <span class="id">et</span>. <span class="id">uo</span>. <span class="id">des_ifs_safe</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">match_prog_def</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">TRANSL1</span> <span class="id">i</span>); <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">DEFMAP</span>. <span class="id">des_ifs</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id">SEGESRC</span>: <span class="id">senv_genv_compat</span> <span class="id">skenv_link_src</span> <span class="id">ge</span>. <span class="kwd">Proof</span>. <span class="tactic">eapply</span> <span class="id">SkEnv.senv_genv_compat</span>; <span class="id">et</span>. Qed.</div>
+<span class="kwd">Let</span> <span class="id">SEGETGT</span>: <span class="id">senv_genv_compat</span> <span class="id">skenv_link_tgt</span> <span class="id">tge</span>. <span class="kwd">Proof</span>. <span class="tactic">eapply</span> <span class="id">SkEnv.senv_genv_compat</span>; <span class="id">et</span>. Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">sim_modsem</span>: <span class="id">ModSemPair.sim</span> <span class="id">msp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7236')">Proof.</div>
+<div class="proofscript" id="proof7236">
+&nbsp;&nbsp;<span class="comment">(*&nbsp;rr&nbsp;in&nbsp;TRANSL.&nbsp;destruct&nbsp;TRANSL&nbsp;as&nbsp;[TRANSL0&nbsp;TRANSL1].&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">TRANSL</span> <span class="kwd">as</span> [<span class="id">used0</span> <span class="id">TRANSL0</span>]. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">match_states_sim</span> <span class="kwd">with</span> (<span class="id">match_states</span> := <span class="id">match_states</span>) (<span class="id">match_states_at</span> := <span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">eq</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sound_state</span> := <span class="id">SoundTop.sound_state</span>); <span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">instantiate</span> (1:= <span class="id">Nat.lt</span>). <span class="tactic">apply</span> <span class="id">lt_wf</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">SoundTop.sound_state_local_preservation</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;init&nbsp;bsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;destruct&nbsp;sm_arg;&nbsp;ss.&nbsp;clarify.&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INITTGT</span>. <span class="id">des</span>. <span class="id">inv</span> <span class="id">SAFESRC</span>. <span class="tactic">destruct</span> <span class="id">args_src</span>, <span class="id">args_tgt</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SIMARGS</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">SIMGE</span>: <span class="id">meminj_preserves_globals</span> <span class="id">prog</span> <span class="id">tprog</span> (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">ge</span> <span class="id">tge</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm_arg</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">sim_skenv_meminj_preserves_globals</span>; <span class="id">et</span>. <span class="tactic">apply</span> <span class="id">SIMSKENV</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="id">eexists</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SimMemInjC.inject_junk_blocks_tgt</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">P</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm1</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">TYP</span>. <span class="id">folder</span>. <span class="id">ss</span>. <span class="id">inv</span> <span class="id">TYP0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">find_funct_inject</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rpapply</span> <span class="id">match_states_call</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">ss</span>. <span class="tactic">eapply</span> <span class="id">SimSymbDrop.sim_skenv_symbols_inject</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">inv</span> <span class="id">MWF</span>. <span class="id">inv</span> <span class="id">SIMSKELINK</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">NBSRC</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">inv</span> <span class="id">MWF</span>. <span class="id">inv</span> <span class="id">SIMSKELINK</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">assign_junk_blocks_nextblock</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">NBTGT</span>. <span class="id">des_ifs</span>; <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">inject_list_typify_list</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">MWF0</span>. }<br/>
+&nbsp;&nbsp;- <span class="id">des</span>. <span class="id">inv</span> <span class="id">SAFESRC</span>. <span class="id">inv</span> <span class="id">SIMARGS</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">SIMGE</span>: <span class="id">meminj_preserves_globals</span> <span class="id">prog</span> <span class="id">tprog</span> (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">ge</span> <span class="id">tge</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm_arg</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">sim_skenv_meminj_preserves_globals</span>; <span class="id">et</span>. <span class="tactic">apply</span> <span class="id">SIMSKENV</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">find_funct_inject</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">TYP</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">et</span>. <span class="id">etrans</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">LEN</span>; <span class="id">et</span>. <span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id">inject_list_length</span>; <span class="id">et</span>. <span class="comment">(*&nbsp;TODO:&nbsp;add&nbsp;lemma&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">etrans</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">LEN</span>; <span class="id">et</span>. <span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id">inject_list_length</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;call&nbsp;wf&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">MATCHST</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;call&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">SIMGE</span>: <span class="id">meminj_preserves_globals</span> <span class="id">prog</span> <span class="id">tprog</span> (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">ge</span> <span class="id">tge</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">sim_skenv_meminj_preserves_globals</span>; <span class="id">et</span>. <span class="tactic">apply</span> <span class="id">SIMSKENV</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">CALLSRC</span>. <span class="id">inv</span> <span class="id">MATCHST</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">folder</span>. <span class="id">inv</span> <span class="id">MCOMPAT</span>; <span class="id">ss</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">FPTR</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">des</span>; <span class="id">ss</span>). <span class="id">ss</span>. <span class="tactic">destruct</span> (<span class="id">Ptrofs.eq_dec</span> <span class="id">ofs1</span> <span class="id">Ptrofs.zero</span>); <span class="id">clarify</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">des</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">folder</span>. <span class="id">ss</span>. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SIMGE</span>. <span class="id">uge0</span>. <span class="id">des_ifs_safe</span>. <span class="id">exploit</span> <span class="id">defs_rev_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">des_ifs_safe</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">clear</span> <span class="id">EXTERNAL</span>. <span class="id">des</span>. <span class="id">ss</span>. <span class="id">uge0</span>. <span class="id">des_ifs_safe</span>. <span class="id">psimpl</span>. <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">inv</span> <span class="id">SIMSKELINK</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SIMDEF</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">des_ifs</span>. <span class="id">esplits</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;after&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">SIMGE</span>: <span class="id">meminj_preserves_globals</span> <span class="id">prog</span> <span class="id">tprog</span> (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">ge</span> <span class="id">tge</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">sim_skenv_meminj_preserves_globals</span>; <span class="id">et</span>. <span class="tactic">apply</span> <span class="id">SIMSKENV</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">AFTERSRC</span>. <span class="id">inv</span> <span class="id">SIMRET</span>; <span class="id">ss</span>. <span class="id">exists</span> (<span class="id">SimMemInj.unlift</span>' <span class="id">sm_arg</span> <span class="id">sm_ret</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">MATCHST</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">HISTORY</span>. <span class="id">ss</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MLE0</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">MCOMPAT</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rpapply</span> <span class="id">match_states_return</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">match_stacks_bound</span>; <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span>. <span class="tactic">eapply</span> <span class="id">match_stacks_incr</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">inv</span> <span class="id">FROZEN</span>. <span class="id">exploit</span> <span class="id">NEW_IMPLIES_OUTSIDE</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">inject_typify</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">MWFAFTR</span>. }<br/>
+<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;final&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">inv</span> <span class="id">FINALSRC</span>; <span class="id">inv</span> <span class="id">MATCHST</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">STACKS</span>. <span class="id">inv</span> <span class="id">MCOMPAT</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eexists</span> <span class="id">sm0</span>. <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">refl</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;step&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">left</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">SIMGE</span>: <span class="id">meminj_preserves_globals</span> <span class="id">prog</span> <span class="id">tprog</span> (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">ge</span> <span class="id">tge</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">sim_skenv_meminj_preserves_globals</span>; <span class="id">et</span>. <span class="tactic">apply</span> <span class="id">SIMSKENV</span>. }<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">modsem_receptive</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (@<span class="id">step_simulation</span> <span class="id">prog</span> <span class="id">tprog</span> (<span class="id">used_set</span> <span class="id">tprog</span>) <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">left</span>. <span class="tactic">apply</span> <span class="id">plus_one</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">modsem2_determinate</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>; <span class="id">inv</span> <span class="id">MCOMPAT</span>; <span class="id">ss</span>.<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">econs</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SIMMODSEM</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SIMMOD</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">prog</span>: <span class="id">RTL.program</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">tprog</span>: <span class="id">RTL.program</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id">TRANSL</span>: <span class="id">match_prog</span> <span class="id">prog</span> <span class="id">tprog</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">mp</span>: <span class="id">ModPair.t</span> :=<br/>
+&nbsp;&nbsp;<span class="id">ModPair.mk</span> (<span class="id">RTLC.module</span> <span class="id">prog</span>) (<span class="id">RTLC.module2</span> <span class="id">tprog</span>) (<span class="id">SimSymbDrop.mk</span> ((<span class="id">prog</span>.(<span class="id">defs</span>) -1 <span class="id">tprog</span>.(<span class="id">defs</span>) -1 (<span class="id">Pos.eq_dec</span> <span class="id">tprog</span>.(<span class="id">prog_main</span>))): <span class="id">ident</span> -&gt; <span class="kwd">Prop</span>) (<span class="id">RTLC.module</span> <span class="id">prog</span>) (<span class="id">RTLC.module2</span> <span class="id">tprog</span>)).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">sim_mod</span>: <span class="id">ModPair.sim</span> <span class="id">mp</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7237')">Proof.</div>
+<div class="proofscript" id="proof7237">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">TRANSL</span> <span class="kwd">as</span> [<span class="id">used0</span> <span class="id">TRANSL0</span>]. <span class="id">desH</span> <span class="id">TRANSL0</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">i</span>. <span class="id">ss</span>. <span class="id">inv</span> <span class="id">TRANSL1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">match_prog_def</span> <span class="id">id</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">REL0</span> := (<span class="id">Sk.of_program_prog_defmap</span> <span class="id">prog</span> <span class="id">fn_sig</span> <span class="id">id</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">REL1</span> := (<span class="id">Sk.of_program_prog_defmap</span> <span class="id">tprog</span> <span class="id">fn_sig</span> <span class="id">id</span>)).<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">defs</span> <span class="id">prog</span> <span class="id">id</span>)); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> &lt;- (<span class="id">Sk.of_program_defs</span> <span class="id">fn_sig</span>) <span class="kwd">in</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">REL0</span>; <span class="id">align_opt</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">prog_defmap_image</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id">defs</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">align_bool</span>; <span class="id">bsimpl</span>. <span class="id">align_bool</span>. <span class="id">des_sumbool</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">fundef</span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> <span class="id">H1</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">REL1</span>; <span class="id">align_opt</span>; <span class="id">ss</span>; <span class="id">clarify</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">KEPT0</span>: <span class="id">defs</span> <span class="id">tprog</span> <span class="id">id</span> \/ <span class="id">Pos.eq_dec</span> (<span class="id">prog_main</span> <span class="id">tprog</span>) <span class="id">id</span>) <span class="tactic">by</span> <span class="tactic">tauto</span>. <span class="tactic">clear</span> <span class="id">KEPT</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">IN</span>: <span class="id">used_set</span> <span class="id">tprog</span> <span class="id">id</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">used_set</span>. <span class="id">des_sumbool</span>. <span class="id">ss</span>. <span class="id">des</span>; <span class="id">et</span>; <span class="id">bsimpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">right</span>. <span class="tactic">unfold</span> <span class="id">defs</span> <span class="kwd">in</span> *. <span class="id">des_sumbool</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">des_sumbool</span>. <span class="id">clarify</span>. <span class="tactic">tauto</span>. }<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>. <span class="tactic">unfold</span> <span class="id">fundef</span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> <span class="id">match_prog_def</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> (<span class="id">Sk.of_program_prog_defmap_eq</span> <span class="id">fn_sig</span> <span class="id">prog</span> <span class="id">tprog</span>) <span class="kwd">in</span> *; <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">i</span>. <span class="id">ss</span>. <span class="id">inv</span> <span class="id">TRANSL1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">match_prog_def</span> <span class="id">id</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">REL0</span> := (<span class="id">Sk.of_program_prog_defmap</span> <span class="id">prog</span> <span class="id">fn_sig</span> <span class="id">id</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">REL1</span> := (<span class="id">Sk.of_program_prog_defmap</span> <span class="id">tprog</span> <span class="id">fn_sig</span> <span class="id">id</span>)).<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="id">align_bool</span>; <span class="id">bsimpl</span>. <span class="id">align_bool</span>. <span class="id">des_sumbool</span>. <span class="id">inv</span> <span class="id">REL1</span>; <span class="id">ss</span>; <span class="id">align_opt</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- (<span class="id">Sk.of_program_defs</span> <span class="id">fn_sig</span>) <span class="kwd">in</span> <span class="id">DROP1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">prog_defmap_image</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id">defs</span> <span class="kwd">in</span> *; <span class="id">ss</span>. <span class="id">des_sumbool</span>. <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">privs</span>. <span class="id">bsimpl</span>. <span class="id">des</span>. <span class="id">bsimpl</span>. <span class="id">des_sumbool</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id">Sk.of_program_defs</span> <span class="id">fn_sig</span>). <span class="tactic">split</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">NW</span>. <span class="id">align_bool</span>; <span class="id">bsimpl</span>. <span class="id">des_sumbool</span>. <span class="id">ii</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">used_public</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">IN</span>. <span class="tactic">unfold</span> <span class="id">used_set</span>, <span class="id">defs</span> <span class="kwd">in</span> *. <span class="id">des_sumbool</span>. <span class="id">ss</span>. <span class="id">des</span>; <span class="id">clarify</span>; <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">TRANSL1</span>; <span class="id">ss</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">TRANSL1</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ii</span>. <span class="id">des</span>. <span class="id">inv</span> <span class="id">TRANSL0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">PROG0</span>: (<span class="id">prog_defmap</span> <span class="id">tprog</span>) ! <span class="id">id</span> = <span class="id">Some</span> (<span class="id">Gvar</span> <span class="id">gv</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">generalize</span> (<span class="id">Sk.of_program_prog_defmap</span> <span class="id">tprog</span> <span class="id">fn_sig</span> <span class="id">id</span>). <span class="tactic">intro</span> <span class="id">REL</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;TODO:&nbsp;make&nbsp;lemma!!!!!!!!!!!!!!!!!!!&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">REL</span>; <span class="tactic">try</span> <span class="tactic">congruence</span>. <span class="tactic">rewrite</span> <span class="id">PROG</span> <span class="kwd">in</span> *. <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">inv</span> <span class="id">H4</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">i1</span>, <span class="id">i2</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TRANSL1</span>. <span class="tactic">rewrite</span> <span class="id">match_prog_def</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (<span class="id">used_closed</span> <span class="id">id</span>); <span class="id">et</span>. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">used_defined</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">prog_defmap_dom</span>; <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">specialize</span> (<span class="id">match_prog_def</span> <span class="id">id_drop</span>). <span class="id">des_ifs</span>. <span class="tactic">rewrite</span> <span class="id">H2</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">defs</span> <span class="kwd">in</span> <span class="id">DROP1</span>. <span class="tactic">apply</span> <span class="id">DROP1</span>. <span class="id">des_sumbool</span>. <span class="tactic">eapply</span> <span class="id">prog_defmap_image</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">clarify</span>. <span class="tactic">apply</span> <span class="id">DROP0</span>. <span class="id">des_sumbool</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">TRANSL1</span>. <span class="tactic">eapply</span> <span class="id">NoDup_norepet</span>; <span class="id">et</span>. <span class="tactic">rewrite</span> <span class="id">Sk.of_program_defs_names</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ii</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id">H0</span>. <span class="id">des_sumbool</span>. <span class="id">inv</span> <span class="id">TRANSL1</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">sim_modsem</span>; <span class="tactic">eauto</span>.<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SIMMOD</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

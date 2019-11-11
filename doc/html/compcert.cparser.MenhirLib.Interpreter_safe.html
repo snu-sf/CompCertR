@@ -1,0 +1,303 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Interpreter_safe</title>
+<meta name="description" content="Documentation of Coq module Interpreter_safe" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Interpreter_safe</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.Streams.html">Streams</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Program.Equality.html">Equality</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html">Alphabet</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Grammar</span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cparser.MenhirLib.Automaton.html">Automaton</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cparser.MenhirLib.Validator_safe.html">Validator_safe</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter.html">Interpreter</a></span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Make">Make</a></span>(<span class="kwd">Import</span> <span class="id">A</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Automaton.html#T">Automaton.T</a></span>) (<span class="kwd">Import</span> <span class="id">Inter</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter.html#T">Interpreter.T</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A">A</a></span>).<br/>
+<span class="kwd">Module</span> <span class="kwd">Import</span> <span class="id"><a name="Make.Valid">Valid</a></span> := <span class="id"><a href="compcert.cparser.MenhirLib.Validator_safe.html#Make">Validator_safe.Make</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A">A</a></span>.<br/>
+<br/>
+<h1> A correct automaton does not crash *</h1>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Make.Safety_proof">Safety_proof</a></span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="Make.Safety_proof.safe">safe</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.safe">safe</a></span>.<br/>
+<br/>
+<span class="id">Proposition</span> <span class="id"><a name="Make.shift_head_symbs">shift_head_symbs</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.shift_head_symbs">shift_head_symbs</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6018')">Proof.</div>
+<div class="proofscript" id="proof6018">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.safe">safe</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.safe">Valid.safe</a></span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<span class="id">Proposition</span> <span class="id"><a name="Make.goto_head_symbs">goto_head_symbs</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.goto_head_symbs">goto_head_symbs</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6019')">Proof.</div>
+<div class="proofscript" id="proof6019">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.safe">safe</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.safe">Valid.safe</a></span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<span class="id">Proposition</span> <span class="id"><a name="Make.shift_past_state">shift_past_state</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.shift_past_state">shift_past_state</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6020')">Proof.</div>
+<div class="proofscript" id="proof6020">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.safe">safe</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.safe">Valid.safe</a></span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<span class="id">Proposition</span> <span class="id"><a name="Make.goto_past_state">goto_past_state</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.goto_past_state">goto_past_state</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6021')">Proof.</div>
+<div class="proofscript" id="proof6021">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.safe">safe</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.safe">Valid.safe</a></span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<span class="id">Proposition</span> <span class="id"><a name="Make.reduce_ok">reduce_ok</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.reduce_ok">reduce_ok</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6022')">Proof.</div>
+<div class="proofscript" id="proof6022">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.safe">safe</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.safe">Valid.safe</a></span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<br/>
+<div class="doc">We prove that a correct automaton won't crash : the interpreter will
+    not return <span class="bracket"><span class="id">Err</span></span> *</div>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="Make.Safety_proof.init">init</a></span> : <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.initstate">initstate</a></span>.<br/>
+<br/>
+<div class="doc">The stack of states of an automaton stack *</div>
+<span class="kwd">Definition</span> <span class="id"><a name="Make.state_stack_of_stack">state_stack_of_stack</a></span> (<span class="id">stack</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.stack">stack</a></span>) :=<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">cell</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#sigT">sigT</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.noninitstate_type">noninitstate_type</a></span> =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.singleton_state_pred">singleton_state_pred</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#projT1">projT1</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#cell">cell</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span> ++ [<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.singleton_state_pred">singleton_state_pred</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span>])%<span class="id">list</span>.<br/>
+<br/>
+<div class="doc">The stack of symbols of an automaton stack *</div>
+<span class="kwd">Definition</span> <span class="id"><a name="Make.symb_stack_of_stack">symb_stack_of_stack</a></span> (<span class="id">stack</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.stack">stack</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">cell</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#sigT">sigT</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.noninitstate_type">noninitstate_type</a></span> =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.last_symb_of_non_init_state">last_symb_of_non_init_state</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#projT1">projT1</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#cell">cell</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span>.<br/>
+<br/>
+<div class="doc">The stack invariant : it basically states that the assumptions on the
+    states are true. *</div>
+<span class="kwd">Inductive</span> <span class="id"><a name="Make.stack_invariant">stack_invariant</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.stack">stack</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Make.stack_invariant_constr">stack_invariant_constr</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">stack</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix">prefix</a></span>      (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.head_symbs_of_state">head_symbs_of_state</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.symb_stack_of_stack">symb_stack_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_pred">prefix_pred</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.head_states_of_state">head_states_of_state</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.state_stack_of_stack">state_stack_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_invariant_next">stack_invariant_next</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_invariant">stack_invariant</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span><br/>
+<span class="kwd">with</span> <span class="id"><a name="Make.stack_invariant_next">stack_invariant_next</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.stack">stack</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Make.stack_invariant_next_nil">stack_invariant_next_nil</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_invariant_next">stack_invariant_next</a></span> []<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Make.stack_invariant_next_cons">stack_invariant_next_cons</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">state_cur</span> <span class="id">st</span> <span class="id">stack_rec</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_invariant">stack_invariant</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_rec">stack_rec</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_invariant_next">stack_invariant_next</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#existT">existT</a></span> <span class="id">_</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#state_cur">state_cur</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#st">st</a></span>::<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_rec">stack_rec</a></span>).<br/>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">pop</span></span> conserves the stack invariant and does not crash
+     under the assumption that we can pop at this place.
+     Moreover, after a pop, the top state of the stack is allowed. *</div>
+<span class="kwd">Lemma</span> <span class="id"><a name="Make.pop_stack_invariant_conserved">pop_stack_invariant_conserved</a></span><br/>
+&nbsp;&nbsp;(<span class="id">symbols_to_pop</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.Gram.symbol">symbol</a></span>) (<span class="id">stack_cur</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.stack">stack</a></span>) <span class="id">A</span> <span class="id">action</span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.stack_invariant">stack_invariant</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_cur">stack_cur</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix">prefix</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#symbols_to_pop">symbols_to_pop</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.head_symbs_of_state">head_symbs_of_state</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_cur">stack_cur</a></span>)) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.pop">pop</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#symbols_to_pop">symbols_to_pop</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_cur">stack_cur</a></span> (<span class="id">A</span>:=<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A">A</a></span>) <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#action">action</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.OK">OK</a></span> (<span class="id">stack_new</span>, <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.stack_invariant">stack_invariant</a></span> <span class="id">stack_new</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.state_valid_after_pop">state_valid_after_pop</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack_new</span>) <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#symbols_to_pop">symbols_to_pop</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.head_states_of_state">head_states_of_state</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack_cur">stack_cur</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Err">Err</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6023')">Proof with</div>
+<div class="proofscript" id="proof6023">
+ <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">pose</span> <span class="id">proof</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">H</span> <span class="id">H0</span> <span class="id">H1</span> <span class="id">H2</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.head_symbs_of_state">head_symbs_of_state</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack0</span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.head_states_of_state">head_states_of_state</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack0</span>)).<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">stack0</span> <span class="id">A</span> <span class="id">action</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">symbols_to_pop</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">split</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H2</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">H7</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack0</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">f2</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack0</span>)) <span class="kwd">as</span> [] <span class="id">eqn</span>:? ...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">stack0</span> <span class="kwd">as</span> [|[]]; <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">H6</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.singleton_state_pred">singleton_state_pred</a></span> <span class="kwd">in</span> <span class="id">Heqb0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_refl">compare_refl</a></span> <span class="kwd">in</span> <span class="id">Heqb0</span>; <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">H6</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.singleton_state_pred">singleton_state_pred</a></span> <span class="kwd">in</span> <span class="id">Heqb0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_refl">compare_refl</a></span> <span class="kwd">in</span> <span class="id">Heqb0</span>; <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">stack0</span> <span class="kwd">as</span> [|[]]; <span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.pop">pop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">fold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.pop">pop</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_eqdec">compare_eqdec</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.last_symb_of_non_init_state">last_symb_of_non_init_state</a></span> <span class="id">x</span>) <span class="id">a</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>. <span class="tactic">clear</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>. <span class="tactic">clear</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">dependent</span> <span class="tactic">destruction</span> <span class="id">H3</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_pred">prefix_pred</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">List.tl</a></span> <span class="id">l</span>) (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.state_stack_of_stack">state_stack_of_stack</a></span> <span class="id">stack0</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#tl">tl</a></span>; <span class="tactic">destruct</span> <span class="id">l</span>; [<span class="id">constructor</span> | <span class="tactic">inversion</span> <span class="id">H2</span>]...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pose</span> <span class="id">proof</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">IHsymbols_to_pop</span> <span class="id">stack0</span> <span class="id">A</span> (<span class="id">action0</span> <span class="id">n</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">H4</span> <span class="id">H7</span> <span class="id">H</span> <span class="id">H0</span> <span class="id">H6</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">IHsymbols_to_pop</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fold</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.noninitstate_type">noninitstate_type</a></span> <span class="id">x</span>); <span class="tactic">generalize</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.pop">pop</a></span> <span class="id">symbols_to_pop</span> <span class="id">stack0</span> (<span class="id">action0</span> <span class="id">n</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">r</span> <span class="kwd">as</span> [|[]]; <span class="tactic">intuition</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="id">constructor</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">n0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>...<br/>
+Qed.</div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">prefix</span></span> is associative *</div>
+<span class="kwd">Lemma</span> <span class="id"><a name="Make.prefix_ass">prefix_ass</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">l1</span> <span class="id">l2</span> <span class="id">l3</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.Gram.symbol">symbol</a></span>), <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix">prefix</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l1">l1</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l2">l2</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix">prefix</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l2">l2</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l3">l3</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix">prefix</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l1">l1</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l3">l3</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6024')">Proof.</div>
+<div class="proofscript" id="proof6024">
+<span class="tactic">induction</span> <span class="id">l1</span>; <span class="tactic">intros</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+<span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">prefix_pred</span></span> is associative *</div>
+<span class="kwd">Lemma</span> <span class="id"><a name="Make.prefix_pred_ass">prefix_pred_ass</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">l1</span> <span class="id">l2</span> <span class="id">l3</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.state">state</a></span>-&gt;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>)),<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_pred">prefix_pred</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l1">l1</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l2">l2</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_pred">prefix_pred</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l2">l2</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l3">l3</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_pred">prefix_pred</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l1">l1</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#l3">l3</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6025')">Proof.</div>
+<div class="proofscript" id="proof6025">
+<span class="tactic">induction</span> <span class="id">l1</span>; <span class="tactic">intros</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+<span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+<span class="tactic">intro</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H3</span> <span class="id">x</span>).<br/>
+<span class="id">specialize</span> (<span class="id">H4</span> <span class="id">x</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id">f0</span> <span class="id">x</span>); <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H4</span> <span class="kwd">in</span> <span class="id">H3</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If we have the right to reduce at this state, then the stack invariant
+   is conserved by <span class="bracket"><span class="id">reduce_step</span></span> and <span class="bracket"><span class="id">reduce_step</span></span> does not crash. *</div>
+<span class="kwd">Lemma</span> <span class="id"><a name="Make.reduce_step_stack_invariant_conserved">reduce_step_stack_invariant_conserved</a></span> <span class="id">stack</span> <span class="id">prod</span> <span class="id">buff</span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.stack_invariant">stack_invariant</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.valid_for_reduce">valid_for_reduce</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span>) <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#prod">prod</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.reduce_step">reduce_step</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#prod">prod</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#buff">buff</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.OK">OK</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Fail_sr">Fail_sr</a></span> | <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Accept_sr">Accept_sr</a></span> <span class="id">_</span> <span class="id">_</span>) =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.OK">OK</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Progress_sr">Progress_sr</a></span> <span class="id">stack_new</span> <span class="id">_</span>) =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.stack_invariant">stack_invariant</a></span> <span class="id">stack_new</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Err">Err</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6026')">Proof with</div>
+<div class="proofscript" id="proof6026">
+ <span class="tactic">eauto</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.valid_for_reduce">valid_for_reduce</a></span>.<br/>
+<span class="tactic">intuition</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.reduce_step">reduce_step</a></span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.pop_stack_invariant_conserved">pop_stack_invariant_conserved</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.Gram.prod_rhs_rev">prod_rhs_rev</a></span> <span class="id">prod</span>) <span class="id">stack</span> <span class="id">_</span> (<span class="id">prod_action</span>' <span class="id">prod</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.pop">pop</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.Gram.prod_rhs_rev">prod_rhs_rev</a></span> <span class="id">prod</span>) <span class="id">stack</span> (<span class="id">prod_action</span>' <span class="id">prod</span>)) <span class="kwd">as</span> [|[]].<br/>
+<span class="tactic">apply</span> <span class="id">H0</span>...<br/>
+<span class="tactic">destruct</span> <span class="id">H0</span>...<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.goto_head_symbs">goto_head_symbs</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">s</span>) (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.Gram.prod_lhs">prod_lhs</a></span> <span class="id">prod</span>)).<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.goto_past_state">goto_past_state</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">s</span>) (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.Gram.prod_lhs">prod_lhs</a></span> <span class="id">prod</span>)).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.bind2">bind2</a></span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H0</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H2</span> <span class="id">_</span> <span class="id">H3</span>)...<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.goto_table">goto_table</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack0</span>) (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.Gram.prod_lhs">prod_lhs</a></span> <span class="id">prod</span>)) <span class="kwd">as</span> [[]|].<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_ass">prefix_ass</a></span>...<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.state_stack_of_stack">state_stack_of_stack</a></span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+<span class="tactic">intro</span>; <span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.singleton_state_pred">singleton_state_pred</a></span> <span class="id">x</span> <span class="id">x0</span>); <span class="tactic">reflexivity</span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_pred_ass">prefix_pred_ass</a></span>...<br/>
+<span class="id">constructor</span>...<br/>
+<span class="id">constructor</span>...<br/>
+<span class="tactic">destruct</span> <span class="id">stack0</span> <span class="kwd">as</span> [|[]]...<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_eqdec">compare_eqdec</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.Gram.prod_lhs">prod_lhs</a></span> <span class="id">prod</span>) (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.start_nt">start_nt</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span>))...<br/>
+<span class="tactic">apply</span> <span class="id">n</span>, <span class="id">H2</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_refl">eq_refl</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id">H2</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_refl">eq_refl</a></span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If the automaton is safe, then the stack invariant is conserved by
+    <span class="bracket"><span class="id">step</span></span> and <span class="bracket"><span class="id">step</span></span> does not crash. *</div>
+<span class="kwd">Lemma</span> <span class="id"><a name="Make.step_stack_invariant_conserved">step_stack_invariant_conserved</a></span> (<span class="id">stack</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.stack">stack</a></span>) <span class="id">buffer</span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.stack_invariant">stack_invariant</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.step">step</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#stack">stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#buffer">buffer</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.OK">OK</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Fail_sr">Fail_sr</a></span> | <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Accept_sr">Accept_sr</a></span> <span class="id">_</span> <span class="id">_</span>) =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.OK">OK</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Progress_sr">Progress_sr</a></span> <span class="id">stack_new</span> <span class="id">_</span>) =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.stack_invariant">stack_invariant</a></span> <span class="id">stack_new</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Err">Err</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6027')">Proof with</div>
+<div class="proofscript" id="proof6027">
+ <span class="tactic">eauto</span>.<br/>
+<span class="tactic">intro</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.step">step</a></span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.shift_head_symbs">shift_head_symbs</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack</span>)).<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.shift_past_state">shift_past_state</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack</span>)).<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.reduce_ok">reduce_ok</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.action_table">action_table</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">stack</span>)).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.reduce_step_stack_invariant_conserved">reduce_step_stack_invariant_conserved</a></span>...<br/>
+<span class="tactic">destruct</span> <span class="id">buffer</span> <span class="kwd">as</span> [[]]; <span class="tactic">simpl</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H0</span> <span class="id">x</span>); <span class="id">specialize</span> (<span class="id">H1</span> <span class="id">x</span>); <span class="id">specialize</span> (<span class="id">H2</span> <span class="id">x</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id">l</span> <span class="id">x</span>)...<br/>
+<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.state_of_stack">state_of_stack</a></span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_ass">prefix_ass</a></span>...<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.state_stack_of_stack">state_stack_of_stack</a></span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+<span class="tactic">intro</span>; <span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.singleton_state_pred">singleton_state_pred</a></span> <span class="id">s0</span> <span class="id">x0</span>)...<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.prefix_pred_ass">prefix_pred_ass</a></span>...<br/>
+<span class="id">constructor</span>...<br/>
+<span class="id">constructor</span>...<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.reduce_step_stack_invariant_conserved">reduce_step_stack_invariant_conserved</a></span>...<br/>
+Qed.</div>
+<br/>
+<div class="doc">If the automaton is safe, then it does not crash *</div>
+<span class="kwd">Theorem</span> <span class="id"><a name="Make.parse_no_err">parse_no_err</a></span> <span class="id">buffer</span> <span class="id">n_steps</span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.parse">parse</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#buffer">buffer</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#n_steps">n_steps</a></span> &lt;&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.Err">Err</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6028')">Proof with</div>
+<div class="proofscript" id="proof6028">
+ <span class="tactic">eauto</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.parse">parse</a></span>.<br/>
+<span class="tactic">assert</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.stack_invariant">stack_invariant</a></span> []).<br/>
+<span class="id">constructor</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.state_stack_of_stack">state_stack_of_stack</a></span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+<span class="tactic">intro</span>; <span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.singleton_state_pred">singleton_state_pred</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">x</span>)...<br/>
+<span class="id">constructor</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="id">revert</span> <span class="id">H</span>.<br/>
+<span class="tactic">generalize</span> <span class="id">buffer</span> ([]:<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.stack">stack</a></span>).<br/>
+<span class="tactic">induction</span> <span class="id">n_steps</span>; <span class="tactic">simpl</span>.<br/>
+<span class="id">now</span> <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.step_stack_invariant_conserved">step_stack_invariant_conserved</a></span> <span class="id">s</span> <span class="id">buffer0</span> <span class="id">H</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.step">step</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">s</span> <span class="id">buffer0</span>) <span class="kwd">as</span> [|[]]; <span class="tactic">simpl</span>...<br/>
+<span class="tactic">discriminate</span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">A version of <span class="bracket"><span class="id">parse</span></span> that uses safeness in order to return a
+   <span class="bracket"><span class="id">parse_result</span></span>, and not a <span class="bracket"><span class="id">result</span> <span class="id">parse_result</span></span> : we have proven that
+   parsing does not return <span class="bracket"><span class="id">Err</span></span>. *</div>
+<span class="kwd">Definition</span> <span class="id"><a name="Make.parse_with_safe">parse_with_safe</a></span> (<span class="id">buffer</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.Streams.html#Stream">Stream</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#A.GramDefs.token">token</a></span>) (<span class="id">n_steps</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>):<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.parse_result">parse_result</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6029')">Proof with</div>
+<div class="proofscript" id="proof6029">
+ <span class="tactic">eauto</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.parse_no_err">parse_no_err</a></span> <span class="id">buffer</span> <span class="id">n_steps</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Inter.parse">parse</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof.init">init</a></span> <span class="id">buffer</span> <span class="id">n_steps</span>)...<br/>
+<span class="tactic">congruence</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make.Safety_proof">Safety_proof</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.cparser.MenhirLib.Interpreter_safe.html#Make">Make</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

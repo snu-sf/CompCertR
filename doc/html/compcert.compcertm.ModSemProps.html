@@ -1,0 +1,346 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module ModSemProps</title>
+<meta name="description" content="Documentation of Coq module ModSemProps" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module ModSemProps</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">EventsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="id">From</span> <span class="id">Paco</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">paco</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSem</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">spread_dstar</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="kwd">forall</span> <span class="id">st0</span>, <span class="id">determinate_at</span> <span class="id">ms</span> <span class="id">st0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DSTAR</span>: <span class="id">DStar</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6063')">Proof.</div>
+<div class="proofscript" id="proof6063">
+ <span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">spread_dplus</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="kwd">forall</span> <span class="id">st0</span>, <span class="id">determinate_at</span> <span class="id">ms</span> <span class="id">st0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DPLUS</span>: <span class="id">DPlus</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6064')">Proof.</div>
+<div class="proofscript" id="proof6064">
+ <span class="id">inv</span> <span class="id">PLUS</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">spread_dstar</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">at_external_receptive_at</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms_src</span> <span class="id">lst_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id">ModSem.is_call</span> <span class="id">ms_src</span> <span class="id">lst_src</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">receptive_at</span> <span class="id">ms_src</span> <span class="id">lst_src</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6065')">Proof.</div>
+<div class="proofscript" id="proof6065">
+ <span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ModSem.tac</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">at_external_determinate_at</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms_src</span> <span class="id">lst_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id">ModSem.is_call</span> <span class="id">ms_src</span> <span class="id">lst_src</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">determinate_at</span> <span class="id">ms_src</span> <span class="id">lst_src</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6066')">Proof.</div>
+<div class="proofscript" id="proof6066">
+ <span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ModSem.tac</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">final_frame_receptive_at</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms_src</span> <span class="id">lst_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id">ModSem.is_return</span> <span class="id">ms_src</span> <span class="id">lst_src</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">receptive_at</span> <span class="id">ms_src</span> <span class="id">lst_src</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6067')">Proof.</div>
+<div class="proofscript" id="proof6067">
+ <span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ModSem.tac</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">final_frame_determinate_at</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms_src</span> <span class="id">lst_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id">ModSem.is_return</span> <span class="id">ms_src</span> <span class="id">lst_src</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">determinate_at</span> <span class="id">ms_src</span> <span class="id">lst_src</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6068')">Proof.</div>
+<div class="proofscript" id="proof6068">
+ <span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ModSem.tac</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">atomic_step_continue_star</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_trace</span> <span class="id">tr</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Star</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) (<span class="id">tr</span>, <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st0</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6069')">Proof.</div>
+<div class="proofscript" id="proof6069">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">tr</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">IHtr</span>; <span class="tactic">eauto</span>. <span class="id">des</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">step_atomic_step</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">Step</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Plus</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6070')">Proof.</div>
+<div class="proofscript" id="proof6070">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">tr</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">plus_one</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">s</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">swap</span> 2 3.<br/>
+&nbsp;&nbsp;{ <span class="id">econs</span> 2; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">WBT</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">ss</span>. <span class="id">hexploit</span> <span class="id">atomic_step_continue_star</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">star_atomic_star</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">Star</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6071')">Proof.</div>
+<div class="proofscript" id="proof6071">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">star_trans</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">step_atomic_step</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">plus_star</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">plus_atomic_plus</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">Plus</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6072')">Proof.</div>
+<div class="proofscript" id="proof6072">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>. <span class="tactic">eapply</span> <span class="id">plus_star_trans</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">step_atomic_step</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">star_atomic_star</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">determ_atomic_determ</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="id">determinate_at</span> <span class="id">ms</span> <span class="id">st0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_trace</span> <span class="id">tr</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DTM</span>: <span class="id">determinate_at</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) (<span class="id">tr</span>, <span class="id">st0</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6073')">Proof.</div>
+<div class="proofscript" id="proof6073">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">DTM</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>; <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;- <span class="id">determ_tac</span> <span class="id">sd_determ_at</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="id">determ_tac</span> <span class="id">sd_determ_at</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="id">determ_tac</span> <span class="id">sd_determ_at</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;- <span class="id">determ_tac</span> <span class="id">sd_determ_at</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id">H0</span>; <span class="id">inv</span> <span class="id">H</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">ev</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">output_trace_determinate_at</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ev</span> <span class="id">tr</span> <span class="id">st0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_event</span> <span class="id">ev</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">determinate_at</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) (<span class="id">ev</span> :: <span class="id">tr</span>, <span class="id">st0</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6074')">Proof.</div>
+<div class="proofscript" id="proof6074">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">split</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">ev</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">atomic_dstep_continue_dstar</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_trace</span> <span class="id">tr</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">DStar</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) (<span class="id">tr</span>, <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st0</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6075')">Proof.</div>
+<div class="proofscript" id="proof6075">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">tr</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="comment">(*&nbsp;exploit&nbsp;determ_atomic_determ;&nbsp;eauto.&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="comment">(*&nbsp;{&nbsp;instantiate&nbsp;(1:=&nbsp;[]).&nbsp;ss.&nbsp;}&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="comment">(*&nbsp;intro&nbsp;DTM0;&nbsp;des.&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">output_trace_determinate_at</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">IHtr</span>; <span class="tactic">eauto</span>. <span class="id">des</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">dstep_atomic_dstep</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">DStep</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">DPlus</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6076')">Proof.</div>
+<div class="proofscript" id="proof6076">
+&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">STEP</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">determ_atomic_determ</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:= []). <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">DTM</span>; <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">tr</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">plus_one</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">s</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">swap</span> 2 3.<br/>
+&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="tactic">split</span>; <span class="id">ss</span>. <span class="id">instantiate</span> (1:= (<span class="id">_</span>, <span class="id">_</span>)). <span class="id">econs</span> 2; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">atomic_dstep_continue_dstar</span>; <span class="tactic">eauto</span>. <span class="id">exploit</span> <span class="id">WBT</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">dstar_atomic_dstar</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">DStar</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">DStar</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6077')">Proof.</div>
+<div class="proofscript" id="proof6077">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">star_trans</span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id">plus_star</span>. <span class="id">exploit</span> <span class="id">dstep_atomic_dstep</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">dplus_atomic_dplus</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">DPlus</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">DPlus</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6078')">Proof.</div>
+<div class="proofscript" id="proof6078">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>. <span class="tactic">eapply</span> <span class="id">plus_star_trans</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">dstep_atomic_dstep</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">dstar_atomic_dstar</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">atomic_single_events_at</span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id">ModSem.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SINGLE</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id">single_events_at</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>) <span class="id">st</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6079')">Proof.</div>
+<div class="proofscript" id="proof6079">
+ <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>. <span class="id">xomega</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">atomic_single_evnents</span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id">ModSem.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SINGLE</span>: <span class="id">single_events</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6080')">Proof.</div>
+<div class="proofscript" id="proof6080">
+ <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>. <span class="id">xomega</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">atomic_receptive_at</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SSR</span>: <span class="id">strongly_receptive_at</span> <span class="id">ms</span> <span class="id">st0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="kwd">forall</span> <span class="id">tr</span>, <span class="id">receptive_at</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>) (<span class="id">tr</span>, <span class="id">st0</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6081')">Proof.</div>
+<div class="proofscript" id="proof6081">
+&nbsp;&nbsp;<span class="tactic">generalize</span> (@<span class="id">atomic_single_evnents</span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SSR</span>. <span class="id">econs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SINGLE</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">LEN</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="tactic">destruct</span> <span class="id">t2</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H0</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">t2</span>; <span class="id">ss</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H0</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">ssr_receptive_at</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">instantiate</span> (1:= (<span class="id">_</span>, <span class="id">_</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">e0</span> = <span class="id">e</span>) <span class="tactic">by</span> (<span class="id">des</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>). <span class="id">clarify</span>. <span class="id">econs</span> 3; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">atomic_single_events_at</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">atomic_receptive_at_nonnil</span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id">ModSem.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="kwd">forall</span> <span class="id">st0</span> <span class="id">ev</span> <span class="id">tr</span>, <span class="id">receptive_at</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>) (<span class="id">ev</span> :: <span class="id">tr</span>, <span class="id">st0</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6082')">Proof.</div>
+<div class="proofscript" id="proof6082">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">generalize</span> (@<span class="id">atomic_single_evnents</span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>. <span class="id">ii</span>. <span class="id">econs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SINGLE</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">LEN</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="tactic">destruct</span> <span class="id">t2</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H0</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">t2</span>; <span class="id">ss</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H0</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>. <span class="id">des</span>. <span class="tactic">assert</span>(<span class="id">e</span> = <span class="id">e0</span>). { <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>. } <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">atomic_single_events_at</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">atomic_receptive</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SSR</span>: <span class="id">strongly_receptive</span> <span class="id">ms</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">receptive</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6083')">Proof.</div>
+<div class="proofscript" id="proof6083">
+&nbsp;&nbsp;<span class="tactic">generalize</span> (@<span class="id">atomic_single_evnents</span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SSR</span>. <span class="id">econs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SINGLE</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">LEN</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">t2</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H0</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">t2</span>; <span class="id">ss</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H0</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">ssr_receptive</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">instantiate</span> (1:= (<span class="id">_</span>, <span class="id">_</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">e0</span> = <span class="id">e</span>) <span class="tactic">by</span> (<span class="id">des</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>). <span class="id">clarify</span>. <span class="id">econs</span> 3; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;}<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">DStep_Step</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">DStep</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Step</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6084')">Proof.</div>
+<div class="proofscript" id="proof6084">
+ <span class="id">rr</span> <span class="kwd">in</span> <span class="id">STEP</span>. <span class="id">des</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">DStar_Star</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">DStar</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6085')">Proof.</div>
+<div class="proofscript" id="proof6085">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">star_refl</span>. }<br/>
+&nbsp;&nbsp;<span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">star_trans</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">star_one</span>. <span class="tactic">eapply</span> <span class="id">DStep_Step</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">DPlus_Plus</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">DPlus</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6086')">Proof.</div>
+<div class="proofscript" id="proof6086">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>.<br/>
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">DStep_Step</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">DStar_Star</span>; <span class="tactic">eauto</span>. }<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">safe_modsem</span> (<span class="id">ms</span>: <span class="id">ModSem.t</span>) (<span class="id">st0</span>: <span class="id">ms</span>.(<span class="id">ModSem.state</span>)): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> (<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">E0</span> <span class="id">st1</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVCALL</span>: <span class="id">ms</span>.(<span class="id">ModSem.is_call</span>) <span class="id">st1</span>&gt;&gt;) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVRET</span>: <span class="id">ms</span>.(<span class="id">ModSem.is_return</span>) <span class="id">st1</span>&gt;&gt;) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVSTEP</span>: <span class="id">exists</span> <span class="id">tr</span> <span class="id">st2</span>, <span class="id">Step</span> <span class="id">ms</span> <span class="id">st1</span> <span class="id">tr</span> <span class="id">st2</span>&gt;&gt;).<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">safe_modsem</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

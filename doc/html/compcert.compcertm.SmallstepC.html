@@ -1,0 +1,158 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SmallstepC</title>
+<meta name="description" content="Documentation of Coq module SmallstepC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SmallstepC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Relations</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Wellfounded</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AxiomsC</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Smallstep</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<h1> Closures of transitions relations </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id">PStep</span> (<span class="id">L</span>: <span class="id">semantics</span>) (<span class="id">P</span>: <span class="id">L</span>.(<span class="id">state</span>) -&gt; <span class="kwd">Prop</span>) :=<br/>
+&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">s1</span> <span class="id">t</span> <span class="id">s2</span> =&gt;  <span class="id">P</span> <span class="id">s1</span> /\ <span class="id">Step</span> <span class="id">L</span> <span class="id">s1</span> <span class="id">t</span> <span class="id">s2</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">PStar</span> (<span class="id">L</span>: <span class="id">semantics</span>) (<span class="id">P</span>: <span class="id">L</span>.(<span class="id">state</span>) -&gt; <span class="kwd">Prop</span>) :=<br/>
+&nbsp;&nbsp;(<span class="id">star</span> (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">PStep</span> <span class="id">L</span> <span class="id">P</span>)) <span class="id">L</span>.(<span class="id">symbolenv</span>) <span class="id">L</span>.(<span class="id">globalenv</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">PStarN</span> (<span class="id">L</span>: <span class="id">semantics</span>) (<span class="id">P</span>: <span class="id">L</span>.(<span class="id">state</span>) -&gt; <span class="kwd">Prop</span>) :=<br/>
+&nbsp;&nbsp;(<span class="id">starN</span> (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">PStep</span> <span class="id">L</span> <span class="id">P</span>)) <span class="id">L</span>.(<span class="id">symbolenv</span>) <span class="id">L</span>.(<span class="id">globalenv</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">PPlus</span> (<span class="id">L</span>: <span class="id">semantics</span>) (<span class="id">P</span>: <span class="id">L</span>.(<span class="id">state</span>) -&gt; <span class="kwd">Prop</span>) :=<br/>
+&nbsp;&nbsp;(<span class="id">plus</span> (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">PStep</span> <span class="id">L</span> <span class="id">P</span>)) <span class="id">L</span>.(<span class="id">symbolenv</span>) <span class="id">L</span>.(<span class="id">globalenv</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">PStep_iff</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">P</span> <span class="id">Q</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IFF</span>: <span class="id">all1</span> (<span class="id">P</span> &lt;1&gt; <span class="id">Q</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">PStep</span> <span class="id">L</span> <span class="id">P</span> = <span class="id">PStep</span> <span class="id">L</span> <span class="id">Q</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6902')">Proof.</div>
+<div class="proofscript" id="proof6902">
+&nbsp;&nbsp;<span class="tactic">repeat</span> (<span class="tactic">eapply</span> <span class="id">functional_extensionality</span>; <span class="id">i</span>). <span class="tactic">eapply</span> <span class="id">prop_ext</span>. <span class="tactic">split</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">H</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="tactic">eapply</span> <span class="id">IFF</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">star_inv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">G</span> <span class="id">ST</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">step</span>: <span class="id">Senv.t</span> -&gt; <span class="id">G</span> -&gt; <span class="id">ST</span> -&gt; <span class="id">trace</span> -&gt; <span class="id">ST</span> -&gt; <span class="kwd">Prop</span>) <span class="id">se</span> (<span class="id">ge</span>: <span class="id">G</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">star</span> <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">st0</span> = <span class="id">st1</span> /\ <span class="id">tr</span> = []&gt;&gt; \/ &lt;&lt;<span class="id">PLUS</span>: <span class="id">plus</span> <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6903')">Proof.</div>
+<div class="proofscript" id="proof6903">
+ <span class="id">inv</span> <span class="id">STAR</span>; <span class="tactic">eauto</span>. <span class="id">right</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">plus_or_star_inv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">G</span> <span class="id">ST</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">step</span>: <span class="id">Senv.t</span> -&gt; <span class="id">G</span> -&gt; <span class="id">ST</span> -&gt; <span class="id">trace</span> -&gt; <span class="id">ST</span> -&gt; <span class="kwd">Prop</span>) <span class="id">se</span> (<span class="id">ge</span>: <span class="id">G</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">plus</span> <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span> \/ <span class="id">star</span> <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">st0</span> = <span class="id">st1</span> /\ <span class="id">tr</span> = []&gt;&gt; \/ &lt;&lt;<span class="id">PLUS</span>: <span class="id">plus</span> <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6904')">Proof.</div>
+<div class="proofscript" id="proof6904">
+ <span class="id">des</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">star_inv</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">Pstar_non_E0_split</span>'<span class="id">_strong</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">P</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SINGLE</span>: <span class="id">single_events</span> <span class="id">L</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">PStar</span> <span class="id">L</span> <span class="id">P</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">tr</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">ev</span> :: <span class="id">tr</span>' =&gt; <span class="id">exists</span> <span class="id">st0x</span>, <span class="id">PPlus</span> <span class="id">L</span> <span class="id">P</span> <span class="id">st0</span> [<span class="id">ev</span>] <span class="id">st0x</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">tr</span>' &lt;&gt; <span class="id">E0</span> /\ <span class="id">PPlus</span> <span class="id">L</span> <span class="id">P</span> <span class="id">st0x</span> <span class="id">tr</span>' <span class="id">st1</span>) \/ (<span class="id">tr</span>' = <span class="id">E0</span> /\ <span class="id">st0x</span> = <span class="id">st1</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6905')">Proof.</div>
+<div class="proofscript" id="proof6905">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id">SINGLE</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> (<span class="id">right</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">plus_star_trans</span>; <span class="tactic">eauto</span>; <span class="id">traceEq</span>. <span class="tactic">apply</span> <span class="id">plus_one</span>. <span class="id">rr</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des_safe</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">star_plus_trans</span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id">star_one</span>; <span class="tactic">eauto</span>. <span class="id">traceEq</span>.<br/>
+&nbsp;&nbsp;- <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">des_safe</span>. <span class="id">exploit</span> <span class="id">SINGLE</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">plus_one</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">left</span>. <span class="tactic">split</span>; <span class="id">ss</span>. <span class="tactic">eapply</span> <span class="id">plus_star_trans</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">plus_star</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">clarify</span>. <span class="id">left</span>. <span class="tactic">split</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">PStar_top_Star</span>: <span class="kwd">forall</span> <span class="id">L</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Star</span> <span class="id">L</span> = <span class="id">PStar</span> <span class="id">L</span> <span class="id">top1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6906')">Proof.</div>
+<div class="proofscript" id="proof6906">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">repeat</span> (<span class="tactic">apply</span> <span class="id">func_ext1</span>; <span class="id">i</span>). <span class="tactic">apply</span> <span class="id">prop_ext</span>. <span class="tactic">split</span>; <span class="tactic">intro</span> <span class="id">STAR</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">star_trans</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">star_refl</span>; <span class="id">traceEq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">star_left</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">star_trans</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">star_refl</span>; <span class="id">traceEq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">star_left</span>; <span class="tactic">eauto</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">PPlus_top_Plus</span>: <span class="kwd">forall</span> <span class="id">L</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Plus</span> <span class="id">L</span> = <span class="id">PPlus</span> <span class="id">L</span> <span class="id">top1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6907')">Proof.</div>
+<div class="proofscript" id="proof6907">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">repeat</span> (<span class="tactic">apply</span> <span class="id">func_ext1</span>; <span class="id">i</span>). <span class="tactic">apply</span> <span class="id">prop_ext</span>. <span class="tactic">split</span>; <span class="tactic">intro</span> <span class="id">PLUS</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">PLUS</span>; <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PStar_top_Star</span> <span class="kwd">in</span> <span class="id">H0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">PLUS</span>; <span class="id">ss</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">des</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">PStar_top_Star</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">star_non_E0_split</span>'<span class="id">_strong</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SINGLE</span>: <span class="id">single_events</span> <span class="id">L</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">tr</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">ev</span> :: <span class="id">tr</span>' =&gt; <span class="id">exists</span> <span class="id">st0x</span>, <span class="id">Plus</span> <span class="id">L</span> <span class="id">st0</span> [<span class="id">ev</span>] <span class="id">st0x</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">tr</span>' &lt;&gt; <span class="id">E0</span> /\ <span class="id">Plus</span> <span class="id">L</span> <span class="id">st0x</span> <span class="id">tr</span>' <span class="id">st1</span>) \/ (<span class="id">tr</span>' = <span class="id">E0</span> /\ <span class="id">st0x</span> = <span class="id">st1</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6908')">Proof.</div>
+<div class="proofscript" id="proof6908">
+&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id">Pstar_non_E0_split</span>'<span class="id">_strong</span> <span class="id">L</span> <span class="id">top1</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">erewrite</span> &lt;- <span class="id">PStar_top_Star</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>. <span class="id">des_ifs</span>. <span class="id">des_safe</span>. <span class="id">erewrite</span> &lt;- <span class="id">PPlus_top_Plus</span> <span class="kwd">in</span> *; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">starN_plus_iff</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">G</span> <span class="id">ST</span> (<span class="id">step</span>: <span class="id">Senv.t</span> -&gt; <span class="id">G</span> -&gt; <span class="id">ST</span> -&gt; <span class="id">trace</span> -&gt; <span class="id">ST</span> -&gt; <span class="kwd">Prop</span>) <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">exists</span> <span class="id">n</span>, <span class="id">starN</span> <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">n</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span> /\ (<span class="id">n</span> &gt; 0)%<span class="id">nat</span>) &lt;-&gt; <span class="id">plus</span> <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6909')">Proof.</div>
+<div class="proofscript" id="proof6909">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">n</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="id">ginduction</span> <span class="id">H</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">plus_star_trans</span>; <span class="id">et</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">star_refl</span>. <span class="tactic">apply</span> <span class="id">plus_one</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">plus_trans</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">plus_one</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">IHstarN</span>; <span class="id">et</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">apply</span> <span class="id">star_starN</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="id">des</span>. <span class="id">exists</span> (<span class="id">Datatypes.S</span> <span class="id">n</span>). <span class="id">esplits</span>; <span class="id">et</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="id">econs</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

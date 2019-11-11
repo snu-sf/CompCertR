@@ -1,0 +1,75 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module RTLtypingC</title>
+<meta name="description" content="Documentation of Coq module RTLtypingC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module RTLtypingC</h1>
+<div class="coq">
+<br/>
+<div class="doc">Typing rules and a type inference algorithm for RTL. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Errors</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Unityping</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Op</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Registers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IntegersC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">RTLC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ConventionsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">RTLtyping</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span> <span class="id">ModSem</span> <span class="id">Preservation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SoundTop</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">RTLC</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">LPRSV</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">prog</span>: <span class="id">program</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">wt_prog</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">fd</span>, <span class="id">In</span> (<span class="id">i</span>, <span class="id">Gfun</span> <span class="id">fd</span>) <span class="id">prog</span>.(<span class="id">prog_defs</span>) -&gt; <span class="id">wt_fundef</span> <span class="id">fd</span>.<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">wt_state_local_preservation</span>: <span class="kwd">forall</span> <span class="id">skenv_link</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">local_preservation</span> (<span class="id">modsem2</span> <span class="id">skenv_link</span> <span class="id">prog</span>) (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> <span class="id">st</span> =&gt; <span class="id">wt_state</span> <span class="id">st</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6466')">Proof.</div>
+<div class="proofscript" id="proof6466">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="comment">(*&nbsp;init&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INIT</span>. <span class="id">econs</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">TYP</span>. <span class="tactic">eapply</span> <span class="id">typify_has_type_list</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="comment">(*&nbsp;step&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">subject_reduction</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>, <span class="id">Genv.find_funct_ptr</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Skeleton.SkEnv.revive</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Genv_map_defs_def</span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="id">des</span>. <span class="id">u</span> <span class="kwd">in</span> <span class="id">MAP</span>. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>. <span class="tactic">eapply</span> <span class="id">in_prog_defmap</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">des_ifs</span>. <span class="id">esplits</span>; <span class="id">ss</span>. <span class="id">rr</span>. <span class="tactic">rewrite</span> <span class="id">Forall_forall</span>. <span class="id">ii</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">AFTER</span>. <span class="id">inv</span> <span class="id">SUST</span>. <span class="id">econs</span>; <span class="id">et</span>. <span class="tactic">apply</span> <span class="id">typify_has_type</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">LPRSV</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

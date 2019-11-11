@@ -1,0 +1,456 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module GlobalenvsC</title>
+<meta name="description" content="Documentation of Coq module GlobalenvsC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module GlobalenvsC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="id">Recdef</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Zwf</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Axioms</span> <span class="id">CoqlibC</span> <span class="id">Errors</span> <span class="id">MapsC</span> <span class="id">ASTC</span> <span class="id">Linking</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IntegersC</span> <span class="id">Floats</span> <span class="id">ValuesC</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Globalenvs</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="id">From</span> <span class="id">Paco</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">paco</span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">s</span> #1" := (<span class="id">fst</span> <span class="id">s</span>) (<span class="tactic">at</span> <span class="id">level</span> 9, <span class="id">format</span> "<span class="id">s</span> '#1'") : <span class="id">pair_scope</span>.<br/>
+<span class="kwd">Notation</span> "<span class="id">s</span> #2" := (<span class="id">snd</span> <span class="id">s</span>) (<span class="tactic">at</span> <span class="id">level</span> 9, <span class="id">format</span> "<span class="id">s</span> '#2'") : <span class="id">pair_scope</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">pair_scope</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">uge0</span> := <span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>, <span class="id">Genv.find_funct_ptr</span>, <span class="id">Genv.find_var_info</span> <span class="kwd">in</span> *.<br/>
+<span class="kwd">Ltac</span> <span class="id">uge1</span> := <span class="tactic">unfold</span> <span class="id">Genv.find_def</span>, <span class="id">Genv.find_symbol</span> <span class="kwd">in</span> *.<br/>
+<span class="kwd">Ltac</span> <span class="id">uge</span> := <span class="id">uge0</span>; <span class="id">uge1</span>.<br/>
+<span class="kwd">Ltac</span> <span class="id">genext</span> := <span class="tactic">try</span> (<span class="tactic">by</span> <span class="tactic">eapply</span> <span class="id">Genv.genv_defs_range</span>; <span class="tactic">eauto</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">by</span> <span class="tactic">eapply</span> <span class="id">Genv.genv_symb_range</span>; <span class="tactic">eauto</span>).<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">EXTERNAL</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">C</span> <span class="id">F1</span> <span class="id">V1</span> <span class="id">F2</span> <span class="id">V2</span>: <span class="kwd">Type</span>} {<span class="id">LC</span>: <span class="id">Linker</span> <span class="id">C</span>} {<span class="id">LF</span>: <span class="id">Linker</span> <span class="id">F1</span>} {<span class="id">LV</span>: <span class="id">Linker</span> <span class="id">V1</span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">ge1</span>: <span class="id">Genv.t</span> <span class="id">F1</span> <span class="id">V1</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">ge2</span>: <span class="id">Genv.t</span> <span class="id">F2</span> <span class="id">V2</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">ctx</span>: <span class="id">C</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">match_fundef</span>: <span class="id">C</span> -&gt; <span class="id">F1</span> -&gt; <span class="id">F2</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">match_varinfo</span>: <span class="id">V1</span> -&gt; <span class="id">V2</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> (<span class="id">GEMATCH</span>: <span class="id">Genv.match_genvs</span> (<span class="id">match_globdef</span> <span class="id">match_fundef</span> <span class="id">match_varinfo</span> <span class="id">ctx</span>) <span class="id">ge1</span> <span class="id">ge2</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">fsim_external_funct_id</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDFSRC</span>: <span class="id">Genv.find_funct</span> <span class="id">ge1</span> <span class="id">v</span> = <span class="id">None</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">FINDFTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">ge2</span> <span class="id">v</span> = <span class="id">None</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6747')">Proof.</div>
+<div class="proofscript" id="proof6747">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>, <span class="id">Genv.find_funct_ptr</span>, <span class="id">Genv.find_def</span> <span class="kwd">in</span> *. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">Genv.mge_defs</span> <span class="id">GEMATCH</span>); <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">fsim_internal_funct_id</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">fd_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDFSRC</span>: <span class="id">Genv.find_funct</span> <span class="id">ge1</span> <span class="id">v</span> = <span class="id">Some</span> <span class="id">fd_src</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">fd_tgt</span> <span class="id">ctx</span>', (&lt;&lt;<span class="id">FINDFTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">ge2</span> <span class="id">v</span> = <span class="id">Some</span> <span class="id">fd_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_fundef</span> <span class="id">ctx</span>' <span class="id">fd_src</span> <span class="id">fd_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LO</span>: <span class="id">linkorder</span> <span class="id">ctx</span>' <span class="id">ctx</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6748')">Proof.</div>
+<div class="proofscript" id="proof6748">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>, <span class="id">Genv.find_funct_ptr</span>, <span class="id">Genv.find_def</span> <span class="kwd">in</span> *. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">Genv.mge_defs</span> <span class="id">GEMATCH</span>); <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">bsim_internal_funct_id</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">fd_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDFTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">ge2</span> <span class="id">v</span> = <span class="id">Some</span> <span class="id">fd_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">fd_src</span> <span class="id">ctx</span>', (&lt;&lt;<span class="id">FINDFTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">ge1</span> <span class="id">v</span> = <span class="id">Some</span> <span class="id">fd_src</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_fundef</span> <span class="id">ctx</span>' <span class="id">fd_src</span> <span class="id">fd_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LO</span>: <span class="id">linkorder</span> <span class="id">ctx</span>' <span class="id">ctx</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6749')">Proof.</div>
+<div class="proofscript" id="proof6749">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>, <span class="id">Genv.find_funct_ptr</span>, <span class="id">Genv.find_def</span> <span class="kwd">in</span> *. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">Genv.mge_defs</span> <span class="id">GEMATCH</span>); <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">Heq</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">skenv_inject</span> {<span class="id">F</span> <span class="id">V</span>} (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>) (<span class="id">j</span>: <span class="id">meminj</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">sken_inject_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DOMAIN</span>: <span class="kwd">forall</span> <span class="id">b</span>, <span class="id">Plt</span> <span class="id">b</span> <span class="id">ge</span>.(<span class="id">Genv.genv_next</span>) -&gt; <span class="id">j</span> <span class="id">b</span> = <span class="id">Some</span>(<span class="id">b</span>, 0))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IMAGE</span>: <span class="kwd">forall</span> <span class="id">b1</span> <span class="id">b2</span> <span class="id">delta</span>, <span class="id">j</span> <span class="id">b1</span> = <span class="id">Some</span>(<span class="id">b2</span>, <span class="id">delta</span>) -&gt; <span class="id">Plt</span> <span class="id">b2</span> <span class="id">ge</span>.(<span class="id">Genv.genv_next</span>) -&gt; <span class="id">b1</span> = <span class="id">b2</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">fsim_external_inject_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">fd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GE</span>: <span class="id">skenv_inject</span> <span class="id">ge1</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FIND</span>: <span class="id">Genv.find_funct</span> <span class="id">ge1</span> <span class="id">v_src</span> = <span class="id">Some</span> <span class="id">fd</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v_src</span> = <span class="id">v_tgt</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6750')">Proof.</div>
+<div class="proofscript" id="proof6750">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>. <span class="id">uge</span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">GE</span>. <span class="id">exploit</span> <span class="id">DOMAIN</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">genext</span>. <span class="id">i</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">bsim_external_inject_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">fd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GE</span>: <span class="id">skenv_inject</span> <span class="id">ge1</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDFTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">ge2</span> <span class="id">v_tgt</span> = <span class="id">Some</span> <span class="id">fd</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v_src</span> = <span class="id">v_tgt</span> \/ <span class="id">v_src</span> = <span class="id">Vundef</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6751')">Proof.</div>
+<div class="proofscript" id="proof6751">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>; <span class="id">et</span>. <span class="id">uge</span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">GE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IMAGE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">erewrite</span> &lt;- <span class="id">Genv.mge_next</span>; <span class="id">et</span>. <span class="id">genext</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id">DOMAIN</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">erewrite</span> &lt;- <span class="id">Genv.mge_next</span>; <span class="id">et</span>. <span class="id">genext</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">clarify</span>. <span class="id">psimpl</span>. <span class="id">et</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">fsim_external_funct_inject</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GE</span>: <span class="id">skenv_inject</span> <span class="id">ge1</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDFSRC</span>: <span class="id">Genv.find_funct</span> <span class="id">ge1</span> <span class="id">v_src</span> = <span class="id">None</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NUNDEF</span>: <span class="id">v_src</span> &lt;&gt; <span class="id">Vundef</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">FINDFTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">ge2</span> <span class="id">v_tgt</span> = <span class="id">None</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6752')">Proof.</div>
+<div class="proofscript" id="proof6752">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">r</span>. <span class="tactic">apply</span> <span class="id">NNPP</span>. <span class="tactic">intro</span> <span class="id">FINDTGT</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.find_funct</span> <span class="id">ge2</span> <span class="id">v_tgt</span>) <span class="id">eqn</span>:<span class="id">FINDTGT0</span>; <span class="id">ss</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">bsim_external_inject_eq</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">GEMATCH</span>. <span class="id">des</span>; <span class="id">clarify</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">uge</span>. <span class="id">des_ifs_safe</span>. <span class="tactic">unfold</span> <span class="id">block</span> <span class="kwd">in</span> *. <span class="id">spc</span> <span class="id">mge_defs</span>. <span class="id">inv</span> <span class="id">mge_defs</span>; <span class="id">align_opt</span>; <span class="id">clarify</span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">fsim_internal_funct_inject</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">fd_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GE</span>: <span class="id">skenv_inject</span> <span class="id">ge1</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDFSRC</span>: <span class="id">Genv.find_funct</span> <span class="id">ge1</span> <span class="id">v_src</span> = <span class="id">Some</span> <span class="id">fd_src</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">fd_tgt</span> <span class="id">ctx</span>', (&lt;&lt;<span class="id">FINDFTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">ge2</span> <span class="id">v_tgt</span> = <span class="id">Some</span> <span class="id">fd_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_fundef</span> <span class="id">ctx</span>' <span class="id">fd_src</span> <span class="id">fd_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LO</span>: <span class="id">linkorder</span> <span class="id">ctx</span>' <span class="id">ctx</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6753')">Proof.</div>
+<div class="proofscript" id="proof6753">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">fsim_external_inject_eq</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">GEMATCH</span>. <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>. <span class="id">uge</span>. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">block</span> <span class="kwd">in</span> *. <span class="id">spc</span> <span class="id">mge_defs</span>. <span class="id">inv</span> <span class="id">mge_defs</span>; <span class="id">align_opt</span>; <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">H1</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">bsim_internal_funct_inject</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">fd_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GE</span>: <span class="id">skenv_inject</span> <span class="id">ge1</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDFSRC</span>: <span class="id">Genv.find_funct</span> <span class="id">ge2</span> <span class="id">v_tgt</span> = <span class="id">Some</span> <span class="id">fd_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SRCUB</span>: <span class="id">v_src</span> = <span class="id">Vundef</span>&gt;&gt; \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">fd_src</span> <span class="id">ctx</span>', (&lt;&lt;<span class="id">FINDFTGT</span>: <span class="id">Genv.find_funct</span> <span class="id">ge1</span> <span class="id">v_src</span> = <span class="id">Some</span> <span class="id">fd_src</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_fundef</span> <span class="id">ctx</span>' <span class="id">fd_src</span> <span class="id">fd_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LO</span>: <span class="id">linkorder</span> <span class="id">ctx</span>' <span class="id">ctx</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6754')">Proof.</div>
+<div class="proofscript" id="proof6754">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">bsim_external_inject_eq</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>; <span class="tactic">eauto</span>. <span class="id">right</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">GEMATCH</span>. <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>. <span class="id">uge</span>. <span class="id">des_ifs_safe</span>. <span class="id">psimpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">block</span> <span class="kwd">in</span> *. <span class="id">spc</span> <span class="id">mge_defs</span>. <span class="id">inv</span> <span class="id">mge_defs</span>; <span class="id">align_opt</span>; <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">H1</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">EXTERNAL</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">MAP</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">F1</span> <span class="id">V1</span> <span class="id">F2</span> <span class="id">V2</span>: <span class="kwd">Type</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">Genv_map_defs</span> (<span class="id">ge0</span>: <span class="id">Genv.t</span> <span class="id">F1</span> <span class="id">V1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">f</span>: <span class="id">block</span> -&gt; <span class="id">globdef</span> <span class="id">F1</span> <span class="id">V1</span> -&gt; <span class="id">option</span> (<span class="id">globdef</span> <span class="id">F2</span> <span class="id">V2</span>)): <span class="id">Genv.t</span> <span class="id">F2</span> <span class="id">V2</span> :=<br/>
+&nbsp;&nbsp;{| <span class="id">Genv.genv_public</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_public</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_symb</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_symb</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_defs</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_defs</span>).(<span class="id">PTree_filter_map</span> <span class="id">f</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_next</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_next</span>);<br/>
+&nbsp;&nbsp;|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6755')">Next Obligation.</div>
+<div class="proofscript" id="proof6755">
+ <span class="tactic">eapply</span> <span class="id">Genv.genv_symb_range</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6756')">Next Obligation.</div>
+<div class="proofscript" id="proof6756">
+ <span class="tactic">rewrite</span> <span class="id">PTree_filter_map_spec</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">u</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="tactic">eapply</span> <span class="id">Genv.genv_defs_range</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6757')">Next Obligation.</div>
+<div class="proofscript" id="proof6757">
+ <span class="tactic">eapply</span> <span class="id">Genv.genv_vars_inj</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Genv_map_defs_def</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge</span> (<span class="id">f</span>: <span class="id">block</span> -&gt; <span class="id">globdef</span> <span class="id">F1</span> <span class="id">V1</span> -&gt; <span class="id">option</span> (<span class="id">globdef</span> <span class="id">F2</span> <span class="id">V2</span>)) <span class="id">blk</span> <span class="id">gd2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FIND</span>: (<span class="id">ge</span>.(<span class="id">Genv_map_defs</span>) <span class="id">f</span>).(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd2</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">gd1</span>, &lt;&lt;<span class="id">FIND</span>: <span class="id">ge</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd1</span>&gt;&gt; /\ &lt;&lt;<span class="id">MAP</span>: <span class="id">f</span> <span class="id">blk</span> <span class="id">gd1</span> = <span class="id">Some</span> <span class="id">gd2</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6758')">Proof.</div>
+<div class="proofscript" id="proof6758">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_def</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id">Genv_map_defs</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree_filter_map_spec</span> <span class="kwd">in</span> *. <span class="id">u</span> <span class="kwd">in</span> <span class="id">FIND</span>. <span class="id">des_ifs</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Genv_map_defs_def_inv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge</span> <span class="id">blk</span> <span class="id">gd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FIND</span>: <span class="id">ge</span>.(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">Some</span> <span class="id">gd</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">FIND</span>: <span class="kwd">forall</span> (<span class="id">f</span>: <span class="id">block</span> -&gt; <span class="id">globdef</span> <span class="id">F1</span> <span class="id">V1</span> -&gt; <span class="id">option</span> (<span class="id">globdef</span> <span class="id">F2</span> <span class="id">V2</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ge</span>.(<span class="id">Genv_map_defs</span>) <span class="id">f</span>).(<span class="id">Genv.find_def</span>) <span class="id">blk</span> = <span class="id">f</span> <span class="id">blk</span> <span class="id">gd</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6759')">Proof.</div>
+<div class="proofscript" id="proof6759">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">Genv.find_def</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id">Genv_map_defs</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree_filter_map_spec</span> <span class="kwd">in</span> *. <span class="id">u</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Genv_map_defs_symb</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge</span> (<span class="id">f</span>: <span class="id">block</span> -&gt; <span class="id">globdef</span> <span class="id">F1</span> <span class="id">V1</span> -&gt; <span class="id">option</span> (<span class="id">globdef</span> <span class="id">F2</span> <span class="id">V2</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">FIND</span>: <span class="id">all1</span> ((<span class="id">ge</span>.(<span class="id">Genv_map_defs</span>) <span class="id">f</span>).(<span class="id">Genv.find_symbol</span>) =1= <span class="id">ge</span>.(<span class="id">Genv.find_symbol</span>))&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6760')">Proof.</div>
+<div class="proofscript" id="proof6760">
+ <span class="id">ii</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">Genv_filter_symb</span> (<span class="id">ge0</span>: <span class="id">Genv.t</span> <span class="id">F1</span> <span class="id">V1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">f</span>: <span class="id">ident</span> -&gt; <span class="id">bool</span>): <span class="id">Genv.t</span> <span class="id">F1</span> <span class="id">V1</span> :=<br/>
+&nbsp;&nbsp;{| <span class="id">Genv.genv_public</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_public</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_symb</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_symb</span>).(<span class="id">PTree_filter_key</span> <span class="id">f</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_defs</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_defs</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_next</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_next</span>);<br/>
+&nbsp;&nbsp;|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6761')">Next Obligation.</div>
+<div class="proofscript" id="proof6761">
+ <span class="tactic">rewrite</span> <span class="id">PTree_filter_key_spec</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="tactic">eapply</span> <span class="id">Genv.genv_symb_range</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6762')">Next Obligation.</div>
+<div class="proofscript" id="proof6762">
+ <span class="tactic">eapply</span> <span class="id">Genv.genv_defs_range</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6763')">Next Obligation.</div>
+<div class="proofscript" id="proof6763">
+ <span class="tactic">rewrite</span> <span class="id">PTree_filter_key_spec</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="tactic">eapply</span> <span class="id">Genv.genv_vars_inj</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">Genv_update_publics</span> (<span class="id">ge0</span>: <span class="id">Genv.t</span> <span class="id">F1</span> <span class="id">V1</span>) (<span class="id">pubs</span>: <span class="id">list</span> <span class="id">ident</span>): <span class="id">Genv.t</span> <span class="id">F1</span> <span class="id">V1</span> :=<br/>
+&nbsp;&nbsp;{| <span class="id">Genv.genv_public</span> := <span class="id">pubs</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_symb</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_symb</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_defs</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_defs</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.genv_next</span> := <span class="id">ge0</span>.(<span class="id">Genv.genv_next</span>);<br/>
+&nbsp;&nbsp;|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6764')">Next Obligation.</div>
+<div class="proofscript" id="proof6764">
+ <span class="tactic">eapply</span> <span class="id">Genv.genv_symb_range</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6765')">Next Obligation.</div>
+<div class="proofscript" id="proof6765">
+ <span class="tactic">eapply</span> <span class="id">Genv.genv_defs_range</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6766')">Next Obligation.</div>
+<div class="proofscript" id="proof6766">
+ <span class="tactic">eapply</span> <span class="id">Genv.genv_vars_inj</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Genv_update_publics_def</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge0</span> <span class="id">pubs</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_def</span> (<span class="id">Genv_update_publics</span> <span class="id">ge0</span> <span class="id">pubs</span>) = <span class="id">Genv.find_def</span> <span class="id">ge0</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6767')">Proof.</div>
+<div class="proofscript" id="proof6767">
+ <span class="tactic">apply</span> <span class="id">functional_extensionality</span>. <span class="id">i</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Genv_update_publics_symb</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge0</span> <span class="id">pubs</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.find_symbol</span> (<span class="id">Genv_update_publics</span> <span class="id">ge0</span> <span class="id">pubs</span>) = <span class="id">Genv.find_symbol</span> <span class="id">ge0</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6768')">Proof.</div>
+<div class="proofscript" id="proof6768">
+ <span class="tactic">apply</span> <span class="id">functional_extensionality</span>. <span class="id">i</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">MAP</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">gesimpl</span> := <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id">Genv_update_publics_def</span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id">Genv_update_publics_symb</span> <span class="kwd">in</span> *.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">MATCH_PROGRAMS_BACKWARD</span>.<br/>
+<br/>
+<span class="kwd">Context</span> {<span class="id">C</span> <span class="id">F1</span> <span class="id">V1</span> <span class="id">F2</span> <span class="id">V2</span>: <span class="kwd">Type</span>} {<span class="id">LC</span>: <span class="id">Linker</span> <span class="id">C</span>} {<span class="id">LF</span>: <span class="id">Linker</span> <span class="id">F1</span>} {<span class="id">LV</span>: <span class="id">Linker</span> <span class="id">V1</span>}.<br/>
+<span class="kwd">Variable</span> <span class="id">match_fundef</span>: <span class="id">C</span> -&gt; <span class="id">F1</span> -&gt; <span class="id">F2</span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">match_varinfo</span>: <span class="id">V1</span> -&gt; <span class="id">V2</span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">ctx</span>: <span class="id">C</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">p</span>: <span class="id">program</span> <span class="id">F1</span> <span class="id">V1</span>.<br/>
+<span class="kwd">Variable</span> <span class="id">tp</span>: <span class="id">program</span> <span class="id">F2</span> <span class="id">V2</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id">progmatch</span>: <span class="id">match_program_gen</span> <span class="id">match_fundef</span> <span class="id">match_varinfo</span> <span class="id">ctx</span> <span class="id">p</span> <span class="id">tp</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">find_def_match_backward</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">tg</span>, <span class="id">Genv.find_def</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">tg</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">g</span>, <span class="id">Genv.find_def</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">g</span> /\ <span class="id">match_globdef</span> <span class="id">match_fundef</span> <span class="id">match_varinfo</span> <span class="id">ctx</span> <span class="id">g</span> <span class="id">tg</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6769')">Proof.</div>
+<div class="proofscript" id="proof6769">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">generalize</span> (<span class="id">Genv.find_def_match_2</span> <span class="id">progmatch</span> <span class="id">b</span>). <span class="tactic">rewrite</span> <span class="id">H</span>; <span class="tactic">intros</span> <span class="id">R</span>; <span class="id">inv</span> <span class="id">R</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">find_funct_ptr_match_backward</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">tf</span>, <span class="id">Genv.find_funct_ptr</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">tf</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">cunit</span> <span class="id">f</span>, <span class="id">Genv.find_funct_ptr</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">f</span> /\ <span class="id">match_fundef</span> <span class="id">cunit</span> <span class="id">f</span> <span class="id">tf</span> /\ <span class="id">linkorder</span> <span class="id">cunit</span> <span class="id">ctx</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6770')">Proof.</div>
+<div class="proofscript" id="proof6770">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id">Genv.find_funct_ptr_iff</span> <span class="kwd">in</span> *. <span class="tactic">apply</span> <span class="id">find_def_match_backward</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">tg</span> &amp; <span class="id">P</span> &amp; <span class="id">Q</span>). <span class="id">inv</span> <span class="id">Q</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">ctx</span>', <span class="id">f1</span>; <span class="tactic">intuition</span> <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id">Genv.find_funct_ptr_iff</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">find_funct_match_backward</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span> <span class="id">tf</span>, <span class="id">Genv.find_funct</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">v</span> = <span class="id">Some</span> <span class="id">tf</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">cunit</span> <span class="id">f</span>, <span class="id">Genv.find_funct</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">v</span> = <span class="id">Some</span> <span class="id">f</span> /\ <span class="id">match_fundef</span> <span class="id">cunit</span> <span class="id">f</span> <span class="id">tf</span> /\ <span class="id">linkorder</span> <span class="id">cunit</span> <span class="id">ctx</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6771')">Proof.</div>
+<div class="proofscript" id="proof6771">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">exploit</span> <span class="id">Genv.find_funct_inv</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> [<span class="id">b</span> <span class="id">EQ</span>]. <span class="tactic">subst</span> <span class="id">v</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Genv.find_funct_find_funct_ptr</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">rewrite</span> <span class="id">Genv.find_funct_find_funct_ptr</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">find_funct_ptr_match_backward</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">find_var_info_match_backward</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">tv</span>, <span class="id">Genv.find_var_info</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">tv</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">v</span>, <span class="id">Genv.find_var_info</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">b</span> = <span class="id">Some</span> <span class="id">v</span> /\ <span class="id">match_globvar</span> <span class="id">match_varinfo</span> <span class="id">v</span> <span class="id">tv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6772')">Proof.</div>
+<div class="proofscript" id="proof6772">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id">Genv.find_var_info_iff</span> <span class="kwd">in</span> *. <span class="tactic">apply</span> <span class="id">find_def_match_backward</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">tg</span> &amp; <span class="id">P</span> &amp; <span class="id">Q</span>). <span class="id">inv</span> <span class="id">Q</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">v1</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id">Genv.find_var_info_iff</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">store_init_data_list_match_backward</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">idl</span> <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;<span class="id">Genv.store_init_data_list</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">idl</span> = <span class="id">Some</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Genv.store_init_data_list</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">idl</span> = <span class="id">Some</span> <span class="id">m</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6773')">Proof.</div>
+<div class="proofscript" id="proof6773">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">idl</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">auto</span>.<br/>
+- <span class="tactic">destruct</span> (<span class="id">Genv.store_init_data</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">a</span>) <span class="kwd">as</span> [<span class="id">m1</span>|] <span class="id">eqn</span>:<span class="id">S</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">X</span>: <span class="id">Genv.store_init_data</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">m</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">a</span> = <span class="id">Some</span> <span class="id">m1</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">auto</span>. <span class="tactic">simpl</span>; <span class="tactic">rewrite</span> &lt;- (<span class="id">Genv.find_symbol_match</span> <span class="id">progmatch</span>); <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">X</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">alloc_globals_match_backward</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">gl1</span> <span class="id">gl2</span>, <span class="id">list_forall2</span> (<span class="id">match_ident_globdef</span> <span class="id">match_fundef</span> <span class="id">match_varinfo</span> <span class="id">ctx</span>) <span class="id">gl1</span> <span class="id">gl2</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span> <span class="id">m</span>',<br/>
+&nbsp;&nbsp;<span class="id">Genv.alloc_globals</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">m</span> <span class="id">gl2</span> = <span class="id">Some</span> <span class="id">m</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Genv.alloc_globals</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">m</span> <span class="id">gl1</span> = <span class="id">Some</span> <span class="id">m</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6774')">Proof.</div>
+<div class="proofscript" id="proof6774">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>; <span class="tactic">auto</span>.<br/>
+- <span class="tactic">destruct</span> (<span class="id">Genv.alloc_global</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">m</span> <span class="id">b1</span>) <span class="kwd">as</span> [<span class="id">m1</span>|] <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">X</span>: <span class="id">Genv.alloc_global</span> (<span class="id">Genv.globalenv</span> <span class="id">p</span>) <span class="id">m</span> <span class="id">a1</span> = <span class="id">Some</span> <span class="id">m1</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">a1</span> <span class="kwd">as</span> [<span class="id">id1</span> <span class="id">g1</span>]; <span class="tactic">destruct</span> <span class="id">b1</span> <span class="kwd">as</span> [<span class="id">id2</span> <span class="id">g2</span>]; <span class="tactic">destruct</span> <span class="id">H</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">id2</span>. <span class="id">inv</span> <span class="id">H2</span>; <span class="tactic">auto</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">sz</span> := <span class="id">init_data_list_size</span> <span class="id">init</span>) <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Mem.alloc</span> <span class="id">m</span> 0 <span class="id">sz</span>) <span class="kwd">as</span> [<span class="id">m2</span> <span class="id">b</span>] <span class="id">eqn</span>:?.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">store_zeros</span> <span class="id">m2</span> <span class="id">b</span> 0 <span class="id">sz</span>) <span class="kwd">as</span> [<span class="id">m3</span>|] <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.store_init_data_list</span> (<span class="id">Genv.globalenv</span> <span class="id">tp</span>) <span class="id">m3</span> <span class="id">b</span> 0 <span class="id">init</span>) <span class="kwd">as</span> [<span class="id">m4</span>|] <span class="id">eqn</span>:?; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">store_init_data_list_match_backward</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">X</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">init_mem_match_backward</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>, <span class="id">Genv.init_mem</span> <span class="id">tp</span> = <span class="id">Some</span> <span class="id">m</span> -&gt; <span class="id">Genv.init_mem</span> <span class="id">p</span> = <span class="id">Some</span> <span class="id">m</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6775')">Proof.</div>
+<div class="proofscript" id="proof6775">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.init_mem</span>; <span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id">alloc_globals_match_backward</span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id">progmatch</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">MATCH_PROGRAMS_BACKWARD</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">find_symbol_eq_invert_symbol_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F0</span> <span class="id">V0</span> <span class="id">F1</span> <span class="id">V1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ge0</span>: <span class="id">Genv.t</span> <span class="id">F0</span> <span class="id">V0</span>) (<span class="id">ge1</span>: <span class="id">Genv.t</span> <span class="id">F1</span> <span class="id">V1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FIND</span>: <span class="id">all1</span> (<span class="id">Genv.find_symbol</span> <span class="id">ge0</span> =1= <span class="id">Genv.find_symbol</span> <span class="id">ge1</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">INVERT</span>: <span class="id">all1</span> (<span class="id">Genv.invert_symbol</span> <span class="id">ge0</span> =1= <span class="id">Genv.invert_symbol</span> <span class="id">ge1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6776')">Proof.</div>
+<div class="proofscript" id="proof6776">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">ge0</span> <span class="id">x0</span>) <span class="id">eqn</span>:<span class="id">T0</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Genv.invert_find_symbol</span> <span class="kwd">in</span> <span class="id">T0</span>. <span class="tactic">rewrite</span> <span class="id">FIND</span> <span class="kwd">in</span> <span class="id">T0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Genv.find_invert_symbol</span> <span class="kwd">in</span> <span class="id">T0</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">ge1</span> <span class="id">x0</span>) <span class="id">eqn</span>:<span class="id">T1</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Genv.invert_find_symbol</span> <span class="kwd">in</span> <span class="id">T1</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">FIND</span> <span class="kwd">in</span> *. <span class="tactic">apply</span> <span class="id">Genv.find_invert_symbol</span> <span class="kwd">in</span> <span class="id">T1</span>. <span class="id">clarify</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">MATCHPROG</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">C</span> <span class="id">F1</span> <span class="id">V1</span> <span class="id">F2</span> <span class="id">V2</span>: <span class="kwd">Type</span>} {<span class="id">LC</span>: <span class="id">Linker</span> <span class="id">C</span>} {<span class="id">LF</span>: <span class="id">Linker</span> (<span class="id">AST.fundef</span> <span class="id">F1</span>)} {<span class="id">LV</span>: <span class="id">Linker</span> <span class="id">V1</span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">match_fundef</span>: <span class="id">C</span> -&gt; <span class="id">AST.fundef</span> <span class="id">F1</span> -&gt; <span class="id">AST.fundef</span> <span class="id">F2</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">match_varinfo</span>: <span class="id">V1</span> -&gt; <span class="id">V2</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variables</span> (<span class="id">ctx</span>: <span class="id">C</span>) (<span class="id">p_src</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F1</span>) <span class="id">V1</span>) (<span class="id">p_tgt</span>: <span class="id">AST.program</span> (<span class="id">AST.fundef</span> <span class="id">F2</span>) <span class="id">V2</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> (<span class="id">MATCHPROG</span>: <span class="id">match_program_gen</span> <span class="id">match_fundef</span> <span class="id">match_varinfo</span> <span class="id">ctx</span> <span class="id">p_src</span> <span class="id">p_tgt</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">match_program_gen_defs</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">p_src</span>.(<span class="id">defs</span>) = <span class="id">p_tgt</span>.(<span class="id">defs</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6777')">Proof.</div>
+<div class="proofscript" id="proof6777">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">u</span>. <span class="id">inv</span> <span class="id">MATCHPROG</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;hexploit&nbsp;(match_program_defmap&nbsp;_&nbsp;_&nbsp;ctx&nbsp;p_src&nbsp;p_tgt&nbsp;MATCH&nbsp;x).&nbsp;intro&nbsp;REL.&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">prog_defs_names</span> <span class="id">p_src</span>) <span class="kwd">with</span> (<span class="id">prog_defs_names</span> <span class="id">p_tgt</span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">prog_defs_names</span>. <span class="tactic">clear</span> - <span class="id">H</span>. <span class="id">ginduction</span> <span class="id">H</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>. <span class="tactic">f_equal</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">MATCHPROG</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">Global_match_genvs_refl</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">ge0</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Genv.match_genvs</span> <span class="id">eq</span> <span class="id">ge0</span> <span class="id">ge0</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6778')">Proof.</div>
+<div class="proofscript" id="proof6778">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">destruct</span> ((<span class="id">Genv.genv_defs</span> <span class="id">ge0</span>) ! <span class="id">b</span>) <span class="id">eqn</span>:<span class="id">T</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">genv_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">ge1</span> <span class="id">ge2</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PUB</span>: <span class="id">ge1</span>.(<span class="id">Genv.genv_public</span>) = <span class="id">ge2</span>.(<span class="id">Genv.genv_public</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NEXT</span>: <span class="id">ge1</span>.(<span class="id">Genv.genv_next</span>) = <span class="id">ge2</span>.(<span class="id">Genv.genv_next</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMB</span>: <span class="id">ge1</span>.(<span class="id">Genv.genv_symb</span>) = <span class="id">ge2</span>.(<span class="id">Genv.genv_symb</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFS</span>: <span class="id">ge1</span>.(<span class="id">Genv.genv_defs</span>) = <span class="id">ge2</span>.(<span class="id">Genv.genv_defs</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ge1</span> = <span class="id">ge2</span> .<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6779')">Proof.</div>
+<div class="proofscript" id="proof6779">
+ <span class="tactic">destruct</span> <span class="id">ge1</span>, <span class="id">ge2</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="tactic">f_equal</span>; <span class="tactic">apply</span> <span class="id">proof_irr</span>. Qed.</div>
+<br/>
+<span class="id">Arguments</span> <span class="id">fsim_external_inject_eq</span> [<span class="id">_</span>].<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">senv_eta</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se</span> <span class="id">tse</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ0</span>: <span class="id">se</span>.(<span class="id">Senv.find_symbol</span>) = <span class="id">tse</span>.(<span class="id">Senv.find_symbol</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ1</span>: <span class="id">se</span>.(<span class="id">Senv.public_symbol</span>) = <span class="id">tse</span>.(<span class="id">Senv.public_symbol</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ2</span>: <span class="id">se</span>.(<span class="id">Senv.invert_symbol</span>) = <span class="id">tse</span>.(<span class="id">Senv.invert_symbol</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ3</span>: <span class="id">se</span>.(<span class="id">Senv.block_is_volatile</span>) = <span class="id">tse</span>.(<span class="id">Senv.block_is_volatile</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ4</span>: <span class="id">se</span>.(<span class="id">Senv.nextblock</span>) = <span class="id">tse</span>.(<span class="id">Senv.nextblock</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se</span> = <span class="id">tse</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6780')">Proof.</div>
+<div class="proofscript" id="proof6780">
+ <span class="tactic">destruct</span> <span class="id">se</span>, <span class="id">tse</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="tactic">f_equal</span>; <span class="tactic">apply</span> <span class="id">Axioms.proof_irr</span>. Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">Senv_eq_equiv</span>: <span class="id">RelationClasses.Equivalence</span> <span class="id">Senv.equiv</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6781')">Next Obligation.</div>
+<div class="proofscript" id="proof6781">
+ <span class="id">ii</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6782')">Next Obligation.</div>
+<div class="proofscript" id="proof6782">
+ <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">des</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6783')">Next Obligation.</div>
+<div class="proofscript" id="proof6783">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">des</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">erewrite</span> &lt;- <span class="id">H1</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

@@ -1,0 +1,194 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MutrecRefinement</title>
+<meta name="description" content="Documentation of Coq module MutrecRefinement" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MutrecRefinement</h1>
+<div class="coq">
+<div class="doc">Libraries. </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">String</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Errors</span> <span class="id">ErrorsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Linking</span> <span class="id">Smallstep</span>.<br/>
+<div class="doc">Command-line flags. </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Compopts</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">BehaviorsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Compiler</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Sem</span> <span class="id">SimProg</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span> <span class="id">SimMod</span> <span class="id">SimModSem</span> <span class="id">SimSymb</span> <span class="id">SimMem</span> <span class="id">Sound</span> <span class="id">SimSymb</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SemProps</span> <span class="id">AdequacyLocal</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="id">SimMemInjInvC</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">RUSC</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MutrecHeader</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MutrecAspec</span> <span class="id">MutrecBspec</span> <span class="id">MutrecABspec</span> <span class="id">MutrecA</span> <span class="id">MutrecB</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MutrecABproof</span> <span class="id">MutrecAproof</span> <span class="id">MutrecBproof</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="id">IdSimAsmIdInv</span>.<br/>
+<span class="kwd">Require</span> <span class="id">IdSimClightIdInv</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">mutrec_relations</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">r</span> =&gt; <span class="id">exists</span> <span class="id">P</span>, <span class="id">r</span> = <span class="id">mkPR</span> (<span class="id">SimMemInjInvC.SimMemInjInv</span> <span class="id">SimMemInjInv.top_inv</span> <span class="id">P</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SimMemInjInvC.SimSymbIdInv</span> <span class="id">P</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SoundTop.Top</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">asm_self_related</span> (<span class="id">asm</span>: <span class="id">Asm.program</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">mutrec_relations</span> [<span class="id">asm</span>.(<span class="id">AsmC.module</span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7287')">Proof.</div>
+<div class="proofscript" id="proof7287">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">RELIN</span>. <span class="tactic">unfold</span> <span class="id">mutrec_relations</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eapply</span> <span class="id">relate_single_program</span>; <span class="tactic">intros</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IdSimAsmIdInv.asm_inj_inv_id</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">clight_self_related</span> (<span class="id">cls</span>: <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">mutrec_relations</span> [<span class="id">cls</span>.(<span class="id">ClightC.module2</span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7288')">Proof.</div>
+<div class="proofscript" id="proof7288">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">RELIN</span>. <span class="tactic">unfold</span> <span class="id">mutrec_relations</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eapply</span> <span class="id">relate_single_program</span>; <span class="tactic">intros</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IdSimClightIdInv.clight_inj_inv_id</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">asms_self_related</span> (<span class="id">asms</span>: <span class="id">list</span> <span class="id">Asm.program</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">mutrec_relations</span> (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">asms</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7289')">Proof.</div>
+<div class="proofscript" id="proof7289">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">asms</span>; <span class="id">ss</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHasms</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id">program_relation.horizontal</span> <span class="id">_</span> [<span class="id">a</span>.(<span class="id">AsmC.module</span>)] <span class="id">_</span> [<span class="id">a</span>.(<span class="id">AsmC.module</span>)]); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">asm_self_related</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">clights_self_related</span> (<span class="id">cls</span>: <span class="id">list</span> <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">mutrec_relations</span> (<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">cls</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7290')">Proof.</div>
+<div class="proofscript" id="proof7290">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">cls</span>; <span class="id">ss</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHcls</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id">program_relation.horizontal</span> <span class="id">_</span> [<span class="id">a</span>.(<span class="id">ClightC.module2</span>)] <span class="id">_</span> [<span class="id">a</span>.(<span class="id">ClightC.module2</span>)]); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">clight_self_related</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Require</span> <span class="id">IdSimMutrecAIdInv</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">specA_self_related</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">mutrec_relations</span> [<span class="id">MutrecAspec.module</span>].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7291')">Proof.</div>
+<div class="proofscript" id="proof7291">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">RELIN</span>. <span class="tactic">unfold</span> <span class="id">mutrec_relations</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eapply</span> <span class="id">relate_single_program</span>; <span class="tactic">intros</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IdSimMutrecAIdInv.a_inj_inv_id</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Require</span> <span class="id">IdSimMutrecBIdInv</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">specB_self_related</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">mutrec_relations</span> [<span class="id">MutrecBspec.module</span>].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7292')">Proof.</div>
+<div class="proofscript" id="proof7292">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">RELIN</span>. <span class="tactic">unfold</span> <span class="id">mutrec_relations</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eapply</span> <span class="id">relate_single_program</span>; <span class="tactic">intros</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IdSimMutrecBIdInv.b_inj_inv_id</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">MutrecA_rusc</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">mutrec_relations</span> [<span class="id">MutrecAspec.module</span>] [<span class="id">MutrecA.prog</span>.(<span class="id">ClightC.module2</span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7293')">Proof.</div>
+<div class="proofscript" id="proof7293">
+&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id">relate_single_rusc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SimMemInjInvC.SimMemInjInv</span> <span class="id">SimMemInjInv.top_inv</span> <span class="id">MutrecAproof.memoized_inv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SimMemInjInvC.SimSymbIdInv</span> <span class="id">MutrecAproof.memoized_inv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SoundTop.Top</span>).<br/>
+&nbsp;&nbsp;- <span class="tactic">set</span> <span class="id">MutrecAproof.sim_mod</span>. <span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">i</span>. <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">mutrec_relations</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">MutrecB_rusc</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">mutrec_relations</span> [<span class="id">MutrecBspec.module</span>] [<span class="id">MutrecB.prog</span>.(<span class="id">AsmC.module</span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7294')">Proof.</div>
+<div class="proofscript" id="proof7294">
+&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id">relate_single_rusc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SimMemInjInvC.SimMemInjInv</span> <span class="id">SimMemInjInv.top_inv</span> <span class="id">MutrecBproof.memoized_inv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SimMemInjInvC.SimSymbIdInv</span> <span class="id">MutrecBproof.memoized_inv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SoundTop.Top</span>).<br/>
+&nbsp;&nbsp;- <span class="tactic">set</span> <span class="id">MutrecBproof.sim_mod</span>. <span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">i</span>. <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">mutrec_relations</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">MutrecAB_AB_rusc</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">bot1</span> [(<span class="id">MutrecABspec.module</span>)] [(<span class="id">MutrecAspec.module</span>) ; (<span class="id">MutrecBspec.module</span>)]<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7295')">Proof.</div>
+<div class="proofscript" id="proof7295">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">rusc</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">mutrecABcorrect</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">MutrecAB_impl_rusc</span><br/>
+&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">mutrec_relations</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span class="id">MutrecABspec.module</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span class="id">MutrecA.prog</span>.(<span class="id">ClightC.module2</span>); <span class="id">MutrecB.prog</span>.(<span class="id">AsmC.module</span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7296')">Proof.</div>
+<div class="proofscript" id="proof7296">
+&nbsp;<span class="id">etrans</span>.<br/>
+&nbsp;- <span class="tactic">eapply</span> <span class="id">rusc_mon</span>; [|<span class="tactic">eapply</span> <span class="id">MutrecAB_AB_rusc</span>]; <span class="id">ss</span>.<br/>
+&nbsp;- <span class="id">hexploit</span> <span class="id">rusc_horizontal</span>.<br/>
+&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">MutrecA_rusc</span>.<br/>
+&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">MutrecB_rusc</span>.<br/>
+&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">specA_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">specB_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">clight_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">asm_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;+ <span class="id">i</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">Mutrec_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id">list</span> <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">hands</span>: <span class="id">list</span> <span class="id">Asm.program</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> ((<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ [<span class="id">MutrecABspec.module</span>]))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sem</span> ((<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ [<span class="id">MutrecA.prog</span>.(<span class="id">ClightC.module2</span>); <span class="id">MutrecB.prog</span>.(<span class="id">AsmC.module</span>)])).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7297')">Proof.</div>
+<div class="proofscript" id="proof7297">
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span> ++ <span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span> ++ [<span class="id">MutrecABspec.module</span>]) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span> ++ <span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ [<span class="id">MutrecABspec.module</span>]); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">app_assoc</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span> ++ <span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;++ [<span class="id">ClightC.module2</span> <span class="id">MutrecA.prog</span>; <span class="id">AsmC.module</span> <span class="id">prog</span>]) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span> ++ <span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ [<span class="id">ClightC.module2</span> <span class="id">MutrecA.prog</span>; <span class="id">AsmC.module</span> <span class="id">prog</span>]); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">app_assoc</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">rusc_adequacy_left_ctx</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">MutrecAB_impl_rusc</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">self_related_horizontal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">clights_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">asms_self_related</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Axioms</title>
+<meta name="description" content="Documentation of Coq module Axioms" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Axioms</h1>
+<div class="coq">
+<br/>
+<div class="doc">This file collects some axioms used throughout the CompCert development. </div>
+<br/>
+<span class="kwd">Require</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.ClassicalFacts.html">ClassicalFacts</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FunctionalExtensionality.html">FunctionalExtensionality</a></span>.<br/>
+<br/>
+<h1> Extensionality axioms </h1>
+<br/>
+<div class="doc">The <span class="bracket"><span class="kwd">Require</span> <span class="id">FunctionalExtensionality</span></span> gives us functional
+    extensionality for dependent function types: </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="functional_extensionality_dep">functional_extensionality_dep</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>: <span class="kwd">Type</span>} {<span class="id">B</span> : <span class="id"><a href="compcert.lib.Axioms.html#A">A</a></span> -&gt; <span class="kwd">Type</span>} (<span class="id">f</span> <span class="id">g</span> : <span class="kwd">forall</span> <span class="id">x</span> : <span class="id"><a href="compcert.lib.Axioms.html#A">A</a></span>, <span class="id"><a href="compcert.lib.Axioms.html#B">B</a></span> <span class="id"><a href="compcert.lib.Axioms.html#x">x</a></span>),<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Axioms.html#f">f</a></span> <span class="id"><a href="compcert.lib.Axioms.html#x">x</a></span> = <span class="id"><a href="compcert.lib.Axioms.html#g">g</a></span> <span class="id"><a href="compcert.lib.Axioms.html#x">x</a></span>) -&gt; <span class="id"><a href="compcert.lib.Axioms.html#f">f</a></span> = <span class="id"><a href="compcert.lib.Axioms.html#g">g</a></span>.<br/>
+<span class="kwd">Proof</span> @<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FunctionalExtensionality.html#functional_extensionality_dep">FunctionalExtensionality.functional_extensionality_dep</a></span>.<br/>
+<br/>
+<div class="doc">and, as a corollary, functional extensionality for non-dependent functions:
+</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="functional_extensionality">functional_extensionality</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>} (<span class="id">f</span> <span class="id">g</span> : <span class="id"><a href="compcert.lib.Axioms.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Axioms.html#B">B</a></span>), (<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Axioms.html#f">f</a></span> <span class="id"><a href="compcert.lib.Axioms.html#x">x</a></span> = <span class="id"><a href="compcert.lib.Axioms.html#g">g</a></span> <span class="id"><a href="compcert.lib.Axioms.html#x">x</a></span>) -&gt; <span class="id"><a href="compcert.lib.Axioms.html#f">f</a></span> = <span class="id"><a href="compcert.lib.Axioms.html#g">g</a></span>.<br/>
+<span class="kwd">Proof</span> @<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FunctionalExtensionality.html#functional_extensionality">FunctionalExtensionality.functional_extensionality</a></span>.<br/>
+<br/>
+<div class="doc">For compatibility with earlier developments, <span class="bracket"><span class="tactic">extensionality</span></span>
+  is an alias for <span class="bracket"><span class="id">functional_extensionality</span></span>. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="tactic">extensionality</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>} (<span class="id">f</span> <span class="id">g</span> : <span class="id"><a href="compcert.lib.Axioms.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Axioms.html#B">B</a></span>),  (<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Axioms.html#f">f</a></span> <span class="id"><a href="compcert.lib.Axioms.html#x">x</a></span> = <span class="id"><a href="compcert.lib.Axioms.html#g">g</a></span> <span class="id"><a href="compcert.lib.Axioms.html#x">x</a></span>) -&gt; <span class="id"><a href="compcert.lib.Axioms.html#f">f</a></span> = <span class="id"><a href="compcert.lib.Axioms.html#g">g</a></span>.<br/>
+<span class="kwd">Proof</span> @<span class="id"><a href="compcert.lib.Axioms.html#functional_extensionality">functional_extensionality</a></span>.<br/>
+<br/>
+<h1> Proof irrelevance </h1>
+<br/>
+<div class="doc">We also use proof irrelevance. </div>
+<br/>
+<span class="kwd">Axiom</span> <span class="id"><a name="proof_irr">proof_irr</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.ClassicalFacts.html#proof_irrelevance">ClassicalFacts.proof_irrelevance</a></span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.lib.Axioms.html#proof_irr">proof_irr</a></span> [<span class="id">A</span>].<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

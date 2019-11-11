@@ -1,0 +1,176 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Stacklayout</title>
+<meta name="description" content="Documentation of Coq module Stacklayout" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Stacklayout</h1>
+<div class="coq">
+<br/>
+<div class="doc">Machine- and ABI-dependent layout information for activation records. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="compcert.common.Separation.html">Separation</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.Bounds.html">Bounds</a></span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">sep_scope</span>.<br/>
+<br/>
+<div class="doc">The general shape of activation records is as follows,
+  from bottom (lowest offsets) to top:
+<ul>
+<li>
+ Space for outgoing arguments to function calls.
+</li>
+<li>
+ Back link to parent frame
+</li>
+<li>
+ Saved values of integer callee-save registers used by the function.
+</li>
+<li>
+ Saved values of float callee-save registers used by the function.
+</li>
+<li>
+ Local stack slots.
+</li>
+<li>
+ Space for the stack-allocated data declared in Cminor
+</li>
+<li>
+ Return address.
+</li>
+</ul>
+</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="fe_ofs_arg">fe_ofs_arg</a></span> := 0.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="make_env">make_env</a></span> (<span class="id">b</span>: <span class="id"><a href="compcert.backend.Bounds.html#bounds">bounds</a></span>) : <span class="id"><a href="compcert.backend.Bounds.html#frame_env">frame_env</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="compcert.x86_64.Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4 <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">olink</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (4 * <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id"><a href="compcert.x86.Stacklayout.html#w">w</a></span> <span class="kwd">in</span>  <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ocs</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#olink">olink</a></span> + <span class="id"><a href="compcert.x86.Stacklayout.html#w">w</a></span> <span class="kwd">in</span>                           <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ol</span> :=  <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#ocs">ocs</a></span>) 8 <span class="kwd">in</span> <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">ostkdata</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id"><a href="compcert.x86.Stacklayout.html#ol">ol</a></span> + 4 * <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_local">bound_local</a></span>)) 8 <span class="kwd">in</span> <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">oretaddr</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id"><a href="compcert.x86.Stacklayout.html#ostkdata">ostkdata</a></span> + <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id"><a href="compcert.x86.Stacklayout.html#w">w</a></span> <span class="kwd">in</span> <br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sz</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#oretaddr">oretaddr</a></span> + <span class="id"><a href="compcert.x86.Stacklayout.html#w">w</a></span> <span class="kwd">in</span> <br/>
+&nbsp;&nbsp;{| <span class="id"><a href="compcert.backend.Bounds.html#mk_frame_env">fe_size</a></span> := <span class="id"><a href="compcert.x86.Stacklayout.html#sz">sz</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_ofs_link</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#olink">olink</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_ofs_retaddr</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#oretaddr">oretaddr</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_ofs_local</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#ol">ol</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_ofs_callee_save</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#ocs">ocs</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_stack_data</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#ostkdata">ostkdata</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fe_used_callee_save</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span>.(<span class="id"><a href="compcert.backend.Bounds.html#used_callee_save">used_callee_save</a></span>) |}.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="frame_env_separated">frame_env_separated</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">sp</span> <span class="id">m</span> <span class="id">P</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Stacklayout.html#m">m</a></span> |= <span class="id"><a href="compcert.common.Separation.html#range">range</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#sp">sp</a></span> 0 (<span class="id"><a href="compcert.backend.Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>) ** <span class="id"><a href="compcert.common.Separation.html#range">range</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span>) (<span class="id"><a href="compcert.backend.Bounds.html#fe_size">fe_size</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>) ** <span class="id"><a href="compcert.x86.Stacklayout.html#P">P</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Stacklayout.html#m">m</a></span> |= <span class="id"><a href="compcert.common.Separation.html#range">range</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>) (<span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span> + 4 * <span class="id"><a href="compcert.backend.Bounds.html#bound_local">bound_local</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="compcert.common.Separation.html#range">range</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#sp">sp</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> (<span class="id"><a href="compcert.x86.Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span> + 4 * <span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="compcert.common.Separation.html#range">range</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_link">fe_ofs_link</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>) (<span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_link">fe_ofs_link</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="compcert.common.AST.html#Mptr">Mptr</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="compcert.common.Separation.html#range">range</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>) (<span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="compcert.common.AST.html#Mptr">Mptr</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="compcert.common.Separation.html#range">range</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#sp">sp</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>) (<span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_callee_save">fe_ofs_callee_save</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;** <span class="id"><a href="compcert.x86.Stacklayout.html#P">P</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3972')">Proof.</div>
+<div class="proofscript" id="proof3972">
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add">Z.add</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mul">Z.mul</a></span> <span class="id"><a href="compcert.common.Separation.html#sepconj">sepconj</a></span> <span class="id"><a href="compcert.common.Separation.html#range">range</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="compcert.x86_64.Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">olink</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id">olink</span> + <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_local">bound_local</a></span>)) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id"><a href="compcert.common.Memdata.html#size_chunk">size_chunk</a></span> <span class="id"><a href="compcert.common.AST.html#Mptr">Mptr</a></span>) <span class="kwd">with</span> <span class="id">w</span> <span class="tactic">by</span> (<span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Memdata.html#size_chunk_Mptr">size_chunk_Mptr</a></span>; <span class="tactic">auto</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt; <span class="id">w</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">w</span>; <span class="tactic">destruct</span> <span class="id"><a href="compcert.x86_64.Archi.html#ptr64">Archi.ptr64</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_local_pos">bound_local_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing_pos">bound_outgoing_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span>); <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt;= 4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span>) &lt;= <span class="id">olink</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">olink</span> + <span class="id">w</span> &lt;= <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">ocs</span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ocs</span> &lt;= <span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span> &lt;= <span class="id">ol</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_local">bound_local</a></span>) &lt;= <span class="id">ostkdata</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ostkdata</span> + <span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span> &lt;= <span class="id">oretaddr</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+<span class="comment">(*&nbsp;Reorder&nbsp;as:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outgoing<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;back&nbsp;link<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;callee-save<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;local<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;retaddr&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Separation.html#sep_swap12">sep_swap12</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Separation.html#sep_swap23">sep_swap23</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Separation.html#sep_swap45">sep_swap45</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Separation.html#sep_swap34">sep_swap34</a></span>.<br/>
+<span class="comment">(*&nbsp;Apply&nbsp;range_split&nbsp;and&nbsp;range_split2&nbsp;repeatedly&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Separation.html#range_split_2">range_split_2</a></span>. <span class="id">fold</span> <span class="id">olink</span>. <span class="tactic">omega</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Separation.html#range_split">range_split</a></span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Separation.html#range_split_2">range_split_2</a></span>. <span class="id">fold</span> <span class="id">ol</span>. <span class="tactic">omega</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Separation.html#range_drop_right">range_drop_right</a></span> <span class="kwd">with</span> <span class="id">ostkdata</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Separation.html#sep_swap">sep_swap</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Separation.html#range_drop_left">range_drop_left</a></span> <span class="kwd">with</span> (<span class="id">ostkdata</span> + <span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span>). <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Separation.html#sep_swap">sep_swap</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">exact</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="frame_env_range">frame_env_range</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;0 &lt;= <span class="id"><a href="compcert.backend.Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span> /\ <span class="id"><a href="compcert.backend.Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span> + <span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span> &lt;= <span class="id"><a href="compcert.backend.Bounds.html#fe_size">fe_size</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3973')">Proof.</div>
+<div class="proofscript" id="proof3973">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="compcert.x86_64.Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">olink</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id">olink</span> + <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_local">bound_local</a></span>)) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt; <span class="id">w</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">w</span>; <span class="tactic">destruct</span> <span class="id"><a href="compcert.x86_64.Archi.html#ptr64">Archi.ptr64</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_local_pos">bound_local_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing_pos">bound_outgoing_pos</a></span>) <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data_pos">bound_stack_data_pos</a></span>); <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt;= 4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span>) &lt;= <span class="id">olink</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">olink</span> + <span class="id">w</span> &lt;= <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">ocs</span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ocs</span> &lt;= <span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area_incr">size_callee_save_area_incr</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span> &lt;= <span class="id">ol</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_local">bound_local</a></span>) &lt;= <span class="id">ostkdata</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">ostkdata</span> + <span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span> <span class="id">b</span> &lt;= <span class="id">oretaddr</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_le">align_le</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">omega</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="frame_env_aligned">frame_env_aligned</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">fe</span> := <span class="id"><a href="compcert.x86.Stacklayout.html#make_env">make_env</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#b">b</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(8 | <span class="id"><a href="compcert.x86.Stacklayout.html#fe_ofs_arg">fe_ofs_arg</a></span>)<br/>
+&nbsp;&nbsp;/\ (8 | <span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_local">fe_ofs_local</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>)<br/>
+&nbsp;&nbsp;/\ (8 | <span class="id"><a href="compcert.backend.Bounds.html#fe_stack_data">fe_stack_data</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>)<br/>
+&nbsp;&nbsp;/\ (<span class="id"><a href="compcert.common.Memdata.html#align_chunk">align_chunk</a></span> <span class="id"><a href="compcert.common.AST.html#Mptr">Mptr</a></span> | <span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_link">fe_ofs_link</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>)<br/>
+&nbsp;&nbsp;/\ (<span class="id"><a href="compcert.common.Memdata.html#align_chunk">align_chunk</a></span> <span class="id"><a href="compcert.common.AST.html#Mptr">Mptr</a></span> | <span class="id"><a href="compcert.backend.Bounds.html#fe_ofs_retaddr">fe_ofs_retaddr</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html#fe">fe</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3974')">Proof.</div>
+<div class="proofscript" id="proof3974">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">w</span> := <span class="kwd">if</span> <span class="id"><a href="compcert.x86_64.Archi.html#ptr64">Archi.ptr64</a></span> <span class="kwd">then</span> 8 <span class="kwd">else</span> 4).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">olink</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_outgoing">bound_outgoing</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ocs</span> := <span class="id">olink</span> + <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ol</span> :=  <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id"><a href="compcert.backend.Bounds.html#size_callee_save_area">size_callee_save_area</a></span> <span class="id">b</span> <span class="id">ocs</span>) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">ostkdata</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id">ol</span> + 4 * <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_local">bound_local</a></span>)) 8).<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">oretaddr</span> := <span class="id"><a href="compcert.lib.Coqlib.html#align">align</a></span> (<span class="id">ostkdata</span> + <span class="id">b</span>.(<span class="id"><a href="compcert.backend.Bounds.html#bound_stack_data">bound_stack_data</a></span>)) <span class="id">w</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (0 &lt; <span class="id">w</span>) <span class="tactic">by</span> (<span class="tactic">unfold</span> <span class="id">w</span>; <span class="tactic">destruct</span> <span class="id"><a href="compcert.x86_64.Archi.html#ptr64">Archi.ptr64</a></span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id"><a href="compcert.common.Memdata.html#align_chunk">align_chunk</a></span> <span class="id"><a href="compcert.common.AST.html#Mptr">Mptr</a></span>) <span class="kwd">with</span> <span class="id">w</span> <span class="tactic">by</span> (<span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Memdata.html#align_chunk_Mptr">align_chunk_Mptr</a></span>; <span class="tactic">auto</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.divide_0_r">Z.divide_0_r</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_divides">align_divides</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_divides">align_divides</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_divides">align_divides</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#align_divides">align_divides</a></span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Registers</title>
+<meta name="description" content="Documentation of Coq module Registers" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Registers</h1>
+<div class="coq">
+<br/>
+<div class="doc">Pseudo-registers and register states.
+  This library defines the type of pseudo-registers (also known as
+  "temporaries" in compiler literature) used in the RTL
+  intermediate language.  We also define finite sets and finite maps
+  over pseudo-registers. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Ordered.html">Ordered</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSetAVL.html">FSetAVL</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="reg">reg</a></span>: <span class="kwd">Type</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Reg">Reg</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Reg.eq">eq</a></span> := <span class="id"><a href="compcert.lib.Coqlib.html#peq">peq</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Reg.typenv">typenv</a></span> := <span class="id"><a href="compcert.lib.Maps.html#PMap.t">PMap.t</a></span> <span class="id"><a href="compcert.common.AST.html#typ">typ</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.backend.Registers.html#Reg">Reg</a></span>.<br/>
+<br/>
+<div class="doc">Mappings from registers to some type. </div>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Regmap">Regmap</a></span> := <span class="id"><a href="compcert.lib.Maps.html#PMap">PMap</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="regmap_optget">regmap_optget</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">A</span>: <span class="kwd">Type</span>) (<span class="id">or</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>) (<span class="id">dfl</span>: <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span>) (<span class="id">rs</span>: <span class="id"><a href="compcert.backend.Registers.html#t">Regmap.t</a></span> <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span>) : <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Registers.html#or">or</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="compcert.backend.Registers.html#dfl">dfl</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.backend.Registers.html#get">Regmap.get</a></span> <span class="id">r</span> <span class="id"><a href="compcert.backend.Registers.html#rs">rs</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="regmap_optset">regmap_optset</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">A</span>: <span class="kwd">Type</span>) (<span class="id">or</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>) (<span class="id">v</span>: <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span>) (<span class="id">rs</span>: <span class="id"><a href="compcert.backend.Registers.html#t">Regmap.t</a></span> <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span>) : <span class="id"><a href="compcert.backend.Registers.html#t">Regmap.t</a></span> <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Registers.html#or">or</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="compcert.backend.Registers.html#rs">rs</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.backend.Registers.html#set">Regmap.set</a></span> <span class="id">r</span> <span class="id"><a href="compcert.backend.Registers.html#v">v</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs">rs</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="regmap_setres">regmap_setres</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">A</span>: <span class="kwd">Type</span>) (<span class="id">res</span>: <span class="id"><a href="compcert.common.AST.html#builtin_res">builtin_res</a></span> <span class="id"><a href="compcert.backend.Registers.html#reg">reg</a></span>) (<span class="id">v</span>: <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span>) (<span class="id">rs</span>: <span class="id"><a href="compcert.backend.Registers.html#t">Regmap.t</a></span> <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span>) : <span class="id"><a href="compcert.backend.Registers.html#t">Regmap.t</a></span> <span class="id"><a href="compcert.backend.Registers.html#A">A</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Registers.html#res">res</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#BR">BR</a></span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.backend.Registers.html#set">Regmap.set</a></span> <span class="id">r</span> <span class="id"><a href="compcert.backend.Registers.html#v">v</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs">rs</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.backend.Registers.html#rs">rs</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> # <span class="id">b</span>" := (<span class="id"><a href="compcert.backend.Registers.html#get">Regmap.get</a></span> <span class="id">b</span> <span class="id">a</span>) (<span class="tactic">at</span> <span class="id">level</span> 1) : <span class="id">rtl</span>.<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> ## <span class="id">b</span>" := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> (<span class="kwd">fun</span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.backend.Registers.html#get">Regmap.get</a></span> <span class="id"><a href="compcert.backend.Registers.html#r">r</a></span> <span class="id">a</span>) <span class="id">b</span>) (<span class="tactic">at</span> <span class="id">level</span> 1) : <span class="id">rtl</span>.<br/>
+<span class="kwd">Notation</span> "<span class="id">a</span> # <span class="id">b</span> &lt;- <span class="id">c</span>" := (<span class="id"><a href="compcert.backend.Registers.html#set">Regmap.set</a></span> <span class="id">b</span> <span class="id">c</span> <span class="id">a</span>) (<span class="tactic">at</span> <span class="id">level</span> 1, <span class="id">b</span> <span class="tactic">at</span> <span class="id">next</span> <span class="id">level</span>) : <span class="id">rtl</span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">rtl</span>.<br/>
+<br/>
+<div class="doc">Pointwise "less defined than" relation between register maps. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="regs_lessdef">regs_lessdef</a></span> (<span class="id">rs1</span> <span class="id">rs2</span>: <span class="id"><a href="compcert.backend.Registers.html#t">Regmap.t</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>, <span class="id"><a href="compcert.common.Values.html#Val.lessdef">Val.lessdef</a></span> (<span class="id"><a href="compcert.backend.Registers.html#rs1">rs1</a></span>#<span class="id"><a href="compcert.backend.Registers.html#r">r</a></span>) (<span class="id"><a href="compcert.backend.Registers.html#rs2">rs2</a></span>#<span class="id"><a href="compcert.backend.Registers.html#r">r</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="regs_lessdef_regs">regs_lessdef_regs</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rs1</span> <span class="id">rs2</span>, <span class="id"><a href="compcert.backend.Registers.html#regs_lessdef">regs_lessdef</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs1">rs1</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs2">rs2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">rl</span>, <span class="id"><a href="compcert.common.Values.html#Val.lessdef_list">Val.lessdef_list</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs1">rs1</a></span>##<span class="id"><a href="compcert.backend.Registers.html#rl">rl</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs2">rs2</a></span>##<span class="id"><a href="compcert.backend.Registers.html#rl">rl</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2566')">Proof.</div>
+<div class="proofscript" id="proof2566">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">rl</span>; <span class="id">constructor</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="set_reg_lessdef">set_reg_lessdef</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span> <span class="id">v1</span> <span class="id">v2</span> <span class="id">rs1</span> <span class="id">rs2</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Values.html#Val.lessdef">Val.lessdef</a></span> <span class="id"><a href="compcert.backend.Registers.html#v1">v1</a></span> <span class="id"><a href="compcert.backend.Registers.html#v2">v2</a></span> -&gt; <span class="id"><a href="compcert.backend.Registers.html#regs_lessdef">regs_lessdef</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs1">rs1</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs2">rs2</a></span> -&gt; <span class="id"><a href="compcert.backend.Registers.html#regs_lessdef">regs_lessdef</a></span> (<span class="id"><a href="compcert.backend.Registers.html#rs1">rs1</a></span>#<span class="id"><a href="compcert.backend.Registers.html#r">r</a></span> &lt;- <span class="id"><a href="compcert.backend.Registers.html#v1">v1</a></span>) (<span class="id"><a href="compcert.backend.Registers.html#rs2">rs2</a></span>#<span class="id"><a href="compcert.backend.Registers.html#r">r</a></span> &lt;- <span class="id"><a href="compcert.backend.Registers.html#v2">v2</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2567')">Proof.</div>
+<div class="proofscript" id="proof2567">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.backend.Registers.html#gsspec">Regmap.gsspec</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#peq">peq</a></span> <span class="id">r0</span> <span class="id">r</span>); <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="set_res_lessdef">set_res_lessdef</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">res</span> <span class="id">v1</span> <span class="id">v2</span> <span class="id">rs1</span> <span class="id">rs2</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Values.html#Val.lessdef">Val.lessdef</a></span> <span class="id"><a href="compcert.backend.Registers.html#v1">v1</a></span> <span class="id"><a href="compcert.backend.Registers.html#v2">v2</a></span> -&gt; <span class="id"><a href="compcert.backend.Registers.html#regs_lessdef">regs_lessdef</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs1">rs1</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs2">rs2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Registers.html#regs_lessdef">regs_lessdef</a></span> (<span class="id"><a href="compcert.backend.Registers.html#regmap_setres">regmap_setres</a></span> <span class="id"><a href="compcert.backend.Registers.html#res">res</a></span> <span class="id"><a href="compcert.backend.Registers.html#v1">v1</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs1">rs1</a></span>) (<span class="id"><a href="compcert.backend.Registers.html#regmap_setres">regmap_setres</a></span> <span class="id"><a href="compcert.backend.Registers.html#res">res</a></span> <span class="id"><a href="compcert.backend.Registers.html#v2">v2</a></span> <span class="id"><a href="compcert.backend.Registers.html#rs2">rs2</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2568')">Proof.</div>
+<div class="proofscript" id="proof2568">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">res</span>; <span class="tactic">simpl</span>; <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.backend.Registers.html#set_reg_lessdef">set_reg_lessdef</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Sets of registers </div>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Regset">Regset</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSetAVL.html#Make">FSetAVL.Make</a></span>(<span class="id"><a href="compcert.lib.Ordered.html#OrderedPositive">OrderedPositive</a></span>).<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

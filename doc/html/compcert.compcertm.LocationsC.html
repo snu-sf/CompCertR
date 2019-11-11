@@ -1,0 +1,405 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module LocationsC</title>
+<meta name="description" content="Documentation of Coq module LocationsC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module LocationsC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">OrderedType</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Ordered</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Machregs</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Locations</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions</span> <span class="id">Integers</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">Loc_not_in_notin_R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">r</span> <span class="id">locs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTIN</span>: ~ <span class="id">In</span> (<span class="id">R</span> <span class="id">r</span>) <span class="id">locs</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">NOTIN</span>: <span class="id">Loc.notin</span> (<span class="id">R</span> <span class="id">r</span>) <span class="id">locs</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7015')">Proof.</div>
+<div class="proofscript" id="proof7015">
+ <span class="tactic">red</span>. <span class="id">ginduction</span> <span class="id">locs</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>. <span class="id">ii</span>; <span class="id">clarify</span>. <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">typealign_divide_8</span>: <span class="kwd">forall</span> <span class="id">ty</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DIV</span>: (4 * <span class="id">typealign</span> <span class="id">ty</span> | 8)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7016')">Proof.</div>
+<div class="proofscript" id="proof7016">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">red</span>. <span class="id">change</span> 8 <span class="kwd">with</span> (4 * 2). <span class="tactic">eapply</span> <span class="id">Z.mul_divide_mono_l</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ty</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Z.divide_1_l</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">locset</span> := <span class="id">Locmap.t</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Z.mul</span> <span class="id">Z.add</span>.<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">list_nth_z</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_one</span> <span class="id">A</span> (<span class="id">ap</span>: <span class="id">rpair</span> <span class="id">A</span>): <span class="id">bool</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">ap</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">One</span> <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;| <span class="id">Twolong</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_arguments_one</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sg</span> <span class="id">lp</span> (<span class="id">IN</span>: <span class="id">In</span> <span class="id">lp</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>)), &lt;&lt;<span class="id">ONE</span>: <span class="id">is_one</span> <span class="id">lp</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7017')">Proof.</div>
+<div class="proofscript" id="proof7017">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sg</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">loc_arguments</span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> 0 <span class="tactic">at</span> 1 <span class="kwd">as</span> <span class="id">ir</span>. <span class="tactic">generalize</span> 0 <span class="tactic">at</span> 1 <span class="kwd">as</span> <span class="id">fr</span>. <span class="tactic">generalize</span> 0 <span class="tactic">at</span> 1 <span class="kwd">as</span> <span class="id">ofs</span>.<br/>
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">sig_args</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">des_ifs</span>; <span class="tactic">repeat</span> (<span class="id">des</span>; <span class="id">ss</span>; <span class="id">clarify</span>); <span class="tactic">eapply</span> <span class="id">IHsig_args</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_result_one</span>: <span class="kwd">forall</span> <span class="id">sg</span>, <span class="id">exists</span> <span class="id">mr_res</span>, &lt;&lt;<span class="id">ONE</span>: <span class="id">loc_result</span> <span class="id">sg</span> = <span class="id">One</span> <span class="id">mr_res</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7018')">Proof.</div>
+<div class="proofscript" id="proof7018">
+ <span class="id">i</span>. <span class="tactic">compute</span>. <span class="id">des_ifs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">Loc_cons_right_disjoint</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">xs0</span> <span class="id">xs1</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DISJ</span>: <span class="id">Loc.disjoint</span> <span class="id">xs0</span> <span class="id">xs1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTIN</span>: <span class="id">Loc.notin</span> <span class="id">x</span> <span class="id">xs0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DISJ</span>: <span class="id">Loc.disjoint</span> <span class="id">xs0</span> (<span class="id">x</span> :: <span class="id">xs1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7019')">Proof.</div>
+<div class="proofscript" id="proof7019">
+&nbsp;&nbsp;<span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des</span>; <span class="id">ss</span>; <span class="id">clarify</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Loc.diff_sym</span>. <span class="tactic">eapply</span> <span class="id">Loc.in_notin_diff</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">disjoint_concat</span> <span class="id">l1</span> <span class="id">l2</span> <span class="id">x</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Loc.disjoint</span> (<span class="id">l1</span>++[<span class="id">x</span>]) <span class="id">l2</span> -&gt; <span class="id">Loc.disjoint</span> <span class="id">l1</span> <span class="id">l2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7020')">Proof.</div>
+<div class="proofscript" id="proof7020">
+ <span class="tactic">unfold</span> <span class="id">Loc.disjoint</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">in_or_app</span>. <span class="id">left</span>. <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">norepet_nth_notin</span> <span class="id">l</span> <span class="id">n</span> <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOREPET</span>: <span class="id">Loc.norepet</span> <span class="id">l</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NTH</span>: <span class="id">list_nth_z</span> <span class="id">l</span> (<span class="id">Z.of_nat</span> <span class="id">n</span>) = <span class="id">Some</span> <span class="id">m</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Loc.notin</span> <span class="id">m</span> (<span class="id">firstn</span> <span class="id">n</span> <span class="id">l</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7021')">Proof.</div>
+<div class="proofscript" id="proof7021">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">l</span>; <span class="id">i</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">NOREPET</span>. <span class="tactic">destruct</span> <span class="id">n</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">NTH</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">list_nth_z</span>. <span class="tactic">unfold</span> <span class="id">list_nth_z</span> <span class="kwd">in</span> <span class="id">NTH</span>. <span class="id">fold</span> <span class="id">list_nth_z</span> <span class="kwd">in</span> <span class="id">NTH</span>. <span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">list_nth_z</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">Z.pred</span> (<span class="id">Z.of_nat</span> (<span class="id">Datatypes.S</span> <span class="id">n</span>))) <span class="kwd">with</span> (<span class="id">Z.of_nat</span> <span class="id">n</span>) <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="id">nia</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">firstn_cons</span>. <span class="id">ss</span>. <span class="id">esplits</span>; <span class="id">et</span>. <span class="tactic">eapply</span> <span class="id">Loc.diff_sym</span>. <span class="tactic">eapply</span> <span class="id">Loc.in_notin_diff</span>; <span class="id">et</span>. <span class="tactic">eapply</span> <span class="id">list_nth_z_in</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">disjoint_app_inv</span>: <span class="kwd">forall</span> <span class="id">l1</span> <span class="id">l2</span> <span class="id">l3</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Loc.disjoint</span> <span class="id">l1</span> (<span class="id">l2</span> ++ <span class="id">l3</span>) -&gt; <span class="id">Loc.disjoint</span> <span class="id">l1</span> <span class="id">l2</span> /\ <span class="id">Loc.disjoint</span> <span class="id">l1</span> <span class="id">l3</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7022')">Proof.</div>
+<div class="proofscript" id="proof7022">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">l2</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="id">et</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">ss</span>. <span class="tactic">eapply</span> <span class="id">H</span>; <span class="id">et</span>. <span class="id">ss</span>. <span class="id">des</span>; <span class="id">clarify</span>; <span class="id">et</span>. <span class="id">right</span>. <span class="tactic">rewrite</span> <span class="id">in_app_iff</span>. <span class="id">et</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Loc.disjoint_cons_right</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">eapply</span> <span class="id">IHl2</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">notin_regs_of_rpairs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ofs</span> <span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs2</span> <span class="id">T</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LT</span>:<span class="id">ofs</span> + 2 &lt;= <span class="id">ofs2</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Loc.notin</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">T</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments_64</span> <span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs2</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7023')">Proof.</div>
+<div class="proofscript" id="proof7023">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">tys</span>; <span class="id">ss</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="tactic">destruct</span> <span class="id">T</span>; <span class="id">econs</span>; <span class="id">ss</span>; <span class="id">et</span>; <span class="tactic">try</span> <span class="id">nia</span>; <span class="tactic">eapply</span> <span class="id">IHtys</span>; <span class="tactic">try</span> <span class="id">nia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_arguments_norepet_aux</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tys</span> (<span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>: <span class="id">Z</span>) <span class="id">locs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOCS</span>: (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments_64</span> <span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>)) = <span class="id">locs</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">NOREP</span>: <span class="id">Loc.norepet</span> <span class="id">locs</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">NOTINIR</span>: <span class="id">Loc.disjoint</span> (<span class="id">map</span> <span class="id">R</span> (<span class="id">List.firstn</span> <span class="id">ir</span>.(<span class="id">Z.to_nat</span>) <span class="id">int_param_regs</span>)) <span class="id">locs</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">NOTINFR</span>: <span class="id">Loc.disjoint</span> (<span class="id">map</span> <span class="id">R</span> (<span class="id">List.firstn</span> <span class="id">fr</span>.(<span class="id">Z.to_nat</span>) <span class="id">float_param_regs</span>)) <span class="id">locs</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7024')">Proof.</div>
+<div class="proofscript" id="proof7024">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">tys</span>; <span class="id">ii</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">econs</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">TTT</span>: <span class="id">Loc.disjoint</span> (<span class="id">map</span> <span class="id">R</span> <span class="id">int_param_regs</span>) (<span class="id">map</span> <span class="id">R</span> <span class="id">float_param_regs</span>)).<br/>
+&nbsp;&nbsp;{ <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des</span>; <span class="tactic">subst</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">a</span> = <span class="id">Tfloat</span> \/ <span class="id">a</span> = <span class="id">Tsingle</span>)).<br/>
+&nbsp;&nbsp;{ <span class="tactic">assert</span>(<span class="id">loc_arguments_64</span> (<span class="id">a</span> :: <span class="id">tys</span>) <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span> =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">list_nth_z</span> <span class="id">float_param_regs</span> <span class="id">fr</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">freg</span> =&gt; <span class="id">One</span> (<span class="id">R</span> <span class="id">freg</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tys</span> <span class="id">ir</span> (<span class="id">fr</span> + 1) <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">One</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">a</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span> (<span class="id">ofs</span> + 2)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">desH</span> <span class="id">H</span>; <span class="tactic">subst</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H0</span>. <span class="tactic">clear</span> <span class="id">H</span> <span class="id">H0</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">specialize</span> (<span class="id">IHtys</span> <span class="id">ir</span> (<span class="id">fr</span> + 1) <span class="id">ofs</span> <span class="id">_</span> <span class="id">eq_refl</span>); <span class="id">des</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">Loc.disjoint_notin</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">NOTINFR</span>. <span class="tactic">eapply</span> <span class="id">in_map</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">list_nth_z_in</span>. <span class="tactic">eapply</span> <span class="id">list_nth_z_firstn</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">Loc_cons_right_disjoint</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">clear</span> - <span class="id">Heq</span> <span class="id">TTT</span>. <span class="tactic">eapply</span> <span class="id">Loc.disjoint_notin</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">list_nth_z_in</span>. <span class="tactic">eapply</span> <span class="id">list_nth_z_map</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Loc.disjoint_sym</span> <span class="kwd">in</span> <span class="id">TTT</span>. <span class="tactic">rewrite</span> <span class="id">map_firstn</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id">firstn_skipn</span> <span class="kwd">in</span> <span class="id">TTT</span>. <span class="tactic">eapply</span> <span class="id">disjoint_app_inv</span> <span class="kwd">in</span> <span class="id">TTT</span>. <span class="id">des</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">Loc_cons_right_disjoint</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">list_nth_z_range</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">RANGE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">fr</span>; <span class="tactic">try</span> <span class="id">xomega</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (<span class="id">firstn_S</span> <span class="id">float_param_regs</span>). <span class="id">i</span>; <span class="id">desH</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">rewrite</span> &lt;- <span class="id">H0</span>. <span class="tactic">replace</span> (<span class="id">Pos.to_nat</span> <span class="id">p</span> + 1)%<span class="id">nat</span> <span class="kwd">with</span> (<span class="id">Pos.to_nat</span> (<span class="id">p</span> + 1)); <span class="tactic">try</span> <span class="id">nia</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">replace</span> (<span class="id">Z.to_nat</span> (<span class="id">Z.pos</span> <span class="id">p</span> + 1)) <span class="kwd">with</span> (<span class="id">Pos.to_nat</span> <span class="id">p</span> + 1)%<span class="id">nat</span> <span class="kwd">in</span> *; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">clear</span>. <span class="tactic">rewrite</span> <span class="id">Z2Nat.inj_add</span>; <span class="tactic">try</span> <span class="id">nia</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">NOTINFR</span>. <span class="tactic">rewrite</span> <span class="id">list_append_map</span> <span class="kwd">in</span> <span class="id">NOTINFR</span>; <span class="id">ss</span>. <span class="tactic">eapply</span> <span class="id">disjoint_concat</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">clear</span> - <span class="id">Heq</span>. <span class="tactic">rewrite</span> <span class="id">map_firstn</span>. <span class="tactic">eapply</span> <span class="id">norepet_nth_notin</span>; <span class="tactic">try</span> <span class="tactic">do</span> 9 (<span class="id">econs</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">list_nth_z_map</span>; <span class="id">et</span>. <span class="tactic">rewrite</span> <span class="id">Z2Nat.id</span>; <span class="id">et</span>. <span class="tactic">eapply</span> <span class="id">list_nth_z_range</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">specialize</span> (<span class="id">IHtys</span> <span class="id">ir</span> <span class="id">fr</span> (<span class="id">ofs</span> + 2) <span class="id">_</span> <span class="id">eq_refl</span>); <span class="id">des</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">eapply</span> <span class="id">Loc_cons_right_disjoint</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Loc.disjoint_notin</span> <span class="kwd">with</span> (<span class="id">l1</span> := [<span class="id">_</span>]); <span class="id">ss</span>; <span class="id">et</span>; <span class="id">ii</span>; <span class="tactic">rewrite</span> <span class="id">in_map_iff</span> <span class="kwd">in</span> *; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">clarify</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">notin_regs_of_rpairs</span>. <span class="id">nia</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;{ <span class="tactic">assert</span>(<span class="id">a</span> = <span class="id">Tint</span> \/ <span class="id">a</span> = <span class="id">Tlong</span> \/ <span class="id">a</span> = <span class="id">Tany32</span> \/ <span class="id">a</span> = <span class="id">Tany64</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">not_or_and</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">des_ifs</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">loc_arguments_64</span> (<span class="id">a</span> :: <span class="id">tys</span>) <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span> =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">list_nth_z</span> <span class="id">int_param_regs</span> <span class="id">ir</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">ireg</span> =&gt; <span class="id">One</span> (<span class="id">R</span> <span class="id">ireg</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tys</span> (<span class="id">ir</span> + 1) <span class="id">fr</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">One</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">a</span>) :: <span class="id">loc_arguments_64</span> <span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span> (<span class="id">ofs</span> + 2)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">desH</span> <span class="id">H0</span>; <span class="tactic">subst</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H1</span>. <span class="tactic">clear</span> <span class="id">H</span> <span class="id">H0</span> <span class="id">H1</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">specialize</span> (<span class="id">IHtys</span> (<span class="id">ir</span> + 1) <span class="id">fr</span> <span class="id">ofs</span> <span class="id">_</span> <span class="id">eq_refl</span>); <span class="id">des</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">Loc.disjoint_notin</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">NOTINIR</span>. <span class="tactic">eapply</span> <span class="id">in_map</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">list_nth_z_in</span>. <span class="tactic">eapply</span> <span class="id">list_nth_z_firstn</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">Loc_cons_right_disjoint</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">list_nth_z_range</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">RANGE</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">ir</span>; <span class="tactic">try</span> <span class="id">xomega</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (<span class="id">firstn_S</span> <span class="id">int_param_regs</span>). <span class="id">i</span>; <span class="id">desH</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">rewrite</span> &lt;- <span class="id">H0</span>. <span class="tactic">replace</span> (<span class="id">Pos.to_nat</span> <span class="id">p</span> + 1)%<span class="id">nat</span> <span class="kwd">with</span> (<span class="id">Pos.to_nat</span> (<span class="id">p</span> + 1)); <span class="tactic">try</span> <span class="id">nia</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">replace</span> (<span class="id">Z.to_nat</span> (<span class="id">Z.pos</span> <span class="id">p</span> + 1)) <span class="kwd">with</span> (<span class="id">Pos.to_nat</span> <span class="id">p</span> + 1)%<span class="id">nat</span> <span class="kwd">in</span> *; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">clear</span>. <span class="tactic">rewrite</span> <span class="id">Z2Nat.inj_add</span>; <span class="tactic">try</span> <span class="id">nia</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">NOTINIR</span>. <span class="tactic">rewrite</span> <span class="id">list_append_map</span> <span class="kwd">in</span> <span class="id">NOTINIR</span>; <span class="id">ss</span>. <span class="tactic">eapply</span> <span class="id">disjoint_concat</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">clear</span> - <span class="id">Heq</span>. <span class="tactic">rewrite</span> <span class="id">map_firstn</span>. <span class="tactic">eapply</span> <span class="id">norepet_nth_notin</span>; <span class="tactic">try</span> <span class="tactic">do</span> 7 (<span class="id">econs</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">list_nth_z_map</span>; <span class="id">et</span>. <span class="tactic">rewrite</span> <span class="id">Z2Nat.id</span>; <span class="id">et</span>. <span class="tactic">eapply</span> <span class="id">list_nth_z_range</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">Loc_cons_right_disjoint</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">clear</span> - <span class="id">Heq</span> <span class="id">TTT</span>. <span class="tactic">eapply</span> <span class="id">Loc.disjoint_notin</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">list_nth_z_in</span>. <span class="tactic">eapply</span> <span class="id">list_nth_z_map</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">rewrite</span> <span class="id">map_firstn</span>. <span class="id">erewrite</span> &lt;- <span class="id">firstn_skipn</span> <span class="kwd">in</span> <span class="id">TTT</span>. <span class="tactic">eapply</span> <span class="id">disjoint_app_inv</span> <span class="kwd">in</span> <span class="id">TTT</span>. <span class="id">des</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">specialize</span> (<span class="id">IHtys</span> <span class="id">ir</span> <span class="id">fr</span> (<span class="id">ofs</span> + 2) <span class="id">_</span> <span class="id">eq_refl</span>); <span class="id">des</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">eapply</span> <span class="id">Loc_cons_right_disjoint</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Loc.disjoint_notin</span> <span class="kwd">with</span> (<span class="id">l1</span> := [<span class="id">_</span>]); <span class="id">ss</span>; <span class="id">et</span>; <span class="id">ii</span>; <span class="tactic">rewrite</span> <span class="id">in_map_iff</span> <span class="kwd">in</span> *; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">clarify</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">notin_regs_of_rpairs</span>. <span class="id">nia</span>.<br/>
+&nbsp;&nbsp;}<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_arguments_norepet</span>: <span class="kwd">forall</span> <span class="id">sg</span>, <span class="id">Loc.norepet</span> (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7025')">Proof.</div>
+<div class="proofscript" id="proof7025">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">loc_arguments</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">loc_arguments_norepet_aux</span> (<span class="id">sig_args</span> <span class="id">sg</span>) 0 0 0). <span class="id">i</span>. <span class="id">specialize</span> (<span class="id">H</span> <span class="id">_</span> <span class="id">eq_refl</span>). <span class="id">des</span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_norepet_app</span> <span class="id">l0</span> <span class="id">l1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOREPEAT</span>: <span class="id">Loc.norepet</span> (<span class="id">l0</span> ++ <span class="id">l1</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Loc.norepet</span> <span class="id">l1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7026')">Proof.</div>
+<div class="proofscript" id="proof7026">
+ <span class="tactic">induction</span> <span class="id">l0</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">NOREPEAT</span>. <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_notin_not_in</span> <span class="id">mr</span> <span class="id">locs</span>:<br/>
+&nbsp;&nbsp;<span class="id">Loc.notin</span> (<span class="id">R</span> <span class="id">mr</span>) <span class="id">locs</span> &lt;-&gt; ~ <span class="id">In</span> (<span class="id">R</span> <span class="id">mr</span>) <span class="id">locs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7027')">Proof.</div>
+<div class="proofscript" id="proof7027">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">locs</span>; <span class="id">ss</span>. <span class="tactic">split</span>; <span class="id">ii</span>; <span class="id">des</span>; <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHlocs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHlocs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">not_or_and</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">des</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="id">ii</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">not_or_and</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">des</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">in_one_in_rpair</span> <span class="id">l</span> (<span class="id">r</span>: <span class="id">loc</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">In</span> (<span class="id">One</span> <span class="id">r</span>) <span class="id">l</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">In</span> <span class="id">r</span> (<span class="id">regs_of_rpairs</span> <span class="id">l</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7028')">Proof.</div>
+<div class="proofscript" id="proof7028">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">r</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">in_or_app</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">loc_arguments_ofs_bounded</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sg</span> <span class="id">lo</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SZ</span>: 0 &lt;= <span class="id">lo</span> /\ <span class="id">lo</span> + 4 * <span class="id">size_arguments</span> <span class="id">sg</span> &lt;= <span class="id">Ptrofs.max_unsigned</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ofs</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">In</span> (<span class="id">One</span> (<span class="id">S</span> <span class="id">Outgoing</span> <span class="id">ofs</span> <span class="id">ty</span>)) (<span class="id">loc_arguments</span> <span class="id">sg</span>)):<br/>
+&nbsp;&nbsp;0 &lt;= <span class="id">lo</span> + 4 * <span class="id">ofs</span> &lt;= <span class="id">Ptrofs.max_unsigned</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7029')">Proof.</div>
+<div class="proofscript" id="proof7029">
+&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id">loc_arguments_bounded</span>.<br/>
+&nbsp;&nbsp;- <span class="id">instantiate</span> (1:=<span class="id">sg</span>). <span class="id">instantiate</span> (1:=<span class="id">ty</span>). <span class="id">instantiate</span> (1:=<span class="id">ofs</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">ofs</span> <span class="id">ty</span> <span class="id">IN</span>. <span class="tactic">induction</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>); <span class="id">ss</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">in_app_iff</span>. <span class="id">right</span>. <span class="tactic">eapply</span> <span class="id">IHl</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">hexploit</span> (<span class="id">loc_arguments_acceptable</span> <span class="id">sg</span>); <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">ACCP</span>. <span class="id">inv</span> <span class="id">ACCP</span>. <span class="id">lia</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> <span class="id">ty</span>; <span class="id">ss</span>; <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">sig_args_length</span> <span class="id">sg</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Datatypes.length</span> (<span class="id">sig_args</span> <span class="id">sg</span>) = <span class="id">Datatypes.length</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7030')">Proof.</div>
+<div class="proofscript" id="proof7030">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">loc_arguments</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> 0 <span class="tactic">at</span> 1. <span class="tactic">generalize</span> 0 <span class="tactic">at</span> 1. <span class="tactic">generalize</span> 0 <span class="tactic">at</span> 1.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> (<span class="id">sig_args</span> <span class="id">sg</span>); <span class="id">ss</span>; <span class="id">i</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="tactic">f_equal</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">Val_has_type_list_length</span> <span class="id">sg</span> <span class="id">vs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">Val.has_type_list</span> <span class="id">vs</span> (<span class="id">sig_args</span> <span class="id">sg</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Datatypes.length</span> <span class="id">vs</span> = <span class="id">Datatypes.length</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7031')">Proof.</div>
+<div class="proofscript" id="proof7031">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">sig_args_length</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">vs</span> <span class="id">TYP</span>. <span class="tactic">induction</span> (<span class="id">sig_args</span> <span class="id">sg</span>); <span class="id">ss</span>; <span class="id">i</span>; <span class="tactic">destruct</span> <span class="id">vs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">f_equal</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">_locmap_tac</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">first</span>[<span class="tactic">rewrite</span> <span class="id">Locmap.gss</span>; <span class="id">ss</span>; <span class="id">check_safe</span>|<span class="tactic">rewrite</span> <span class="id">Locmap.gso</span>; <span class="id">ss</span>]);<br/>
+&nbsp;&nbsp;<span class="tactic">try</span> <span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">H</span>: <span class="id">Loc.notin</span> <span class="id">_</span> (<span class="id">_</span> :: <span class="id">_</span>) |- <span class="id">_</span>] =&gt; <span class="id">inv</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">H</span>: <span class="id">Loc.norepet</span> (<span class="id">_</span> :: <span class="id">_</span>) |- <span class="id">_</span>] =&gt; <span class="id">inv</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [ |- <span class="id">Loc.diff</span> <span class="id">_</span> <span class="id">_</span>] =&gt; <span class="tactic">by</span> (<span class="tactic">eapply</span> <span class="id">Loc.in_notin_diff</span>; <span class="tactic">eauto</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">H</span>: <span class="id">Loc.diff</span> ?<span class="id">A</span> ?<span class="id">B</span> |- <span class="id">Loc.diff</span> ?<span class="id">B</span> ?<span class="id">A</span>] =&gt; <span class="tactic">apply</span> <span class="id">Loc.diff_sym</span>; <span class="tactic">assumption</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [<span class="id">H</span>: <span class="id">R</span> ?<span class="id">x</span> &lt;&gt; <span class="id">R</span> ?<span class="id">y</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tryif</span> <span class="id">exists_prop</span> (<span class="id">x</span> &lt;&gt; <span class="id">y</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id">idtac</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="tactic">assert</span>(<span class="id">x</span> &lt;&gt; <span class="id">y</span>) <span class="tactic">by</span> (<span class="id">ii</span>; <span class="id">clarify</span>; <span class="id">ss</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>;<br/>
+&nbsp;&nbsp;<span class="id">des_safe</span>;<br/>
+&nbsp;&nbsp;<span class="id">idtac</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Loc.diff</span>.<br/>
+<span class="kwd">Ltac</span> <span class="id">locmap_tac</span> := <span class="tactic">repeat</span> <span class="id">_locmap_tac</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">locmap_put</span> (<span class="id">l</span>: <span class="id">loc</span>) (<span class="id">v</span>: <span class="id">val</span>) (<span class="id">ls</span>: <span class="id">locset</span>): <span class="id">locset</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">loc</span> =&gt; <span class="kwd">if</span> <span class="id">Loc.eq</span> <span class="id">loc</span> <span class="id">l</span> <span class="kwd">then</span> <span class="id">v</span> <span class="kwd">else</span> <span class="id">ls</span> <span class="id">loc</span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">locmap_put</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">fill_arguments</span> (<span class="id">ls0</span>: <span class="id">locset</span>) (<span class="id">args</span>: <span class="id">list</span> <span class="id">val</span>) (<span class="id">locs</span>: <span class="id">list</span> (<span class="id">rpair</span> <span class="id">loc</span>)): <span class="id">option</span> <span class="id">locset</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">args</span>, <span class="id">locs</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [], [] =&gt; <span class="id">Some</span> <span class="id">ls0</span><br/>
+&nbsp;&nbsp;| <span class="id">arg</span> :: <span class="id">args</span>, <span class="id">loc</span> :: <span class="id">locs</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fill_arguments</span> <span class="id">ls0</span> <span class="id">args</span> <span class="id">locs</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">ls1</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">loc</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">One</span> <span class="id">loc</span> =&gt; <span class="id">Some</span> (<span class="id">locmap_put</span> <span class="id">loc</span> <span class="id">arg</span> <span class="id">ls1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Twolong</span> <span class="id">hi</span> <span class="id">lo</span> =&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Some</span> (<span class="id">Locmap.set</span> <span class="id">lo</span> <span class="id">arg</span>.(<span class="id">Val.loword</span>) (<span class="id">Locmap.set</span> <span class="id">hi</span> <span class="id">arg</span>.(<span class="id">Val.hiword</span>) <span class="id">ls1</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">None</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id">None</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">fill_arguments_progress</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ls0</span> <span class="id">args</span> <span class="id">locs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id">length</span> <span class="id">args</span> = <span class="id">length</span> <span class="id">locs</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">ls1</span>, &lt;&lt;<span class="id">LS</span>: <span class="id">fill_arguments</span> <span class="id">ls0</span> <span class="id">args</span> <span class="id">locs</span> =<span class="id">Some</span> <span class="id">ls1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7032')">Proof.</div>
+<div class="proofscript" id="proof7032">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">args</span>; <span class="id">ii</span>; <span class="tactic">destruct</span> <span class="id">locs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IHargs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="tactic">rewrite</span> <span class="id">LS</span>. <span class="id">des_ifs</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">fill_arguments_spec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vs</span> <span class="id">sg</span> <span class="id">locs</span> <span class="id">ls0</span> <span class="id">ls1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOCS</span>: <span class="id">locs</span> = <span class="id">loc_arguments</span> <span class="id">sg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FILL</span>: <span class="id">fill_arguments</span> <span class="id">ls0</span> <span class="id">vs</span> <span class="id">locs</span> = <span class="id">Some</span> <span class="id">ls1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">FILL</span>: <span class="id">vs</span> = <span class="id">map</span> (<span class="kwd">fun</span> <span class="id">p</span> =&gt; <span class="id">Locmap.getpair</span> <span class="id">p</span> <span class="id">ls1</span>) <span class="id">locs</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">OUT</span>: <span class="kwd">forall</span> <span class="id">loc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTIN</span>: ~ <span class="id">In</span> <span class="id">loc</span> (<span class="id">regs_of_rpairs</span> <span class="id">locs</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ls1</span> <span class="id">loc</span> = <span class="id">ls0</span> <span class="id">loc</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7033')">Proof.</div>
+<div class="proofscript" id="proof7033">
+&nbsp;&nbsp;<span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">ONES</span>: <span class="kwd">forall</span> <span class="id">lp</span>, <span class="id">In</span> <span class="id">lp</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>) -&gt; <span class="id">is_one</span> <span class="id">lp</span>).<br/>
+&nbsp;&nbsp;{ <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">loc_arguments_one</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">NOREPT</span>: <span class="id">Loc.norepet</span> (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))).<br/>
+&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">loc_arguments_norepet</span>. }<br/>
+&nbsp;&nbsp;<span class="id">abstr</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>) <span class="id">locs</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">locs</span>; <span class="id">ii</span>; <span class="tactic">destruct</span> <span class="id">vs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">clarify</span>. }<br/>
+&nbsp;&nbsp;<span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHlocs</span>; <span class="tactic">eauto</span>. { <span class="tactic">eapply</span> <span class="id">loc_norepet_app</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">spc</span> <span class="id">ONES</span>. <span class="id">exploit</span> <span class="id">ONES</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">red</span>. <span class="tactic">f_equal</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">u</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">clear</span> - <span class="id">NOREPT</span>. <span class="id">inv</span> <span class="id">NOREPT</span>. <span class="tactic">induction</span> <span class="id">locs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">locmap_put</span>. <span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">apply_all_once</span> <span class="id">Loc.diff_not_eq</span>; <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">eapply</span> <span class="id">loc_norepet_app</span> <span class="kwd">in</span> <span class="id">H2</span>. <span class="tactic">eapply</span> <span class="id">IHlocs</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">inv</span> <span class="id">H1</span>; <span class="tactic">try</span> <span class="id">inv</span> <span class="id">H0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>; <span class="id">des</span>. <span class="id">u</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">contradict</span> <span class="id">NOTIN</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">erewrite</span> <span class="id">OUT</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">extcall_args_reg</span> (<span class="id">mr</span>: <span class="id">mreg</span>) (<span class="id">sg</span>: <span class="id">signature</span>):<br/>
+&nbsp;&nbsp;{<span class="id">In</span> (<span class="id">R</span> <span class="id">mr</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))} +<br/>
+&nbsp;&nbsp;{~ <span class="id">In</span> (<span class="id">R</span> <span class="id">mr</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7034')">Proof.</div>
+<div class="proofscript" id="proof7034">
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>)). <span class="tactic">induction</span> <span class="id">l</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ss</span>. <span class="tactic">tauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ss</span>. <span class="id">inv</span> <span class="id">IHl</span>; [<span class="tactic">tauto</span>|]. <span class="tactic">destruct</span> <span class="id">a</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id">mreg_eq</span> <span class="id">r</span> <span class="id">mr</span>); [<span class="id">clarify</span>; <span class="tactic">eauto</span>|]. <span class="id">right</span>. <span class="tactic">intros</span> []; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">right</span>. <span class="tactic">intros</span> []; <span class="id">clarify</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">arguments_loc</span> <span class="id">sg</span> <span class="id">sl</span> <span class="id">delta</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">In</span> (<span class="id">S</span> <span class="id">sl</span> <span class="id">delta</span> <span class="id">ty</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> <span class="id">sg</span>))):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sl</span> = <span class="id">Outgoing</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;0 &lt;= <span class="id">delta</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;4 * <span class="id">delta</span> + <span class="id">size_chunk</span> (<span class="id">chunk_of_type</span> <span class="id">ty</span>) &lt;= 4 * <span class="id">size_arguments</span> <span class="id">sg</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7035')">Proof.</div>
+<div class="proofscript" id="proof7035">
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">loc_arguments_acceptable_2</span> <span class="id">_</span> <span class="id">_</span> <span class="id">IN</span>). <span class="id">i</span>. <span class="id">ss</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">loc_arguments_bounded</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">IN</span>).<br/>
+&nbsp;&nbsp;<span class="id">splits</span>; <span class="tactic">eauto</span>; [<span class="tactic">omega</span>|]. <span class="tactic">unfold</span> <span class="id">typesize</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">regs_of_rpair_In</span> <span class="id">A</span> (<span class="id">l</span>: <span class="id">list</span> (<span class="id">rpair</span> <span class="id">A</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span> (<span class="id">IN</span>: <span class="id">In</span> (<span class="id">One</span> <span class="id">r</span>) <span class="id">l</span>), <span class="id">In</span> <span class="id">r</span> (<span class="id">regs_of_rpairs</span> <span class="id">l</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;/\ (<span class="kwd">forall</span> <span class="id">r0</span> <span class="id">r1</span> (<span class="id">IN</span>: <span class="id">In</span> (<span class="id">Twolong</span> <span class="id">r0</span> <span class="id">r1</span>) <span class="id">l</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">In</span> <span class="id">r0</span> (<span class="id">regs_of_rpairs</span> <span class="id">l</span>) /\ <span class="id">In</span> <span class="id">r1</span> (<span class="id">regs_of_rpairs</span> <span class="id">l</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7036')">Proof.</div>
+<div class="proofscript" id="proof7036">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="id">i</span>; <span class="id">ss</span>; <span class="tactic">split</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="id">clarify</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">in_or_app</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">split</span>; <span class="tactic">eapply</span> <span class="id">in_or_app</span>; <span class="id">right</span>; <span class="tactic">eapply</span> (<span class="id">IHl0</span> <span class="id">_</span> <span class="id">_</span> <span class="id">IN</span>).<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

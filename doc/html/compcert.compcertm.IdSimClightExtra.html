@@ -1,0 +1,128 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module IdSimClightExtra</title>
+<meta name="description" content="Documentation of Coq module IdSimClightExtra" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module IdSimClightExtra</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Program</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Sem</span> <span class="id">SimProg</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span> <span class="id">SimMod</span> <span class="id">SimModSem</span> <span class="id">SimSymb</span> <span class="id">SimMem</span> <span class="id">Sound</span> <span class="id">SimSymb</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Cop</span> <span class="id">Ctypes</span> <span class="id">ClightC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmC</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimMemInjInvC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinkingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MapsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AxiomsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Ord</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SmallstepC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Preservation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span> <span class="id">Conventions</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions1C</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmregsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MatchSimModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">StoreArguments</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmStepInj</span> <span class="id">IntegersC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Coq.Logic.PropExtensionality</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmExtra</span> <span class="id">IdSimExtra</span> <span class="id">IdSimAsmExtra</span> <span class="id">IdSimInvExtra</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MatchSimModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions1C</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ClightStepInj</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IdSimExtra</span> <span class="id">IdSimInvExtra</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">mktac</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Z.mul</span> <span class="id">Z.add</span> <span class="id">Z.sub</span> <span class="id">Z.div</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">val_casted_inject</span> <span class="id">val0</span> <span class="id">val1</span> <span class="id">j</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">val0</span> <span class="id">val1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CAST</span>: <span class="id">val_casted</span> <span class="id">val0</span> <span class="id">ty</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">val_casted</span> <span class="id">val1</span> <span class="id">ty</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6334')">Proof.</div>
+<div class="proofscript" id="proof6334">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">CAST</span>; <span class="id">inv</span> <span class="id">VAL</span>; <span class="id">clarify</span>; <span class="tactic">try</span> <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CopC</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">typecheck_inject</span> <span class="id">vals0</span> <span class="id">vals1</span> <span class="id">j</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id">Val.inject_list</span> <span class="id">j</span> <span class="id">vals0</span> <span class="id">vals1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">typecheck</span> <span class="id">vals0</span> <span class="id">ty</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typecheck</span> <span class="id">vals1</span> <span class="id">ty</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6335')">Proof.</div>
+<div class="proofscript" id="proof6335">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TYP</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">clear</span> - <span class="id">VALS</span> <span class="id">TYP0</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">vals1</span> <span class="id">VALS</span> <span class="id">TYP0</span>. <span class="tactic">generalize</span> (<span class="id">typelist_to_listtype</span> <span class="id">ty</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">ty</span>. <span class="tactic">induction</span> <span class="id">vals0</span>; <span class="id">ss</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">VALS</span>; <span class="id">inv</span> <span class="id">TYP0</span>; <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">val_casted_inject</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHvals0</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">wt_retval_inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">wt_retval</span> <span class="id">v_tgt</span> <span class="id">ty</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_retval</span> <span class="id">v_src</span> <span class="id">ty</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6336')">Proof.</div>
+<div class="proofscript" id="proof6336">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TYP</span>; <span class="id">inv</span> <span class="id">WTV</span>; <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">clarify</span>; <span class="tactic">try</span> <span class="tactic">by</span> <span class="tactic">repeat</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">NVOID</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">typify_c_inject</span> <span class="id">j</span> <span class="id">retv_src</span> <span class="id">retv_tgt</span> <span class="id">tres</span> <span class="id">tv_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">typify_c</span> <span class="id">retv_src</span> <span class="id">tres</span> <span class="id">tv_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">retv_src</span> <span class="id">retv_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tv_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">TYP</span>: <span class="id">typify_c</span> <span class="id">retv_tgt</span> <span class="id">tres</span> <span class="id">tv_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">tv_src</span> <span class="id">tv_tgt</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6337')">Proof.</div>
+<div class="proofscript" id="proof6337">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TYP</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">wt_retval</span> <span class="id">retv_tgt</span> <span class="id">tres</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exists</span> <span class="id">Vundef</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span> 2. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">assert</span> (<span class="id">tv_src</span> = <span class="id">Vundef</span>); <span class="id">clarify</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INJ</span>; <span class="id">inv</span> <span class="id">WT</span>; <span class="id">inv</span> <span class="id">WTV</span>; <span class="id">clarify</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exfalso</span>; <span class="tactic">eapply</span> <span class="id">H</span>; <span class="id">econs</span>; <span class="id">clarify</span>; <span class="tactic">try</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">NVOID</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exists</span> <span class="id">Vundef</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 2. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">wt_retval_inject</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">vals_casted_inject</span> <span class="id">j</span> <span class="id">vals_src</span> <span class="id">vals_tgt</span> <span class="id">tys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id">Val.inject_list</span> <span class="id">j</span> <span class="id">vals_src</span> <span class="id">vals_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">Forall2</span> <span class="id">val_casted</span> <span class="id">vals_src</span> <span class="id">tys</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Forall2</span> <span class="id">val_casted</span> <span class="id">vals_tgt</span> <span class="id">tys</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6338')">Proof.</div>
+<div class="proofscript" id="proof6338">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">vals_src</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">VALS</span>. <span class="id">inv</span> <span class="id">TYP</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">VALS</span>. <span class="id">inv</span> <span class="id">TYP</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">val_casted_inject</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">cgenv</span> <span class="id">skenv_link</span> <span class="id">clight</span> :=<br/>
+&nbsp;&nbsp;<span class="id">Build_genv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SkEnv.revive</span> (<span class="id">SkEnv.project</span> <span class="id">skenv_link</span> (<span class="id">CtypesC.CSk.of_program</span> <span class="id">signature_of_function</span> <span class="id">clight</span>)) <span class="id">clight</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">prog_comp_env</span> <span class="id">clight</span>).<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

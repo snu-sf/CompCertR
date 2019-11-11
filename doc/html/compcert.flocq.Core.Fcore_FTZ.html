@@ -1,0 +1,359 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Fcore_FTZ</title>
+<meta name="description" content="Documentation of Coq module Fcore_FTZ" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Fcore_FTZ</h1>
+<div class="coq">
+<br/>
+<h1> Floating-point format with abrupt underflow </h1>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html">Fcore_Raux</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html">Fcore_defs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_rnd.html">Fcore_rnd</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html">Fcore_generic_fmt</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html">Fcore_float_prop</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_ulp.html">Fcore_ulp</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html">Fcore_FLX</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="RND_FTZ">RND_FTZ</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="RND_FTZ.beta">beta</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix">radix</a></span>.<br/>
+<br/>
+<span class="kwd">Notation</span> <span class="id"><a name="bpow">bpow</a></span> <span class="id">e</span> := (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow">bpow</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id">e</span>).<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="RND_FTZ.emin">emin</a></span> <span class="id"><a name="RND_FTZ.prec">prec</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>.<br/>
+<br/>
+<span class="kwd">Context</span> { <span class="id">prec_gt_0_</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#Prec_gt_0">Prec_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> }.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="FTZ_format">FTZ_format</a></span> (<span class="id">x</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rdefinitions.html#R">R</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">f</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#f">f</a></span> /\ (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> &lt;&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rdefinitions.html#R0">R0</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1) &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fnum">Fnum</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#f">f</a></span>) &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>)%<span class="id">Z</span> /\<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fexp">Fexp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#f">f</a></span>)%<span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="FTZ_exp">FTZ_exp</a></span> <span class="id">e</span> := <span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#e">e</a></span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> <span class="kwd">then</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1)%<span class="id">Z</span> <span class="kwd">else</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#e">e</a></span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>)%<span class="id">Z</span>.<br/>
+<br/>
+<div class="doc">Properties of the FTZ format </div>
+<span class="kwd">Global</span> <span class="kwd">Instance</span> <span class="id"><a name="FTZ_exp_valid">FTZ_exp_valid</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Valid_exp">Valid_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5330')">Proof.</div>
+<div class="proofscript" id="proof5330">
+<span class="tactic">intros</span> <span class="id">k</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_cases">Zlt_cases</a></span> (<span class="id">k</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> (<span class="id">k</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>) ; <span class="tactic">intros</span> <span class="id">H1</span>.<br/>
+<span class="tactic">split</span> ; <span class="tactic">intros</span> <span class="id">H2</span>.<br/>
+<span class="tactic">omega</span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_cases">Zlt_cases</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> + 1 - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> + 1 - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>) ; <span class="tactic">intros</span> <span class="id">H3</span>.<br/>
+<span class="tactic">omega</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_cases">Zlt_cases</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1 + 1 - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>).<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#prec_gt_0">prec_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1 + 1 - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>) ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">intros</span> <span class="id">l</span> <span class="id">H3</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_cases">Zlt_cases</a></span> (<span class="id">l</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> (<span class="id">l</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>) ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">split</span> ; <span class="tactic">intros</span> <span class="id">H2</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_cases">Zlt_cases</a></span> (<span class="id">k</span> + 1 - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> (<span class="id">k</span> + 1 - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>) ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#prec_gt_0">prec_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>).<br/>
+<span class="tactic">split</span> ; <span class="tactic">intros</span> ; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="FLXN_format_FTZ">FLXN_format_FTZ</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_format">FTZ_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLXN_format">FLXN_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5331')">Proof.</div>
+<div class="proofscript" id="proof5331">
+<span class="tactic">intros</span> <span class="id">x</span> ((<span class="id">xm</span>, <span class="id">xe</span>), (<span class="id">Hx1</span>, (<span class="id">Hx2</span>, <span class="id">Hx3</span>))).<br/>
+<span class="id">eexists</span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#conj">conj</a></span> <span class="id">Hx1</span> <span class="id">Hx2</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="generic_format_FTZ">generic_format_FTZ</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_format">FTZ_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#generic_format">generic_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5332')">Proof.</div>
+<div class="proofscript" id="proof5332">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">Hx</span>.<br/>
+<span class="tactic">cut</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#generic_format">generic_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLX_exp">FLX_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id">x</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#generic_inclusion_ln_beta">generic_inclusion_ln_beta</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">Zx</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">Hx</span> <span class="kwd">as</span> ((<span class="id">xm</span>, <span class="id">xe</span>), (<span class="id">Hx1</span>, (<span class="id">Hx2</span>, <span class="id">Hx3</span>))).<br/>
+<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Hx2</span>, <span class="id">Hx3</span>.<br/>
+<span class="id">specialize</span> (<span class="id">Hx2</span> <span class="id">Zx</span>).<br/>
+<span class="tactic">assert</span> (<span class="id">Zxm</span>: <span class="id">xm</span> &lt;&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>).<br/>
+<span class="id">contradict</span> <span class="id">Zx</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Hx1</span>, <span class="id">Zx</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_0">F2R_0</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLX_exp">FLX_exp</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_false">Zlt_bool_false</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_refl">Zle_refl</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Hx1</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#ln_beta_F2R">ln_beta_F2R</a></span> <span class="kwd">with</span> (1 := <span class="id">Zxm</span>).<br/>
+<span class="tactic">cut</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta">ln_beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R">Z2R</a></span> <span class="id">xm</span>))%<span class="id">Z</span>.<br/>
+<span class="tactic">clear</span> -<span class="id">Hx3</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta_gt_Zpower">ln_beta_gt_Zpower</a></span> <span class="kwd">with</span> (1 := <span class="id">Zxm</span>).<br/>
+<span class="tactic">apply</span> <span class="id">Hx2</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#generic_format_FLXN">generic_format_FLXN</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FLXN_format_FTZ">FLXN_format_FTZ</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="FTZ_format_generic">FTZ_format_generic</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#generic_format">generic_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_format">FTZ_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5333')">Proof.</div>
+<div class="proofscript" id="proof5333">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">Hx</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Req_dec">Req_dec</a></span> <span class="id">x</span> 0) <span class="kwd">as</span> [<span class="id">Hx3</span>|<span class="id">Hx3</span>].<br/>
+<span class="id">exists</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> 0 <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>).<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span>. <span class="tactic">simpl</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rmult_0_l">Rmult_0_l</a></span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="id">now</span> <span class="tactic">elim</span> <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_refl">Zle_refl</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#generic_format">generic_format</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#scaled_mantissa">scaled_mantissa</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#canonic_exp">canonic_exp</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> <span class="kwd">in</span> <span class="id">Hx</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta">ln_beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id">x</span>) <span class="kwd">as</span> (<span class="id">ex</span>, <span class="id">Hx4</span>).<br/>
+<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">Hx</span>.<br/>
+<span class="id">specialize</span> (<span class="id">Hx4</span> <span class="id">Hx3</span>).<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_cases">Zlt_cases</a></span> (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>) <span class="id">Hx</span>. <span class="tactic">clear</span> <span class="id">Hx</span>.<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>) ; <span class="tactic">intros</span> <span class="id">Hx5</span> <span class="id">Hx2</span>.<br/>
+<span class="tactic">elim</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rlt_not_ge">Rlt_not_ge</a></span> <span class="kwd">with</span> (1 := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj2">proj2</a></span> <span class="id">Hx4</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_ge">Rle_ge</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Hx2</span>, &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_Zabs">F2R_Zabs</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Raxioms.html#Rmult_1_l">Rmult_1_l</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> <span class="id">ex</span>)).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span>. <span class="tactic">simpl</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rmult_le_compat">Rmult_le_compat</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_le">Z2R_le</a></span> 0 1).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_ge_0">bpow_ge_0</a></span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_le">Z2R_le</a></span> 1).<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_succ">Zlt_le_succ</a></span> 0).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#lt_Z2R">lt_Z2R</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rmult_lt_reg_r">Rmult_lt_reg_r</a></span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1)).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_gt_0">bpow_gt_0</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rmult_0_l">Rmult_0_l</a></span>.<br/>
+<span class="id">change</span> (0 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Ztrunc">Ztrunc</a></span> (<span class="id">x</span> * <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (- (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1))))) (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1)))%<span class="id">R</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_Zabs">F2R_Zabs</a></span>, &lt;- <span class="id">Hx2</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs_pos_lt">Rabs_pos_lt</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_le">bpow_le</a></span>.<br/>
+<span class="tactic">omega</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Hx2</span>.<br/>
+<span class="id">eexists</span> ; <span class="tactic">repeat</span> <span class="tactic">split</span> ; <span class="tactic">simpl</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#le_Z2R">le_Z2R</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_Zpower">Z2R_Zpower</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rmult_le_reg_r">Rmult_le_reg_r</a></span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>)).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_gt_0">bpow_gt_0</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_plus">bpow_plus</a></span>.<br/>
+<span class="tactic">replace</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1 + (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>))%<span class="id">Z</span> <span class="kwd">with</span> (<span class="id">ex</span> - 1)%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="id">change</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (<span class="id">ex</span> - 1) &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Ztrunc">Ztrunc</a></span> (<span class="id">x</span> * <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (- (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>))))) (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>)))%<span class="id">R</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_Zabs">F2R_Zabs</a></span>, &lt;- <span class="id">Hx2</span>.<br/>
+<span class="tactic">apply</span> <span class="id">Hx4</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_minus_le_0">Zle_minus_le_0</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_succ">Zlt_le_succ</a></span> 0).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#lt_Z2R">lt_Z2R</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_Zpower">Z2R_Zpower</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rmult_lt_reg_r">Rmult_lt_reg_r</a></span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>)).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_gt_0">bpow_gt_0</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_plus">bpow_plus</a></span>.<br/>
+<span class="tactic">replace</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> + (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>))%<span class="id">Z</span> <span class="kwd">with</span> <span class="id">ex</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="id">change</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Ztrunc">Ztrunc</a></span> (<span class="id">x</span> * <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (- (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>))))) (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>)) &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> <span class="id">ex</span>)%<span class="id">R</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_Zabs">F2R_Zabs</a></span>, &lt;- <span class="id">Hx2</span>.<br/>
+<span class="tactic">apply</span> <span class="id">Hx4</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zge_le">Zge_le</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="FTZ_format_satisfies_any">FTZ_format_satisfies_any</a></span> :<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_rnd.html#satisfies_any">satisfies_any</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_format">FTZ_format</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5334')">Proof.</div>
+<div class="proofscript" id="proof5334">
+<span class="tactic">refine</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_rnd.html#satisfies_any_eq">satisfies_any_eq</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#generic_format_satisfies_any">generic_format_satisfies_any</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>)).<br/>
+<span class="tactic">intros</span> <span class="id">x</span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_format_generic">FTZ_format_generic</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#generic_format_FTZ">generic_format_FTZ</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="FTZ_format_FLXN">FTZ_format_FLXN</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rdefinitions.html#R">R</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1) &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs">Rabs</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span>)%<span class="id">R</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLXN_format">FLXN_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_format">FTZ_format</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5335')">Proof.</div>
+<div class="proofscript" id="proof5335">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">Hx</span> <span class="id">Fx</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_format_generic">FTZ_format_generic</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#generic_format_FLXN">generic_format_FLXN</a></span> <span class="kwd">in</span> <span class="id">Fx</span>.<br/>
+<span class="id">revert</span> <span class="id">Hx</span> <span class="id">Fx</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#generic_inclusion_ge">generic_inclusion_ge</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">e</span> <span class="id">He</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_false">Zlt_bool_false</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_refl">Zle_refl</a></span>.<br/>
+<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="ulp_FTZ_0">ulp_FTZ_0</a></span>: <span class="id"><a href="compcert.flocq.Core.Fcore_ulp.html#ulp">ulp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> 0 = <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>+<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>-1).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5336')">Proof with</div>
+<div class="proofscript" id="proof5336">
+ <span class="tactic">auto</span> <span class="kwd">with</span> <span class="id">typeclass_instances</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_ulp.html#ulp">ulp</a></span>; <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Req_bool_true">Req_bool_true</a></span>; <span class="tactic">trivial</span>.<br/>
+<span class="tactic">case</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_ulp.html#negligible_exp_spec">negligible_exp_spec</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>).<br/>
+<span class="tactic">intros</span> <span class="id">T</span>; <span class="id">specialize</span> (<span class="id">T</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>-1)%<span class="id">Z</span>); <span class="id">contradict</span> <span class="id">T</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_not_lt">Zle_not_lt</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#Prec_gt_0">Prec_gt_0</a></span> <span class="kwd">in</span> <span class="id">prec_gt_0_</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_true">Zlt_bool_true</a></span>; <span class="tactic">omega</span>.<br/>
+<span class="tactic">assert</span> (<span class="id">V</span>:(<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>+<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>-1) = <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>+<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>-1)%<span class="id">Z</span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>; <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_true">Zlt_bool_true</a></span>; <span class="tactic">omega</span>.<br/>
+<span class="tactic">intros</span> <span class="id">n</span> <span class="id">H2</span>; <span class="tactic">rewrite</span> &lt;-<span class="id">V</span>.<br/>
+<span class="tactic">apply</span> <span class="tactic">f_equal</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_ulp.html#fexp_negligible_exp_eq">fexp_negligible_exp_eq</a></span>...<br/>
+<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="RND_FTZ.FTZ_round">FTZ_round</a></span>.<br/>
+<br/>
+<div class="doc">Rounding with FTZ </div>
+<span class="kwd">Variable</span> <span class="id"><a name="RND_FTZ.FTZ_round.rnd">rnd</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rdefinitions.html#R">R</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>.<br/>
+<span class="kwd">Context</span> { <span class="id">valid_rnd</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Valid_rnd">Valid_rnd</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.FTZ_round.rnd">rnd</a></span> }.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Zrnd_FTZ">Zrnd_FTZ</a></span> <span class="id">x</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rle_bool">Rle_bool</a></span> 1 (<span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs">Rabs</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span>) <span class="kwd">then</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.FTZ_round.rnd">rnd</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>.<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Instance</span> <span class="id"><a name="valid_rnd_FTZ">valid_rnd_FTZ</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Valid_rnd">Valid_rnd</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#Zrnd_FTZ">Zrnd_FTZ</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5337')">Proof with</div>
+<div class="proofscript" id="proof5337">
+ <span class="tactic">auto</span> <span class="kwd">with</span> <span class="id">typeclass_instances</span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span> <span class="id">Hxy</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#Zrnd_FTZ">Zrnd_FTZ</a></span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rle_bool_spec">Rle_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">Hx</span> ;<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rle_bool_spec">Rle_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">Hy</span>.<br/>
+4: <span class="id">easy</span>.<br/>
+<span class="comment">(*&nbsp;1&nbsp;&lt;=&nbsp;|x|&nbsp;*)</span><br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Zrnd_le">Zrnd_le</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Zrnd_Z2R">Zrnd_Z2R</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.FTZ_round.rnd">rnd</a></span> 0).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Zrnd_le">Zrnd_le</a></span>...<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_trans">Rle_trans</a></span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R">Z2R</a></span> (-1)). 2: <span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_le">Z2R_le</a></span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rabs_ge_inv">Rabs_ge_inv</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Hx</span>) <span class="kwd">as</span> [<span class="id">Hx1</span>|<span class="id">Hx1</span>].<br/>
+<span class="tactic">exact</span> <span class="id">Hx1</span>.<br/>
+<span class="tactic">elim</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_not_lt">Rle_not_lt</a></span> <span class="kwd">with</span> (1 := <span class="id">Hx1</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_lt_trans">Rle_lt_trans</a></span> <span class="kwd">with</span> (2 := <span class="id">Hy</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_trans">Rle_trans</a></span> <span class="kwd">with</span> (1 := <span class="id">Hxy</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#RRle_abs">RRle_abs</a></span>.<br/>
+<span class="comment">(*&nbsp;|x|&nbsp;&lt;&nbsp;1&nbsp;*)</span><br/>
+<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Zrnd_Z2R">Zrnd_Z2R</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.FTZ_round.rnd">rnd</a></span> 0).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Zrnd_le">Zrnd_le</a></span>...<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_trans">Rle_trans</a></span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R">Z2R</a></span> 1).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_le">Z2R_le</a></span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rabs_ge_inv">Rabs_ge_inv</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Hy</span>) <span class="kwd">as</span> [<span class="id">Hy1</span>|<span class="id">Hy1</span>].<br/>
+<span class="tactic">elim</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_not_lt">Rle_not_lt</a></span> <span class="kwd">with</span> (1 := <span class="id">Hy1</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rlt_le_trans">Rlt_le_trans</a></span> <span class="kwd">with</span> (2 := <span class="id">Hxy</span>).<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs_def2">Rabs_def2</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Hx</span>).<br/>
+<span class="tactic">exact</span> <span class="id">Hy1</span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">intros</span> <span class="id">n</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#Zrnd_FTZ">Zrnd_FTZ</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#Zrnd_Z2R">Zrnd_Z2R</a></span>...<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rle_bool_spec">Rle_bool_spec</a></span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_abs">Z2R_abs</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#lt_Z2R">lt_Z2R</a></span> <span class="id">_</span> 1 <span class="id">H</span>).<br/>
+<span class="tactic">clear</span>.<br/>
+<span class="id">now</span> <span class="tactic">case</span> <span class="id">n</span> ; <span class="tactic">trivial</span> ; <span class="tactic">simpl</span> ; <span class="tactic">intros</span> [<span class="id">p</span>|<span class="id">p</span>|].<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="round_FTZ_FLX">round_FTZ_FLX</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rdefinitions.html#R">R</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1) &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs">Rabs</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span>)%<span class="id">R</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#round">round</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#Zrnd_FTZ">Zrnd_FTZ</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#round">round</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLX_exp">FLX_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.FTZ_round.rnd">rnd</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5338')">Proof.</div>
+<div class="proofscript" id="proof5338">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">Hx</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#round">round</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#scaled_mantissa">scaled_mantissa</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#canonic_exp">canonic_exp</a></span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta">ln_beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id">x</span>) <span class="kwd">as</span> (<span class="id">ex</span>, <span class="id">He</span>). <span class="tactic">simpl</span>.<br/>
+<span class="tactic">assert</span> (<span class="id">Hx0</span>: <span class="id">x</span> &lt;&gt; 0%<span class="id">R</span>).<br/>
+<span class="tactic">intros</span> <span class="id">Hx0</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_not_lt">Rle_not_lt</a></span> <span class="kwd">with</span> (1 := <span class="id">Hx</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id">Hx0</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs_R0">Rabs_R0</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_gt_0">bpow_gt_0</a></span>.<br/>
+<span class="id">specialize</span> (<span class="id">He</span> <span class="id">Hx0</span>).<br/>
+<span class="tactic">assert</span> (<span class="id">He</span>': (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> &lt;= <span class="id">ex</span>)%<span class="id">Z</span>).<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_lt_bpow">bpow_lt_bpow</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_lt_trans">Rle_lt_trans</a></span> <span class="kwd">with</span> (1 := <span class="id">Hx</span>).<br/>
+<span class="tactic">apply</span> <span class="id">He</span>.<br/>
+<span class="tactic">replace</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> <span class="id">ex</span>) <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLX_exp">FLX_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> <span class="id">ex</span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#Zrnd_FTZ">Zrnd_FTZ</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rle_bool_true">Rle_bool_true</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs_mult">Rabs_mult</a></span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs_pos_eq">Rabs_pos_eq</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (- <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLX_exp">FLX_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> <span class="id">ex</span>))).<br/>
+<span class="id">change</span> 1%<span class="id">R</span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> 0).<br/>
+<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_opp_r">Zplus_opp_r</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLX_exp">FLX_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> <span class="id">ex</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_plus">bpow_plus</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rmult_le_compat_r">Rmult_le_compat_r</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_ge_0">bpow_ge_0</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_trans">Rle_trans</a></span> <span class="kwd">with</span> (2 := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> <span class="id">He</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_le">bpow_le</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLX_exp">FLX_exp</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#prec_gt_0">prec_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>).<br/>
+<span class="tactic">clear</span> -<span class="id">He</span>' ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_ge_0">bpow_ge_0</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLX.html#FLX_exp">FLX_exp</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_false">Zlt_bool_false</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+<span class="tactic">clear</span> -<span class="id">He</span>' ; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="round_FTZ_small">round_FTZ_small</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rdefinitions.html#R">R</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs">Rabs</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span> - 1))%<span class="id">R</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#round">round</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#Zrnd_FTZ">Zrnd_FTZ</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#x">x</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rdefinitions.html#R0">R0</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5339')">Proof with</div>
+<div class="proofscript" id="proof5339">
+ <span class="tactic">auto</span> <span class="kwd">with</span> <span class="id">typeclass_instances</span>.<br/>
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">Hx</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Req_dec">Req_dec</a></span> <span class="id">x</span> 0) <span class="kwd">as</span> [<span class="id">Hx0</span>|<span class="id">Hx0</span>].<br/>
+<span class="tactic">rewrite</span> <span class="id">Hx0</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#round_0">round_0</a></span>...<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#round">round</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#scaled_mantissa">scaled_mantissa</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#canonic_exp">canonic_exp</a></span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta">ln_beta</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.beta">beta</a></span> <span class="id">x</span>) <span class="kwd">as</span> (<span class="id">ex</span>, <span class="id">He</span>). <span class="tactic">simpl</span>.<br/>
+<span class="id">specialize</span> (<span class="id">He</span> <span class="id">Hx0</span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#Zrnd_FTZ">Zrnd_FTZ</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Rle_bool_false">Rle_bool_false</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_0">F2R_0</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs_mult">Rabs_mult</a></span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs_pos_eq">Rabs_pos_eq</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> (- <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> <span class="id">ex</span>))).<br/>
+<span class="id">change</span> 1%<span class="id">R</span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#bpow">bpow</a></span> 0).<br/>
+<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_opp_r">Zplus_opp_r</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span> <span class="id">ex</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_plus">bpow_plus</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rmult_lt_compat_r">Rmult_lt_compat_r</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_gt_0">bpow_gt_0</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rlt_le_trans">Rlt_le_trans</a></span> <span class="kwd">with</span> (1 := <span class="id">Hx</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_le">bpow_le</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#FTZ_exp">FTZ_exp</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_cases">Zlt_cases</a></span> (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.prec">prec</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.emin">emin</a></span>).<br/>
+<span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">_</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_refl">Zle_refl</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">He</span>'.<br/>
+<span class="tactic">elim</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rlt_not_le">Rlt_not_le</a></span> <span class="kwd">with</span> (1 := <span class="id">Hx</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rle_trans">Rle_trans</a></span> <span class="kwd">with</span> (2 := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> <span class="id">He</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_le">bpow_le</a></span>.<br/>
+<span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_ge_0">bpow_ge_0</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ.FTZ_round">FTZ_round</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FTZ.html#RND_FTZ">RND_FTZ</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

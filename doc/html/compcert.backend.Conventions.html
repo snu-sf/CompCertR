@@ -1,0 +1,215 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Conventions</title>
+<meta name="description" content="Documentation of Coq module Conventions" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Conventions</h1>
+<div class="coq">
+<br/>
+<div class="doc">Function calling conventions and other conventions regarding the use of
+    machine registers and stack slots. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.Locations.html">Locations</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.x86.Conventions1.html">Conventions1</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<br/>
+<div class="doc">The processor-dependent and EABI-dependent definitions are in
+    <span class="bracket"><span class="id">arch</span>/<span class="id">abi</span>/<span class="id">Conventions1.v</span></span>.  This file adds various processor-independent
+    definitions and lemmas. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="loc_arguments_acceptable_2">loc_arguments_acceptable_2</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id"><a href="compcert.backend.Conventions.html#s">s</a></span>)) -&gt; <span class="id"><a href="compcert.x86.Conventions1.html#loc_argument_acceptable">loc_argument_acceptable</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3677')">Proof.</div>
+<div class="proofscript" id="proof3677">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">l</span>. <span class="tactic">generalize</span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments_acceptable">loc_arguments_acceptable</a></span> <span class="id">s</span>). <span class="tactic">generalize</span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id">s</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l0</span> <span class="kwd">as</span> [ | <span class="id">p</span> <span class="id">pl</span>]; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+- <span class="id">contradiction</span>.<br/>
+- <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_app_iff">in_app_iff</a></span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="tactic">destruct</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">p</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHpl</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h2> Location of function parameters </h2>
+<br/>
+<div class="doc">A function finds the values of its parameter in the same locations
+  where its caller stored them, except that the stack-allocated arguments,
+  viewed as <span class="bracket"><span class="id">Outgoing</span></span> slots by the caller, are accessed via <span class="bracket"><span class="id">Incoming</span></span>
+  slots (at the same offsets and types) in the callee. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="parameter_of_argument">parameter_of_argument</a></span> (<span class="id">l</span>: <span class="id"><a href="compcert.backend.Locations.html#loc">loc</a></span>) : <span class="id"><a href="compcert.backend.Locations.html#loc">loc</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id"><a href="compcert.backend.Locations.html#Outgoing">Outgoing</a></span> <span class="id">n</span> <span class="id">ty</span> =&gt; <span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id"><a href="compcert.backend.Locations.html#Incoming">Incoming</a></span> <span class="id">n</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="loc_parameters">loc_parameters</a></span> (<span class="id">s</span>: <span class="id"><a href="compcert.common.AST.html#signature">signature</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="compcert.common.AST.html#rpair">rpair</a></span> <span class="id"><a href="compcert.backend.Locations.html#loc">loc</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> (<span class="id"><a href="compcert.common.AST.html#map_rpair">map_rpair</a></span> <span class="id"><a href="compcert.backend.Conventions.html#parameter_of_argument">parameter_of_argument</a></span>) (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id"><a href="compcert.backend.Conventions.html#s">s</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="incoming_slot_in_parameters">incoming_slot_in_parameters</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ofs</span> <span class="id">ty</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> (<span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id"><a href="compcert.backend.Locations.html#Incoming">Incoming</a></span> <span class="id"><a href="compcert.backend.Conventions.html#ofs">ofs</a></span> <span class="id"><a href="compcert.backend.Conventions.html#ty">ty</a></span>) (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.backend.Conventions.html#loc_parameters">loc_parameters</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span>)) -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> (<span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id"><a href="compcert.backend.Locations.html#Outgoing">Outgoing</a></span> <span class="id"><a href="compcert.backend.Conventions.html#ofs">ofs</a></span> <span class="id"><a href="compcert.backend.Conventions.html#ty">ty</a></span>) (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3678')">Proof.</div>
+<div class="proofscript" id="proof3678">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.backend.Conventions.html#loc_parameters">loc_parameters</a></span> <span class="id">sg</span>)) <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> <span class="id"><a href="compcert.backend.Conventions.html#parameter_of_argument">parameter_of_argument</a></span> (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id">sg</span>))) <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">change</span> (<span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id"><a href="compcert.backend.Locations.html#Incoming">Incoming</a></span> <span class="id">ofs</span> <span class="id">ty</span>) <span class="kwd">with</span> (<span class="id"><a href="compcert.backend.Conventions.html#parameter_of_argument">parameter_of_argument</a></span> (<span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id"><a href="compcert.backend.Locations.html#Outgoing">Outgoing</a></span> <span class="id">ofs</span> <span class="id">ty</span>)) <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.lib.Coqlib.html#list_in_map_inv">list_in_map_inv</a></span>. <span class="id">eexact</span> <span class="id">H</span>. <span class="tactic">intros</span> [<span class="id">x</span> [<span class="id">A</span> <span class="id">B</span>]]. <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">A</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.backend.Conventions.html#loc_arguments_acceptable_2">loc_arguments_acceptable_2</a></span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.x86.Conventions1.html#loc_argument_acceptable">loc_argument_acceptable</a></span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">A</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sl</span>; <span class="tactic">try</span> <span class="id">contradiction</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">A</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.backend.Conventions.html#loc_parameters">loc_parameters</a></span>. <span class="tactic">generalize</span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id">sg</span>). <span class="tactic">induction</span> <span class="id">l</span> <span class="kwd">as</span> [ | <span class="id">p</span> <span class="id">l</span>]; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map_app">map_app</a></span>. <span class="tactic">f_equal</span>; <span class="tactic">auto</span>. <span class="tactic">destruct</span> <span class="id">p</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Tail calls </h1>
+<br/>
+<div class="doc">A tail-call is possible for a signature if the corresponding
+    arguments are all passed in registers. </div>
+<br/>
+<div class="doc">A tail-call is possible for a signature if the corresponding
+    arguments are all passed in registers. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="tailcall_possible">tailcall_possible</a></span> (<span class="id">s</span>: <span class="id"><a href="compcert.common.AST.html#signature">signature</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id"><a href="compcert.backend.Conventions.html#s">s</a></span>)) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> <span class="kwd">with</span> <span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span> | <span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span> <span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">Decide whether a tailcall is possible. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="tailcall_is_possible">tailcall_is_possible</a></span> (<span class="id">sg</span>: <span class="id"><a href="compcert.common.AST.html#signature">signature</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#forallb">List.forallb</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">l</span> =&gt; <span class="kwd">match</span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> <span class="kwd">with</span> <span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> | <span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> <span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span>)).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="tailcall_is_possible_correct">tailcall_is_possible_correct</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span>, <span class="id"><a href="compcert.backend.Conventions.html#tailcall_is_possible">tailcall_is_possible</a></span> <span class="id"><a href="compcert.backend.Conventions.html#s">s</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt; <span class="id"><a href="compcert.backend.Conventions.html#tailcall_possible">tailcall_possible</a></span> <span class="id"><a href="compcert.backend.Conventions.html#s">s</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3679')">Proof.</div>
+<div class="proofscript" id="proof3679">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.backend.Conventions.html#tailcall_is_possible">tailcall_is_possible</a></span>; <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#forallb_forall">forallb_forall</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id">H</span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="tactic">destruct</span> <span class="id">l</span>; [<span class="tactic">auto</span>|<span class="tactic">discriminate</span>].<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="zero_size_arguments_tailcall_possible">zero_size_arguments_tailcall_possible</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sg</span>, <span class="id"><a href="compcert.x86.Conventions1.html#size_arguments">size_arguments</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span> = 0 -&gt; <span class="id"><a href="compcert.backend.Conventions.html#tailcall_possible">tailcall_possible</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3680')">Proof.</div>
+<div class="proofscript" id="proof3680">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.backend.Conventions.html#loc_arguments_acceptable_2">loc_arguments_acceptable_2</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.x86.Conventions1.html#loc_argument_acceptable">loc_argument_acceptable</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="tactic">intros</span>. <span class="tactic">auto</span>. <span class="tactic">destruct</span> <span class="id">sl</span>; <span class="tactic">try</span> <span class="id">contradiction</span>. <span class="tactic">destruct</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments_bounded">loc_arguments_bounded</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H0</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="compcert.backend.Locations.html#typesize_pos">typesize_pos</a></span> <span class="id">ty</span>). <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<h1> Callee-save locations </h1>
+<br/>
+<div class="doc">We classify locations as either
+<ul>
+<li>
+ callee-save, i.e. preserved across function calls:
+  callee-save registers, <span class="bracket"><span class="kwd">Local</span></span> and <span class="bracket"><span class="id">Incoming</span></span> stack slots;
+</li>
+<li>
+ caller-save, i.e. possibly modified by a function call:
+  non-callee-save registers, <span class="bracket"><span class="id">Outgoing</span></span> stack slots.
+</li>
+</ul>
+Concerning <span class="bracket"><span class="id">Outgoing</span></span> stack slots: several ABIs allow a function to modify
+the stack slots used for passing parameters to this function.
+The code currently generated by CompCert never does so, but the code
+generated by other compilers often does so (e.g. GCC for x86-32).
+Hence, CompCert-generated code must not assume that <span class="bracket"><span class="id">Outgoing</span></span> stack slots
+are preserved across function calls, because they might not be preserved
+if the called function was compiled by another compiler. 
+</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="callee_save_loc">callee_save_loc</a></span> (<span class="id">l</span>: <span class="id"><a href="compcert.backend.Locations.html#loc">loc</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.x86.Conventions1.html#is_callee_save">is_callee_save</a></span> <span class="id">r</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id">sl</span> <span class="id">ofs</span> <span class="id">ty</span> =&gt; <span class="id">sl</span> &lt;&gt; <span class="id"><a href="compcert.backend.Locations.html#Outgoing">Outgoing</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.backend.Conventions.html#callee_save_loc">callee_save_loc</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="agree_callee_save">agree_callee_save</a></span> (<span class="id">ls1</span> <span class="id">ls2</span>: <span class="id"><a href="compcert.backend.Locations.html#Locmap.t">Locmap.t</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">l</span>, <span class="id"><a href="compcert.backend.Conventions.html#callee_save_loc">callee_save_loc</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> -&gt; <span class="id"><a href="compcert.backend.Conventions.html#ls1">ls1</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> = <span class="id"><a href="compcert.backend.Conventions.html#ls2">ls2</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="agree_callee_save_regs">agree_callee_save_regs</a></span> (<span class="id">ls1</span> <span class="id">ls2</span>: <span class="id"><a href="compcert.backend.Locations.html#Locmap.t">Locmap.t</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r</span>, <span class="id"><a href="compcert.x86.Conventions1.html#is_callee_save">is_callee_save</a></span> <span class="id"><a href="compcert.backend.Conventions.html#r">r</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> -&gt; <span class="id"><a href="compcert.backend.Conventions.html#ls1">ls1</a></span> (<span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id"><a href="compcert.backend.Conventions.html#r">r</a></span>) = <span class="id"><a href="compcert.backend.Conventions.html#ls2">ls2</a></span> (<span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id"><a href="compcert.backend.Conventions.html#r">r</a></span>).<br/>
+<br/>
+<h1> Assigning result locations </h1>
+<br/>
+<div class="doc">Useful lemmas to reason about the result of an external call. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="locmap_get_set_loc_result">locmap_get_set_loc_result</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sg</span> <span class="id">v</span> <span class="id">rs</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> <span class="kwd">with</span> <span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.x86.Conventions1.html#is_callee_save">is_callee_save</a></span> <span class="id">r</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> | <span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span> <span class="kwd">end</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Locations.html#Locmap.setpair">Locmap.setpair</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_result">loc_result</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span>) <span class="id"><a href="compcert.backend.Conventions.html#v">v</a></span> <span class="id"><a href="compcert.backend.Conventions.html#rs">rs</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> = <span class="id"><a href="compcert.backend.Conventions.html#rs">rs</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3681')">Proof.</div>
+<div class="proofscript" id="proof3681">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.backend.Locations.html#Locmap.gpo">Locmap.gpo</a></span>. <br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">X</span>: <span class="kwd">forall</span> <span class="id">r</span>, <span class="id"><a href="compcert.x86.Conventions1.html#is_callee_save">is_callee_save</a></span> <span class="id"><a href="compcert.backend.Conventions.html#r">r</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> -&gt; <span class="id"><a href="compcert.backend.Locations.html#Loc.diff">Loc.diff</a></span> <span class="id">l</span> (<span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id"><a href="compcert.backend.Conventions.html#r">r</a></span>)).<br/>
+&nbsp;&nbsp;{ <span class="tactic">intros</span>. <span class="tactic">destruct</span> <span class="id">l</span>; <span class="tactic">simpl</span>. <span class="tactic">congruence</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_result_caller_save">loc_result_caller_save</a></span> <span class="id">sg</span>). <span class="tactic">destruct</span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_result">loc_result</a></span> <span class="id">sg</span>); <span class="tactic">simpl</span>; <span class="tactic">intuition</span> <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="locmap_get_set_loc_result_callee_save">locmap_get_set_loc_result_callee_save</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sg</span> <span class="id">v</span> <span class="id">rs</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Conventions.html#callee_save_loc">callee_save_loc</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Locations.html#Locmap.setpair">Locmap.setpair</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_result">loc_result</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span>) <span class="id"><a href="compcert.backend.Conventions.html#v">v</a></span> <span class="id"><a href="compcert.backend.Conventions.html#rs">rs</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> = <span class="id"><a href="compcert.backend.Conventions.html#rs">rs</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3682')">Proof.</div>
+<div class="proofscript" id="proof3682">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.backend.Conventions.html#locmap_get_set_loc_result">locmap_get_set_loc_result</a></span>. <br/>
+&nbsp;&nbsp;<span class="tactic">red</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">destruct</span> <span class="id">l</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add">Z.add</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mul">Z.mul</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.divide">Z.divide</a></span> <span class="id"><a href="compcert.lib.Coqlib.html#list_nth_z">list_nth_z</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="tailcall_size_aux">tailcall_size_aux</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TAIL</span>: <span class="kwd">forall</span> <span class="id">l</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments_64">loc_arguments_64</a></span> <span class="id"><a href="compcert.backend.Conventions.html#tys">tys</a></span> <span class="id"><a href="compcert.backend.Conventions.html#ir">ir</a></span> <span class="id"><a href="compcert.backend.Conventions.html#fr">fr</a></span> 0)) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Conventions.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IRBOUND</span>: (<span class="id"><a href="compcert.backend.Conventions.html#ir">ir</a></span> - 1) &lt; <span class="id"><a href="compcert.lib.Coqlib.html#list_length_z">list_length_z</a></span> <span class="id"><a href="compcert.x86.Conventions1.html#int_param_regs">int_param_regs</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FRBOUND</span>: (<span class="id"><a href="compcert.backend.Conventions.html#fr">fr</a></span> - 1) &lt; <span class="id"><a href="compcert.lib.Coqlib.html#list_length_z">list_length_z</a></span> <span class="id"><a href="compcert.x86.Conventions1.html#float_param_regs">float_param_regs</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SZ</span>: <span class="id"><a href="compcert.x86.Conventions1.html#size_arguments_64">size_arguments_64</a></span> <span class="id"><a href="compcert.backend.Conventions.html#tys">tys</a></span> <span class="id"><a href="compcert.backend.Conventions.html#ir">ir</a></span> <span class="id"><a href="compcert.backend.Conventions.html#fr">fr</a></span> 0 = 0&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3683')">Proof.</div>
+<div class="proofscript" id="proof3683">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">tys</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">des_ifs</span>; <span class="id">ss</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">exploit</span> <span class="id">TAIL</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="tactic">eapply</span> <span class="id">IHtys</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span class="id">ii</span>; <span class="id">des_ifs</span>; []; <span class="id">exploit</span> <span class="id">TAIL</span>; <span class="tactic">eauto</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_simpl_r">Z.add_simpl_r</a></span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#list_nth_z_range">list_nth_z_range</a></span> <span class="kwd">in</span> <span class="id">Heq</span>; <span class="id">xomega</span>]).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="tailcall_size">tailcall_size</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sg</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TAIL</span>: <span class="id"><a href="compcert.backend.Conventions.html#tailcall_possible">tailcall_possible</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Conventions1.html#size_arguments">size_arguments</a></span> <span class="id"><a href="compcert.backend.Conventions.html#sg">sg</a></span> = 0.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof3684')">Proof.</div>
+<div class="proofscript" id="proof3684">
+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Conventions.html#tailcall_size_aux">tailcall_size_aux</a></span>; <span class="tactic">eauto</span>; <span class="id">cbn</span>; <span class="id">xomega</span>. Qed.</div>
+<br/>
+<span class="kwd">Class</span> <span class="id"><a name="main_args_ctx">main_args_ctx</a></span>: <span class="kwd">Type</span> := { <span class="id"><a name="main_args">main_args</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> }.<br/>
+<span class="kwd">Local</span> <span class="kwd">Instance</span> <span class="id"><a name="main_args_none">main_args_none</a></span>: <span class="id"><a href="compcert.backend.Conventions.html#main_args_ctx">main_args_ctx</a></span> := { <span class="id"><a href="compcert.backend.Conventions.html#main_args">main_args</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> }.
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

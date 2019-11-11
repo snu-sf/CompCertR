@@ -1,0 +1,752 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module ClightStepInj</title>
+<meta name="description" content="Documentation of Coq module ClightStepInj" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module ClightStepInj</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Sem</span> <span class="id">SimProg</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span> <span class="id">SimMod</span> <span class="id">SimModSem</span> <span class="id">SimSymb</span> <span class="id">SimMem</span> <span class="id">Sound</span> <span class="id">SimSymb</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span> <span class="id">Ctypes</span> <span class="id">Cop</span> <span class="id">Ctyping</span> <span class="id">Csyntax</span> <span class="id">Clight</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimMemId</span> <span class="id">SimMemExt</span> <span class="id">SimMemInj</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SoundTop</span> <span class="id">UnreachC</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimSymbId</span> <span class="id">SimSymbDrop</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinkingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MapsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AxiomsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Ord</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SmallstepC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Preservation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span> <span class="id">Conventions</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MatchSimModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">mktac</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IntegersC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IdSimExtra</span> <span class="id">ClightC</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Z.mul</span> <span class="id">Z.add</span> <span class="id">Z.sub</span> <span class="id">Z.div</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">clight_step_readonly</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">st0</span> <span class="id">st1</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> (<span class="id">function_entry2</span> <span class="id">ge</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.unchanged_on</span> (<span class="id">loc_not_writable</span> <span class="id">st0</span>.(<span class="id">get_mem</span>)) <span class="id">st0</span>.(<span class="id">get_mem</span>) <span class="id">st1</span>.(<span class="id">get_mem</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6526')">Proof.</div>
+<div class="proofscript" id="proof6526">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">STEP</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="tactic">eapply</span> <span class="id">mem_free_list_readonly</span>; <span class="tactic">eauto</span>); <span class="tactic">try</span> (<span class="tactic">by</span> <span class="tactic">eapply</span> <span class="id">external_call_readonly</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">unfold</span> <span class="id">Mem.storev</span> <span class="kwd">in</span> *. <span class="tactic">eapply</span> <span class="id">mem_store_readonly</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">Mem.storebytes_unchanged_on</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">loc_not_writable</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">H9</span>. <span class="tactic">eapply</span> <span class="id">Mem.perm_cur</span>. <span class="tactic">eapply</span> <span class="id">Mem.storebytes_range_perm</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">eapply</span> <span class="id">alloc_variables_unchanged_on</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">match_env</span> (<span class="id">j</span>: <span class="id">meminj</span>) (<span class="id">env_src</span> <span class="id">env_tgt</span>: <span class="id">env</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">id</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MAPPED</span>: <span class="id">exists</span> <span class="id">blk_src</span> <span class="id">blk_tgt</span> <span class="id">ty</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id">j</span> <span class="id">blk_src</span> = <span class="id">Some</span> (<span class="id">blk_tgt</span>, 0)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">BLKSRC</span>: <span class="id">env_src</span> ! <span class="id">id</span> = <span class="id">Some</span> (<span class="id">blk_src</span>, <span class="id">ty</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">BLKTGT</span>: <span class="id">env_tgt</span> ! <span class="id">id</span> = <span class="id">Some</span> (<span class="id">blk_tgt</span>, <span class="id">ty</span>)&gt;&gt;)&gt;&gt;) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">NOTMAPPED</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">BLKSRC</span>: <span class="id">env_src</span> ! <span class="id">id</span> = <span class="id">None</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">BLKTGT</span>: <span class="id">env_tgt</span> ! <span class="id">id</span> = <span class="id">None</span>&gt;&gt;)&gt;&gt;).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">match_temp_env</span> (<span class="id">j</span>: <span class="id">meminj</span>) (<span class="id">tenv_src</span> <span class="id">tenv_tgt</span>: <span class="id">temp_env</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">id</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">option_rel</span> (<span class="id">Val.inject</span> <span class="id">j</span>) (<span class="id">tenv_src</span> ! <span class="id">id</span>) (<span class="id">tenv_tgt</span> ! <span class="id">id</span>).<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">match_cont</span> (<span class="id">j</span>: <span class="id">meminj</span>): <span class="id">cont</span> -&gt; <span class="id">cont</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">match_Kstop</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_cont</span> <span class="id">j</span> <span class="id">Kstop</span> <span class="id">Kstop</span><br/>
+| <span class="id">match_Kseq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stmt</span> <span class="id">K_src</span> <span class="id">K_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_cont</span> <span class="id">j</span> (<span class="id">Kseq</span> <span class="id">stmt</span> <span class="id">K_src</span>) (<span class="id">Kseq</span> <span class="id">stmt</span> <span class="id">K_tgt</span>)<br/>
+| <span class="id">match_Kloop1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stmt0</span> <span class="id">stmt1</span> <span class="id">K_src</span> <span class="id">K_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_cont</span> <span class="id">j</span> (<span class="id">Kloop1</span> <span class="id">stmt0</span> <span class="id">stmt1</span> <span class="id">K_src</span>) (<span class="id">Kloop1</span> <span class="id">stmt0</span> <span class="id">stmt1</span> <span class="id">K_tgt</span>)<br/>
+| <span class="id">match_Kloop2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stmt0</span> <span class="id">stmt1</span> <span class="id">K_src</span> <span class="id">K_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_cont</span> <span class="id">j</span> (<span class="id">Kloop2</span> <span class="id">stmt0</span> <span class="id">stmt1</span> <span class="id">K_src</span>) (<span class="id">Kloop2</span> <span class="id">stmt0</span> <span class="id">stmt1</span> <span class="id">K_tgt</span>)<br/>
+| <span class="id">match_Kswitch</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">K_src</span> <span class="id">K_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_cont</span> <span class="id">j</span> (<span class="id">Kswitch</span> <span class="id">K_src</span>) (<span class="id">Kswitch</span> <span class="id">K_tgt</span>)<br/>
+| <span class="id">match_Kcall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">id</span> <span class="id">fn</span> <span class="id">env_src</span> <span class="id">env_tgt</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span> <span class="id">K_src</span> <span class="id">K_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_cont</span> <span class="id">j</span> (<span class="id">Kcall</span> <span class="id">id</span> <span class="id">fn</span> <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">K_src</span>) (<span class="id">Kcall</span> <span class="id">id</span> <span class="id">fn</span> <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">K_tgt</span>).<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">match_states_clight_internal</span>:<br/>
+&nbsp;&nbsp;<span class="id">state</span> -&gt; <span class="id">state</span> -&gt; <span class="id">meminj</span> -&gt; <span class="id">mem</span> -&gt; <span class="id">mem</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">match_State</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fn</span> <span class="id">stmt</span> <span class="id">K_src</span> <span class="id">K_tgt</span> <span class="id">env_src</span> <span class="id">env_tgt</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">j</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states_clight_internal</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">State</span> <span class="id">fn</span> <span class="id">stmt</span> <span class="id">K_src</span> <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">m_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">State</span> <span class="id">fn</span> <span class="id">stmt</span> <span class="id">K_tgt</span> <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span><br/>
+| <span class="id">match_Callstate</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fptr_src</span> <span class="id">fptr_tgt</span> <span class="id">ty</span> <span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">K_src</span> <span class="id">K_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">j</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">fptr_src</span> <span class="id">fptr_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id">Val.inject_list</span> <span class="id">j</span> <span class="id">args_src</span> <span class="id">args_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states_clight_internal</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Callstate</span> <span class="id">fptr_src</span> <span class="id">ty</span> <span class="id">args_src</span> <span class="id">K_src</span> <span class="id">m_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Callstate</span> <span class="id">fptr_tgt</span> <span class="id">ty</span> <span class="id">args_tgt</span> <span class="id">K_tgt</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span><br/>
+| <span class="id">match_Returnstate</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">retv_src</span> <span class="id">retv_tgt</span> <span class="id">K_src</span> <span class="id">K_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">j</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">retv_src</span> <span class="id">retv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states_clight_internal</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Returnstate</span> <span class="id">retv_src</span> <span class="id">K_src</span> <span class="id">m_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Returnstate</span> <span class="id">retv_tgt</span> <span class="id">K_tgt</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">match_states_clight</span><br/>
+&nbsp;&nbsp;: <span class="id">unit</span> -&gt; <span class="id">state</span> -&gt; <span class="id">state</span> -&gt; <span class="id">SimMemInj.t</span>' -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id">match_states_clight_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st_src</span> <span class="id">st_tgt</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">sm0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWFSRC</span>: <span class="id">m_src</span> = <span class="id">sm0</span>.(<span class="id">SimMemInj.src</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWFTGT</span>: <span class="id">m_tgt</span> = <span class="id">sm0</span>.(<span class="id">SimMemInj.tgt</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWFINJ</span>: <span class="id">j</span> = <span class="id">sm0</span>.(<span class="id">SimMemInj.inj</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCHST</span>: <span class="id">match_states_clight_internal</span> <span class="id">st_src</span> <span class="id">st_tgt</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_states_clight</span> <span class="id">tt</span> <span class="id">st_src</span> <span class="id">st_tgt</span> <span class="id">sm0</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">CLIGHTINJ</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">se_src</span> <span class="id">se_tgt</span>: <span class="id">Senv.t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">ge_src</span> <span class="id">ge_tgt</span>: <span class="id">genv</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">CENV</span>: <span class="id">genv_cenv</span> <span class="id">ge_src</span> = <span class="id">genv_cenv</span> <span class="id">ge_tgt</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">function_entry_inject</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">function_entry</span>: <span class="id">genv</span> -&gt; <span class="id">function</span> -&gt; <span class="id">list</span> <span class="id">val</span> -&gt; <span class="id">mem</span> -&gt; <span class="id">env</span> -&gt; <span class="id">temp_env</span> -&gt; <span class="id">mem</span> -&gt; <span class="kwd">Prop</span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fn</span> <span class="id">vs_src</span> <span class="id">vs_tgt</span> <span class="id">sm0</span> <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">m_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id">Val.inject_list</span> <span class="id">sm0</span>.(<span class="id">SimMemInj.inj</span>) <span class="id">vs_src</span> <span class="id">vs_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENTRY</span>: <span class="id">function_entry</span> <span class="id">ge_src</span> <span class="id">fn</span> <span class="id">vs_src</span> <span class="id">sm0</span>.(<span class="id">SimMemInj.src</span>) <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">m_src1</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">sm1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEMSRC</span>: <span class="id">SimMemInj.src</span> <span class="id">sm1</span> = <span class="id">m_src1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">sm1</span>.(<span class="id">SimMemInj.inj</span>) <span class="id">env_src</span> <span class="id">env_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">sm1</span>.(<span class="id">SimMemInj.inj</span>) <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMemInj.le</span>' <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ENTRY</span>: <span class="id">function_entry</span> <span class="id">ge_tgt</span> <span class="id">fn</span> <span class="id">vs_tgt</span> <span class="id">sm0</span>.(<span class="id">SimMemInj.tgt</span>) <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">sm1</span>.(<span class="id">SimMemInj.tgt</span>)&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">alloc_variables_inject</span> <span class="id">sm0</span> <span class="id">idl</span> <span class="id">e_src0</span> <span class="id">e_tgt0</span> <span class="id">e_src1</span> <span class="id">m_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ALLOC</span>: <span class="id">alloc_variables</span> <span class="id">ge_src</span> <span class="id">e_src0</span> (<span class="id">SimMemInj.src</span> <span class="id">sm0</span>) <span class="id">idl</span> <span class="id">e_src1</span> <span class="id">m_src1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENV</span>: <span class="id">match_env</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>) <span class="id">e_src0</span> <span class="id">e_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">e_tgt1</span> <span class="id">sm1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEMSRC</span>: <span class="id">SimMemInj.src</span> <span class="id">sm1</span> = <span class="id">m_src1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMemInj.le</span>' <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ENV</span>: <span class="id">match_env</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm1</span>) <span class="id">e_src1</span> <span class="id">e_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ALLOC</span>: <span class="id">alloc_variables</span> <span class="id">ge_tgt</span> <span class="id">e_tgt0</span> (<span class="id">SimMemInj.tgt</span> <span class="id">sm0</span>) <span class="id">idl</span> <span class="id">e_tgt1</span> (<span class="id">SimMemInj.tgt</span> <span class="id">sm1</span>)&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6527')">Proof.</div>
+<div class="proofscript" id="proof6527">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">sm0</span> <span class="id">MWF</span> <span class="id">e_src0</span> <span class="id">e_tgt0</span> <span class="id">e_src1</span> <span class="id">m_src1</span> <span class="id">ENV</span> <span class="id">ALLOC</span>. <span class="tactic">induction</span> <span class="id">idl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">inv</span> <span class="id">ALLOC</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">refl</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">inv</span> <span class="id">ALLOC</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SimMemInj.alloc_parallel</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">refl</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHidl</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:=<span class="id">PTree.set</span> <span class="id">id</span> (<span class="id">blk_tgt</span>, <span class="id">ty</span>) <span class="id">e_tgt0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">PTree.gsspec</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">left</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">ENV</span> <span class="id">id0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">des</span>. <span class="id">left</span>. <span class="id">inv</span> <span class="id">MLE</span>. <span class="id">esplits</span>; <span class="id">cycle</span> 1; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">right</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">etrans</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">CENV</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;<span class="kwd">Lemma</span> <span class="id">assign_loc_inject</span> <span class="id">ce</span> <span class="id">ty</span> <span class="id">sm0</span> <span class="id">blk_src</span> <span class="id">blk_tgt</span> <span class="id">ofs_src</span> <span class="id">ofs_tgt</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">m_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ASSIGN</span>: <span class="id">assign_loc</span> <span class="id">ce</span> <span class="id">ty</span> <span class="id">sm0</span>.(<span class="id">SimMemInj.src</span>) <span class="id">blk_src</span> <span class="id">ofs_src</span> <span class="id">v_src</span> <span class="id">m_src1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">sm0</span>.(<span class="id">SimMemInj.inj</span>) (<span class="id">Vptr</span> <span class="id">blk_src</span> <span class="id">ofs_src</span>) (<span class="id">Vptr</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL</span>: <span class="id">Val.inject</span> <span class="id">sm0</span>.(<span class="id">SimMemInj.inj</span>) <span class="id">v_src</span> <span class="id">v_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">ASSIGN</span>: <span class="id">assign_loc</span> <span class="id">ce</span> <span class="id">ty</span> <span class="id">sm0</span>.(<span class="id">SimMemInj.tgt</span>) <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span> <span class="id">v_tgt</span> <span class="id">sm1</span>.(<span class="id">SimMemInj.tgt</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEMSRC</span>: <span class="id">SimMemInj.src</span> <span class="id">sm1</span> = <span class="id">m_src1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMemInj.le</span>' <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6528')">Proof.</div>
+<div class="proofscript" id="proof6528">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">inv</span> <span class="id">ASSIGN</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">SimMemInj.storev_mapped</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 1; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">zeq</span> (<span class="id">sizeof</span> <span class="id">ce</span> <span class="id">ty</span>) 0).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">cinv</span> <span class="id">VAL</span>. <span class="id">cinv</span> <span class="id">INJ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">bytes</span> = <span class="id">nil</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> (<span class="id">Mem.loadbytes_empty</span> (<span class="id">SimMemInj.src</span> <span class="id">sm0</span>) <span class="id">b</span>' (<span class="id">Ptrofs.unsigned</span> <span class="id">ofs</span>') (<span class="id">sizeof</span> <span class="id">ce</span> <span class="id">ty</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">omega</span>. <span class="tactic">congruence</span>. } <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Mem.range_perm_storebytes</span> (<span class="id">SimMemInj.tgt</span> <span class="id">sm0</span>) <span class="id">blk_tgt</span> (<span class="id">Ptrofs.unsigned</span> (<span class="id">Ptrofs.add</span> <span class="id">ofs_src</span> (<span class="id">Ptrofs.repr</span> <span class="id">delta0</span>))) <span class="id">nil</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">as</span> [<span class="id">tm</span>' <span class="id">SB</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">simpl</span>. <span class="tactic">red</span>; <span class="tactic">intros</span>; <span class="id">omegaContradiction</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eexists</span> (<span class="id">SimMemInj.mk</span> <span class="id">_</span> <span class="id">tm</span>' <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>); <span class="id">ss</span>. <span class="id">esplits</span>; <span class="id">cycle</span> 3; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="tactic">eapply</span> <span class="id">Mem.storebytes_unchanged_on</span>; <span class="tactic">eauto</span>; <span class="id">i</span>; <span class="id">ss</span>; <span class="tactic">omega</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">ii</span>; <span class="tactic">eapply</span> <span class="id">Mem.perm_storebytes_2</span>; <span class="tactic">eauto</span>); <span class="tactic">try</span> (<span class="id">econs</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="id">clarify</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span> 2; <span class="tactic">eauto</span>; <span class="id">i</span>; <span class="tactic">try</span> <span class="id">omegaContradiction</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">e</span>; <span class="id">right</span>; <span class="tactic">omega</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">Mem.loadbytes_empty</span>. <span class="tactic">omega</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">inv</span> <span class="id">MWF</span>. <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="id">erewrite</span> <span class="id">Mem.nextblock_storebytes</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">Mem.storebytes_empty_inject</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">SimMemInj.src_private</span>, <span class="id">SimMemInj.valid_blocks</span>, <span class="id">Mem.valid_block</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">Mem.nextblock_storebytes</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">TGTEXT0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">SimMemInj.tgt_private</span>, <span class="id">SimMemInj.valid_blocks</span>, <span class="id">Mem.valid_block</span>, <span class="id">loc_out_of_reach</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> (@<span class="id">Mem.nextblock_storebytes</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">SB</span>). <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_safe</span>. <span class="tactic">split</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">H5</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">Mem.perm_storebytes_2</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">assert</span> (<span class="id">SZPOS</span>: <span class="id">sizeof</span> <span class="id">ce</span> <span class="id">ty</span> &gt; 0).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">generalize</span> (<span class="id">sizeof_pos</span> <span class="id">ce</span> <span class="id">ty</span>); <span class="tactic">omega</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> <span class="id">VAL</span>. <span class="id">cinv</span> <span class="id">INJ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">RPSRC</span>: <span class="id">Mem.range_perm</span> (<span class="id">SimMemInj.src</span> <span class="id">sm0</span>) <span class="id">b</span>' (<span class="id">Ptrofs.unsigned</span> <span class="id">ofs</span>') (<span class="id">Ptrofs.unsigned</span> <span class="id">ofs</span>' + <span class="id">sizeof</span> <span class="id">ce</span> <span class="id">ty</span>) <span class="id">Cur</span> <span class="id">Nonempty</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">Mem.range_perm_implies</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">perm_any_N</span>. <span class="tactic">eapply</span> <span class="id">Mem.loadbytes_range_perm</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">RPDST</span>: <span class="id">Mem.range_perm</span> (<span class="id">SimMemInj.src</span> <span class="id">sm0</span>) <span class="id">blk_src</span> (<span class="id">Ptrofs.unsigned</span> <span class="id">ofs_src</span>) (<span class="id">Ptrofs.unsigned</span> <span class="id">ofs_src</span> + <span class="id">sizeof</span> <span class="id">ce</span> <span class="id">ty</span>) <span class="id">Cur</span> <span class="id">Nonempty</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">replace</span> (<span class="id">sizeof</span> <span class="id">ce</span> <span class="id">ty</span>) <span class="kwd">with</span> (<span class="id">Z.of_nat</span> (<span class="id">List.length</span> <span class="id">bytes</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Mem.range_perm_implies</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">perm_any_N</span>. <span class="tactic">eapply</span> <span class="id">Mem.storebytes_range_perm</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">Mem.loadbytes_length</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">H3</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">LEN</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">LEN</span>. <span class="tactic">apply</span> <span class="id">nat_of_Z_eq</span>. <span class="tactic">omega</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">PSRC</span>: <span class="id">Mem.perm</span> (<span class="id">SimMemInj.src</span> <span class="id">sm0</span>) <span class="id">b</span>' (<span class="id">Ptrofs.unsigned</span> <span class="id">ofs</span>') <span class="id">Cur</span> <span class="id">Nonempty</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id">RPSRC</span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">PDST</span>: <span class="id">Mem.perm</span> (<span class="id">SimMemInj.src</span> <span class="id">sm0</span>) <span class="id">blk_src</span> (<span class="id">Ptrofs.unsigned</span> <span class="id">ofs_src</span>) <span class="id">Cur</span> <span class="id">Nonempty</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id">RPDST</span>; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.address_inject</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">PSRC</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">EQ1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.address_inject</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">PDST</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">EQ2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.loadbytes_inject</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> [<span class="id">bytes2</span> [<span class="id">A</span> <span class="id">B</span>]].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SimMemInjC.storebytes_mapped</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm1</span>. <span class="id">splits</span>; <span class="tactic">auto</span>. <span class="id">econs</span> 2; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id">EQ1</span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id">EQ2</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">intros</span>; <span class="tactic">eapply</span> <span class="id">Mem.aligned_area_inject</span> <span class="kwd">with</span> (<span class="id">m</span> := <span class="id">SimMemInj.src</span> <span class="id">sm0</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">alignof_blockcopy_1248</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">sizeof_alignof_blockcopy_compat</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">intros</span>; <span class="tactic">eapply</span> <span class="id">Mem.aligned_area_inject</span> <span class="kwd">with</span> (<span class="id">m</span> := <span class="id">SimMemInj.src</span> <span class="id">sm0</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">alignof_blockcopy_1248</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">sizeof_alignof_blockcopy_compat</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*  <span class="tactic">eapply</span> <span class="id">Mem.disjoint_or_equal_inject</span> <span class="kwd">with</span> (<span class="id">m</span> := <span class="id">SimMemInj.src</span> <span class="id">sm0</span>); <span class="tactic">eauto</span>; <span class="tactic">apply</span> <span class="id">Mem.range_perm_max</span> <span class="kwd">with</span> <span class="id">Cur</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">call_cont_match</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src</span> <span class="id">K_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_cont</span> <span class="id">j</span> (<span class="id">call_cont</span> <span class="id">K_src</span>) (<span class="id">call_cont</span> <span class="id">K_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6529')">Proof.</div>
+<div class="proofscript" id="proof6529">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">K_tgt</span> <span class="id">MATCH</span>. <span class="tactic">induction</span> <span class="id">K_src</span>; <span class="id">ss</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">match_env_incr</span> <span class="id">j0</span> <span class="id">j1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCR</span>: <span class="id">inject_incr</span> <span class="id">j0</span> <span class="id">j1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_env</span> <span class="id">j0</span> &lt;2= <span class="id">match_env</span> <span class="id">j1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6530')">Proof.</div>
+<div class="proofscript" id="proof6530">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">destruct</span> (<span class="id">PR</span> <span class="id">id</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">des</span>. <span class="id">left</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">des</span>. <span class="id">right</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">match_temp_env_incr</span> <span class="id">j0</span> <span class="id">j1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCR</span>: <span class="id">inject_incr</span> <span class="id">j0</span> <span class="id">j1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_temp_env</span> <span class="id">j0</span> &lt;2= <span class="id">match_temp_env</span> <span class="id">j1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6531')">Proof.</div>
+<div class="proofscript" id="proof6531">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">destruct</span> (<span class="id">PR</span> <span class="id">id</span>); <span class="id">econs</span>. <span class="tactic">eapply</span> <span class="id">val_inject_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">match_cont_incr</span> <span class="id">j0</span> <span class="id">j1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCR</span>: <span class="id">inject_incr</span> <span class="id">j0</span> <span class="id">j1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_cont</span> <span class="id">j0</span> &lt;2= <span class="id">match_cont</span> <span class="id">j1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6532')">Proof.</div>
+<div class="proofscript" id="proof6532">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">revert</span> <span class="id">INCR</span>. <span class="tactic">induction</span> <span class="id">PR</span>; <span class="id">i</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="tactic">by</span> (<span class="tactic">eapply</span> <span class="id">match_expr_incr</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">match_env_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">match_temp_env_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">bind_parameters_inject</span> <span class="id">e_src</span> <span class="id">e_tgt</span> <span class="id">sm0</span> <span class="id">idl</span> <span class="id">vargs_src</span> <span class="id">vargs_tgt</span> <span class="id">m_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">BIND</span>: <span class="id">bind_parameters</span> <span class="id">ge_src</span> <span class="id">e_src</span> (<span class="id">SimMemInj.src</span> <span class="id">sm0</span>) <span class="id">idl</span> <span class="id">vargs_src</span> <span class="id">m_src1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENV</span>: <span class="id">match_env</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>) <span class="id">e_src</span> <span class="id">e_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id">Val.inject_list</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>) <span class="id">vargs_src</span> <span class="id">vargs_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEMSRC</span>: <span class="id">SimMemInj.src</span> <span class="id">sm1</span> = <span class="id">m_src1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMemInj.le</span>' <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">BIND</span>: <span class="id">bind_parameters</span> <span class="id">ge_tgt</span> <span class="id">e_tgt</span> (<span class="id">SimMemInj.tgt</span> <span class="id">sm0</span>) <span class="id">idl</span> <span class="id">vargs_tgt</span> (<span class="id">SimMemInj.tgt</span> <span class="id">sm1</span>)&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6533')">Proof.</div>
+<div class="proofscript" id="proof6533">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">sm0</span> <span class="id">ENV</span> <span class="id">vargs_src</span> <span class="id">vargs_tgt</span> <span class="id">m_src1</span> <span class="id">MWF</span> <span class="id">VALS</span> <span class="id">BIND</span>. <span class="tactic">induction</span> <span class="id">idl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">inv</span> <span class="id">BIND</span>. <span class="id">inv</span> <span class="id">VALS</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">refl</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">inv</span> <span class="id">BIND</span>. <span class="id">inv</span> <span class="id">VALS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">ENV</span> <span class="id">id</span>); <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">assign_loc_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHidl</span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">H6</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">match_env_incr</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">val_inject_list_incr</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">etrans</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">CENV</span> <span class="kwd">in</span> *. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">set_match_temp_env</span> <span class="id">j</span> <span class="id">id</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_temp_env</span> <span class="id">j</span> (<span class="id">PTree.set</span> <span class="id">id</span> <span class="id">v_src</span> <span class="id">tenv_src</span>) (<span class="id">PTree.set</span> <span class="id">id</span> <span class="id">v_tgt</span> <span class="id">tenv_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6534')">Proof.</div>
+<div class="proofscript" id="proof6534">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">PTree.gsspec</span>. <span class="id">des_ifs</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">bind_parameter_temps_inject</span> <span class="id">tenv_src0</span> <span class="id">tenv_tgt0</span> <span class="id">tenv_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">idl</span> <span class="id">vargs_src</span> <span class="id">vargs_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">BIND</span>: <span class="id">bind_parameter_temps</span> <span class="id">idl</span> <span class="id">vargs_src</span> <span class="id">tenv_src0</span> = <span class="id">Some</span> <span class="id">tenv_src1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src0</span> <span class="id">tenv_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id">Val.inject_list</span> <span class="id">j</span> <span class="id">vargs_src</span> <span class="id">vargs_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tenv_tgt1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">BIND</span>: <span class="id">bind_parameter_temps</span> <span class="id">idl</span> <span class="id">vargs_tgt</span> <span class="id">tenv_tgt0</span> = <span class="id">Some</span> <span class="id">tenv_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src1</span> <span class="id">tenv_tgt1</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6535')">Proof.</div>
+<div class="proofscript" id="proof6535">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">tenv_src0</span> <span class="id">tenv_tgt0</span> <span class="id">tenv_src1</span> <span class="id">vargs_src</span> <span class="id">BIND</span> <span class="id">TENV</span> <span class="id">vargs_tgt</span> <span class="id">VALS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">idl</span>; <span class="id">i</span>; <span class="id">ss</span>; <span class="id">des_ifs_safe</span>; <span class="id">inv</span> <span class="id">VALS</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHidl</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">set_match_temp_env</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">create_undef_temps_match</span> <span class="id">j</span> <span class="id">l</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">match_temp_env</span> <span class="id">j</span> (<span class="id">create_undef_temps</span> <span class="id">l</span>) (<span class="id">create_undef_temps</span> <span class="id">l</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6536')">Proof.</div>
+<div class="proofscript" id="proof6536">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">PTree.gempty</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">des_ifs</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gsspec</span>. <span class="id">des_ifs</span>. <span class="id">econs</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">function_entry1_inject</span>: <span class="id">function_entry_inject</span> <span class="id">function_entry1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6537')">Proof.</div>
+<div class="proofscript" id="proof6537">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">ENTRY</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">alloc_variables_inject</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:=<span class="id">empty_env</span>). <span class="id">ii</span>. <span class="id">right</span>. <span class="tactic">unfold</span> <span class="id">empty_env</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">PTree.gempty</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">bind_parameters_inject</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">cinv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">val_inject_list_incr</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">etrans</span>; <span class="tactic">eauto</span>); <span class="tactic">try</span> <span class="tactic">by</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MLE</span>. <span class="id">cinv</span> <span class="id">MLE0</span>. <span class="tactic">eapply</span> <span class="id">match_env_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">create_undef_temps_match</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">function_entry2_inject</span>: <span class="id">function_entry_inject</span> <span class="id">function_entry2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6538')">Proof.</div>
+<div class="proofscript" id="proof6538">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">ENTRY</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">alloc_variables_inject</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:=<span class="id">empty_env</span>). <span class="id">ii</span>. <span class="id">right</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">empty_env</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">PTree.gempty</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">bind_parameter_temps_inject</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">create_undef_temps_match</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>). <span class="id">cinv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">match_temp_env_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">function_entry</span>: <span class="id">genv</span> -&gt; <span class="id">function</span> -&gt; <span class="id">list</span> <span class="id">val</span> -&gt; <span class="id">mem</span> -&gt; <span class="id">env</span> -&gt; <span class="id">temp_env</span> -&gt; <span class="id">mem</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">FUNCTIONENTRY</span>: <span class="id">function_entry_inject</span> <span class="id">function_entry</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">deref_loc_inject</span> <span class="id">j</span> <span class="id">ty</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">blk_src</span> <span class="id">blk_tgt</span> <span class="id">ofs_src</span> <span class="id">ofs_tgt</span> <span class="id">v_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEREF</span>: <span class="id">deref_loc</span> <span class="id">ty</span> <span class="id">m_src</span> <span class="id">blk_src</span> <span class="id">ofs_src</span> <span class="id">v_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJECT</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL</span>: <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">Vptr</span> <span class="id">blk_src</span> <span class="id">ofs_src</span>) (<span class="id">Vptr</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">v_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">DEREF</span>: <span class="id">deref_loc</span> <span class="id">ty</span> <span class="id">m_tgt</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span> <span class="id">v_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">VAL</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6539')">Proof.</div>
+<div class="proofscript" id="proof6539">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">DEREF</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Mem.loadv_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 1; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_expr_lvalue_inject</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GENV</span>: <span class="id">meminj_match_globals</span> <span class="id">eq</span> <span class="id">ge_src</span> <span class="id">ge_tgt</span> <span class="id">j</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">exp</span> <span class="id">v_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EVAL</span>: <span class="id">eval_expr</span> <span class="id">ge_src</span> <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">m_src</span> <span class="id">exp</span> <span class="id">v_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJECT</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">v_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVAL</span>: <span class="id">eval_expr</span> <span class="id">ge_tgt</span> <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">m_tgt</span> <span class="id">exp</span> <span class="id">v_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>&gt;&gt;)) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">exp</span> <span class="id">blk_src</span> <span class="id">ofs_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EVAL</span>: <span class="id">eval_lvalue</span> <span class="id">ge_src</span> <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">m_src</span> <span class="id">exp</span> <span class="id">blk_src</span> <span class="id">ofs_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJECT</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVAL</span>: <span class="id">eval_lvalue</span> <span class="id">ge_tgt</span> <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">m_tgt</span> <span class="id">exp</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">Vptr</span> <span class="id">blk_src</span> <span class="id">ofs_src</span>) (<span class="id">Vptr</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span>)&gt;&gt;)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6540')">Proof.</div>
+<div class="proofscript" id="proof6540">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">eval_expr_lvalue_ind</span>; <span class="id">i</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> (<span class="id">TENV</span> <span class="id">id</span>); <span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 5; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 6; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id">sem_unary_operation_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 7; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id">H2</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">sem_binary_operation_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 8; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">CENV</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id">sem_cast_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 9; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">CENV</span>. <span class="id">econs</span> 10; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">CENV</span>. <span class="id">econs</span> 11; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id">deref_loc_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 12; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> (<span class="id">ENV</span> <span class="id">id</span>); <span class="id">des</span>; <span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 1; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> (<span class="id">ENV</span> <span class="id">id</span>); <span class="id">des</span>; <span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> *; <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">GENV</span>. <span class="id">exploit</span> <span class="id">SYMBLE</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 2; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">cinv</span> <span class="id">INJ</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 3; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">cinv</span> <span class="id">INJ</span>. <span class="tactic">rewrite</span> <span class="id">CENV</span> <span class="kwd">in</span> *. <span class="id">esplits</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span> 4; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">Ptrofs.add_assoc</span>. <span class="tactic">f_equal</span>. <span class="tactic">apply</span> <span class="id">Ptrofs.add_commut</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">cinv</span> <span class="id">INJ</span>. <span class="tactic">rewrite</span> <span class="id">CENV</span> <span class="kwd">in</span> *. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 5; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_expr_inject</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">exp</span> <span class="id">v_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EVAL</span>: <span class="id">eval_expr</span> <span class="id">ge_src</span> <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">m_src</span> <span class="id">exp</span> <span class="id">v_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GENV</span>: <span class="id">meminj_match_globals</span> <span class="id">eq</span> <span class="id">ge_src</span> <span class="id">ge_tgt</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJECT</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">v_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVAL</span>: <span class="id">eval_expr</span> <span class="id">ge_tgt</span> <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">m_tgt</span> <span class="id">exp</span> <span class="id">v_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6541')">Proof.</div>
+<div class="proofscript" id="proof6541">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_expr_lvalue_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_exprlist_inject</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">tys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exps</span> <span class="id">vs_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EVALS</span>: <span class="id">eval_exprlist</span> <span class="id">ge_src</span> <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">m_src</span> <span class="id">exps</span> <span class="id">tys</span> <span class="id">vs_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GENV</span>: <span class="id">meminj_match_globals</span> <span class="id">eq</span> <span class="id">ge_src</span> <span class="id">ge_tgt</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJECT</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">vs_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVALS</span>: <span class="id">eval_exprlist</span> <span class="id">ge_tgt</span> <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">m_tgt</span> <span class="id">exps</span> <span class="id">tys</span> <span class="id">vs_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id">Val.inject_list</span> <span class="id">j</span> <span class="id">vs_src</span> <span class="id">vs_tgt</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6542')">Proof.</div>
+<div class="proofscript" id="proof6542">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">tys</span> <span class="id">vs_src</span> <span class="id">EVALS</span> <span class="id">ENV</span> <span class="id">TENV</span> <span class="id">INJECT</span>. <span class="tactic">induction</span> <span class="id">exps</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">EVALS</span>. <span class="id">exists</span> []. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">EVALS</span>. <span class="id">exploit</span> <span class="id">IHexps</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_expr_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">sem_cast_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">tv</span> :: <span class="id">vs_tgt</span>). <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_lvalue_inject</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span> <span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">exp</span> <span class="id">blk_src</span> <span class="id">ofs_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EVAL</span>: <span class="id">eval_lvalue</span> <span class="id">ge_src</span> <span class="id">env_src</span> <span class="id">tenv_src</span> <span class="id">m_src</span> <span class="id">exp</span> <span class="id">blk_src</span> <span class="id">ofs_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GENV</span>: <span class="id">meminj_match_globals</span> <span class="id">eq</span> <span class="id">ge_src</span> <span class="id">ge_tgt</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">j</span> <span class="id">env_src</span> <span class="id">env_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TENV</span>: <span class="id">match_temp_env</span> <span class="id">j</span> <span class="id">tenv_src</span> <span class="id">tenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJECT</span>: <span class="id">Mem.inject</span> <span class="id">j</span> <span class="id">m_src</span> <span class="id">m_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVAL</span>: <span class="id">eval_lvalue</span> <span class="id">ge_tgt</span> <span class="id">env_tgt</span> <span class="id">tenv_tgt</span> <span class="id">m_tgt</span> <span class="id">exp</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> (<span class="id">Vptr</span> <span class="id">blk_src</span> <span class="id">ofs_src</span>) (<span class="id">Vptr</span> <span class="id">blk_tgt</span> <span class="id">ofs_tgt</span>)&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6543')">Proof.</div>
+<div class="proofscript" id="proof6543">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_expr_lvalue_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">match_loc</span> <span class="id">j</span> (<span class="id">loc_src</span> <span class="id">loc_tgt</span>: <span class="id">block</span> * <span class="id">Z</span> * <span class="id">Z</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">loc_src</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| (<span class="id">blk_src</span>, <span class="id">lo_src</span>, <span class="id">hi_src</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">loc_tgt</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| (<span class="id">blk_tgt</span>, <span class="id">lo_tgt</span>, <span class="id">hi_tgt</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">delta</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">DELTA</span>: <span class="id">j</span> <span class="id">blk_src</span> = <span class="id">Some</span> (<span class="id">blk_tgt</span>, <span class="id">delta</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LO</span>: <span class="id">lo_src</span> + <span class="id">delta</span> = <span class="id">lo_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">HI</span>: <span class="id">hi_src</span> + <span class="id">delta</span> = <span class="id">hi_tgt</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">free_list_inject_parallel</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm0</span> <span class="id">locs_src</span> <span class="id">locs_tgt</span> <span class="id">m_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOCS</span>: <span class="id">list_forall2</span> (<span class="id">match_loc</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>)) <span class="id">locs_src</span> <span class="id">locs_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FREE</span>: <span class="id">Mem.free_list</span> (<span class="id">SimMemInj.src</span> <span class="id">sm0</span>) <span class="id">locs_src</span> = <span class="id">Some</span> <span class="id">m_src1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEMSRC</span>: <span class="id">SimMemInj.src</span> <span class="id">sm1</span> = <span class="id">m_src1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMemInj.le</span>' <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">FREE</span>: <span class="id">Mem.free_list</span> (<span class="id">SimMemInj.tgt</span> <span class="id">sm0</span>) <span class="id">locs_tgt</span> = <span class="id">Some</span> (<span class="id">SimMemInj.tgt</span> <span class="id">sm1</span>)&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6544')">Proof.</div>
+<div class="proofscript" id="proof6544">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">sm0</span> <span class="id">locs_tgt</span> <span class="id">m_src1</span> <span class="id">MWF</span> <span class="id">LOCS</span> <span class="id">FREE</span>. <span class="tactic">induction</span> <span class="id">locs_src</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">LOCS</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">inv</span> <span class="id">LOCS</span>. <span class="tactic">unfold</span> <span class="id">match_loc</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="id">des_ifs</span>. <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SimMemInj.free_parallel</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHlocs_src</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">list_forall2_imply</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">match_loc</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="id">des</span>. <span class="id">inv</span> <span class="id">MLE</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">etrans</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">FREETGT</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">blocks_of_env_match</span> <span class="id">j</span> <span class="id">e_src</span> <span class="id">e_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ENV</span>: <span class="id">match_env</span> <span class="id">j</span> <span class="id">e_src</span> <span class="id">e_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">list_forall2</span> (<span class="id">match_loc</span> <span class="id">j</span>) (<span class="id">blocks_of_env</span> <span class="id">ge_src</span> <span class="id">e_src</span>) (<span class="id">blocks_of_env</span> <span class="id">ge_tgt</span> <span class="id">e_tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6545')">Proof.</div>
+<div class="proofscript" id="proof6545">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">R</span>:=(<span class="kwd">fun</span> (<span class="id">d_src</span> <span class="id">d_tgt</span>: <span class="id">block</span> * <span class="id">type</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> (<span class="id">b_src</span>, <span class="id">t_src</span>) := <span class="id">d_src</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> (<span class="id">b_tgt</span>, <span class="id">t_tgt</span>) := <span class="id">d_tgt</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id">j</span> <span class="id">b_src</span> = <span class="id">Some</span> (<span class="id">b_tgt</span>, 0)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">TYSAME</span>: <span class="id">t_src</span> = <span class="id">t_tgt</span>&gt;&gt;))).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">PTree.elements_canonical_order</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">instantiate</span> (1:=<span class="id">R</span>). <span class="id">instantiate</span> (1:=<span class="id">e_tgt</span>). <span class="id">instantiate</span> (1:=<span class="id">e_src</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">destruct</span> (<span class="id">ENV</span> <span class="id">i</span>); <span class="id">des</span>; <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="tactic">destruct</span> (<span class="id">ENV</span> <span class="id">i</span>); <span class="id">des</span>; <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">intros</span> <span class="id">ALL</span>. <span class="tactic">unfold</span> <span class="id">blocks_of_env</span>. <span class="id">revert</span> <span class="id">ALL</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">PTree.elements</span> <span class="id">e_tgt</span>). <span class="tactic">generalize</span> (<span class="id">PTree.elements</span> <span class="id">e_src</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ss</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">ALL</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">ALL</span>. <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">block_of_binding</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">CENV</span>. <span class="id">zsimpl</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Scheme</span> <span class="id">statement_ind2</span> := <span class="kwd">Induction</span> <span class="kwd">for</span> <span class="id">statement</span> <span class="kwd">Sort</span> <span class="kwd">Prop</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">with</span> <span class="id">labeled_statements_ind2</span> := <span class="kwd">Induction</span> <span class="kwd">for</span> <span class="id">labeled_statements</span> <span class="kwd">Sort</span> <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="id">Combined</span> <span class="kwd">Scheme</span> <span class="id">statement_labeled_statements_ind</span> <span class="id">from</span> <span class="id">statement_ind2</span>, <span class="id">labeled_statements_ind2</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">find_label_label_ls_match_none</span> <span class="id">j</span> <span class="id">lbl</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">stmt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LABEL</span>: <span class="id">find_label</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_src0</span> = <span class="id">None</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_tgt0</span> = <span class="id">None</span>) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">ls</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LABEL</span>: <span class="id">find_label_ls</span> <span class="id">lbl</span> <span class="id">ls</span> <span class="id">K_src0</span> = <span class="id">None</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label_ls</span> <span class="id">lbl</span> <span class="id">ls</span> <span class="id">K_tgt0</span> = <span class="id">None</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6546')">Proof.</div>
+<div class="proofscript" id="proof6546">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">statement_labeled_statements_ind</span>; <span class="id">ss</span>; <span class="id">i</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">des_ifs_safe</span>; <span class="id">erewrite</span> <span class="id">H</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">des_ifs_safe</span>. <span class="id">erewrite</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">erewrite</span> <span class="id">H0</span>; <span class="tactic">try</span> <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">find_label_match_none</span> <span class="id">j</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LABEL</span>: <span class="id">find_label</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_src0</span> = <span class="id">None</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">find_label</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_tgt0</span> = <span class="id">None</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6547')">Proof.</div>
+<div class="proofscript" id="proof6547">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">find_label_label_ls_match_none</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">find_label_label_ls_match</span> <span class="id">j</span> <span class="id">lbl</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">stmt</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span> <span class="id">stmt</span>' <span class="id">K_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LABEL</span>: <span class="id">find_label</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_src0</span> = <span class="id">Some</span> (<span class="id">stmt</span>', <span class="id">K_src1</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">K_tgt1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LABEL</span>: <span class="id">find_label</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_tgt0</span> = <span class="id">Some</span> (<span class="id">stmt</span>', <span class="id">K_tgt1</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src1</span> <span class="id">K_tgt1</span>&gt;&gt;)) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">ls</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span> <span class="id">stmt</span>' <span class="id">K_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LABEL</span>: <span class="id">find_label_ls</span> <span class="id">lbl</span> <span class="id">ls</span> <span class="id">K_src0</span> = <span class="id">Some</span> (<span class="id">stmt</span>', <span class="id">K_src1</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">K_tgt1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LABEL</span>: <span class="id">find_label_ls</span> <span class="id">lbl</span> <span class="id">ls</span> <span class="id">K_tgt0</span> = <span class="id">Some</span> (<span class="id">stmt</span>', <span class="id">K_tgt1</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src1</span> <span class="id">K_tgt1</span>&gt;&gt;)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6548')">Proof.</div>
+<div class="proofscript" id="proof6548">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">statement_labeled_statements_ind</span>; <span class="id">ss</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">lbl</span> <span class="id">s</span> (<span class="id">Kseq</span> <span class="id">s0</span> <span class="id">K_src0</span>)) <span class="id">eqn</span>:<span class="id">LABEL0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">LABEL</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">find_label_match_none</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. } <span class="tactic">intros</span> <span class="id">LABEL2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">LABEL1</span>. <span class="tactic">rewrite</span> <span class="id">LABEL2</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">lbl</span> <span class="id">s</span> <span class="id">K_src0</span>) <span class="id">eqn</span>:<span class="id">LABEL0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="tactic">rewrite</span> <span class="id">LABEL</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exploit</span> <span class="id">find_label_match_none</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">LABEL1</span>. <span class="tactic">rewrite</span> <span class="id">LABEL1</span>. <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">lbl</span> <span class="id">s</span> (<span class="id">Kloop1</span> <span class="id">s</span> <span class="id">s0</span> <span class="id">K_src0</span>)) <span class="id">eqn</span>:<span class="id">LABEL0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">LABEL</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exploit</span> <span class="id">find_label_match_none</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">LABEL1</span>. <span class="tactic">rewrite</span> <span class="id">LABEL1</span>. <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">find_label</span> <span class="id">lbl</span> <span class="id">s</span> (<span class="id">Kseq</span> (<span class="id">seq_of_labeled_statement</span> <span class="id">l</span>) <span class="id">K_src0</span>)) <span class="id">eqn</span>:<span class="id">LABEL0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">LABEL</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exploit</span> <span class="id">find_label_match_none</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">LABEL1</span>. <span class="tactic">rewrite</span> <span class="id">LABEL1</span>. <span class="id">exploit</span> <span class="id">H0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">find_label_match</span> <span class="id">j</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span> <span class="id">stmt</span>' <span class="id">K_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LABEL</span>: <span class="id">find_label</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_src0</span> = <span class="id">Some</span> (<span class="id">stmt</span>', <span class="id">K_src1</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src0</span> <span class="id">K_tgt0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">K_tgt1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LABEL</span>: <span class="id">find_label</span> <span class="id">lbl</span> <span class="id">stmt</span> <span class="id">K_tgt0</span> = <span class="id">Some</span> (<span class="id">stmt</span>', <span class="id">K_tgt1</span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">CONT</span>: <span class="id">match_cont</span> <span class="id">j</span> <span class="id">K_src1</span> <span class="id">K_tgt1</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6549')">Proof.</div>
+<div class="proofscript" id="proof6549">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">find_label_label_ls_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">clight_step_preserve_injection</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">st_src1</span> <span class="id">sm0</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMBOLS</span>: <span class="id">symbols_inject</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>) <span class="id">se_src</span> <span class="id">se_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GENV</span>: <span class="id">meminj_match_globals</span> <span class="id">eq</span> <span class="id">ge_src</span> <span class="id">ge_tgt</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm0</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states_clight</span> <span class="id">u</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">step</span> <span class="id">se_src</span> <span class="id">ge_src</span> (<span class="id">function_entry</span> <span class="id">ge_src</span>) <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">st_tgt1</span> <span class="id">sm1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">STEP</span>: <span class="id">step</span> <span class="id">se_tgt</span> <span class="id">ge_tgt</span> (<span class="id">function_entry</span> <span class="id">ge_tgt</span>) <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_states_clight</span> <span class="id">u</span> <span class="id">st_src1</span> <span class="id">st_tgt1</span> <span class="id">sm1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMemInj.le</span>' <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6550')">Proof.</div>
+<div class="proofscript" id="proof6550">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">STEP</span>; <span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">inv</span> <span class="id">MATCHST</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">inv</span> <span class="id">CONT</span>; <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">do</span> 3 (<span class="id">econs</span>; <span class="tactic">eauto</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">eval_expr_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_lvalue_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">sem_cast_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">assign_loc_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">CENV</span> <span class="kwd">in</span> *. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">cinv</span> <span class="id">MLE</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">match_env_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">match_temp_env_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">match_cont_incr</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">eval_expr_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">set_match_temp_env</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">eval_exprlist_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_expr_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">do</span> 3 (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">eval_exprlist_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">external_call_mem_inject_gen</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SimMemInjC.parallel_gen</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">external_call_max_perm</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">external_call_max_perm</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span> 4; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">cinv</span> <span class="id">MLE</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">eapply</span> <span class="id">match_env_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">unfold</span> <span class="id">set_opttemp</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">set_match_temp_env</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">match_temp_env_incr</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">match_temp_env_incr</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">eapply</span> <span class="id">match_cont_incr</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">do</span> 3 (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">eval_expr_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">bool_val_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">do</span> 2 (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">do</span> 3 (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">free_list_inject_parallel</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">blocks_of_env_match</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">econs</span> 15; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">call_cont_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">match_cont_incr</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">eval_expr_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">sem_cast_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">free_list_inject_parallel</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">blocks_of_env_match</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">econs</span> 16; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">cinv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">val_inject_incr</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">call_cont_match</span>; <span class="tactic">eauto</span>. <span class="id">cinv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">match_cont_incr</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">free_list_inject_parallel</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">blocks_of_env_match</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span> 17; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">is_call_cont</span> <span class="kwd">in</span> *. <span class="tactic">destruct</span> <span class="id">CONT</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">cinv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">match_cont_incr</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">eval_expr_inject</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">SWITCH</span>: <span class="id">sem_switch_arg</span> <span class="id">v_tgt</span> (<span class="id">typeof</span> <span class="id">a</span>) = <span class="id">Some</span> <span class="id">n</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">sem_switch_arg</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>; <span class="id">clarify</span>; <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">do</span> 3 (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">find_label_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">call_cont_match</span>; <span class="tactic">eauto</span>. } <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">do</span> 2 (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">match_globals_find_funct</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">FPTRTGT</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">FUNCTIONENTRY</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">econs</span> 23; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> <span class="id">MLE</span>. <span class="tactic">eapply</span> <span class="id">match_cont_incr</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">cinv</span> <span class="id">MWF</span>. <span class="id">exploit</span> <span class="id">match_globals_find_funct</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">FPTRTGT</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">external_call_mem_inject_gen</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SimMemInjC.parallel_gen</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">external_call_max_perm</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">external_call_max_perm</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">econs</span> 24; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">cinv</span> <span class="id">MLE</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">match_cont_incr</span>; <span class="tactic">eauto</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">CONT</span>. <span class="id">esplits</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">optid</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">set_match_temp_env</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">clight_step_preserve_injection2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">st_src1</span> <span class="id">j0</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SYMBOLS</span>: <span class="id">symbols_inject</span> <span class="id">j0</span> <span class="id">se_src</span> <span class="id">se_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GENV</span>: <span class="id">meminj_match_globals</span> <span class="id">eq</span> <span class="id">ge_src</span> <span class="id">ge_tgt</span> <span class="id">j0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJECT</span>: <span class="id">Mem.inject</span> <span class="id">j0</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states_clight_internal</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">j0</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">step</span> <span class="id">se_src</span> <span class="id">ge_src</span> (<span class="id">function_entry</span> <span class="id">ge_src</span>) <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">st_tgt1</span> <span class="id">m_src1</span> <span class="id">m_tgt1</span> <span class="id">j1</span> ,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">STEP</span>: <span class="id">step</span> <span class="id">se_tgt</span> <span class="id">ge_tgt</span> (<span class="id">function_entry</span> <span class="id">ge_tgt</span>) <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_states_clight_internal</span> <span class="id">st_src1</span> <span class="id">st_tgt1</span> <span class="id">j1</span> <span class="id">m_src1</span> <span class="id">m_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJECT</span>: <span class="id">Mem.inject</span> <span class="id">j1</span> <span class="id">m_src1</span> <span class="id">m_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INCR</span>: <span class="id">inject_incr</span> <span class="id">j0</span> <span class="id">j1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SEP</span>: <span class="id">inject_separated</span> <span class="id">j0</span> <span class="id">j1</span> <span class="id">m_src0</span> <span class="id">m_tgt0</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">UNCHSRC</span>: <span class="id">Mem.unchanged_on</span> (<span class="id">loc_unmapped</span> <span class="id">j0</span>) <span class="id">m_src0</span> <span class="id">m_src1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">UNCHTGT</span>: <span class="id">Mem.unchanged_on</span> (<span class="id">loc_out_of_reach</span> <span class="id">j0</span> <span class="id">m_src0</span>) <span class="id">m_tgt0</span> <span class="id">m_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MAXSRC</span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALID</span>: <span class="id">Mem.valid_block</span> <span class="id">m_src0</span> <span class="id">b</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MAX</span>: <span class="id">Mem.perm</span> <span class="id">m_src1</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">Max</span> &lt;1= <span class="id">Mem.perm</span> <span class="id">m_src0</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">Max</span>&gt;&gt; &gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MAXTGT</span>: <span class="kwd">forall</span> <span class="id">b</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALID</span>: <span class="id">Mem.valid_block</span> <span class="id">m_tgt0</span> <span class="id">b</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MAX</span>: <span class="id">Mem.perm</span> <span class="id">m_tgt1</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">Max</span> &lt;1= <span class="id">Mem.perm</span> <span class="id">m_tgt0</span> <span class="id">b</span> <span class="id">ofs</span> <span class="id">Max</span>&gt;&gt; &gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6551')">Proof.</div>
+<div class="proofscript" id="proof6551">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">sm</span>:=<span class="id">SimMemInj.mk</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m_src0</span> <span class="id">m_tgt0</span> <span class="id">j0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">loc_unmapped</span> <span class="id">j0</span> /2\ <span class="id">SimMemInj.valid_blocks</span> <span class="id">m_src0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">loc_out_of_reach</span> <span class="id">j0</span> <span class="id">m_src0</span> /2\ <span class="id">SimMemInj.valid_blocks</span> <span class="id">m_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Mem.nextblock</span> <span class="id">m_src0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Mem.nextblock</span> <span class="id">m_tgt0</span>) 1%<span class="id">positive</span> 1%<span class="id">positive</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">SYMBINJ</span>: <span class="id">symbols_inject</span> (<span class="id">SimMemInj.inj</span> <span class="id">sm</span>) <span class="id">se_src</span> <span class="id">se_tgt</span>) <span class="tactic">by</span> <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">clight_step_preserve_injection</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">sm1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH0</span>. <span class="id">inv</span> <span class="id">MLE</span>. <span class="id">inv</span> <span class="id">MWF</span>. <span class="id">ss</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">FROZEN</span>. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">NEW_IMPLIES_OUTSIDE</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Mem.valid_block</span>. <span class="tactic">clear</span> - <span class="id">OUTSIDE_SRC</span> <span class="id">OUTSIDE_TGT</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">CLIGHTINJ</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

@@ -1,0 +1,206 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Ord</title>
+<meta name="description" content="Documentation of Coq module Ord" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Ord</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">LINK_WFO</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> (<span class="id">idx0</span> <span class="id">idx1</span>: <span class="kwd">Type</span>) (<span class="id">ord0</span>: <span class="id">idx0</span> -&gt; <span class="id">idx0</span> -&gt; <span class="kwd">Prop</span>) (<span class="id">ord1</span>: <span class="id">idx1</span> -&gt; <span class="id">idx1</span> -&gt; <span class="kwd">Prop</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">embedded</span> <span class="id">A</span> <span class="id">B</span> (<span class="id">ordA</span>: <span class="id">A</span> -&gt; <span class="id">A</span> -&gt; <span class="kwd">Prop</span>) (<span class="id">ordB</span>: <span class="id">B</span> -&gt; <span class="id">B</span> -&gt; <span class="kwd">Prop</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">embedded_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PRESERVING</span>: <span class="kwd">forall</span> <span class="id">a0</span> <span class="id">a1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORDA</span>: <span class="id">ordA</span> <span class="id">a0</span> <span class="id">a1</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ORDB</span>: <span class="id">ordB</span> (<span class="id">f</span> <span class="id">a0</span>) (<span class="id">f</span> <span class="id">a1</span>)&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">idx_link</span> := (<span class="id">idx0</span> + <span class="id">idx1</span>)%<span class="id">type</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">ord_link</span>: <span class="id">idx_link</span> -&gt; <span class="id">idx_link</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">ord_link_introl</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">idx0a</span> <span class="id">idx0b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD0</span>: <span class="id">ord0</span> <span class="id">idx0a</span> <span class="id">idx0b</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ord_link</span> (<span class="id">inl</span> <span class="id">idx0a</span>) (<span class="id">inl</span> <span class="id">idx0b</span>)<br/>
+&nbsp;&nbsp;| <span class="id">ord_link_intror</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">idx1a</span> <span class="id">idx1b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD1</span>: <span class="id">ord1</span> <span class="id">idx1a</span> <span class="id">idx1b</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ord_link</span> (<span class="id">inr</span> <span class="id">idx1a</span>) (<span class="id">inr</span> <span class="id">idx1b</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">ord_link_embedded</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EMBED0</span>: <span class="id">embedded</span> <span class="id">ord0</span> (<span class="id">ord_link</span>)&gt;&gt; /\ &lt;&lt;<span class="id">EMBED1</span>: <span class="id">embedded</span> <span class="id">ord1</span> (<span class="id">ord_link</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7368')">Proof.</div>
+<div class="proofscript" id="proof7368">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">embedded_intro</span> <span class="kwd">with</span> (<span class="id">f</span> := <span class="id">inl</span>). <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">embedded_intro</span> <span class="kwd">with</span> (<span class="id">f</span> := <span class="id">inr</span>). <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">ord_link_wf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF0</span>: <span class="id">well_founded</span> <span class="id">ord0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF1</span>: <span class="id">well_founded</span> <span class="id">ord1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WF</span>: <span class="id">well_founded</span> <span class="id">ord_link</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7369')">Proof.</div>
+<div class="proofscript" id="proof7369">
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">idx0a</span>. <span class="tactic">pattern</span> <span class="id">idx0b</span>. <span class="tactic">eapply</span> <span class="id">well_founded_ind</span>; <span class="tactic">eauto</span>. <span class="tactic">clear</span> <span class="id">idx0b</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">H0</span>; <span class="tactic">eapply</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">idx1a</span>. <span class="tactic">pattern</span> <span class="id">idx1b</span>. <span class="tactic">eapply</span> <span class="id">well_founded_ind</span>; <span class="tactic">eauto</span>. <span class="tactic">clear</span> <span class="id">idx1b</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">eapply</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">ord_link_spec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF0</span>: <span class="id">well_founded</span> <span class="id">ord0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF1</span>: <span class="id">well_founded</span> <span class="id">ord1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">idx</span>: <span class="kwd">Type</span>) (<span class="id">ord</span>: <span class="id">idx</span> -&gt; <span class="id">idx</span> -&gt; <span class="kwd">Prop</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EMBED0</span>: <span class="id">embedded</span> <span class="id">ord0</span> <span class="id">ord</span>&gt;&gt; /\ &lt;&lt;<span class="id">EMBED1</span>: <span class="id">embedded</span> <span class="id">ord1</span> <span class="id">ord</span>&gt;&gt; /\ &lt;&lt;<span class="id">WF</span>: <span class="id">well_founded</span> <span class="id">ord</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7370')">Proof.</div>
+<div class="proofscript" id="proof7370">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">idx_link</span>, <span class="id">ord_link</span>. <span class="tactic">generalize</span> <span class="id">ord_link_embedded</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id">ord_link_wf</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">LINK_WFO</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Program</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Axioms</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id">idx</span> := <span class="id">mk</span> { <span class="id">local_idx</span>: <span class="kwd">Type</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">local_ord</span>: <span class="id">local_idx</span> -&gt; <span class="id">local_idx</span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wf_local_ord</span>: <span class="id">well_founded</span> <span class="id">local_ord</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">elem</span>: <span class="id">local_idx</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">TMP</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">X</span> <span class="id">Y</span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">EQ</span>: <span class="id">X</span> = <span class="id">Y</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">ORDX</span>: <span class="id">X</span> -&gt; <span class="id">X</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">ORDY</span>: <span class="id">Y</span> -&gt; <span class="id">Y</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">my_funcX</span> (<span class="id">x</span>: <span class="id">X</span>) (<span class="id">y</span>: <span class="id">Y</span>): <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">EQ</span> <span class="kwd">in</span> <span class="id">y</span>. <span class="id">specialize</span> (<span class="id">ORDX</span> <span class="id">x</span> <span class="id">y</span>). <span class="tactic">apply</span> <span class="id">ORDX</span>.<br/>
+&nbsp;&nbsp;Defined.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">my_funcY</span> (<span class="id">x</span>: <span class="id">X</span>) (<span class="id">y</span>: <span class="id">Y</span>): <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">EQ</span> <span class="kwd">in</span> <span class="id">x</span>. <span class="id">specialize</span> (<span class="id">ORDY</span> <span class="id">x</span> <span class="id">y</span>). <span class="tactic">apply</span> <span class="id">ORDY</span>.<br/>
+&nbsp;&nbsp;Defined.</div>
+<br/>
+&nbsp;&nbsp;<span class="id">About</span> <span class="id">eq_rect</span>.<br/>
+&nbsp;&nbsp;<span class="id">About</span> <span class="id">eq_rect_r</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">TMP</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">ord</span> (<span class="id">x0</span> <span class="id">x1</span>: <span class="id">idx</span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id">ord_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQLOCAL_IDX</span>: <span class="id">x0</span>.(<span class="id">local_idx</span>) = <span class="id">x1</span>.(<span class="id">local_idx</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQORD</span>: <span class="id">x0</span>.(<span class="id">local_ord</span>) ~= <span class="id">x1</span>.(<span class="id">local_ord</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD</span>: <span class="id">x1</span>.(<span class="id">local_ord</span>) (<span class="id">eq_rect</span> <span class="id">x0</span>.(<span class="id">local_idx</span>) <span class="id">id</span> <span class="id">x0</span>.(<span class="id">elem</span>) <span class="id">x1</span>.(<span class="id">local_idx</span>) <span class="id">EQLOCAL_IDX</span>) <span class="id">x1</span>.(<span class="id">elem</span>)).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">wf_ord</span>: <span class="id">well_founded</span> <span class="id">ord</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7371')">Proof.</div>
+<div class="proofscript" id="proof7371">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">a</span>, <span class="id">y</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">JMeq_eq</span> <span class="kwd">in</span> <span class="id">EQORD</span>. <span class="id">clarify</span>. <span class="id">clear_tac</span>. <span class="tactic">unfold</span> <span class="id">eq_rect</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">swapname</span> <span class="id">elem1</span> <span class="id">elem0</span>. <span class="tactic">clear</span> <span class="id">ORD</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">pattern</span> <span class="id">elem0</span>. <span class="tactic">eapply</span> <span class="id">well_founded_ind</span>; <span class="tactic">try</span> <span class="id">eassumption</span>. <span class="id">ii</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">destruct</span> <span class="id">y</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;eapply&nbsp;H.&nbsp;Undo&nbsp;1.&nbsp;<span class="comment">(*&nbsp;IDK&nbsp;why&nbsp;but&nbsp;apply&nbsp;acts&nbsp;in&nbsp;weird&nbsp;way.&nbsp;*)</span>&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">H</span> <span class="id">elem0</span>). <span class="tactic">unfold</span> <span class="id">eq_rect</span> <span class="kwd">in</span> *. <span class="id">specialize</span> (<span class="id">H</span> <span class="id">ORD</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">JMeq_eq</span> <span class="kwd">in</span> <span class="id">EQORD</span>. <span class="id">clarify</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id">proof_irr</span>. <span class="tactic">intro</span> <span class="id">IRR</span>. <span class="tactic">unfold</span> <span class="id">ClassicalFacts.proof_irrelevance</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">IRR</span> <span class="id">_</span> <span class="id">wf_local_ord0</span> <span class="id">wf_local_ord1</span>). <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;}<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">idx_greatest</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">local_idx</span>: <span class="kwd">Type</span>) (<span class="id">local_ord</span>: <span class="id">local_idx</span> -&gt; <span class="id">local_idx</span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="id">well_founded</span> <span class="id">local_ord</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">embedded</span> <span class="id">local_ord</span> <span class="id">ord</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7372')">Proof.</div>
+<div class="proofscript" id="proof7372">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">embedded_intro</span> <span class="kwd">with</span> (<span class="id">f</span>:= <span class="kwd">fun</span> <span class="id">local_elem</span> =&gt; <span class="id">mk</span> <span class="id">WF</span> <span class="id">local_elem</span>).<br/>
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="id">instantiate</span> (1:= <span class="id">eq_refl</span>). <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">idx_bot</span>: <span class="id">idx</span> := @<span class="id">mk</span> <span class="id">unit</span> <span class="id">bot2</span> <span class="id">_</span> <span class="id">tt</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7373')">Next Obligation.</div>
+<div class="proofscript" id="proof7373">
+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">idx_bot_spec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD</span>: <span class="id">ord</span> <span class="id">i0</span> <span class="id">idx_bot</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">False</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7374')">Proof.</div>
+<div class="proofscript" id="proof7374">
+ <span class="id">inv</span> <span class="id">ORD</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">LIFT</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">index</span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">order</span>: <span class="id">index</span> -&gt; <span class="id">index</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">WFORD</span>: <span class="id">well_founded</span> <span class="id">order</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">lift_idx</span> (<span class="id">i0</span>: <span class="id">index</span>): <span class="id">idx</span> := (<span class="id">mk</span> <span class="id">WFORD</span> <span class="id">i0</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">lift_idx_spec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i0</span> <span class="id">i1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD</span>: <span class="id">order</span> <span class="id">i0</span> <span class="id">i1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ORD</span>: <span class="id">ord</span> <span class="id">i0</span>.(<span class="id">lift_idx</span>) <span class="id">i1</span>.(<span class="id">lift_idx</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7375')">Proof.</div>
+<div class="proofscript" id="proof7375">
+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">cbn</span>. <span class="id">instantiate</span> (1:= <span class="id">eq_refl</span>). <span class="id">cbn</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">lift_idx</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">LIFT</span>.<br/>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

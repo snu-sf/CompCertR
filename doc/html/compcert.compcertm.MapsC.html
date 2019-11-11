@@ -1,0 +1,81 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MapsC</title>
+<meta name="description" content="Documentation of Coq module MapsC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MapsC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinkingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span> <span class="id">Errors</span> <span class="id">ASTC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">RelationClasses</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Maps</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">o_monad_scope</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">xfilter_map</span> (<span class="id">A</span> <span class="id">B</span> : <span class="kwd">Type</span>) (<span class="id">f</span> : <span class="id">positive</span> -&gt; <span class="id">A</span> -&gt; <span class="id">option</span> <span class="id">B</span>) (<span class="id">m</span> : <span class="id">PTree.t</span> <span class="id">A</span>) (<span class="id">i</span> : <span class="id">positive</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="kwd">struct</span> <span class="id">m</span>} : <span class="id">PTree.t</span> <span class="id">B</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">m</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">PTree.Leaf</span> =&gt; <span class="id">PTree.Leaf</span><br/>
+&nbsp;&nbsp;| <span class="id">PTree.Node</span> <span class="id">l</span> <span class="id">o</span> <span class="id">r</span> =&gt; <span class="id">PTree.Node</span> (<span class="id">xfilter_map</span> <span class="id">f</span> <span class="id">l</span> (<span class="id">xO</span> <span class="id">i</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">match</span> <span class="id">o</span> <span class="kwd">with</span> <span class="id">None</span> =&gt; <span class="id">None</span> | <span class="id">Some</span> <span class="id">x</span> =&gt; (<span class="id">f</span> (<span class="id">PTree.prev</span> <span class="id">i</span>) <span class="id">x</span>) <span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">xfilter_map</span> <span class="id">f</span> <span class="id">r</span> (<span class="id">xI</span> <span class="id">i</span>))<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">xfilter_map_get</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id">positive</span> -&gt; <span class="id">A</span> -&gt; <span class="id">option</span> <span class="id">B</span>) (<span class="id">i</span> <span class="id">j</span> : <span class="id">positive</span>) (<span class="id">m</span>: <span class="id">PTree.t</span> <span class="id">A</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">PTree.get</span> <span class="id">i</span> (<span class="id">xfilter_map</span> <span class="id">f</span> <span class="id">m</span> <span class="id">j</span>) = <span class="id">o_bind</span> (<span class="id">PTree.get</span> <span class="id">i</span> <span class="id">m</span>) (<span class="id">f</span> (<span class="id">PTree.prev</span> (<span class="id">PTree.prev_append</span> <span class="id">i</span> <span class="id">j</span>))).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6462')">Proof.</div>
+<div class="proofscript" id="proof6462">
+ <span class="tactic">induction</span> <span class="id">i</span>; <span class="tactic">intros</span>; <span class="tactic">destruct</span> <span class="id">m</span>; <span class="tactic">simpl</span>; <span class="tactic">auto</span>. <span class="id">des_ifs</span>. Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">PTree_filter_map</span> <span class="id">A</span> <span class="id">B</span> (<span class="id">f</span>: <span class="id">positive</span> -&gt; <span class="id">A</span> -&gt; <span class="id">option</span> <span class="id">B</span>) (<span class="id">m</span>: <span class="id">PTree.t</span> <span class="id">A</span>): <span class="id">PTree.t</span> <span class="id">B</span> := <span class="id">xfilter_map</span> <span class="id">f</span> <span class="id">m</span> 1.<br/>
+<br/>
+<span class="id">About</span> <span class="id">PTree.gmap</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">PTree_filter_map_spec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">f</span>: <span class="id">positive</span> -&gt; <span class="id">A</span> -&gt; <span class="id">option</span> <span class="id">B</span>) <span class="id">i</span> <span class="id">m</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PTree_filter_map</span> <span class="id">f</span> <span class="id">m</span>) ! <span class="id">i</span> = <span class="id">o_bind</span> (<span class="id">m</span> ! <span class="id">i</span>) (<span class="id">f</span> <span class="id">i</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6463')">Proof.</div>
+<div class="proofscript" id="proof6463">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">PTree_filter_map</span>. <span class="tactic">rewrite</span> <span class="id">xfilter_map_get</span>. <span class="tactic">f_equal</span>. <span class="tactic">rewrite</span> <span class="id">PTree.prev_append_prev</span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="id">About</span> <span class="id">PTree.filter1</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">PTree_filter_key</span> <span class="id">A</span> (<span class="id">f</span>: <span class="id">positive</span> -&gt; <span class="id">bool</span>) (<span class="id">m</span>: <span class="id">PTree.t</span> <span class="id">A</span>): <span class="id">PTree.t</span> <span class="id">A</span> :=<br/>
+&nbsp;&nbsp;<span class="id">PTree_filter_map</span> (<span class="kwd">fun</span> <span class="id">k</span> <span class="id">v</span> =&gt; <span class="kwd">if</span> <span class="id">f</span> <span class="id">k</span> <span class="kwd">then</span> <span class="id">Some</span> <span class="id">v</span> <span class="kwd">else</span> <span class="id">None</span>) <span class="id">m</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">PTree_filter_key_spec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> (<span class="id">f</span>: <span class="id">positive</span> -&gt; <span class="id">bool</span>) <span class="id">i</span> (<span class="id">m</span>: <span class="id">PTree.t</span> <span class="id">A</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PTree_filter_key</span> <span class="id">f</span> <span class="id">m</span>) ! <span class="id">i</span> = <span class="id">assertion</span> (<span class="id">f</span> <span class="id">i</span>); <span class="id">m</span> ! <span class="id">i</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6464')">Proof.</div>
+<div class="proofscript" id="proof6464">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">PTree_filter_key</span>. <span class="tactic">rewrite</span> <span class="id">PTree_filter_map_spec</span>. <span class="id">uo</span>. <span class="id">des_ifs</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">PTree_elements_map</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> <span class="id">Y</span> (<span class="id">f</span>: <span class="id">X</span> -&gt; <span class="id">Y</span>) <span class="id">xm</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">map</span> (<span class="id">update_snd</span> <span class="id">f</span>) (<span class="id">PTree.elements</span> <span class="id">xm</span>) = <span class="id">PTree.elements</span> (<span class="id">PTree.map</span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id">f</span>) <span class="id">xm</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6465')">Proof.</div>
+<div class="proofscript" id="proof6465">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">PTree.elements</span>. <span class="tactic">unfold</span> <span class="id">PTree.map</span>. <span class="tactic">generalize</span> 1%<span class="id">positive</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">LIST</span>: [] = <span class="id">map</span> (<span class="id">update_snd</span> <span class="id">f</span>) ([]: <span class="id">list</span> (<span class="id">prod</span> <span class="id">positive</span> <span class="id">X</span>))) <span class="tactic">by</span> <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">LIST</span>. <span class="tactic">generalize</span> ([]: <span class="id">list</span> (<span class="id">prod</span> <span class="id">positive</span> <span class="id">X</span>)) <span class="kwd">as</span> <span class="id">lx</span>. <span class="tactic">generalize</span> ([]: <span class="id">list</span> (<span class="id">prod</span> <span class="id">positive</span> <span class="id">Y</span>)) <span class="kwd">as</span> <span class="id">ly</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">xm</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">cbn</span> <span class="kwd">in</span> *. <span class="tactic">destruct</span> <span class="id">o</span>; <span class="id">ss</span>; <span class="id">erewrite</span> <span class="id">IHxm1</span>; <span class="id">ss</span>; <span class="id">erewrite</span> <span class="id">IHxm2</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

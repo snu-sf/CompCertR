@@ -1,0 +1,465 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SeparationC</title>
+<meta name="description" content="Documentation of Coq module SeparationC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SeparationC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Setoid</span> <span class="id">Program.Basics</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Decidableplus</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Integers</span> <span class="id">Values</span> <span class="id">MemoryC</span> <span class="id">Events</span> <span class="id">Globalenvs</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AxiomsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Separation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">JunkBlock</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">sep_scope</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">sep_split</span> := <span class="id">econs</span>; [|<span class="tactic">split</span>]; <span class="id">swap</span> 2 3.<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">disjoint_footprint_sym</span>: <span class="id">Symmetric</span> <span class="id">disjoint_footprint</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7376')">Next Obligation.</div>
+<div class="proofscript" id="proof7376">
+ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">H</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">separation_private</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m_src</span> <span class="id">m_tgt</span> <span class="id">F</span> <span class="id">P</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">m_tgt</span> |= <span class="id">P</span> ** <span class="id">minjection</span> <span class="id">F</span> <span class="id">m_src</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">loc_out_of_reach</span> <span class="id">F</span> <span class="id">m_src</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7377')">Proof.</div>
+<div class="proofscript" id="proof7377">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">des</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">disjoint_footprint</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">H1</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">disjoint_footprint_drop_empty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">Q0</span> <span class="id">Q1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EMPTY</span>: <span class="id">Q0</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">bot2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DISJ</span>: <span class="id">disjoint_footprint</span> <span class="id">P</span> <span class="id">Q1</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DISJ</span>: <span class="id">disjoint_footprint</span> <span class="id">P</span> (<span class="id">Q0</span> ** <span class="id">Q1</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7378')">Proof.</div>
+<div class="proofscript" id="proof7378">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">disjoint_footprint</span> <span class="kwd">in</span> *. <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">EMPTY</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">disjoint_footprint_mconj</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">Q0</span> <span class="id">Q1</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DISJ</span>: <span class="id">disjoint_footprint</span> <span class="id">P</span> (<span class="id">mconj</span> <span class="id">Q0</span> <span class="id">Q1</span>)&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;-&gt; &lt;&lt;<span class="id">DISJ0</span>: <span class="id">disjoint_footprint</span> <span class="id">P</span> <span class="id">Q0</span>&gt;&gt; /\ &lt;&lt;<span class="id">DISJ1</span>: <span class="id">disjoint_footprint</span> <span class="id">P</span> <span class="id">Q1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7379')">Proof.</div>
+<div class="proofscript" id="proof7379">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">unfold</span> <span class="id">disjoint_footprint</span> <span class="kwd">in</span> *; <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplits</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">disjoint_footprint_sepconj</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">Q0</span> <span class="id">Q1</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">DISJ0</span>: <span class="id">disjoint_footprint</span> <span class="id">P</span> <span class="id">Q0</span>&gt;&gt;) /\ (&lt;&lt;<span class="id">DISJ1</span>: <span class="id">disjoint_footprint</span> <span class="id">P</span> <span class="id">Q1</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;-&gt; (&lt;&lt;<span class="id">DISJ</span>: <span class="id">disjoint_footprint</span> <span class="id">P</span> (<span class="id">Q0</span> ** <span class="id">Q1</span>)&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7380')">Proof.</div>
+<div class="proofscript" id="proof7380">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">disjoint_footprint</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">esplits</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">massert_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pred0</span> <span class="id">footprint0</span> <span class="id">INVAR0</span> <span class="id">VALID0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pred1</span> <span class="id">footprint1</span> <span class="id">INVAR1</span> <span class="id">VALID1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ0</span>: <span class="id">pred0</span> = <span class="id">pred1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ1</span>: <span class="id">footprint0</span> = <span class="id">footprint1</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Build_massert</span> <span class="id">pred0</span> <span class="id">footprint0</span> <span class="id">INVAR0</span> <span class="id">VALID0</span> = <span class="id">Build_massert</span> <span class="id">pred1</span> <span class="id">footprint1</span> <span class="id">INVAR1</span> <span class="id">VALID1</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7381')">Proof.</div>
+<div class="proofscript" id="proof7381">
+&nbsp;&nbsp;<span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Axioms.proof_irr</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Axioms.proof_irr</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">mconj_sym</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">Q</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: (<span class="id">mconj</span> <span class="id">P</span> <span class="id">Q</span>) = (<span class="id">mconj</span> <span class="id">Q</span> <span class="id">P</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7382')">Proof.</div>
+<div class="proofscript" id="proof7382">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">massert_eq</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">prop_ext</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="tactic">split</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">prop_ext</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sepconj_sym</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">Q</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: (<span class="id">sepconj</span> <span class="id">P</span> <span class="id">Q</span>) = (<span class="id">sepconj</span> <span class="id">Q</span> <span class="id">P</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7383')">Proof.</div>
+<div class="proofscript" id="proof7383">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">massert_eq</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">prop_ext</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="id">esplits</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">sym</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">sym</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">Axioms.functional_extensionality</span>. <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">prop_ext</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">sepconj</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sep_drop_tail3</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">Q</span> <span class="id">R</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">massert_imp</span> (<span class="id">P</span> ** <span class="id">Q</span> ** <span class="id">R</span>) (<span class="id">P</span> ** <span class="id">Q</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7384')">Proof.</div>
+<div class="proofscript" id="proof7384">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">massert_imp</span>. <span class="id">ss</span>. <span class="tactic">split</span>; <span class="id">ii</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">des</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id">disjoint_footprint_sepconj</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="id">des</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ss</span>. <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sepconj_isolated_mutation0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">m1</span> <span class="id">P</span> <span class="id">Q</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m0</span> |= <span class="id">P</span> ** <span class="id">Q</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNCH</span>: <span class="id">Mem.unchanged_on</span> (<span class="kwd">fun</span> <span class="id">blk</span> <span class="id">ofs</span> =&gt; ~ <span class="id">P</span>.(<span class="id">m_footprint</span>) <span class="id">blk</span> <span class="id">ofs</span> /\ <span class="id">Mem.valid_block</span> <span class="id">m0</span> <span class="id">blk</span>) <span class="id">m0</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m1</span> |= <span class="id">Q</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7385')">Proof.</div>
+<div class="proofscript" id="proof7385">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">SEP</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">ss</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sepconj_isolated_mutation1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">m1</span> <span class="id">P</span> <span class="id">Q</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m0</span> |= <span class="id">P</span> ** <span class="id">Q</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNCH</span>: <span class="id">Mem.unchanged_on</span> (~2 <span class="id">P</span>.(<span class="id">m_footprint</span>)) <span class="id">m0</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m1</span> |= <span class="id">Q</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7386')">Proof.</div>
+<div class="proofscript" id="proof7386">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">sepconj_isolated_mutation0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sepconj_isolated_mutation_strong</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">m1</span> <span class="id">P0</span> <span class="id">P1</span> <span class="id">Q</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m0</span> |= <span class="id">P0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNCH</span>: <span class="id">Mem.unchanged_on</span> <span class="id">Q</span> <span class="id">m0</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IMP</span>: <span class="id">massert_imp</span> <span class="id">P0</span> <span class="id">P1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FOOT</span>: <span class="id">P1</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">Q</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m1</span> |= <span class="id">P1</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7387')">Proof.</div>
+<div class="proofscript" id="proof7387">
+&nbsp;&nbsp;<span class="id">hnf</span> <span class="kwd">in</span> <span class="id">IMP</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sepconj_isolated_mutation_stronger</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">m1</span> <span class="id">P0</span> <span class="id">P1</span> <span class="id">CTX</span> <span class="id">CHNG</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m0</span> |= <span class="id">P0</span> ** <span class="id">CTX</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNCH</span>: <span class="id">Mem.unchanged_on</span> (~2 <span class="id">CHNG</span>) <span class="id">m0</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IMP</span>: <span class="id">massert_imp</span> <span class="id">P0</span> <span class="id">P1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISOL0</span>: <span class="id">CHNG</span> &lt;2= <span class="id">P0</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISOL1</span>: <span class="id">P1</span>.(<span class="id">m_footprint</span>) &lt;2= ~2 <span class="id">CHNG</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m1</span> |= <span class="id">P1</span> ** <span class="id">CTX</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7388')">Proof.</div>
+<div class="proofscript" id="proof7388">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">SEP</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>).<br/>
+&nbsp;&nbsp;<span class="id">hnf</span> <span class="kwd">in</span> <span class="id">IMP</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">sep_split</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">ISOL1</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">C</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">apply</span> <span class="id">ISOL0</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">globalenv_inject_incr_strong</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">j</span>' <span class="id">m_src</span> <span class="id">m_tgt0</span> <span class="id">m_tgt1</span> <span class="id">F</span> <span class="id">V</span> (<span class="id">ge</span>: <span class="id">Genv.t</span> <span class="id">F</span> <span class="id">V</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCR</span>: <span class="id">inject_incr</span> <span class="id">j</span> <span class="id">j</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">inject_separated</span> <span class="id">j</span> <span class="id">j</span>' <span class="id">m_src</span> <span class="id">m_tgt0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m_tgt0</span> |= <span class="id">globalenv_inject</span> <span class="id">ge</span> <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: (<span class="id">m_tgt0</span>.(<span class="id">Mem.nextblock</span>) &lt;= <span class="id">m_tgt1</span>.(<span class="id">Mem.nextblock</span>))%<span class="id">positive</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m_tgt1</span> |= <span class="id">globalenv_inject</span> <span class="id">ge</span> <span class="id">j</span>'&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7389')">Proof.</div>
+<div class="proofscript" id="proof7389">
+&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">m_tgt0</span> |= <span class="id">globalenv_inject</span> <span class="id">ge</span> <span class="id">j</span>').<br/>
+&nbsp;&nbsp;{ <span class="id">ss</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">SEP0</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">IMAGE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">INJ</span>. <span class="tactic">destruct</span> (<span class="id">j</span> <span class="id">b1</span>) <span class="id">eqn</span>:<span class="id">T</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">p</span>; <span class="id">ss</span>. <span class="id">exploit</span> <span class="id">INCR</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">INJ</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">exfalso</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">H2</span>. <span class="id">r</span>. <span class="tactic">eapply</span> <span class="id">Plt_Ple_trans</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">disjoint_footprint_sep</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">WALL</span> <span class="id">B</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DISJ0</span>: <span class="id">A</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">WALL</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DISJ1</span>: <span class="id">B</span>.(<span class="id">m_footprint</span>) &lt;2= ~2 <span class="id">WALL</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DISJ</span>: <span class="id">disjoint_footprint</span> <span class="id">A</span> <span class="id">B</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7390')">Proof.</div>
+<div class="proofscript" id="proof7390">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">apply</span> <span class="id">DISJ0</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">apply</span> <span class="id">DISJ1</span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">freed_range</span> (<span class="id">b</span>: <span class="id">block</span>) (<span class="id">lo</span> <span class="id">hi</span>: <span class="id">Z</span>): <span class="id">massert</span> := {|<br/>
+&nbsp;&nbsp;<span class="id">m_pred</span> := <span class="kwd">fun</span> <span class="id">m</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RANGE</span>: 0 &lt;= <span class="id">lo</span> /\ <span class="id">hi</span> &lt;= <span class="id">Ptrofs.modulus</span>&gt;&gt; /\ &lt;&lt;<span class="id">VALID</span>: <span class="id">lo</span> &lt; <span class="id">hi</span> -&gt; <span class="id">m</span>.(<span class="id">Mem.valid_block</span>) <span class="id">b</span>&gt;&gt;<br/>
+&nbsp;&nbsp;;<br/>
+&nbsp;&nbsp;<span class="id">m_footprint</span> := <span class="id">brange</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span><br/>
+&nbsp;&nbsp;;<br/>
+|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7391')">Next Obligation.</div>
+<div class="proofscript" id="proof7391">
+ <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">Mem.valid_block_unchanged_on</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof7392')">Next Obligation.</div>
+<div class="proofscript" id="proof7392">
+ <span class="id">hnf</span> <span class="kwd">in</span> <span class="id">H0</span>. <span class="id">des</span>; <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">H1</span>. <span class="id">lia</span>. Qed.</div>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">freed_range</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">add_pure_r</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> <span class="id">P</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m</span> |= <span class="id">P</span>&gt;&gt; &lt;-&gt; &lt;&lt;<span class="id">SEP</span>: <span class="id">m</span> |= <span class="id">P</span> ** <span class="id">pure</span> <span class="id">True</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7393')">Proof.</div>
+<div class="proofscript" id="proof7393">
+ <span class="tactic">split</span>; <span class="id">ii</span>. - <span class="id">sep_split</span>; <span class="id">ss</span>. - <span class="tactic">destruct</span> <span class="id">H</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">range_split0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">b</span> <span class="id">lo</span> <span class="id">mid</span> <span class="id">hi</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RANEG</span>: <span class="id">lo</span> &lt;= <span class="id">mid</span> &lt;= <span class="id">hi</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">massert_imp</span> (<span class="id">range</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span>) (<span class="id">range</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">mid</span> ** <span class="id">range</span> <span class="id">b</span> <span class="id">mid</span> <span class="id">hi</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7394')">Proof.</div>
+<div class="proofscript" id="proof7394">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">add_pure_r</span>. <span class="tactic">apply</span> <span class="id">add_pure_r</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">r</span>. <span class="tactic">rewrite</span> <span class="id">sep_assoc</span>. <span class="tactic">eapply</span> <span class="id">range_split</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ss</span>. <span class="id">des</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">range_freed_range</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sp</span> <span class="id">lo</span> <span class="id">hi</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">massert_imp</span> (<span class="id">range</span> <span class="id">sp</span> <span class="id">lo</span> <span class="id">hi</span>) (<span class="id">freed_range</span> <span class="id">sp</span> <span class="id">lo</span> <span class="id">hi</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7395')">Proof.</div>
+<div class="proofscript" id="proof7395">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">specialize</span> (<span class="id">H1</span> <span class="id">lo</span>).<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">H1</span>; <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span> <span class="id">lia</span>.<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">econs</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">add_pure_r_eq</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> = <span class="id">P</span> ** <span class="id">pure</span> <span class="id">True</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7396')">Proof.</div>
+<div class="proofscript" id="proof7396">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">P</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">sepconj</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">massert_eq</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">functional_extensionality</span>. <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">prop_ext</span>. <span class="tactic">split</span>; <span class="id">ii</span>; <span class="id">des</span>; <span class="id">esplits</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">repeat</span> (<span class="tactic">apply</span> <span class="id">functional_extensionality</span>; <span class="id">ii</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">prop_ext</span>. <span class="tactic">split</span>; <span class="id">ii</span>; <span class="id">des</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">mconj_distr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> <span class="id">P</span> <span class="id">Q</span> <span class="id">CTX</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m</span> |= (<span class="id">mconj</span> <span class="id">P</span> <span class="id">Q</span>) ** <span class="id">CTX</span>&gt;&gt; &lt;-&gt; &lt;&lt;<span class="id">SEP</span>: <span class="id">m</span> |= <span class="id">P</span> ** <span class="id">CTX</span>&gt;&gt; /\ &lt;&lt;<span class="id">SEP</span>: <span class="id">m</span> |= <span class="id">Q</span> ** <span class="id">CTX</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7397')">Proof.</div>
+<div class="proofscript" id="proof7397">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>). <span class="id">ss</span>. <span class="id">des</span>. <span class="id">sym</span> <span class="kwd">in</span> <span class="id">C</span>. <span class="tactic">apply</span> <span class="id">disjoint_footprint_mconj</span> <span class="kwd">in</span> <span class="id">C</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">sym</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">sym</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">SEP</span>. <span class="tactic">destruct</span> <span class="id">SEP0</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sep_split</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sym</span>. <span class="tactic">apply</span> <span class="id">disjoint_footprint_mconj</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">sym</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">sym</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">range_nonnil_valid_block</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m</span> |= <span class="id">range</span> <span class="id">b</span> <span class="id">lo</span> <span class="id">hi</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RANGE</span>: <span class="id">lo</span> &lt; <span class="id">hi</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">VALID</span>: <span class="id">m</span>.(<span class="id">Mem.valid_block</span>) <span class="id">b</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7398')">Proof.</div>
+<div class="proofscript" id="proof7398">
+&nbsp;&nbsp;<span class="id">ss</span>. <span class="id">des</span>. <span class="id">specialize</span> (<span class="id">SEP1</span> <span class="id">lo</span>). <span class="id">exploit</span> <span class="id">SEP1</span>; <span class="tactic">eauto</span>. { <span class="id">lia</span>. } <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">Mem.perm_valid_block</span>; <span class="tactic">eauto</span>.<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">econs</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sepconj_isolated_mutation_strongest</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">m1</span> <span class="id">P</span> <span class="id">P0</span> <span class="id">P1</span> <span class="id">CTX</span> <span class="id">CHNG</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m0</span> |= <span class="id">P</span> ** <span class="id">CTX</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNCH</span>: <span class="id">Mem.unchanged_on</span> (~2 <span class="id">CHNG</span>) <span class="id">m0</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IMP</span>: <span class="id">massert_imp</span> <span class="id">P</span> <span class="id">P1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PRED</span>: <span class="id">m1</span> |= <span class="id">P0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISOL</span>: <span class="id">CHNG</span> &lt;2= <span class="id">P</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISOL0</span>: <span class="id">P0</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">CHNG</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISOL1</span>: <span class="id">P1</span>.(<span class="id">m_footprint</span>) &lt;2= ~2 <span class="id">CHNG</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DISJ</span>: <span class="id">disjoint_footprint</span> <span class="id">P0</span> <span class="id">P1</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m1</span> |= <span class="id">P0</span> ** <span class="id">P1</span> ** <span class="id">CTX</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7399')">Proof.</div>
+<div class="proofscript" id="proof7399">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">SEP</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>).<br/>
+&nbsp;&nbsp;<span class="id">hnf</span> <span class="kwd">in</span> <span class="id">IMP</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">sep_split</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">disjoint_footprint_sepconj</span>. <span class="tactic">split</span>; <span class="id">ss</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">C</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">sep_split</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">ISOL1</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">C</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">apply</span> <span class="id">ISOL</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sepconj_isolated_mutation_revisited</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">m1</span> <span class="id">P0</span> <span class="id">P1</span> <span class="id">CTX</span> <span class="id">CHNG</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m0</span> |= <span class="id">P0</span> ** <span class="id">CTX</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNCH</span>: <span class="id">Mem.unchanged_on</span> (~2 <span class="id">CHNG</span>) <span class="id">m0</span> <span class="id">m1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISOL</span>: <span class="id">CHNG</span> &lt;2= <span class="id">P0</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PRED</span>: <span class="id">m1</span> |= <span class="id">P1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FOOT</span>: <span class="id">P1</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">P0</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m1</span> |= <span class="id">P1</span> ** <span class="id">CTX</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7400')">Proof.</div>
+<div class="proofscript" id="proof7400">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">SEP</span> <span class="kwd">as</span> (<span class="id">A</span> &amp; <span class="id">B</span> &amp; <span class="id">C</span>).<br/>
+&nbsp;&nbsp;<span class="id">sep_split</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">ISOL</span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">C</span>. <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">mconj_footprint_le</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A0</span> <span class="id">B0</span> <span class="id">A1</span> <span class="id">B1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEA</span>: <span class="id">A0</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">A1</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEB</span>: <span class="id">B0</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">B1</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mconj</span> <span class="id">A0</span> <span class="id">B0</span>).(<span class="id">m_footprint</span>) &lt;2= (<span class="id">mconj</span> <span class="id">A1</span> <span class="id">B1</span>).(<span class="id">m_footprint</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7401')">Proof.</div>
+<div class="proofscript" id="proof7401">
+&nbsp;&nbsp;<span class="id">ss</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sepconj_footprint_le</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A0</span> <span class="id">B0</span> <span class="id">A1</span> <span class="id">B1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEA</span>: <span class="id">A0</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">A1</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEB</span>: <span class="id">B0</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">B1</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sepconj</span> <span class="id">A0</span> <span class="id">B0</span>).(<span class="id">m_footprint</span>) &lt;2= (<span class="id">sepconj</span> <span class="id">A1</span> <span class="id">B1</span>).(<span class="id">m_footprint</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7402')">Proof.</div>
+<div class="proofscript" id="proof7402">
+<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">sepconj</span>.<br/>
+&nbsp;&nbsp;<span class="id">ss</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">et</span>.<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">sepconj</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">sepconj</span>.<br/>
+<span class="kwd">Lemma</span> <span class="id">m_footprint_sepconj_le</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P0</span> <span class="id">Q0</span> <span class="id">P1</span> <span class="id">Q1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEP</span>: <span class="id">P0</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">P1</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEQ</span>: <span class="id">Q0</span>.(<span class="id">m_footprint</span>) &lt;2= <span class="id">Q1</span>.(<span class="id">m_footprint</span>))<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: (<span class="id">P0</span> ** <span class="id">Q0</span>).(<span class="id">m_footprint</span>) &lt;2= (<span class="id">P1</span> ** <span class="id">Q1</span>).(<span class="id">m_footprint</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7403')">Proof.</div>
+<div class="proofscript" id="proof7403">
+ <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sep_assoc_footprint</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">Q</span> <span class="id">R</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id">P</span> ** <span class="id">Q</span>) ** <span class="id">R</span>).(<span class="id">m_footprint</span>) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">P</span> ** <span class="id">Q</span> ** <span class="id">R</span>).(<span class="id">m_footprint</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7404')">Proof.</div>
+<div class="proofscript" id="proof7404">
+&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">func_ext2</span>. <span class="id">ii</span>; <span class="id">ss</span>. <span class="tactic">apply</span> <span class="id">prop_ext</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">unfree_freed_range</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sp</span> <span class="id">m0</span> <span class="id">m1</span> <span class="id">lo</span> <span class="id">mid</span> <span class="id">hi</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SEP</span>: <span class="id">m0</span> |= <span class="id">freed_range</span> <span class="id">sp</span> <span class="id">lo</span> <span class="id">mid</span> ** <span class="id">range</span> <span class="id">sp</span> <span class="id">mid</span> <span class="id">hi</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNFREE</span>: <span class="id">Mem_unfree</span> <span class="id">m0</span> <span class="id">sp</span> <span class="id">lo</span> <span class="id">mid</span> = <span class="id">Some</span> <span class="id">m1</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SEP</span>: <span class="id">m1</span> |= <span class="id">range</span> <span class="id">sp</span> <span class="id">lo</span> <span class="id">hi</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7405')">Proof.</div>
+<div class="proofscript" id="proof7405">
+&nbsp;&nbsp;<span class="id">ss</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="id">et</span>. <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id">Mem_unfree_unchanged_on</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">UNCH</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">i</span> &lt; <span class="id">mid</span>)).<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Mem_unfree_perm</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">Mem.perm_unchanged_on</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">u</span>. <span class="id">ii</span>. <span class="id">des</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">SEP3</span>; <span class="id">et</span>. <span class="id">xomega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">sepconj</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">assign_junk_blocks_rule</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">m_src0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PRED</span>: <span class="id">m_src0</span> |= <span class="id">P</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">n</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">assign_junk_blocks</span> <span class="id">m_src0</span> <span class="id">n</span>) |= <span class="id">P</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7406')">Proof.</div>
+<div class="proofscript" id="proof7406">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">P</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">m_invar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_implies</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">assign_junk_blocks_unchanged_on</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module JunkBlock</title>
+<meta name="description" content="Documentation of Coq module JunkBlock" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module JunkBlock</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ASTC</span> <span class="id">Integers</span> <span class="id">ValuesC</span> <span class="id">EventsC</span> <span class="id">MemoryC</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Op</span> <span class="id">Registers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SmallstepC</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">assign_junk_blocks</span> (<span class="id">m0</span>: <span class="id">mem</span>) (<span class="id">n</span>: <span class="id">nat</span>): <span class="id">mem</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">n</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">O</span> =&gt; <span class="id">m0</span><br/>
+&nbsp;&nbsp;| <span class="id">S</span> <span class="id">n</span>' =&gt; <span class="kwd">let</span> (<span class="id">m1</span>, <span class="id">_</span>) := <span class="id">Mem.alloc</span> <span class="id">m0</span> 0%<span class="id">Z</span> 0%<span class="id">Z</span> <span class="kwd">in</span> <span class="id">assign_junk_blocks</span> <span class="id">m1</span> <span class="id">n</span>'<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_junk_value</span> (<span class="id">m0</span> <span class="id">m1</span>: <span class="id">mem</span>) (<span class="id">v</span>: <span class="id">val</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">v</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">Vptr</span> <span class="id">blk</span> <span class="id">_</span> =&gt; ~ <span class="id">Mem.valid_block</span> <span class="id">m0</span> <span class="id">blk</span> /\ <span class="id">Mem.valid_block</span> <span class="id">m1</span> <span class="id">blk</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">PROPS</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">assign_junk_blocks_perm</span>: <span class="kwd">forall</span> <span class="id">m0</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">Mem.perm</span> (<span class="id">assign_junk_blocks</span> <span class="id">m0</span> <span class="id">n</span>) = <span class="id">Mem.perm</span> <span class="id">m0</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6056')">Proof.</div>
+<div class="proofscript" id="proof6056">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">repeat</span> (<span class="tactic">apply</span> <span class="id">func_ext1</span>; <span class="id">i</span>). <span class="tactic">apply</span> <span class="id">AxiomsC.prop_ext</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">n</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="tactic">split</span>; <span class="id">i</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">erewrite</span> <span class="id">IHn</span>. <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">erewrite</span> <span class="id">IHn</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">destruct</span> (<span class="id">peq</span> <span class="id">x0</span> <span class="id">b</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id">Mem.perm_alloc_3</span>; <span class="tactic">eauto</span>. <span class="id">xomega</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.perm_alloc_4</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">assign_junk_blocks_nextblock</span>: <span class="kwd">forall</span> <span class="id">m0</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">NB</span>: (<span class="id">Mem.nextblock</span> (<span class="id">assign_junk_blocks</span> <span class="id">m0</span> <span class="id">n</span>) = <span class="kwd">if</span> <span class="id">Zerob.zerob</span> <span class="id">n</span> <span class="kwd">then</span> <span class="id">Mem.nextblock</span> <span class="id">m0</span> <span class="kwd">else</span> <span class="id">Mem.nextblock</span> <span class="id">m0</span> + <span class="id">Pos.of_nat</span> <span class="id">n</span>)%<span class="id">positive</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6057')">Proof.</div>
+<div class="proofscript" id="proof6057">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">unfold</span> <span class="id">NW</span>. <span class="id">ginduction</span> <span class="id">n</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">IHn</span>; <span class="tactic">eauto</span>. <span class="id">erewrite</span> <span class="id">Mem.nextblock_alloc</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> ! <span class="id">Pplus_one_succ_r</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">Pos.add_assoc</span>. <span class="tactic">rewrite</span> <span class="id">Pos.add_comm</span> <span class="kwd">with</span> (<span class="id">p</span> := 1%<span class="id">positive</span>). <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">assign_junk_blocks_nextblock</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">n</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NZR</span>: <span class="id">n</span> &lt;&gt; <span class="id">O</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">NB</span>: (<span class="id">Mem.nextblock</span> (<span class="id">assign_junk_blocks</span> <span class="id">m0</span> <span class="id">n</span>) = <span class="id">Mem.nextblock</span> <span class="id">m0</span> + <span class="id">Pos.of_nat</span> <span class="id">n</span>)%<span class="id">positive</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6058')">Proof.</div>
+<div class="proofscript" id="proof6058">
+ <span class="tactic">rewrite</span> <span class="id">assign_junk_blocks_nextblock</span>. <span class="tactic">destruct</span> <span class="id">n</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">assign_junk_blocks_unchanged_on</span>: <span class="kwd">forall</span> <span class="id">m0</span> <span class="id">n</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">UNCH</span>: <span class="id">Mem.unchanged_on</span> <span class="id">top2</span> <span class="id">m0</span> (<span class="id">assign_junk_blocks</span> <span class="id">m0</span> <span class="id">n</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6059')">Proof.</div>
+<div class="proofscript" id="proof6059">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">n</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">Mem.unchanged_on_refl</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>. <span class="id">r</span>. <span class="id">etrans</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">IHn</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.alloc_unchanged_on</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">assign_junk_blocks_load</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">chunk</span> <span class="id">n</span> <span class="id">blk</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALID</span>: <span class="id">Mem.valid_block</span> <span class="id">m0</span> <span class="id">blk</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Mem.load</span> <span class="id">chunk</span> (<span class="id">assign_junk_blocks</span> <span class="id">m0</span> <span class="id">n</span>) <span class="id">blk</span> <span class="id">ofs</span> = <span class="id">Mem.load</span> <span class="id">chunk</span> <span class="id">m0</span> <span class="id">blk</span> <span class="id">ofs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6060')">Proof.</div>
+<div class="proofscript" id="proof6060">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">n</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="id">erewrite</span> <span class="id">IHn</span>; <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span>. <span class="tactic">repeat</span> (<span class="tactic">apply</span> <span class="id">func_ext1</span>; <span class="id">i</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Mem.load_alloc_unchanged</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">assign_junk_block_extends</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m_src</span> <span class="id">m_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id">Mem.extends</span> <span class="id">m_src</span> <span class="id">m_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>, &lt;&lt;<span class="id">EXT</span>: <span class="id">Mem.extends</span> (<span class="id">assign_junk_blocks</span> <span class="id">m_src</span> <span class="id">n</span>) (<span class="id">assign_junk_blocks</span> <span class="id">m_tgt</span> <span class="id">n</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6061')">Proof.</div>
+<div class="proofscript" id="proof6061">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">n</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="tactic">eapply</span> <span class="id">IHn</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (<span class="id">Mem.alloc_extends</span> <span class="id">m_src</span> <span class="id">m_tgt</span> 0 0 <span class="id">b</span> <span class="id">m</span> 0 0); <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">lia</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> *. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">PROPS</span>.<br/>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

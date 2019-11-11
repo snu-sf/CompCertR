@@ -1,0 +1,234 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Unreach</title>
+<meta name="description" content="Documentation of Coq module Unreach" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Unreach</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span> <span class="id"><a href="compcert.common.Linking.html">Linking</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html">RelationClasses</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="t">t</a></span> := <span class="id"><a name="mk">mk</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="unreach">unreach</a></span>:&gt; <span class="id"><a href="compcert.common.Values.html#block">block</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>; <br/>
+&nbsp;&nbsp;<span class="id"><a name="ge_nb">ge_nb</a></span>: <span class="id"><a href="compcert.common.Values.html#block">block</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="nb">nb</a></span>: <span class="id"><a href="compcert.common.Values.html#block">block</a></span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Notation</span> "'<span class="id">prange</span>' '#' <span class="id">hi</span>" := (<span class="kwd">fun</span> <span class="id">blk</span> =&gt; <span class="id"><a href="compcert.lib.Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id">hi</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">no</span> <span class="id">associativity</span>).<br/>
+<span class="kwd">Notation</span> "'<span class="id">prange</span>' <span class="id">lo</span> '#'" := (<span class="kwd">fun</span> <span class="id">blk</span> =&gt; <span class="id"><a href="compcert.lib.Coqlib.html#Ple">Ple</a></span> <span class="id">lo</span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">no</span> <span class="id">associativity</span>).<br/>
+<span class="kwd">Notation</span> "'<span class="id">prange</span>' <span class="id">lo</span> <span class="id">hi</span>" := (<span class="kwd">fun</span> <span class="id">blk</span> =&gt; <span class="id"><a href="compcert.lib.Coqlib.html#Ple">Ple</a></span> <span class="id">lo</span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> /\ <span class="id"><a href="compcert.lib.Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id">hi</span>) (<span class="tactic">at</span> <span class="id">level</span> 50, <span class="id">no</span> <span class="id">associativity</span>).<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="kwd">wf</span> (<span class="id">su</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="wf_intro">wf_intro</a></span><br/>
+&nbsp;&nbsp;(<span class="id">WFLO</span>: <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> &lt;1= <span class="id">prange</span> <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>) #)<br/>
+&nbsp;&nbsp;(<span class="id">WFHI</span>: <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> &lt;1= <span class="id">prange</span> # <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="hle_old">hle_old</a></span> (<span class="id">su0</span> <span class="id">su1</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;(&lt;&lt;<span class="id">PRIV</span>: <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#unreach">unreach</a></span>) &lt;1= <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#unreach">unreach</a></span>)&gt;&gt;)<br/>
+&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">OLD</span>: <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#unreach">unreach</a></span>) /1\ (<span class="id">prange</span> # <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>)) &lt;1= <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#unreach">unreach</a></span>)&gt;&gt;)<br/>
+&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">NB</span>: <span class="id"><a href="compcert.lib.Coqlib.html#Ple">Ple</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>) <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>)&gt;&gt;)<br/>
+&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">GENB</span>: <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>) = <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>)&gt;&gt;).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="hle">hle</a></span> (<span class="id">su0</span> <span class="id">su1</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;(&lt;&lt;<span class="id">OLD</span>: <span class="kwd">forall</span> <span class="id">blk</span> (<span class="id">LT</span>: <span class="id"><a href="compcert.lib.Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>)), <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> = <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>&gt;&gt;)<br/>
+&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">NB</span>: <span class="id"><a href="compcert.lib.Coqlib.html#Ple">Ple</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>) <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>)&gt;&gt;)<br/>
+&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">GENB</span>: <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>) = <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>)&gt;&gt;).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="hle_old_hle">hle_old_hle</a></span>: <span class="kwd">forall</span> <span class="id">su0</span> <span class="id">su1</span>, <span class="id"><a href="compcert.common.Unreach.html#hle_old">hle_old</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span> -&gt; <span class="id"><a href="compcert.common.Unreach.html#hle">hle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2142')">Proof.</div>
+<div class="proofscript" id="proof2142">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">i</span>; <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="id">des</span>; <span class="id">rr</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">destruct</span> (<span class="id">su1</span> <span class="id">blk</span>) <span class="id">eqn</span>:<span class="id">T</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exploit</span> <span class="id">OLD</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> (<span class="id">su0</span> <span class="id">blk</span>) <span class="id">eqn</span>:<span class="id">T2</span>; <span class="id">ss</span>. <span class="id">exploit</span> <span class="id">PRIV</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<span class="kwd">Lemma</span> <span class="id"><a name="hle_hle_old">hle_hle_old</a></span>: <span class="kwd">forall</span> <span class="id">su0</span> <span class="id">su1</span> (<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>), <span class="id"><a href="compcert.common.Unreach.html#hle">hle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span> -&gt; <span class="id"><a href="compcert.common.Unreach.html#hle_old">hle_old</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2143')">Proof.</div>
+<div class="proofscript" id="proof2143">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">i</span>; <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="id">des</span>; <span class="id">rr</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">erewrite</span> &lt;- <span class="id">OLD</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">WF</span>. <span class="id">exploit</span> <span class="id">WFHI</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">i</span>. <span class="id">des</span>. <span class="id">erewrite</span> <span class="id">OLD</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="hle_update">hle_update</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">su0</span> <span class="id">su1</span> <span class="id">su2</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="kwd">forall</span> <span class="id">blk</span> (<span class="id">LT</span>: <span class="id"><a href="compcert.lib.Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>)), <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> = <span class="id"><a href="compcert.common.Unreach.html#su2">su2</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NB</span>: <span class="id"><a href="compcert.lib.Coqlib.html#Ple">Ple</a></span> <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>) <span class="id"><a href="compcert.common.Unreach.html#su2">su2</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GENB</span>: <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>) = <span class="id"><a href="compcert.common.Unreach.html#su2">su2</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HLE</span>: <span class="id"><a href="compcert.common.Unreach.html#hle">hle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">HLE</span>: <span class="id"><a href="compcert.common.Unreach.html#hle">hle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#su2">su2</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2144')">Proof.</div>
+<div class="proofscript" id="proof2144">
+&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">HLE</span>. <span class="id">des</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">GENB</span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="hle_old_update">hle_old_update</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">su0</span> <span class="id">su1</span> <span class="id">su2</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="kwd">forall</span> <span class="id">blk</span> (<span class="id">LT</span>: <span class="id"><a href="compcert.lib.Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>)), <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> = <span class="id"><a href="compcert.common.Unreach.html#su2">su2</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NB</span>: <span class="id"><a href="compcert.lib.Coqlib.html#Ple">Ple</a></span> <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>) <span class="id"><a href="compcert.common.Unreach.html#su2">su2</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GENB</span>: <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>) = <span class="id"><a href="compcert.common.Unreach.html#su2">su2</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HLE</span>: <span class="id"><a href="compcert.common.Unreach.html#hle_old">hle_old</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">HLE</span>: <span class="id"><a href="compcert.common.Unreach.html#hle_old">hle_old</a></span> <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> <span class="id"><a href="compcert.common.Unreach.html#su2">su2</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2145')">Proof.</div>
+<div class="proofscript" id="proof2145">
+&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">HLE</span>. <span class="id">rr</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">WF</span>. <span class="id">i</span>. <span class="id">exploit</span> <span class="id">PRIV</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">erewrite</span> &lt;- <span class="id">EQ</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">i</span>; <span class="id">des</span>. <span class="id">erewrite</span> &lt;- <span class="id">EQ</span> <span class="kwd">in</span> <span class="id">PR</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> &lt;- <span class="id">NB</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">rewrite</span> &lt;- <span class="id">GENB</span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="hle_old_PreOrder">hle_old_PreOrder</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.common.Unreach.html#hle_old">hle_old</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2146')">Next Obligation.</div>
+<div class="proofscript" id="proof2146">
+&nbsp;&nbsp;<span class="id">rr</span>. <span class="id">ii</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">des</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">xomega</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof2147')">Next Obligation.</div>
+<div class="proofscript" id="proof2147">
+&nbsp;&nbsp;<span class="id">ii</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Unreach.html#hle_old">hle_old</a></span> <span class="kwd">in</span> *. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">des</span>; <span class="id">ss</span>. <span class="tactic">eapply</span> <span class="id">OLD0</span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">OLD</span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="hle_PreOrder">hle_PreOrder</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.common.Unreach.html#hle">hle</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2148')">Next Obligation.</div>
+<div class="proofscript" id="proof2148">
+&nbsp;&nbsp;<span class="id">rr</span>. <span class="id">ii</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof2149')">Next Obligation.</div>
+<div class="proofscript" id="proof2149">
+&nbsp;&nbsp;<span class="id">ii</span>; <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Unreach.html#hle">hle</a></span> <span class="kwd">in</span> *. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">OLD</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="tactic">rewrite</span> <span class="id">OLD0</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="mle">mle</a></span> (<span class="id">su</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>) (<span class="id">m0</span> <span class="id">m1</span>: <span class="id"><a href="compcert.common.Memory.html#mem">Memory.mem</a></span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="mle_intro">mle_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PERM</span>: <span class="kwd">forall</span> <span class="id">blk</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALID</span>: <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span>.(<span class="id"><a href="compcert.common.Memory.html#Mem.valid_block">Mem.valid_block</a></span>) <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>.(<span class="id"><a href="compcert.common.Memory.html#Mem.perm">Mem.perm</a></span>) <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#ofs">ofs</a></span> <span class="id"><a href="compcert.common.Memtype.html#Max">Max</a></span> &lt;1= <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span>.(<span class="id"><a href="compcert.common.Memory.html#Mem.perm">Mem.perm</a></span>) <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#ofs">ofs</a></span> <span class="id"><a href="compcert.common.Memtype.html#Max">Max</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RO</span>: <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on">Mem.unchanged_on</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span>.(<span class="id"><a href="compcert.common.Events.html#loc_not_writable">loc_not_writable</a></span>) <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PRIV</span>: <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on">Mem.unchanged_on</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span>).(<span class="id"><a href="http://coq.inria.fr/library/Coq.Program.Basics.html#flip">Basics.flip</a></span>) <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>).<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="mle_PreOrder">mle_PreOrder</a></span> <span class="id">su</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> (<span class="id"><a href="compcert.common.Unreach.html#mle">mle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2150')">Next Obligation.</div>
+<div class="proofscript" id="proof2150">
+&nbsp;&nbsp;<span class="id">rr</span>. <span class="id">ii</span>. <span class="id">econs</span>; <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof2151')">Next Obligation.</div>
+<div class="proofscript" id="proof2151">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">PERM</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">PERM0</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Memory.html#Mem.valid_block">Mem.valid_block</a></span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">RO</span>. <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on_implies">Mem.unchanged_on_implies</a></span> <span class="kwd">with</span> (<span class="id">P</span>:= <span class="kwd">fun</span> <span class="id">blk</span> <span class="id">ofs</span> =&gt; <span class="id"><a href="compcert.common.Events.html#loc_not_writable">loc_not_writable</a></span> <span class="id">x</span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#ofs">ofs</a></span> /\ <span class="id"><a href="compcert.common.Memory.html#Mem.valid_block">Mem.valid_block</a></span> <span class="id">x</span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>); <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on_trans">Mem.unchanged_on_trans</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on_implies">Mem.unchanged_on_implies</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">RO</span>. <span class="id">i</span>. <span class="id">des</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on_implies">Mem.unchanged_on_implies</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">RO0</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">eapply</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on_trans">Mem.unchanged_on_trans</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="store_mle">store_mle</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">chunk</span> <span class="id">m0</span> <span class="id">blk</span> <span class="id">ofs</span> <span class="id">v</span> <span class="id">m1</span> (<span class="id">su</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STR</span>: <span class="id"><a href="compcert.common.Memory.html#Mem.store">Mem.store</a></span> <span class="id"><a href="compcert.common.Unreach.html#chunk">chunk</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#ofs">ofs</a></span> <span class="id"><a href="compcert.common.Unreach.html#v">v</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SU</span>: ~<span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MLE</span>: <span class="id"><a href="compcert.common.Unreach.html#mle">mle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2152')">Proof.</div>
+<div class="proofscript" id="proof2152">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;Copied&nbsp;from&nbsp;Events.volatile_store_readonly&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.store_unchanged_on">Mem.store_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.common.Memory.html#Mem.store_valid_access_3">Mem.store_valid_access_3</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> [<span class="id">P</span> <span class="id">Q</span>].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Events.html#loc_not_writable">loc_not_writable</a></span>. <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">elim</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.perm_cur_max">Mem.perm_cur_max</a></span>. <span class="tactic">apply</span> <span class="id">P</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.store_unchanged_on">Mem.store_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="free_mle">free_mle</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">blk</span> <span class="id">lo</span> <span class="id">hi</span> <span class="id">m1</span> (<span class="id">su</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FREE</span>: <span class="id"><a href="compcert.common.Memory.html#Mem.free">Mem.free</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#lo">lo</a></span> <span class="id"><a href="compcert.common.Unreach.html#hi">hi</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SU</span>: ~<span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MLE</span>: <span class="id"><a href="compcert.common.Unreach.html#mle">mle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2153')">Proof.</div>
+<div class="proofscript" id="proof2153">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;Copied&nbsp;from&nbsp;Events.extcall_free_ok&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">FREE</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.free_unchanged_on">Mem.free_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">elim</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.perm_cur_max">Mem.perm_cur_max</a></span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.perm_implies">Mem.perm_implies</a></span> <span class="kwd">with</span> <span class="id"><a href="compcert.common.Memtype.html#Freeable">Freeable</a></span>; <span class="tactic">auto</span> <span class="kwd">with</span> <span class="id">mem</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.free_range_perm">Mem.free_range_perm</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.free_unchanged_on">Mem.free_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="storebytes_mle">storebytes_mle</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">blk</span> <span class="id">ofs</span> <span class="id">mvs</span> <span class="id">m1</span> (<span class="id">su</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STR</span>: <span class="id"><a href="compcert.common.Memory.html#Mem.storebytes">Mem.storebytes</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span> <span class="id"><a href="compcert.common.Unreach.html#ofs">ofs</a></span> <span class="id"><a href="compcert.common.Unreach.html#mvs">mvs</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SU</span>: ~<span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MLE</span>: <span class="id"><a href="compcert.common.Unreach.html#mle">mle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2154')">Proof.</div>
+<div class="proofscript" id="proof2154">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;Copied&nbsp;from&nbsp;Events.volatile_store_readonly&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">STR</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.storebytes_unchanged_on">Mem.storebytes_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">elim</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.perm_cur_max">Mem.perm_cur_max</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.storebytes_range_perm">Mem.storebytes_range_perm</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.storebytes_unchanged_on">Mem.storebytes_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="alloc_mle">alloc_mle</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">lo</span> <span class="id">hi</span> <span class="id">m1</span> <span class="id">blk</span> (<span class="id">su</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ALC</span>: <span class="id"><a href="compcert.common.Memory.html#Mem.alloc">Mem.alloc</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#lo">lo</a></span> <span class="id"><a href="compcert.common.Unreach.html#hi">hi</a></span> = (<span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>, <span class="id"><a href="compcert.common.Unreach.html#blk">blk</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MLE</span>: <span class="id"><a href="compcert.common.Unreach.html#mle">mle</a></span> <span class="id"><a href="compcert.common.Unreach.html#su">su</a></span> <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2155')">Proof.</div>
+<div class="proofscript" id="proof2155">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="id">mem</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.alloc_unchanged_on">Mem.alloc_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.alloc_unchanged_on">Mem.alloc_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="mle_monotone">mle_monotone</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">m0</span> <span class="id">m1</span> (<span class="id">su0</span> <span class="id">su1</span>: <span class="id"><a href="compcert.common.Unreach.html#t">t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span> &lt;1= <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id"><a href="compcert.common.Unreach.html#su1">su1</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#mle">mle</a></span>) <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MLE</span>: <span class="id"><a href="compcert.common.Unreach.html#su0">su0</a></span>.(<span class="id"><a href="compcert.common.Unreach.html#mle">mle</a></span>) <span class="id"><a href="compcert.common.Unreach.html#m0">m0</a></span> <span class="id"><a href="compcert.common.Unreach.html#m1">m1</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2156')">Proof.</div>
+<div class="proofscript" id="proof2156">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MLE</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on_implies">Mem.unchanged_on_implies</a></span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Program.Basics.html#flip">Basics.flip</a></span> <span class="kwd">in</span> *. <span class="id">rr</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">nb_tac</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">repeat</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">multimatch</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span>: <span class="id"><a href="compcert.common.Unreach.html#nb">nb</a></span> <span class="id">_</span> = <span class="id">_</span> |- <span class="id">_</span> ] =&gt; <span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> *<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [ <span class="id">H</span>: <span class="id"><a href="compcert.common.Unreach.html#ge_nb">ge_nb</a></span> <span class="id">_</span> = <span class="id">_</span> |- <span class="id">_</span> ] =&gt; <span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> *<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

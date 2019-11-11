@@ -1,0 +1,787 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CompilerC</title>
+<meta name="description" content="Documentation of Coq module CompilerC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CompilerC</h1>
+<div class="coq">
+<div class="doc">Libraries. </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">String</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Errors</span> <span class="id">ErrorsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Linking</span> <span class="id">Smallstep</span>.<br/>
+<div class="doc">Languages (syntax and semantics). </div>
+<span class="kwd">Require</span> <span class="id">Ctypes</span> <span class="id">Csyntax</span> <span class="id">CsemC</span> <span class="id">Cstrategy</span> <span class="id">Cexec</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Clight</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Csharpminor</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CminorC</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CminorSel</span>.<br/>
+<span class="kwd">Require</span> <span class="id">RTLC</span>.<br/>
+<span class="kwd">Require</span> <span class="id">LTL</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Linear</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Mach</span>.<br/>
+<span class="kwd">Require</span> <span class="id">AsmC</span>.<br/>
+<div class="doc">Translation passes. </div>
+<span class="kwd">Require</span> <span class="id">Initializers</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimplExpr</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimplLocals</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Cshmgen</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Cminorgen</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Selection</span>.<br/>
+<span class="kwd">Require</span> <span class="id">RTLgen</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Tailcall</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Inlining</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Renumber</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Constprop</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CSE</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Deadcode</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Unreadglob</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Unusedglob</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Allocation</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Tunneling</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Linearize</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CleanupLabels</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Debugvar</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Stacking</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Asmgen</span>.<br/>
+<div class="doc">Proofs of semantic preservation. </div>
+<span class="kwd">Require</span> <span class="id">SimplExprproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SimplLocalsproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Cshmgenproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Cminorgenproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Selectionproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">RTLgenproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Tailcallproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Inliningproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Renumberproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Constpropproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CSEproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Deadcodeproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Unusedglobproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Allocproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Tunnelingproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Linearizeproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">CleanupLabelsproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Debugvarproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Stackingproof</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Asmgenproof</span>.<br/>
+<div class="doc">Command-line flags. </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Compopts</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">BehaviorsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Compiler</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Sem</span> <span class="id">SimProg</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span> <span class="id">SimMod</span> <span class="id">SimModSem</span> <span class="id">SimSymb</span> <span class="id">SimMem</span> <span class="id">Sound</span> <span class="id">SimSymb</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SemProps</span> <span class="id">AdequacyLocal</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="id">SimMemInj</span> <span class="id">SoundTop</span> <span class="id">SimSymbDrop</span> <span class="id">SimSymbDropInv</span>.<br/>
+<span class="kwd">Require</span> <span class="id">IdSim</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">RUSC</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">CompCert_relations_list</span>: <span class="id">list</span> <span class="id">program_relation.t</span> :=<br/>
+&nbsp;&nbsp;[ (<span class="id">mkPR</span> <span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mkPR</span> <span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">SoundTop.Top</span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mkPR</span> <span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">UnreachC.Unreach</span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mkPR</span> <span class="id">SimMemInjC.SimMemInj</span> <span class="id">SimSymbDrop.SimSymbDrop</span> <span class="id">SoundTop.Top</span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mkPR</span> <span class="id">SimMemInjC.SimMemInj</span> <span class="id">SimMemInjC.SimSymbId</span> <span class="id">SoundTop.Top</span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">mkPR</span> <span class="id">SimSymbDropInv.SimMemInvTop</span> <span class="id">SimSymbDropInv.SimSymbDropInv</span> <span class="id">SoundTop.Top</span>)<br/>
+&nbsp;&nbsp;].<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">CompCert_relations</span> := (<span class="kwd">fun</span> <span class="id">r</span> =&gt; <span class="id">In</span> <span class="id">r</span> <span class="id">CompCert_relations_list</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">asm_self_related</span> (<span class="id">asm</span>: <span class="id">Asm.program</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">CompCert_relations</span> [<span class="id">asm</span>.(<span class="id">AsmC.module</span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6964')">Proof.</div>
+<div class="proofscript" id="proof6964">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">RELIN</span>. <span class="tactic">unfold</span> <span class="id">CompCert_relations</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eapply</span> <span class="id">relate_single_program</span>; <span class="tactic">intros</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.asm_id</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.asm_ext_top</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.asm_ext_unreach</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.asm_inj_drop</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.asm_inj_id</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.asm_inj_inv_drop</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">asms_self_related</span> (<span class="id">asms</span>: <span class="id">list</span> <span class="id">Asm.program</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">CompCert_relations</span> (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">asms</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6965')">Proof.</div>
+<div class="proofscript" id="proof6965">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">asms</span>; <span class="id">ss</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHasms</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id">program_relation.horizontal</span> <span class="id">_</span> [<span class="id">a</span>.(<span class="id">AsmC.module</span>)] <span class="id">_</span> [<span class="id">a</span>.(<span class="id">AsmC.module</span>)]); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">asm_self_related</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">clight_self_related</span> (<span class="id">cl</span>: <span class="id">Clight.program</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">CompCert_relations</span> [<span class="id">cl</span>.(<span class="id">ClightC.module2</span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6966')">Proof.</div>
+<div class="proofscript" id="proof6966">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">RELIN</span>. <span class="tactic">unfold</span> <span class="id">CompCert_relations</span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eapply</span> <span class="id">relate_single_program</span>; <span class="tactic">intros</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.clight_id</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.clight_ext_top</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.clight_ext_unreach</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.clight_inj_drop</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.clight_inj_id</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IdSim.clight_inj_inv_drop</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">clights_self_related</span> (<span class="id">cls</span>: <span class="id">list</span> <span class="id">Clight.program</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">self_related</span> <span class="id">CompCert_relations</span> (<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">cls</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6967')">Proof.</div>
+<div class="proofscript" id="proof6967">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">cls</span>; <span class="id">ss</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHcls</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id">program_relation.horizontal</span> <span class="id">_</span> [<span class="id">a</span>.(<span class="id">ClightC.module2</span>)] <span class="id">_</span> [<span class="id">a</span>.(<span class="id">ClightC.module2</span>)]); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">clight_self_related</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Cstrategy</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">CstrategyproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Cstrategy_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">src</span> = <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CsemC.module</span> <span class="id">src</span>) (<span class="id">CstrategyC.module</span> <span class="id">tgt</span>).(<span class="id">Mod.Atomic.trans</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6968')">Proof.</div>
+<div class="proofscript" id="proof6968">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id">CstrategyproofC.sim_mod</span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Cstrategy</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SimplExpr</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">SimplExprproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">SimplExpr_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">SimplExpr.transl_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CstrategyC.module</span> <span class="id">src</span>).(<span class="id">Mod.Atomic.trans</span>) (<span class="id">ClightC.module1</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6969')">Proof.</div>
+<div class="proofscript" id="proof6969">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">SimplExprproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">SimplExprproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SimplExpr</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SimplLocals</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">SimplLocalsproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">SimplLocals_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">SimplLocals.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemInjC.SimMemInj</span> <span class="id">SimMemInjC.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ClightC.module1</span> <span class="id">src</span>) (<span class="id">ClightC.module2</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6970')">Proof.</div>
+<div class="proofscript" id="proof6970">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">SimplLocalsproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">SimplLocalsproof.match_transf_program</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SimplLocals</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Cshmgen</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">CshmgenproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Cshmgen_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Cshmgen.transl_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ClightC.module2</span> <span class="id">src</span>) (<span class="id">CsharpminorC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6971')">Proof.</div>
+<div class="proofscript" id="proof6971">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">CshmgenproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Cshmgenproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Cshmgen</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Cminorgen</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">CminorgenproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Cminorgen_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Cminorgen.transl_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemInjC.SimMemInj</span> <span class="id">SimMemInjC.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CsharpminorC.module</span> <span class="id">src</span>) (<span class="id">CminorC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6972')">Proof.</div>
+<div class="proofscript" id="proof6972">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">CminorgenproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Cminorgenproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Cminorgen</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Selection</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">SelectionproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Selection_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Selection.sel_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CminorC.module</span> <span class="id">src</span>) (<span class="id">CminorSelC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6973')">Proof.</div>
+<div class="proofscript" id="proof6973">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">SelectionproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Selectionproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Selection</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">RTLgen</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">RTLgenproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">RTLgen_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">RTLgen.transl_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CminorSelC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6974')">Proof.</div>
+<div class="proofscript" id="proof6974">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">RTLgenproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">RTLgenproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">RTLgen</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Renumber0</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">RenumberproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Renumber0_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Renumber.transf_program</span> <span class="id">src</span> = <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6975')">Proof.</div>
+<div class="proofscript" id="proof6975">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">RenumberproofC.sim_mod</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">Renumberproof.transf_program_match</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">TRANSF</span> <span class="kwd">in</span> *. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Renumber0</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Tailcall</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">TailcallproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Tailcall_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">total_if</span> <span class="id">optim_tailcalls</span> <span class="id">Tailcall.transf_program</span> <span class="id">src</span> = <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rtc</span> (<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">SoundTop.Top</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6976')">Proof.</div>
+<div class="proofscript" id="proof6976">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">total_if</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">rtc_once</span>. <span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">TailcallproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Tailcallproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Tailcall</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Inlining</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">InliningproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Inlining_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Inlining.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemInjC.SimMemInj</span> <span class="id">SimMemInjC.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6977')">Proof.</div>
+<div class="proofscript" id="proof6977">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">InliningproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Inliningproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Inlining</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Constprop</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ConstpropproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Constprop_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">total_if</span> <span class="id">optim_constprop</span> <span class="id">Constprop.transf_program</span> <span class="id">src</span> = <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rtc</span> (<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">UnreachC.Unreach</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6978')">Proof.</div>
+<div class="proofscript" id="proof6978">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">total_if</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">rtc_once</span>. <span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">ConstpropproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Constpropproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Constprop</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Renumber1</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">RenumberproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Renumber1_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">total_if</span> <span class="id">optim_constprop</span> <span class="id">Renumber.transf_program</span> <span class="id">src</span> = <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rtc</span> (<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>)<br/>
+&nbsp;&nbsp;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6979')">Proof.</div>
+<div class="proofscript" id="proof6979">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">total_if</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">rtc_once</span>. <span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">RenumberproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Renumberproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Renumber1</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">CSE</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id">CSEproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">CSE_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">partial_if</span> <span class="id">optim_CSE</span> <span class="id">CSE.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rtc</span> (<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">UnreachC.Unreach</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6980')">Proof.</div>
+<div class="proofscript" id="proof6980">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">partial_if</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">rtc_once</span>. <span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">CSEproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">CSEproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">CSE</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Deadcode</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">DeadcodeproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Deadcode_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">partial_if</span> <span class="id">optim_redundancy</span> <span class="id">Deadcode.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rtc</span> (<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">UnreachC.Unreach</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6981')">Proof.</div>
+<div class="proofscript" id="proof6981">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">partial_if</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">rtc_once</span>. <span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">DeadcodeproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Deadcodeproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Deadcode</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Unreadglob</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">UnreadglobproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Unreadglob_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Unreadglob.transform_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimSymbDropInv.SimMemInvTop</span> <span class="id">SimSymbDropInv.SimSymbDropInv</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6982')">Proof.</div>
+<div class="proofscript" id="proof6982">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">UnreadglobproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Unreadglobproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Unreadglob</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Unusedglob</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">UnusedglobproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Unusedglob_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Unusedglob.transform_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemInjC.SimMemInj</span> <span class="id">SimSymbDrop.SimSymbDrop</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module</span> <span class="id">src</span>) (<span class="id">RTLC.module2</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6983')">Proof.</div>
+<div class="proofscript" id="proof6983">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">UnusedglobproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Unusedglobproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Unusedglob</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Allocation</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AllocproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Allocation_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Allocation.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">RTLC.module2</span> <span class="id">src</span>) (<span class="id">LTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6984')">Proof.</div>
+<div class="proofscript" id="proof6984">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">AllocproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Allocproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Allocation</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Tunneling</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">TunnelingproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Tunneling_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Tunneling.tunnel_program</span> <span class="id">src</span> = <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LTLC.module</span> <span class="id">src</span>) (<span class="id">LTLC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6985')">Proof.</div>
+<div class="proofscript" id="proof6985">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">TunnelingproofC.sim_mod</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">Tunnelingproof.transf_program_match</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">TRANSF</span> <span class="kwd">in</span> *. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Tunneling</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Linearize</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinearizeproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Linearize_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Linearize.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LTLC.module</span> <span class="id">src</span>) (<span class="id">LinearC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6986')">Proof.</div>
+<div class="proofscript" id="proof6986">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">LinearizeproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Linearizeproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Linearize</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">CleanupLabels</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CleanupLabelsproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">CleanupLabels_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">CleanupLabels.transf_program</span> <span class="id">src</span> = <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LinearC.module</span> <span class="id">src</span>) (<span class="id">LinearC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6987')">Proof.</div>
+<div class="proofscript" id="proof6987">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">CleanupLabelsproofC.sim_mod</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">CleanupLabelsproof.transf_program_match</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">TRANSF</span> <span class="kwd">in</span> *. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">CleanupLabels</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Debugvar</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">DebugvarproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Debugvar_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">partial_if</span> <span class="id">debug</span> <span class="id">Debugvar.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rtc</span> (<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LinearC.module</span> <span class="id">src</span>) (<span class="id">LinearC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6988')">Proof.</div>
+<div class="proofscript" id="proof6988">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">partial_if</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">rtc_once</span>. <span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">DebugvarproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Debugvarproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Debugvar</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Stacking</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">StackingproofC</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">return_address_offset_deterministic</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">c</span> <span class="id">ofs</span> <span class="id">ofs</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Asmgenproof0.return_address_offset</span> <span class="id">f</span> <span class="id">c</span> <span class="id">ofs</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Asmgenproof0.return_address_offset</span> <span class="id">f</span> <span class="id">c</span> <span class="id">ofs</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ofs</span> = <span class="id">ofs</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6989')">Proof.</div>
+<div class="proofscript" id="proof6989">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">TF</span> <span class="kwd">in</span> <span class="id">TF0</span>. <span class="id">inv</span> <span class="id">TF0</span>. <span class="tactic">rewrite</span> <span class="id">TC</span> <span class="kwd">in</span> <span class="id">TC0</span>. <span class="id">inv</span> <span class="id">TC0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Asmgenproof0.code_tail_unique</span> <span class="kwd">in</span> <span class="id">TL</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">Integers.Ptrofs.eq</span> <span class="id">ofs</span> <span class="id">ofs</span>' = <span class="id">true</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Integers.Ptrofs.eq</span>. <span class="tactic">rewrite</span> <span class="id">TL</span>. <span class="tactic">rewrite</span> <span class="id">zeq_true</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">Integers.Ptrofs.eq_spec</span>. <span class="tactic">rewrite</span> <span class="id">H</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Stacking_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Stacking.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">COMPILESUCCED</span>: <span class="id">exists</span> <span class="id">final_tgt</span>, <span class="id">Asmgenproof.match_prog</span> <span class="id">tgt</span> <span class="id">final_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemInjC.SimMemInj</span> <span class="id">SimMemInjC.SimSymbId</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LinearC.module</span> <span class="id">src</span>) (<span class="id">MachC.module</span> <span class="id">tgt</span> <span class="id">Asmgenproof0.return_address_offset</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6990')">Proof.</div>
+<div class="proofscript" id="proof6990">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id">StackingproofC.sim_mod</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">Asmgenproof.return_address_exists</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">determ_tac</span> <span class="id">return_address_offset_deterministic</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">Stackingproof.transf_program_match</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Stacking</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Asmgen</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AsmgenproofC</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">Asmgen_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">Asmgen.transf_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">relate_single</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">SimMemExt.SimMemExt</span> <span class="id">SimMemExt.SimSymbExtends</span> <span class="id">SoundTop.Top</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MachC.module</span> <span class="id">src</span> <span class="id">Asmgenproof0.return_address_offset</span>) (<span class="id">AsmC.module</span> <span class="id">tgt</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6991')">Proof.</div>
+<div class="proofscript" id="proof6991">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">relate_single</span>. <span class="id">exploit</span> <span class="id">AsmgenproofC.sim_mod</span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Asmgenproof.transf_program_match</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Asmgen</span>.<br/>
+<br/>
+<br/>
+<br/>
+<div class="doc">Copied from Compiler.v, but without "SimplLocals.transf_program" *</div>
+<div class="doc">SimplLocals translate Clight1 into Clight2 and our source program is Clight2. *</div>
+<div class="doc">We chose Clight2 because VST uses Clight2. *</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">transf_clight_program</span> (<span class="id">p</span>: <span class="id">Clight.program</span>) : <span class="id">res</span> <span class="id">Asm.program</span> :=<br/>
+&nbsp;&nbsp;<span class="id">OK</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id">print</span> <span class="id">print_Clight</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">time</span> "<span class="id">C</span>#<span class="id">minor</span> <span class="id">generation</span>" <span class="id">Cshmgen.transl_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">time</span> "<span class="id">Cminor</span> <span class="id">generation</span>" <span class="id">Cminorgen.transl_program</span><br/>
+&nbsp;&nbsp;@@@ <span class="id">transf_cminor_program</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compiler_single_rusc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">src</span>: <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgt</span>: <span class="id">Asm.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id">transf_clight_program</span> <span class="id">src</span> = <span class="id">OK</span> <span class="id">tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">CompCert_relations</span> [<span class="id">src</span>.(<span class="id">ClightC.module2</span>)] [<span class="id">tgt</span>.(<span class="id">AsmC.module</span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6992')">Proof.</div>
+<div class="proofscript" id="proof6992">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">transf_clight_program</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id">transf_cminor_program</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id">transf_rtl_program</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">time</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id">print</span> <span class="kwd">in</span> *. <span class="id">cbn</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id">apply_total</span>, <span class="id">apply_partial</span> <span class="kwd">in</span> *. <span class="id">des_ifs_safe</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">total_if</span> <span class="id">optim_tailcalls</span> <span class="id">Tailcall.transf_program</span> <span class="id">p0</span>) <span class="kwd">as</span> <span class="id">ptail</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">Renumber.transf_program</span> <span class="id">p10</span>) <span class="kwd">as</span> <span class="id">prenum0</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">total_if</span> <span class="id">optim_constprop</span> <span class="id">Constprop.transf_program</span> <span class="id">prenum0</span>) <span class="kwd">as</span> <span class="id">pconst</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">total_if</span> <span class="id">optim_constprop</span> <span class="id">Renumber.transf_program</span> <span class="id">pconst</span>) <span class="kwd">as</span> <span class="id">prenum1</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">Tunneling.tunnel_program</span> <span class="id">p5</span>) <span class="kwd">as</span> <span class="id">ptunnel</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id">CleanupLabels.transf_program</span> <span class="id">p4</span>) <span class="kwd">as</span> <span class="id">pclean</span> <span class="kwd">in</span> *.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">next</span> <span class="id">PASS_CORRECT</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etrans</span>; [<span class="tactic">try</span> (<span class="id">hexploit</span> <span class="id">PASS_CORRECT</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[..|<span class="tactic">intros</span> <span class="id">REL</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id">relate_single_rtc_rusc</span>) <span class="kwd">in</span> <span class="id">REL</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">CompCert_relations</span>; <span class="id">ss</span>; <span class="tactic">eauto</span> 10; <span class="tactic">fail</span>]);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">hexploit</span> <span class="id">PASS_CORRECT</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[..|<span class="tactic">intros</span> <span class="id">REL</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id">relate_single_rusc</span>) <span class="kwd">in</span> <span class="id">REL</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">CompCert_relations</span>; <span class="id">ss</span>; <span class="tactic">eauto</span> 10])|].<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id">Cshmgen_correct</span>. <span class="id">next</span> <span class="id">Cminorgen_correct</span>. <span class="id">next</span> <span class="id">Selection_correct</span>. <span class="id">next</span> <span class="id">RTLgen_correct</span>.<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id">Tailcall_correct</span>. <span class="id">next</span> <span class="id">Inlining_correct</span>. <span class="id">next</span> <span class="id">Renumber0_correct</span>. <span class="id">next</span> <span class="id">Constprop_correct</span>.<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id">Renumber1_correct</span>. <span class="id">next</span> <span class="id">CSE_correct</span>. <span class="id">next</span> <span class="id">Deadcode_correct</span>. <span class="id">next</span> <span class="id">Unreadglob_correct</span>.<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id">Unusedglob_correct</span>. <span class="id">next</span> <span class="id">Allocation_correct</span>. <span class="id">next</span> <span class="id">Tunneling_correct</span>. <span class="id">next</span> <span class="id">Linearize_correct</span>.<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id">CleanupLabels_correct</span>. <span class="id">next</span> <span class="id">Debugvar_correct</span>. <span class="id">next</span> <span class="id">Stacking_correct</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">eexists</span>. <span class="tactic">eapply</span> <span class="id">transf_program_match</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id">Asmgen_correct</span>. <span class="id">refl</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">compiler_rusc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id">list</span> <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgts</span>: <span class="id">list</span> <span class="id">Asm.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR</span>: <span class="id">mmap</span> <span class="id">transf_clight_program</span> <span class="id">srcs</span> = <span class="id">OK</span> <span class="id">tgts</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span> <span class="id">CompCert_relations</span> (<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span>) (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">tgts</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6993')">Proof.</div>
+<div class="proofscript" id="proof6993">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">mmap_inversion</span> <span class="kwd">in</span> <span class="id">TR</span>. <span class="id">revert</span> <span class="id">tgts</span> <span class="id">TR</span>. <span class="tactic">induction</span> <span class="id">srcs</span>; <span class="id">ss</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">TR</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">replace</span> (<span class="id">ClightC.module2</span> <span class="id">a</span> :: <span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;([<span class="id">ClightC.module2</span> <span class="id">a</span>] ++ <span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id">AsmC.module</span> <span class="id">b1</span> :: <span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">bl</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;([<span class="id">AsmC.module</span> <span class="id">b1</span>] ++ <span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">bl</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">rusc_horizontal</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">compiler_single_rusc</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">clight_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">clights_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">asm_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">asms_self_related</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">compiler_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id">list</span> <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgts</span> <span class="id">hands</span>: <span class="id">list</span> <span class="id">Asm.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR</span>: <span class="id">mmap</span> <span class="id">transf_clight_program</span> <span class="id">srcs</span> = <span class="id">OK</span> <span class="id">tgts</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ctx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF</span>: <span class="id">self_related</span> <span class="id">CompCert_relations</span> <span class="id">ctx</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> ((<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ <span class="id">ctx</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sem</span> ((<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">tgts</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ <span class="id">ctx</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6994')">Proof.</div>
+<div class="proofscript" id="proof6994">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">rusc_adequacy_right_ctx</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">compiler_rusc</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">self_related_horizontal</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">asms_self_related</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<div class="doc">Additionally, we support C as a source language too. *</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">clightgen_rusc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id">list</span> <span class="id">Csyntax.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgts</span>: <span class="id">list</span> <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">irs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR0</span>: <span class="id">mmap</span> (<span class="id">SimplExpr.transl_program</span>) <span class="id">srcs</span> = <span class="id">OK</span> <span class="id">irs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR1</span>: <span class="id">mmap</span> (<span class="id">SimplLocals.transf_program</span>) <span class="id">irs</span> = <span class="id">OK</span> <span class="id">tgts</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rusc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">CompCert_relations</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">map</span> <span class="id">CsemC.module</span> <span class="id">srcs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">tgts</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6995')">Proof.</div>
+<div class="proofscript" id="proof6995">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">mmap_inversion</span> <span class="kwd">in</span> <span class="id">TR0</span>. <span class="tactic">apply</span> <span class="id">mmap_inversion</span> <span class="kwd">in</span> <span class="id">TR1</span>. <span class="tactic">rewrite</span> <span class="id">forall2_eq</span> <span class="kwd">in</span> *.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">transitivity</span> (<span class="id">map</span> (<span class="id">Mod.Atomic.trans</span> &lt;*&gt; <span class="id">CstrategyC.module</span>) <span class="id">srcs</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">rusc_incl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> (<span class="id">relate_each_program</span> <span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Forall2_apply_Forall2</span> <span class="kwd">with</span> (<span class="id">P</span>:=<span class="id">eq</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">clear</span>. <span class="tactic">induction</span> <span class="id">srcs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">Cstrategy_correct</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">CompCert_relations</span>. <span class="id">ss</span>. <span class="tactic">auto</span>. }<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">transitivity</span> (<span class="id">map</span> <span class="id">ClightC.module1</span> <span class="id">irs</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">rusc_incl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> (<span class="id">relate_each_program</span> <span class="id">SimMemId.SimMemId</span> <span class="id">SimMemId.SimSymbId</span> <span class="id">SoundTop.Top</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Forall2_apply_Forall2</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">SimplExpr_correct</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">CompCert_relations</span>. <span class="id">ss</span>. <span class="tactic">auto</span>. }<br/>
+<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">rusc_incl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> (<span class="id">relate_each_program</span> <span class="id">SimMemInjC.SimMemInj</span> <span class="id">SimMemInjC.SimSymbId</span> <span class="id">SoundTop.Top</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Forall2_apply_Forall2</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">SimplLocals_correct</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id">CompCert_relations</span>. <span class="id">ss</span>. <span class="tactic">auto</span> 10. }<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">clightgen_correct</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id">list</span> <span class="id">Csyntax.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">cls</span> <span class="id">tgts</span>: <span class="id">list</span> <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">hands</span>: <span class="id">list</span> <span class="id">Asm.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">irs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR0</span>: <span class="id">mmap</span> (<span class="id">SimplExpr.transl_program</span>) <span class="id">srcs</span> = <span class="id">OK</span> <span class="id">irs</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR1</span>: <span class="id">mmap</span> (<span class="id">SimplLocals.transf_program</span>) <span class="id">irs</span> = <span class="id">OK</span> <span class="id">tgts</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ctx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF</span>: <span class="id">self_related</span> <span class="id">CompCert_relations</span> <span class="id">ctx</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> ((<span class="id">map</span> <span class="id">CsemC.module</span> <span class="id">srcs</span>) ++ (<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">cls</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ <span class="id">ctx</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sem</span> ((<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">tgts</span>) ++ (<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">cls</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ <span class="id">ctx</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6996')">Proof.</div>
+<div class="proofscript" id="proof6996">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">rusc_adequacy_right_ctx</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">clightgen_rusc</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">self_related_horizontal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">clights_self_related</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id">self_related_horizontal</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">asms_self_related</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id">compiler_correct_full</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs0</span>: <span class="id">list</span> <span class="id">Csyntax.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs1</span>: <span class="id">list</span> <span class="id">Clight.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgts0</span> <span class="id">tgts1</span> <span class="id">hands</span>: <span class="id">list</span> <span class="id">Asm.program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR0</span>: <span class="id">mmap</span> <span class="id">transf_c_program</span> <span class="id">srcs0</span> = <span class="id">OK</span> <span class="id">tgts0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR1</span>: <span class="id">mmap</span> <span class="id">transf_clight_program</span> <span class="id">srcs1</span> = <span class="id">OK</span> <span class="id">tgts1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ctx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF</span>: <span class="id">self_related</span> <span class="id">CompCert_relations</span> <span class="id">ctx</span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">improves</span> (<span class="id">sem</span> ((<span class="id">map</span> <span class="id">CsemC.module</span> <span class="id">srcs0</span>) ++ (<span class="id">map</span> <span class="id">ClightC.module2</span> <span class="id">srcs1</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ <span class="id">ctx</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sem</span> ((<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">tgts0</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">tgts1</span>) ++ (<span class="id">map</span> <span class="id">AsmC.module</span> <span class="id">hands</span>) ++ <span class="id">ctx</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6997')">Proof.</div>
+<div class="proofscript" id="proof6997">
+&nbsp;&nbsp;<span class="tactic">replace</span> <span class="id">transf_c_program</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">p</span> =&gt; <span class="id">OK</span> <span class="id">p</span> @@@ <span class="id">SimplExpr.transl_program</span> @@@ <span class="id">SimplLocals.transf_program</span> @@@ <span class="id">transf_clight_program</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">in</span> <span class="id">TR0</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">transf_c_program</span>, <span class="id">transf_clight_program</span>, <span class="id">Compiler.transf_clight_program</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">func_ext1</span>. <span class="id">i</span>. <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">apply_partial</span>, <span class="id">time</span>, <span class="id">print</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs_safe</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">mmap_partial</span> <span class="kwd">in</span> <span class="id">TR0</span>; <span class="tactic">eauto</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">mmap_partial</span> <span class="kwd">in</span> <span class="id">MMAP0</span>; <span class="tactic">eauto</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id">clightgen_correct</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">T</span>.<br/>
+&nbsp;&nbsp;<span class="id">etrans</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">app_assoc</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">app_assoc</span>.<br/>
+&nbsp;&nbsp;<span class="id">rpapply</span> (@<span class="id">compiler_correct</span> (<span class="id">lb</span> ++ <span class="id">srcs1</span>) (<span class="id">tgts0</span> ++ <span class="id">tgts1</span>) <span class="id">hands</span>) ; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">mmap_app</span>. <span class="tactic">unfold</span> <span class="id">bind</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">map_app</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">app_assoc</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">map_app</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">app_assoc</span>. <span class="id">ss</span>. }<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

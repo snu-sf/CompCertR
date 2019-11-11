@@ -1,0 +1,145 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module LineartypingC</title>
+<meta name="description" content="Documentation of Coq module LineartypingC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module LineartypingC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ASTC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">GlobalenvsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Op</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Machregs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Conventions</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LTL</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Linear</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Lineartyping</span>.<br/>
+<span class="kwd">Require</span> <span class="id">SoundTop</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Preservation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinearC</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">ls_init_has_type</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ls_init</span> <span class="id">sg</span> <span class="id">vs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id">length</span> <span class="id">vs</span> = <span class="id">length</span> <span class="id">sg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOCSET</span>: <span class="id">typify_list</span> <span class="id">vs</span> <span class="id">sg</span> = <span class="id">map</span> (<span class="kwd">fun</span> <span class="id">p</span> =&gt; <span class="id">Locmap.getpair</span> <span class="id">p</span> <span class="id">ls_init</span>) (<span class="id">loc_arguments_64</span> <span class="id">sg</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sl</span> <span class="id">pos</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id">In</span> (<span class="id">S</span> <span class="id">sl</span> <span class="id">pos</span> <span class="id">ty</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments_64</span> <span class="id">sg</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ONES</span>: <span class="kwd">forall</span> <span class="id">lp</span>, <span class="id">In</span> <span class="id">lp</span> (<span class="id">loc_arguments_64</span> <span class="id">sg</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>) -&gt; <span class="id">is_one</span> <span class="id">lp</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TY</span>: <span class="id">Val.has_type</span> (<span class="id">ls_init</span> (<span class="id">S</span> <span class="id">sl</span> <span class="id">pos</span> <span class="id">ty</span>)) <span class="id">ty</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6654')">Proof.</div>
+<div class="proofscript" id="proof6654">
+&nbsp;&nbsp;<span class="id">remember</span> (<span class="id">loc_arguments_64</span> <span class="id">sg</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>) <span class="kwd">as</span> <span class="id">locs</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Z.add</span> <span class="id">Z.mul</span> <span class="id">Z.sub</span> <span class="id">Z.div</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">loc_arguments_64</span>.<br/>
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">locs</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">vs</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">sg</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="tactic">unfold</span> <span class="id">typify_list</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">ONES</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="id">des</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;- <span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">loc_arguments_64</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>. <span class="id">des_ifs</span>; <span class="tactic">eapply</span> <span class="id">IHlocs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">clarify</span>. <span class="tactic">rewrite</span> &lt;- <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">t</span> = <span class="id">ty</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">clear</span> - <span class="id">Heqlocs</span>. <span class="id">ss</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">typify_has_type</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">SOUNDNESS</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">prog</span>: <span class="id">program</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">wt_prog</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">fd</span>, <span class="id">In</span> (<span class="id">i</span>, <span class="id">Gfun</span> <span class="id">fd</span>) <span class="id">prog</span>.(<span class="id">prog_defs</span>) -&gt; <span class="id">wt_fundef</span> <span class="id">fd</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">mreg_type_any</span>: <span class="kwd">forall</span> <span class="id">mr</span>, &lt;&lt;<span class="id">ANY</span>: <span class="id">mreg_type</span> <span class="id">mr</span> = <span class="id">Tany64</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6655')">Proof.</div>
+<div class="proofscript" id="proof6655">
+ <span class="id">i</span>. <span class="id">rr</span>. <span class="tactic">unfold</span> <span class="id">mreg_type</span>. <span class="id">des_ifs</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">has_type_any</span>: <span class="kwd">forall</span> <span class="id">v</span>, &lt;&lt;<span class="id">ANY</span>: <span class="id">Val.has_type</span> <span class="id">v</span> <span class="id">Tany64</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6656')">Proof.</div>
+<div class="proofscript" id="proof6656">
+ <span class="id">i</span>. <span class="id">rr</span>. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">wt_state_local_preservation</span>: <span class="kwd">forall</span> <span class="id">skenv_link</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">local_preservation</span> (<span class="id">modsem</span> <span class="id">skenv_link</span> <span class="id">prog</span>) (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> <span class="id">st</span> =&gt; <span class="id">wt_state</span> <span class="id">st</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6657')">Proof.</div>
+<div class="proofscript" id="proof6657">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="comment">(*&nbsp;init&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INIT</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">WTLS</span>: <span class="id">wt_locset</span> <span class="id">ls_init</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">mreg_type_any</span>. <span class="tactic">apply</span> <span class="id">has_type_any</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">In</span> (<span class="id">S</span> <span class="id">sl</span> <span class="id">pos</span> <span class="id">ty</span>) (<span class="id">regs_of_rpairs</span> (<span class="id">loc_arguments</span> (<span class="id">fn_sig</span> <span class="id">fd</span>))))).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">clear</span> - <span class="id">TYP</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">TYP</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">abstr</span> (<span class="id">fn_sig</span> <span class="id">fd</span>) <span class="id">sg</span>. <span class="id">abstr</span> (<span class="id">Args.vs</span> <span class="id">args</span>) <span class="id">vs</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">loc_arguments_one</span> <span class="id">sg</span>). <span class="tactic">intro</span> <span class="id">ONES</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sg</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id">loc_arguments</span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">ls_init_has_type</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">erewrite</span> <span class="id">SLOT</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">STEP</span>. <span class="tactic">eapply</span> <span class="id">step_type_preservation</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>, <span class="id">Genv.find_funct_ptr</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Skeleton.SkEnv.revive</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">Genv_map_defs_def</span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="id">des</span>. <span class="id">u</span> <span class="kwd">in</span> <span class="id">MAP</span>. <span class="id">des_ifs_safe</span>. <span class="id">bsimpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>. <span class="tactic">eapply</span> <span class="id">in_prog_defmap</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">AT</span>; <span class="id">ss</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="tactic">rewrite</span> <span class="id">Forall_forall</span>. <span class="id">ii</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">AFTER</span>. <span class="id">inv</span> <span class="id">SUST</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">loc_result_caller_save</span> <span class="id">sg</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">RES</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">loc_result_one</span> <span class="id">sg</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">ONE</span>. <span class="id">des</span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> <span class="id">stack</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">WTSTK</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id">undef_outgoing_slots</span>. <span class="id">ii</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id">Locmap.setpair</span>. <span class="id">des_ifs</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">wt_setreg</span>; <span class="id">ss</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">wt_undef_caller_save_regs</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">mreg_type_any</span>. <span class="tactic">apply</span> <span class="id">has_type_any</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ii</span>. <span class="tactic">destruct</span> <span class="id">l</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">locmap_get_set_loc_result</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="tactic">rewrite</span> <span class="id">AGCS</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">parent_locset_after_external</span> <span class="id">stack</span>); <span class="id">et</span>. <span class="id">i</span>; <span class="id">des</span>; <span class="id">clarify</span>. <span class="tactic">rewrite</span> <span class="id">AFTER</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;TODO:&nbsp;we&nbsp;can&nbsp;remove&nbsp;spurious&nbsp;case&nbsp;by&nbsp;strengthening&nbsp;wt_callstack&nbsp;-&gt;&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;we&nbsp;know&nbsp;stack&nbsp;&gt;=&nbsp;1,&nbsp;because&nbsp;of&nbsp;dummy&nbsp;stack&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">undef_caller_save_regs</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">locmap_get_set_loc_result</span>; <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">AGCS</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id">parent_locset_after_external</span> <span class="id">stack</span>); <span class="id">et</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">rewrite</span> <span class="id">AFTER</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">ii</span>. <span class="tactic">rewrite</span> <span class="id">locmap_get_set_loc_result</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">FINAL</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">SOUNDNESS</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

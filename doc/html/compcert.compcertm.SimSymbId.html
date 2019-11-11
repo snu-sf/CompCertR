@@ -1,0 +1,162 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SimSymbId</title>
+<meta name="description" content="Documentation of Coq module SimSymbId" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SimSymbId</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">GlobalenvsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ASTC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinkingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MapsC</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SimSymb</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">System</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">sim_skenv</span> (<span class="id">skenv0</span> <span class="id">skenv1</span>: <span class="id">SkEnv.t</span>): <span class="kwd">Prop</span> := <span class="id">skenv0</span> = <span class="id">skenv1</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sim_skenv_equiv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQUIV</span>: <span class="id">Senv.equiv</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6372')">Proof.</div>
+<div class="proofscript" id="proof6372">
+ <span class="tactic">rewrite</span> <span class="id">SIMSKENV</span>. <span class="tactic">eapply</span> <span class="id">GlobalenvsC.Senv_eq_equiv_obligation_1</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">system_sim_skenv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> (<span class="id">skenv_src</span>).(<span class="id">System.skenv</span>) (<span class="id">skenv_tgt</span>).(<span class="id">System.skenv</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6373')">Proof.</div>
+<div class="proofscript" id="proof6373">
+ <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Record</span> <span class="id">t</span>' := <span class="id">mk</span> {<br/>
+&nbsp;&nbsp;<span class="id">src</span>: <span class="id">Sk.t</span>;<br/>
+&nbsp;&nbsp;<span class="id">tgt</span>: <span class="id">Sk.t</span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="kwd">wf</span> (<span class="id">ss</span>: <span class="id">t</span>'): <span class="kwd">Prop</span> := <span class="id">ss</span>.(<span class="id">src</span>) = <span class="id">ss</span>.(<span class="id">tgt</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">le</span>: <span class="id">t</span>' -&gt; <span class="id">t</span>' -&gt; <span class="kwd">Prop</span> := <span class="id">top2</span>.<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">le_PreOrder</span>: <span class="id">PreOrder</span> <span class="id">le</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">wf_link</span>: <span class="kwd">forall</span> <span class="id">ss0</span> <span class="id">ss1</span> <span class="id">sk_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINKSRC</span>: <span class="id">link</span> <span class="id">ss0</span>.(<span class="id">src</span>) <span class="id">ss1</span>.(<span class="id">src</span>) = <span class="id">Some</span> <span class="id">sk_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">ss</span> <span class="id">sk_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LINKTGT</span>: <span class="id">link</span> <span class="id">ss0</span>.(<span class="id">tgt</span>) <span class="id">ss1</span>.(<span class="id">tgt</span>) = <span class="id">Some</span> <span class="id">sk_tgt</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SKSRC</span>: <span class="id">ss</span>.(<span class="id">src</span>) = <span class="id">sk_src</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SKTGT</span>: <span class="id">ss</span>.(<span class="id">tgt</span>) = <span class="id">sk_tgt</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE0</span>: <span class="id">le</span> <span class="id">ss0</span> <span class="id">ss</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE1</span>: <span class="id">le</span> <span class="id">ss1</span> <span class="id">ss</span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6374')">Proof.</div>
+<div class="proofscript" id="proof6374">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">inv</span> <span class="id">SIMSK</span>. <span class="id">inv</span> <span class="id">SIMSK0</span>. <span class="id">eexists</span> (<span class="id">mk</span> <span class="id">_</span> <span class="id">_</span>). <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">wf_load_sim_skenv</span>: <span class="kwd">forall</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span> <span class="id">m_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADSRC</span>: <span class="id">ss</span>.(<span class="id">src</span>).(<span class="id">Sk.load_skenv</span>) = <span class="id">skenv_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADTGT</span>: <span class="id">ss</span>.(<span class="id">tgt</span>).(<span class="id">Sk.load_skenv</span>) = <span class="id">skenv_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADMEMSRC</span>: <span class="id">ss</span>.(<span class="id">src</span>).(<span class="id">Sk.load_mem</span>) = <span class="id">Some</span> <span class="id">m_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LOADMEMTGT</span>: <span class="id">ss</span>.(<span class="id">tgt</span>).(<span class="id">Sk.load_mem</span>) = <span class="id">Some</span> <span class="id">m_src</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MAINSIM</span>: (<span class="id">Genv.symbol_address</span> <span class="id">skenv_src</span> (<span class="id">prog_main</span> <span class="id">ss</span>.(<span class="id">src</span>)) <span class="id">Ptrofs.zero</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (<span class="id">Genv.symbol_address</span> <span class="id">skenv_tgt</span> (<span class="id">prog_main</span> <span class="id">ss</span>.(<span class="id">tgt</span>)) <span class="id">Ptrofs.zero</span>)&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6375')">Proof.</div>
+<div class="proofscript" id="proof6375">
+ <span class="id">i</span>. <span class="id">u</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">SIMSK</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span> <span class="kwd">with</span> <span class="tactic">congruence</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sim_skenv_monotone</span>: <span class="kwd">forall</span> <span class="id">ss_link</span> <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span> <span class="id">ss</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFSRC</span>: <span class="id">SkEnv.wf</span> <span class="id">skenv_link_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFTGT</span>: <span class="id">SkEnv.wf</span> <span class="id">skenv_link_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">skenv_link_src</span> <span class="id">skenv_link_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSK</span>: <span class="kwd">wf</span> <span class="id">ss</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id">le</span> <span class="id">ss</span> <span class="id">ss_link</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LESRC</span>: <span class="id">SkEnv.project</span> <span class="id">skenv_link_src</span> <span class="id">ss</span>.(<span class="id">src</span>) = <span class="id">skenv_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LETGT</span>: <span class="id">SkEnv.project</span> <span class="id">skenv_link_tgt</span> <span class="id">ss</span>.(<span class="id">tgt</span>) = <span class="id">skenv_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6376')">Proof.</div>
+<div class="proofscript" id="proof6376">
+ <span class="id">i</span>. <span class="id">clarify</span>. <span class="id">rr</span>. <span class="id">inv</span> <span class="id">SIMSK</span>. <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">sim_skenv_func_bisim</span>: <span class="kwd">forall</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DEF</span>: <span class="id">SimSymb.skenv_func_bisim</span> <span class="id">eq</span> <span class="id">skenv_src</span> <span class="id">skenv_tgt</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6377')">Proof.</div>
+<div class="proofscript" id="proof6377">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="tactic">assert</span>(<span class="id">fptr_src</span> = <span class="id">fptr_tgt</span>) <span class="tactic">by</span> <span class="id">ss</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clarify</span>; <span class="tactic">unfold</span> <span class="id">Genv.find_funct</span>, <span class="id">Genv.find_funct_ptr</span> <span class="kwd">in</span> *; <span class="id">des_ifs_safe</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">prog_defmap</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">REVIVE</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">C</span> <span class="id">F1</span> <span class="id">V1</span> <span class="id">F2</span> <span class="id">V2</span>: <span class="kwd">Type</span>} {<span class="id">LC</span>: <span class="id">Linker</span> <span class="id">C</span>} {<span class="id">LF</span>: <span class="id">Linker</span> <span class="id">F1</span>} {<span class="id">LV</span>: <span class="id">Linker</span> <span class="id">V1</span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id">HasExternal</span> <span class="id">F1</span>} `{<span class="id">HasExternal</span> <span class="id">F2</span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">match_fundef</span>: <span class="id">C</span> -&gt; <span class="id">F1</span> -&gt; <span class="id">F2</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">match_varinfo</span>: <span class="id">V1</span> -&gt; <span class="id">V2</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variables</span> (<span class="id">ctx</span>: <span class="id">C</span>) (<span class="id">p_src</span>: <span class="id">AST.program</span> <span class="id">F1</span> <span class="id">V1</span>) (<span class="id">p_tgt</span>: <span class="id">AST.program</span> <span class="id">F2</span> <span class="id">V2</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> (<span class="id">MATCHPROG</span>: <span class="id">match_program_gen</span> <span class="id">match_fundef</span> <span class="id">match_varinfo</span> <span class="id">ctx</span> <span class="id">p_src</span> <span class="id">p_tgt</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">MATCH_FUNDEF_EXTERNAL</span>: <span class="kwd">forall</span> <span class="id">ctx</span> <span class="id">f_src</span> <span class="id">f_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_fundef</span> <span class="id">ctx</span> <span class="id">f_src</span> <span class="id">f_tgt</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_external</span> <span class="id">f_src</span> = <span class="id">is_external</span> <span class="id">f_tgt</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">sim_skenv_revive</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv_proj_src</span> <span class="id">skenv_proj_tgt</span> <span class="id">ge_src</span> <span class="id">ge_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">REVIVESRC</span>: <span class="id">ge_src</span> = <span class="id">SkEnv.revive</span> <span class="id">skenv_proj_src</span> <span class="id">p_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">REVIVETGT</span>: <span class="id">ge_tgt</span> = <span class="id">SkEnv.revive</span> <span class="id">skenv_proj_tgt</span> <span class="id">p_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">sim_skenv</span> <span class="id">skenv_proj_src</span> <span class="id">skenv_proj_tgt</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SIMGE</span>: <span class="id">Genv.match_genvs</span> (<span class="id">match_globdef</span> <span class="id">match_fundef</span> <span class="id">match_varinfo</span> <span class="id">ctx</span>) <span class="id">ge_src</span> <span class="id">ge_tgt</span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6378')">Proof.</div>
+<div class="proofscript" id="proof6378">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">clarify</span>. <span class="id">inv</span> <span class="id">SIMSKENV</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> ! <span class="id">MapsC.PTree_filter_map_spec</span>. <span class="tactic">rewrite</span> ! <span class="id">o_bind_ignore</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Genv.find_def</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">econs</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">Genv.invert_symbol</span> <span class="id">skenv_proj_tgt</span> <span class="id">b</span>) <span class="id">eqn</span>:<span class="id">T</span>; <span class="id">cbn</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">match_program_defmap</span> <span class="kwd">with</span> (<span class="id">id</span> := <span class="id">i</span>) <span class="kwd">in</span> <span class="id">MATCHPROG</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCHPROG</span>; <span class="id">cbn</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;inv&nbsp;H3;&nbsp;ss;&nbsp;cycle&nbsp;1.&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;{&nbsp;econs;&nbsp;eauto.&nbsp;econs;&nbsp;eauto.&nbsp;}&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;erewrite&nbsp;MATCH_FUNDEF_EXTERNAL;&nbsp;eauto.&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;des_ifs;&nbsp;try&nbsp;(by&nbsp;econs;&nbsp;eauto).&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;econs;&nbsp;eauto.&nbsp;econs;&nbsp;eauto.&nbsp;*)</span><br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">REVIVE</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SimMod</span>.<br/>
+<span class="kwd">Notation</span> <span class="id">mk_mp</span> := (<span class="kwd">fun</span> <span class="id">md_src</span> <span class="id">md_tgt</span> =&gt; <span class="id">ModPair.mk</span> <span class="id">md_src</span> <span class="id">md_tgt</span> (<span class="id">mk</span> <span class="id">md_src</span> <span class="id">md_tgt</span>)).
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

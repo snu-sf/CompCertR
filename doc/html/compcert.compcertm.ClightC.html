@@ -1,0 +1,231 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module ClightC</title>
+<meta name="description" content="Documentation of Coq module ClightC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module ClightC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Errors</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Floats</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">EventsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CopC</span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Clight</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span> <span class="id">Mod</span> <span class="id">ModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypesC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Obligation</span> <span class="kwd">Tactic</span> := <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">inv_all_once</span>; <span class="id">ss</span>; <span class="id">clarify</span>; <span class="tactic">try</span> <span class="tactic">by</span> (<span class="tactic">f_equal</span>; <span class="id">determ_tac</span> <span class="id">typify_c_dtm</span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">signature_of_function</span> (<span class="id">fd</span>: <span class="id">function</span>) :=<br/>
+&nbsp;&nbsp;{| <span class="id">sig_args</span> := <span class="id">map</span> <span class="id">typ_of_type</span> (<span class="id">map</span> <span class="id">snd</span> (<span class="id">fn_params</span> <span class="id">fd</span>));<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sig_res</span>  := <span class="id">opttyp_of_type</span> (<span class="id">fn_return</span> <span class="id">fd</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sig_cc</span>   := <span class="id">fn_callconv</span> <span class="id">fd</span> ; <span class="id">sig_cstyle</span> := <span class="id">true</span> |}.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">get_mem</span> (<span class="id">st</span>: <span class="id">state</span>): <span class="id">mem</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">st</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id">State</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m0</span> =&gt; <span class="id">m0</span><br/>
+&nbsp;&nbsp;| <span class="id">Callstate</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m0</span> =&gt; <span class="id">m0</span><br/>
+&nbsp;&nbsp;| <span class="id">Returnstate</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m0</span> =&gt; <span class="id">m0</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">MODSEM</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">skenv_link</span>: <span class="id">SkEnv.t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">p</span>: <span class="id">program</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">skenv</span>: <span class="id">SkEnv.t</span> := <span class="id">skenv_link</span>.(<span class="id">SkEnv.project</span>) <span class="id">p</span>.(<span class="id">CSk.of_program</span> <span class="id">signature_of_function</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">ge</span>: <span class="id">genv</span> := <span class="id">Build_genv</span> (<span class="id">skenv</span>.(<span class="id">SkEnv.revive</span>) <span class="id">p</span>) <span class="id">p</span>.(<span class="id">prog_comp_env</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">at_external</span>: <span class="id">state</span> -&gt; <span class="id">Args.t</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">at_external_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fptr_arg</span> <span class="id">vs_arg</span> <span class="id">k0</span> <span class="id">m0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXTERNAL</span>: <span class="id">ge</span>.(<span class="id">Genv.find_funct</span>) <span class="id">fptr_arg</span> = <span class="id">None</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIG</span>: <span class="id">exists</span> <span class="id">skd</span>, <span class="id">skenv_link</span>.(<span class="id">Genv.find_funct</span>) <span class="id">fptr_arg</span> = <span class="id">Some</span> <span class="id">skd</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ <span class="id">Some</span> (<span class="id">signature_of_type</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span>) = <span class="id">Sk.get_csig</span> <span class="id">skd</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">at_external</span> (<span class="id">Callstate</span> <span class="id">fptr_arg</span> (<span class="id">Tfunction</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span>) <span class="id">vs_arg</span> <span class="id">k0</span> <span class="id">m0</span>) (<span class="id">Args.mk</span> <span class="id">fptr_arg</span> <span class="id">vs_arg</span> <span class="id">m0</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">initial_frame1</span> (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">initial_frame1_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fd</span> <span class="id">tyf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">Args.is_cstyle</span> <span class="id">args</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDF</span>: <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">args</span>.(<span class="id">Args.fptr</span>) = <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYPE</span>: <span class="id">type_of_fundef</span> (<span class="id">Internal</span> <span class="id">fd</span>) = <span class="id">tyf</span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">CopC.typecheck</span> <span class="id">args</span>.(<span class="id">Args.vs</span>) (<span class="id">type_of_params</span> (<span class="id">fn_params</span> <span class="id">fd</span>))):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">initial_frame1</span> <span class="id">args</span> (<span class="id">Callstate</span> <span class="id">args</span>.(<span class="id">Args.fptr</span>) <span class="id">tyf</span> <span class="id">args</span>.(<span class="id">Args.vs</span>) <span class="id">Kstop</span> <span class="id">args</span>.(<span class="id">Args.m</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">final_frame</span>: <span class="id">state</span> -&gt; <span class="id">Retv.t</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">final_frame_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v_ret</span> <span class="id">m_ret</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_frame</span> (<span class="id">Returnstate</span> <span class="id">v_ret</span> <span class="id">Kstop</span> <span class="id">m_ret</span>) (<span class="id">Retv.mk</span> <span class="id">v_ret</span> <span class="id">m_ret</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">after_external1</span>: <span class="id">state</span> -&gt; <span class="id">Retv.t</span> -&gt; <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">after_external1_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fptr_arg</span> <span class="id">vs_arg</span> <span class="id">m_arg</span> <span class="id">k</span> <span class="id">retv</span> <span class="id">tv</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">Retv.is_cstyle</span> <span class="id">retv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">typify_c</span> <span class="id">retv</span>.(<span class="id">Retv.v</span>) <span class="id">tres</span> <span class="id">tv</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">after_external1</span> (<span class="id">Callstate</span> <span class="id">fptr_arg</span> (<span class="id">Tfunction</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span>) <span class="id">vs_arg</span> <span class="id">k</span> <span class="id">m_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">retv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Returnstate</span> <span class="id">tv</span> <span class="id">k</span> <span class="id">retv</span>.(<span class="id">Retv.m</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">modsem1</span>: <span class="id">ModSem.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{| <span class="id">ModSem.step</span> := <span class="id">step1</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.at_external</span> := <span class="id">at_external</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.initial_frame</span> := <span class="id">initial_frame1</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.final_frame</span> := <span class="id">final_frame</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.after_external</span> := <span class="id">after_external1</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.globalenv</span> := <span class="id">ge</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.skenv</span> := <span class="id">skenv</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.skenv_link</span> := <span class="id">skenv_link</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;|}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">initial_frame2</span> (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">initial_frame2_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tvs</span> <span class="id">fd</span> <span class="id">tyf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">Args.is_cstyle</span> <span class="id">args</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINDF</span>: <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">args</span>.(<span class="id">Args.fptr</span>) = <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYPE</span>: <span class="id">type_of_fundef</span> (<span class="id">Internal</span> <span class="id">fd</span>) = <span class="id">tyf</span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">ValuesC.typecheck</span> <span class="id">args</span>.(<span class="id">Args.vs</span>) (<span class="id">signature_of_function</span> <span class="id">fd</span>) <span class="id">tvs</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">initial_frame2</span> <span class="id">args</span> (<span class="id">Callstate</span> <span class="id">args</span>.(<span class="id">Args.fptr</span>) <span class="id">tyf</span> <span class="id">tvs</span> <span class="id">Kstop</span> <span class="id">args</span>.(<span class="id">Args.m</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">after_external2</span>: <span class="id">state</span> -&gt; <span class="id">Retv.t</span> -&gt; <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">after_external2_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fptr_arg</span> <span class="id">vs_arg</span> <span class="id">m_arg</span> <span class="id">k</span> <span class="id">retv</span> <span class="id">tv</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id">Retv.is_cstyle</span> <span class="id">retv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">tv</span> = <span class="id">typify</span> <span class="id">retv</span>.(<span class="id">Retv.v</span>) (<span class="id">typ_of_type</span> <span class="id">tres</span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">after_external2</span> (<span class="id">Callstate</span> <span class="id">fptr_arg</span> (<span class="id">Tfunction</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span>) <span class="id">vs_arg</span> <span class="id">k</span> <span class="id">m_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">retv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Returnstate</span> <span class="id">tv</span> <span class="id">k</span> <span class="id">retv</span>.(<span class="id">Retv.m</span>)).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">modsem2</span>: <span class="id">ModSem.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{| <span class="id">ModSem.step</span> := <span class="id">step2</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.at_external</span> := <span class="id">at_external</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.initial_frame</span> := <span class="id">initial_frame2</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.final_frame</span> := <span class="id">final_frame</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.after_external</span> := <span class="id">after_external2</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.globalenv</span> := <span class="id">ge</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.skenv</span> := <span class="id">skenv</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.skenv_link</span> := <span class="id">skenv_link</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;|}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">eval_expr_determ</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">a</span> <span class="id">v</span>, <span class="id">eval_expr</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">a</span> <span class="id">v</span> -&gt; <span class="kwd">forall</span> <span class="id">v</span>', <span class="id">eval_expr</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">a</span> <span class="id">v</span>' -&gt; <span class="id">v</span> = <span class="id">v</span>'<br/>
+&nbsp;&nbsp;<span class="kwd">with</span> <span class="id">eval_lvalue_determ</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">a</span> <span class="id">loc</span> <span class="id">ofs</span>, <span class="id">eval_lvalue</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">a</span> <span class="id">loc</span> <span class="id">ofs</span> -&gt; <span class="kwd">forall</span> <span class="id">loc</span>' <span class="id">ofs</span>', <span class="id">eval_lvalue</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">a</span> <span class="id">loc</span>' <span class="id">ofs</span>' -&gt; <span class="id">loc</span> = <span class="id">loc</span>' /\ <span class="id">ofs</span> = <span class="id">ofs</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6321')">Proof.</div>
+<div class="proofscript" id="proof6321">
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">v</span>' <span class="id">EV</span>; <span class="id">inv</span> <span class="id">EV</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">determ_tac</span> <span class="id">eval_expr_determ</span>); <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">determ_tac</span> <span class="id">eval_lvalue_determ</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> <span class="tactic">congruence</span>; <span class="tactic">try</span> <span class="tactic">by</span> <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">by</span> <span class="id">inv</span> <span class="id">H0</span>; <span class="tactic">try</span> <span class="tactic">by</span> <span class="id">inv</span> <span class="id">H1</span>; <span class="tactic">try</span> <span class="tactic">by</span> <span class="id">inv</span> <span class="id">H2</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">determ_tac</span> <span class="id">eval_expr_determ</span>. <span class="tactic">clear</span> <span class="id">H</span>. <span class="id">determ_tac</span> <span class="id">eval_expr_determ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">determ_tac</span> <span class="id">eval_lvalue_determ</span>. <span class="id">inv</span> <span class="id">H0</span>; <span class="id">inv</span> <span class="id">H2</span>; <span class="tactic">try</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">loc</span>' <span class="id">ofs</span>' <span class="id">EV</span>; <span class="id">inv</span> <span class="id">EV</span>; <span class="id">des_ifs</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">determ_tac</span> <span class="id">eval_expr_determ</span>); <span class="tactic">try</span> <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">determ_tac</span> <span class="id">eval_expr_determ</span>. <span class="tactic">rewrite</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H7</span>. <span class="id">des_ifs</span>. <span class="tactic">rewrite</span> <span class="id">H2</span> <span class="kwd">in</span> <span class="id">H11</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">eval_exprlist_determ</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">bl</span> <span class="id">tyl</span> <span class="id">vl</span>, <span class="id">eval_exprlist</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">bl</span> <span class="id">tyl</span> <span class="id">vl</span>  -&gt; <span class="kwd">forall</span> <span class="id">vl</span>', <span class="id">eval_exprlist</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">le</span> <span class="id">m</span> <span class="id">bl</span> <span class="id">tyl</span> <span class="id">vl</span>' -&gt; <span class="id">vl</span>' = <span class="id">vl</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6322')">Proof.</div>
+<div class="proofscript" id="proof6322">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">v</span>' <span class="id">EV</span>; <span class="id">inv</span> <span class="id">EV</span>; <span class="tactic">f_equal</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">eval_expr_determ</span>. <span class="tactic">apply</span> <span class="id">H</span>. <span class="tactic">apply</span> <span class="id">H6</span>. <span class="id">i</span>. <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H8</span>. <span class="id">inv</span> <span class="id">H8</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">alloc_variables_determ</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">env</span> <span class="id">m</span> <span class="id">vars</span> <span class="id">e</span> <span class="id">m1</span>, <span class="id">alloc_variables</span> <span class="id">ge</span> <span class="id">env</span> <span class="id">m</span> <span class="id">vars</span> <span class="id">e</span> <span class="id">m1</span> -&gt; <span class="kwd">forall</span> <span class="id">e</span>' <span class="id">m1</span>', <span class="id">alloc_variables</span> <span class="id">ge</span> <span class="id">env</span> <span class="id">m</span> <span class="id">vars</span> <span class="id">e</span>' <span class="id">m1</span>' -&gt; <span class="id">e</span> = <span class="id">e</span>' /\ <span class="id">m1</span> = <span class="id">m1</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6323')">Proof.</div>
+<div class="proofscript" id="proof6323">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">e</span>' <span class="id">m1</span>' <span class="id">EV</span>; <span class="id">inv</span> <span class="id">EV</span>; <span class="tactic">f_equal</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> <span class="id">H8</span>. <span class="id">des_ifs</span>. <span class="tactic">eapply</span> <span class="id">IHalloc_variables</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">bind_parameters_determ</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">m</span> <span class="id">params</span> <span class="id">vargs</span> <span class="id">m1</span>, <span class="id">bind_parameters</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">m</span> <span class="id">params</span> <span class="id">vargs</span> <span class="id">m1</span> -&gt; <span class="kwd">forall</span> <span class="id">m1</span>', <span class="id">bind_parameters</span> <span class="id">ge</span> <span class="id">e</span> <span class="id">m</span> <span class="id">params</span> <span class="id">vargs</span> <span class="id">m1</span>' -&gt; <span class="id">m1</span> = <span class="id">m1</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6324')">Proof.</div>
+<div class="proofscript" id="proof6324">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span> <span class="id">m1</span>' <span class="id">EV</span>; <span class="id">inv</span> <span class="id">EV</span>; <span class="tactic">f_equal</span>; <span class="tactic">eauto</span>. <span class="tactic">replace</span> <span class="id">m1</span> <span class="kwd">with</span> <span class="id">m3</span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="tactic">eapply</span> <span class="id">IHbind_parameters</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H0</span>; <span class="id">inv</span> <span class="id">H10</span>; <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">modsem1_receptive</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id">receptive_at</span> <span class="id">modsem1</span> <span class="id">st</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6325')">Proof.</div>
+<div class="proofscript" id="proof6325">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_receptive</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="id">inv_match_traces</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_trace_length</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">modsem1_determinate</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id">determinate_at</span> <span class="id">modsem1</span> <span class="id">st</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6326')">Proof.</div>
+<div class="proofscript" id="proof6326">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">clarify_meq</span>; <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_expr_determ</span>; <span class="id">check_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_lvalue_determ</span>; <span class="id">check_safe</span>); <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_exprlist_determ</span>; <span class="id">check_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_builtin_args_determ</span>; <span class="id">check_safe</span>); <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">external_call_determ</span>; <span class="id">check_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>); <span class="id">ii</span>; <span class="id">eq_closure_tac</span>; <span class="id">clarify_meq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">H4</span>; <span class="id">inv</span> <span class="id">H16</span>; <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">determ_tac</span> <span class="id">eval_exprlist_determ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">H1</span>. <span class="id">inv</span> <span class="id">H8</span>. <span class="id">hexploit</span> (<span class="id">alloc_variables_determ</span> <span class="id">H0</span> <span class="id">H3</span>). <span class="id">i</span>; <span class="id">des</span>; <span class="id">clarify</span>. <span class="id">determ_tac</span> <span class="id">bind_parameters_determ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_trace_length</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="id">des</span>; <span class="id">ss</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">exfalso</span>; <span class="id">des</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">modsem2_receptive</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id">receptive_at</span> <span class="id">modsem2</span> <span class="id">st</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6327')">Proof.</div>
+<div class="proofscript" id="proof6327">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_receptive</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="id">inv_match_traces</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_trace_length</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">modsem2_determinate</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id">determinate_at</span> <span class="id">modsem2</span> <span class="id">st</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6328')">Proof.</div>
+<div class="proofscript" id="proof6328">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">clarify_meq</span>; <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_expr_determ</span>; <span class="id">check_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_lvalue_determ</span>; <span class="id">check_safe</span>); <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_exprlist_determ</span>; <span class="id">check_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">eval_builtin_args_determ</span>; <span class="id">check_safe</span>); <span class="tactic">try</span> (<span class="id">determ_tac</span> <span class="id">external_call_determ</span>; <span class="id">check_safe</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>); <span class="id">ii</span>; <span class="id">eq_closure_tac</span>; <span class="id">clarify_meq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">H4</span>; <span class="id">inv</span> <span class="id">H16</span>; <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">determ_tac</span> <span class="id">eval_exprlist_determ</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">H1</span>. <span class="id">inv</span> <span class="id">H8</span>. <span class="id">hexploit</span> (<span class="id">alloc_variables_determ</span> <span class="id">H3</span> <span class="id">H7</span>). <span class="id">i</span>; <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">external_call_trace_length</span>; <span class="tactic">eauto</span>; <span class="id">check_safe</span>; <span class="tactic">intro</span> <span class="id">T</span>; <span class="id">des</span>); <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="id">des</span>; <span class="id">ss</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">exfalso</span>; <span class="id">des</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">MODSEM</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">module1</span> (<span class="id">p</span>: <span class="id">program</span>): <span class="id">Mod.t</span> :=<br/>
+&nbsp;&nbsp;{| <span class="id">Mod.data</span> := <span class="id">p</span>; <span class="id">Mod.get_sk</span> := <span class="id">CSk.of_program</span> <span class="id">signature_of_function</span>; <span class="id">Mod.get_modsem</span> := <span class="id">modsem1</span>; |}.<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">module2</span> (<span class="id">p</span>: <span class="id">program</span>): <span class="id">Mod.t</span> :=<br/>
+&nbsp;&nbsp;{| <span class="id">Mod.data</span> := <span class="id">p</span>; <span class="id">Mod.get_sk</span> := <span class="id">CSk.of_program</span> <span class="id">signature_of_function</span>; <span class="id">Mod.get_modsem</span> := <span class="id">modsem2</span>; |}.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

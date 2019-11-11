@@ -1,0 +1,195 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module MatchSimModSem</title>
+<meta name="description" content="Documentation of Coq module MatchSimModSem" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module MatchSimModSem</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SmallstepC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSem</span> <span class="id">AsmregsC</span> <span class="id">GlobalenvsC</span> <span class="id">MemoryC</span> <span class="id">ASTC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span> <span class="id">SimModSem</span> <span class="id">SimMemLift</span> <span class="id">SimSymb</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Sound</span> <span class="id">Preservation</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSemProps</span>.<br/>
+<span class="kwd">Require</span> <span class="id">MatchSimModSemExcl</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">MATCHSIMFORWARD</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">SM</span>: <span class="id">SimMem.class</span>} {<span class="id">SS</span>: <span class="id">SimSymb.class</span> <span class="id">SM</span>} {<span class="id">SU</span>: <span class="id">Sound.class</span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">SML</span>: <span class="id">SimMemLift.class</span> <span class="id">SM</span>}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">msp</span>: <span class="id">ModSemPair.t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">index</span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">order</span>: <span class="id">index</span> -&gt; <span class="id">index</span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">WFORD</span>: <span class="id">well_founded</span> <span class="id">order</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">ms_src</span>: <span class="id">ModSem.t</span> := <span class="id">msp</span>.(<span class="id">ModSemPair.src</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">ms_tgt</span>: <span class="id">ModSem.t</span> := <span class="id">msp</span>.(<span class="id">ModSemPair.tgt</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">sound_state</span>: <span class="id">Sound.t</span> -&gt; <span class="id">mem</span> -&gt; <span class="id">ms_src</span>.(<span class="id">state</span>) -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">PRSV</span>: <span class="id">local_preservation</span> <span class="id">ms_src</span> <span class="id">sound_state</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">match_states</span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">idx</span>: <span class="id">index</span>) (<span class="id">st_src0</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.state</span>)) (<span class="id">st_tgt0</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.state</span>)) (<span class="id">sm0</span>: <span class="id">SimMem.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Prop</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">match_states_at</span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">st_src0</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.state</span>)) (<span class="id">st_tgt0</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.state</span>)) (<span class="id">sm_at</span> <span class="id">sm_arg</span>: <span class="id">SimMem.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Prop</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">match_states_at_helper</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">idx_at</span>: <span class="id">index</span>) (<span class="id">st_src0</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.state</span>)) (<span class="id">st_tgt0</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.state</span>)) (<span class="id">sm_at</span> <span class="id">sm_arg</span>: <span class="id">SimMem.t</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">match_states_at_intro</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx_at</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm_at</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">args_src</span> <span class="id">args_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALLSRC</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.at_external</span>) <span class="id">st_src0</span> <span class="id">args_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALLTGT</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.at_external</span>) <span class="id">st_tgt0</span> <span class="id">args_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMARGS</span>: <span class="id">SimMem.sim_args</span> <span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id">SimMem.le</span> <span class="id">sm_at</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCHARG</span>: <span class="id">match_states_at</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm_at</span> <span class="id">sm_arg</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">INITBSIM</span>: <span class="kwd">forall</span> <span class="id">sm_arg</span> <span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">st_init_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">ModSemPair.sim_skenv</span> <span class="id">msp</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMARGS</span>: <span class="id">SimMem.sim_args</span> <span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INITTGT</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.initial_frame</span>) <span class="id">args_tgt</span> <span class="id">st_init_tgt</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SAFESRC</span>: <span class="id">exists</span> <span class="id">_st_init_src</span>, <span class="id">ms_src</span>.(<span class="id">ModSem.initial_frame</span>) <span class="id">args_src</span> <span class="id">_st_init_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">st_init_src</span> <span class="id">sm_init</span> <span class="id">idx_init</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INITSRC</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.initial_frame</span>) <span class="id">args_src</span> <span class="id">st_init_src</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMem.le</span> <span class="id">sm_arg</span> <span class="id">sm_init</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx_init</span> <span class="id">st_init_src</span> <span class="id">st_init_tgt</span> <span class="id">sm_init</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">INITPROGRESS</span>: <span class="kwd">forall</span> <span class="id">sm_arg</span> <span class="id">args_src</span> <span class="id">args_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">ModSemPair.sim_skenv</span> <span class="id">msp</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMARGS</span>: <span class="id">SimMem.sim_args</span> <span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SAFESRC</span>: <span class="id">exists</span> <span class="id">st_init_src</span>, <span class="id">ms_src</span>.(<span class="id">ModSem.initial_frame</span>) <span class="id">args_src</span> <span class="id">st_init_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">st_init_tgt</span>, (&lt;&lt;<span class="id">INITTGT</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.initial_frame</span>) <span class="id">args_tgt</span> <span class="id">st_init_tgt</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">ATMWF</span>: <span class="kwd">forall</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALLSRC</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.is_call</span>) <span class="id">st_src0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm0</span>&gt;&gt;.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">ATFSIM</span>: <span class="kwd">forall</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span> <span class="id">args_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">ModSemPair.sim_skenv</span> <span class="id">msp</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALLSRC</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.at_external</span>) <span class="id">st_src0</span> <span class="id">args_src</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOUND</span>: <span class="id">exists</span> <span class="id">su0</span> <span class="id">m_init</span>, (<span class="id">sound_state</span>) <span class="id">su0</span> <span class="id">m_init</span> <span class="id">st_src0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">args_tgt</span> <span class="id">sm_arg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">CALLTGT</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.at_external</span>) <span class="id">st_tgt0</span> <span class="id">args_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SIMARGS</span>: <span class="id">SimMem.sim_args</span> <span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">sm_arg</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMem.le</span> <span class="id">sm0</span> <span class="id">sm_arg</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm_arg</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCHAT</span>: <span class="id">match_states_at</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span> <span class="id">sm_arg</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">AFTERFSIM</span>: <span class="kwd">forall</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span> <span class="id">sm_arg</span> <span class="id">sm_ret</span> <span class="id">retv_src</span> <span class="id">retv_tgt</span> <span class="id">st_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">ModSemPair.sim_skenv</span> <span class="id">msp</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id">SimMem.le</span> <span class="id">sm0</span> <span class="id">sm_arg</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id">SimMem.le</span> (<span class="id">SimMemLift.lift</span> <span class="id">sm_arg</span>) <span class="id">sm_ret</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm_ret</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMRET</span>: <span class="id">SimMem.sim_retv</span> <span class="id">retv_src</span> <span class="id">retv_tgt</span> <span class="id">sm_ret</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AFTERSRC</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.after_external</span>) <span class="id">st_src0</span> <span class="id">retv_src</span> <span class="id">st_src1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOUND</span>: <span class="id">exists</span> <span class="id">su0</span> <span class="id">m_init</span>, (<span class="id">sound_state</span>) <span class="id">su0</span> <span class="id">m_init</span> <span class="id">st_src0</span>)<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HISTORY</span>: <span class="id">match_states_at_helper</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span> <span class="id">sm_arg</span>)<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWFAFTR</span>: <span class="id">SimMem.wf</span> (<span class="id">SimMemLift.unlift</span> <span class="id">sm_arg</span> <span class="id">sm_ret</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLEAFTR</span>: <span class="id">SimMem.le</span> <span class="id">sm_arg</span> (<span class="id">SimMemLift.unlift</span> <span class="id">sm_arg</span> <span class="id">sm_ret</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm_after</span> <span class="id">idx1</span> <span class="id">st_tgt1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">AFTERTGT</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.after_external</span>) <span class="id">st_tgt0</span> <span class="id">retv_tgt</span> <span class="id">st_tgt1</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx1</span> <span class="id">st_src1</span> <span class="id">st_tgt1</span> <span class="id">sm_after</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMem.le</span> (<span class="id">SimMemLift.unlift</span> <span class="id">sm_arg</span> <span class="id">sm_ret</span>) <span class="id">sm_after</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">FINALFSIM</span>: <span class="kwd">forall</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span> <span class="id">retv_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">ModSemPair.sim_skenv</span> <span class="id">msp</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINALSRC</span>: <span class="id">ms_src</span>.(<span class="id">ModSem.final_frame</span>) <span class="id">st_src0</span> <span class="id">retv_src</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm_ret</span> <span class="id">retv_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">FINALTGT</span>: <span class="id">ms_tgt</span>.(<span class="id">ModSem.final_frame</span>) <span class="id">st_tgt0</span> <span class="id">retv_tgt</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SIMRET</span>: <span class="id">SimMem.sim_retv</span> <span class="id">retv_src</span> <span class="id">retv_tgt</span> <span class="id">sm_ret</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMem.le</span> <span class="id">sm0</span> <span class="id">sm_ret</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MWF</span>: <span class="id">SimMem.wf</span> <span class="id">sm_ret</span>&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">STEPFSIM</span> := <span class="kwd">forall</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">ModSemPair.sim_skenv</span> <span class="id">msp</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTCALL</span>: ~ <span class="id">ModSem.is_call</span> <span class="id">ms_src</span> <span class="id">st_src0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTRET</span>: ~ <span class="id">ModSem.is_return</span> <span class="id">ms_src</span> <span class="id">st_src0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOUND</span>: <span class="id">exists</span> <span class="id">su0</span> <span class="id">m_init</span>, (<span class="id">sound_state</span>) <span class="id">su0</span> <span class="id">m_init</span> <span class="id">st_src0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">RECEP</span>: <span class="id">receptive_at</span> <span class="id">ms_src</span> <span class="id">st_src0</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">STEPFSIM</span>: <span class="kwd">forall</span> <span class="id">tr</span> <span class="id">st_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEPSRC</span>: <span class="id">Step</span> <span class="id">ms_src</span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">idx1</span> <span class="id">st_tgt1</span> <span class="id">sm1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PLUS</span>: <span class="id">DPlus</span> <span class="id">ms_tgt</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span>&gt;&gt; \/ &lt;&lt;<span class="id">STAR</span>: <span class="id">DStar</span> <span class="id">ms_tgt</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span> /\ <span class="id">order</span> <span class="id">idx1</span> <span class="id">idx0</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMem.le</span> <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx1</span> <span class="id">st_src1</span> <span class="id">st_tgt1</span> <span class="id">sm1</span>&gt;&gt;)&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">STEPBSIM</span> := <span class="kwd">forall</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SIMSKENV</span>: <span class="id">ModSemPair.sim_skenv</span> <span class="id">msp</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTCALL</span>: ~ <span class="id">ModSem.is_call</span> <span class="id">ms_src</span> <span class="id">st_src0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTRET</span>: ~ <span class="id">ModSem.is_return</span> <span class="id">ms_src</span> <span class="id">st_src0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx0</span> <span class="id">st_src0</span> <span class="id">st_tgt0</span> <span class="id">sm0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOUND</span>: <span class="id">exists</span> <span class="id">su0</span> <span class="id">m_init</span>, (<span class="id">sound_state</span>) <span class="id">su0</span> <span class="id">m_init</span> <span class="id">st_src0</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PROGRESS</span>: <span class="id">safe_modsem</span> <span class="id">ms_src</span> <span class="id">st_src0</span> -&gt; <span class="id">ModSem.is_step</span> <span class="id">ms_tgt</span> <span class="id">st_tgt0</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">STEPBSIM</span>: <span class="kwd">forall</span> <span class="id">tr</span> <span class="id">st_tgt1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEPTGT</span>: <span class="id">Step</span> <span class="id">ms_tgt</span> <span class="id">st_tgt0</span> <span class="id">tr</span> <span class="id">st_tgt1</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">idx1</span> <span class="id">st_src1</span> <span class="id">sm1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id">ms_src</span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span>&gt;&gt; \/ &lt;&lt;<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">ms_src</span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span> /\ <span class="id">order</span> <span class="id">idx1</span> <span class="id">idx0</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">MLE</span>: <span class="id">SimMem.le</span> <span class="id">sm0</span> <span class="id">sm1</span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">MATCH</span>: <span class="id">match_states</span> <span class="id">idx1</span> <span class="id">st_src1</span> <span class="id">st_tgt1</span> <span class="id">sm1</span>&gt;&gt;)&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Remark</span> <span class="id">safe_modsem_is_smaller</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st_src0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTCALL</span>: ~ <span class="id">ModSem.is_call</span> <span class="id">ms_src</span> <span class="id">st_src0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NOTRET</span>: ~ <span class="id">ModSem.is_return</span> <span class="id">ms_src</span> <span class="id">st_src0</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SAFE</span>: <span class="id">safe_modsem</span> <span class="id">ms_src</span> <span class="id">st_src0</span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ModSem.is_step</span> <span class="id">ms_src</span> <span class="id">st_src0</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6569')">Proof.</div>
+<div class="proofscript" id="proof6569">
+ <span class="id">rr</span>. <span class="id">specialize</span> (<span class="id">SAFE</span> <span class="id">_</span> (<span class="id">star_refl</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>)). <span class="id">des</span>; <span class="id">ss</span>. <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">STEPSIM</span>: <span class="id">STEPFSIM</span> \/ <span class="id">STEPBSIM</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">BAR</span>: <span class="id">bar_True</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">match_states_sim</span>: &lt;&lt;<span class="id">SIM</span>: <span class="id">msp</span>.(<span class="id">ModSemPair.sim</span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6570')">Proof.</div>
+<div class="proofscript" id="proof6570">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">MatchSimModSemExcl.match_states_sim</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">has_footprint</span> := <span class="id">top3</span>) (<span class="id">mle_excl</span> := <span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">SimMem.le</span>) (<span class="id">sidx</span> := <span class="id">unit</span>); <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">PRSV</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">r</span>. <span class="id">etrans</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">ATFSIM</span>; <span class="tactic">eauto</span>. { <span class="tactic">eapply</span> <span class="id">SOUND</span>. <span class="id">ss</span>. } <span class="id">i</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">i</span>. <span class="id">exploit</span> <span class="id">AFTERFSIM</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">SOUND</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">HISTORY</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">STEPSIM</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">left</span>. <span class="tactic">subst</span> <span class="id">STEPFSIM</span>. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. { <span class="tactic">eapply</span> <span class="id">SOUND</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">right</span>. <span class="tactic">subst</span> <span class="id">STEPBSIM</span>. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. { <span class="tactic">eapply</span> <span class="id">SOUND</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">MATCHSIMFORWARD</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

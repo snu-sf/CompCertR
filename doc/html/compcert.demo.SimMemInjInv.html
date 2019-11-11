@@ -1,0 +1,180 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SimMemInjInv</title>
+<meta name="description" content="Documentation of Coq module SimMemInjInv" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SimMemInjInv</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="compcert.common.Linking.html">Linking</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FunctionalExtensionality.html">Coq.Logic.FunctionalExtensionality</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.ClassicalChoice.html">Coq.Logic.ClassicalChoice</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.ChoiceFacts.html">Coq.Logic.ChoiceFacts</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.SimMemInj.html">SimMemInj</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="memblk_invariant">memblk_invariant</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a name="memblk_invarant_mk">memblk_invarant_mk</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="load_values">load_values</a></span>: (<span class="id"><a href="compcert.common.AST.html#memory_chunk">memory_chunk</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="permissions">permissions</a></span>: <span class="id"><a href="compcert.common.AST.html#memory_chunk">memory_chunk</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id"><a href="compcert.common.Memtype.html#permission">permission</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="MEMINJINV">MEMINJINV</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="MEMINJINV.P_src">P_src</a></span> : <span class="id"><a href="compcert.demo.SimMemInjInv.html#memblk_invariant">memblk_invariant</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="MEMINJINV.P_tgt">P_tgt</a></span> : <span class="id"><a href="compcert.demo.SimMemInjInv.html#memblk_invariant">memblk_invariant</a></span>.<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id">t</span>' :=<br/>
+&nbsp;&nbsp;<span class="id"><a name="mk">mk</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id"><a name="minj">minj</a></span> :&gt; <span class="id">SimMemInj.t</span>';<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="mem_inv_src">mem_inv_src</a></span>: <span class="id"><a href="compcert.common.Values.html#block">block</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="mem_inv_tgt">mem_inv_tgt</a></span>: <span class="id"><a href="compcert.common.Values.html#block">block</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="inv_sat_blk">inv_sat_blk</a></span> (<span class="id">P</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#memblk_invariant">memblk_invariant</a></span>) <span class="id">blk</span> (<span class="id">m</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="inv_sat_blk_intro">inv_sat_blk_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PERMISSIONS</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">chunk</span> <span class="id">ofs</span> <span class="id">p</span> (<span class="id">INVAR</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#P">P</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#permissions">permissions</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#chunk">chunk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#ofs">ofs</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#p">p</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#m">m</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#chunk">chunk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#ofs">ofs</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#p">p</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADVALS</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#P">P</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#load_values">load_values</a></span>) (<span class="kwd">fun</span> <span class="id">chunk</span> =&gt; <span class="id"><a href="compcert.common.Memory.html#Mem.load">Mem.load</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#chunk">chunk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#m">m</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span>))<br/>
+.<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="inv_sat_mem">inv_sat_mem</a></span> (<span class="id">P</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#memblk_invariant">memblk_invariant</a></span>) (<span class="id">invar</span>: <span class="id"><a href="compcert.common.Values.html#block">block</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">m</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">blk</span> (<span class="id">INVAR</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#invar">invar</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span>), <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_sat_blk">inv_sat_blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#P">P</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#m">m</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="kwd">wf</span>' (<span class="id">sm0</span>: <span class="id">t</span>'): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="wf_intro">wf_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="id">SimMemInj.wf</span>' <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SATSRC</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_sat_mem">inv_sat_mem</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#MEMINJINV.P_src">P_src</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_src">mem_inv_src</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#src">src</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SATTGT</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_sat_mem">inv_sat_mem</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#MEMINJINV.P_tgt">P_tgt</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_tgt">mem_inv_tgt</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#tgt">tgt</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INVRANGESRC</span>: <span class="kwd">forall</span> <span class="id">blk</span> <span class="id">ofs</span> (<span class="id">INV</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_src">mem_inv_src</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Events.html#loc_unmapped">loc_unmapped</a></span> (<span class="id"><a href="compcert.common.SimMemInj.html#inj">inj</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#ofs">ofs</a></span> /\ ~ <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#src_external">src_external</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#ofs">ofs</a></span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#src_parent_nb">src_parent_nb</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INVRANGETGT</span>: <span class="kwd">forall</span> <span class="id">blk</span> <span class="id">ofs</span> (<span class="id">INV</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_tgt">mem_inv_tgt</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Events.html#loc_out_of_reach">loc_out_of_reach</a></span> (<span class="id"><a href="compcert.common.SimMemInj.html#inj">inj</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>) (<span class="id"><a href="compcert.common.SimMemInj.html#src">src</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#ofs">ofs</a></span> /\ ~ <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#tgt_external">tgt_external</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#ofs">ofs</a></span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#tgt_parent_nb">tgt_parent_nb</a></span>))<br/>
+.<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="private_unchanged_on_invariant">private_unchanged_on_invariant</a></span> <span class="id">P</span> <span class="id">invar</span> <span class="id">m0</span> <span class="id">m1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INVAR</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_sat_mem">inv_sat_mem</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#P">P</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#invar">invar</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#m0">m0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INVRANGE</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#invar">invar</a></span> &lt;1= <span class="id"><a href="compcert.common.Memory.html#Mem.valid_block">Mem.valid_block</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#m0">m0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">UNCH</span>: <span class="id"><a href="compcert.common.Memory.html#Mem.unchanged_on">Mem.unchanged_on</a></span> (<span class="kwd">fun</span> <span class="id">blk</span> <span class="id">_</span> =&gt; <span class="id"><a href="compcert.demo.SimMemInjInv.html#invar">invar</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#blk">blk</a></span>) <span class="id"><a href="compcert.demo.SimMemInjInv.html#m0">m0</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#m1">m1</a></span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_sat_mem">inv_sat_mem</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#P">P</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#invar">invar</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#m1">m1</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2260')">Proof.</div>
+<div class="proofscript" id="proof2260">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">exploit</span> <span class="id">INVAR</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> <span class="id">SAT</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SAT</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">PERMISSIONS</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Memory.html#Mem.valid_access">Mem.valid_access</a></span> <span class="kwd">in</span> *. <span class="id">des</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.perm_unchanged_on">Mem.perm_unchanged_on</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">rpapply</span> <span class="id">LOADVALS</span>. <span class="tactic">extensionality</span> <span class="id">chunk</span>. <span class="tactic">extensionality</span> <span class="id">ofs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.load_unchanged_on_1">Mem.load_unchanged_on_1</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id">le</span>' (<span class="id">mrel0</span> <span class="id">mrel1</span>: <span class="id">t</span>'): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="le_intro">le_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id">SimMemInj.le</span>' <span class="id"><a href="compcert.demo.SimMemInjInv.html#mrel0">mrel0</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#mrel1">mrel1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MINVEQSRC</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#mrel0">mrel0</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_src">mem_inv_src</a></span>) = <span class="id"><a href="compcert.demo.SimMemInjInv.html#mrel1">mrel1</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_src">mem_inv_src</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MINVEQTGT</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#mrel0">mrel0</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_tgt">mem_inv_tgt</a></span>) = <span class="id"><a href="compcert.demo.SimMemInjInv.html#mrel1">mrel1</a></span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_tgt">mem_inv_tgt</a></span>))<br/>
+.<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">le</span>'<span class="id">_PreOrder</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">RelationClasses.PreOrder</a></span> <span class="id">le</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2261')">Next Obligation.</div>
+<div class="proofscript" id="proof2261">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof2262')">Next Obligation.</div>
+<div class="proofscript" id="proof2262">
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">etransitivity</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">etransitivity</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">etransitivity</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="le_inj_wf_wf">le_inj_wf_wf</a></span> <span class="id">minj_old</span> <span class="id">minj_new</span> <span class="id">inv_src</span> <span class="id">inv_tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id">SimMemInj.le</span>' <span class="id"><a href="compcert.demo.SimMemInjInv.html#minj_old">minj_old</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#minj_new">minj_new</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="kwd">wf</span>' (<span class="id"><a href="compcert.demo.SimMemInjInv.html#mk">mk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#minj_old">minj_old</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_src">inv_src</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_tgt">inv_tgt</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id">SimMemInj.wf</span>' <span class="id"><a href="compcert.demo.SimMemInjInv.html#minj_new">minj_new</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SATSRC</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_sat_mem">inv_sat_mem</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#MEMINJINV.P_src">P_src</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_src">inv_src</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#minj_new">minj_new</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#src">src</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SATTGT</span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_sat_mem">inv_sat_mem</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#MEMINJINV.P_tgt">P_tgt</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_tgt">inv_tgt</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#minj_new">minj_new</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#tgt">tgt</a></span>))<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">wf</span>' (<span class="id"><a href="compcert.demo.SimMemInjInv.html#mk">mk</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#minj_new">minj_new</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_src">inv_src</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_tgt">inv_tgt</a></span>)<br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2263')">Proof.</div>
+<div class="proofscript" id="proof2263">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">WF</span>. <span class="id">inv</span> <span class="id">WF0</span>. <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">MLE</span>. <span class="id">exploit</span> <span class="id">INVRANGESRC</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">SRCPARENTEQ</span>. <span class="tactic">rewrite</span> <span class="id">SRCPARENTEQNB</span> <span class="kwd">in</span> *. <span class="id">i</span>. <span class="id">des</span>. <span class="id">splits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.SimMemInj.html#inj">inj</a></span> <span class="id">minj_new</span> <span class="id">blk</span>) <span class="id">eqn</span>:<span class="id">BLK</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>. <span class="id">inv</span> <span class="id">FROZEN</span>. <span class="id">exploit</span> <span class="id">NEW_IMPLIES_OUTSIDE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="id">exfalso</span>. <span class="tactic">eapply</span> (<span class="id"><a href="compcert.lib.Coqlib.html#Plt_strict">Plt_strict</a></span> <span class="id">blk</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Coqlib.html#Plt_Ple_trans">Plt_Ple_trans</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">MLE</span>. <span class="id">exploit</span> <span class="id">INVRANGETGT</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">TGTPARENTEQ</span>. <span class="tactic">rewrite</span> <span class="id">TGTPARENTEQNB</span> <span class="kwd">in</span> *. <span class="id">i</span>. <span class="id">des</span>. <span class="id">splits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.SimMemInj.html#inj">inj</a></span> <span class="id">minj_old</span> <span class="id">b0</span>) <span class="id">eqn</span>:<span class="id">BLK</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">destruct</span> <span class="id">p</span>. <span class="id">dup</span> <span class="id">BLK</span>. <span class="tactic">eapply</span> <span class="id">INCR</span> <span class="kwd">in</span> <span class="id">BLK</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">MAXSRC</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Memory.html#Mem.valid_block_inject_1">Mem.valid_block_inject_1</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">FROZEN</span>. <span class="id">exploit</span> <span class="id">NEW_IMPLIES_OUTSIDE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">des</span>. <span class="tactic">eapply</span> (<span class="id"><a href="compcert.lib.Coqlib.html#Plt_strict">Plt_strict</a></span> <span class="id">blk</span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Coqlib.html#Plt_Ple_trans">Plt_Ple_trans</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#MEMINJINV">MEMINJINV</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="top_inv">top_inv</a></span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#memblk_invariant">memblk_invariant</a></span> := <span class="id"><a href="compcert.demo.SimMemInjInv.html#memblk_invarant_mk">memblk_invarant_mk</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span>) (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="top_inv_satisfied_always">top_inv_satisfied_always</a></span> <span class="id">m</span> <span class="id">minv</span><br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.demo.SimMemInjInv.html#inv_sat_mem">inv_sat_mem</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#top_inv">top_inv</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#minv">minv</a></span> <span class="id"><a href="compcert.demo.SimMemInjInv.html#m">m</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2264')">Proof.</div>
+<div class="proofscript" id="proof2264">
+ <span class="id">econs</span>; <span class="id">ss</span>. Qed.</div>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span> <span class="id">top_inv_satisfied_always</span>.<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="mcompat">mcompat</a></span> (<span class="id">sm0</span>: <span class="id">t</span>') (<span class="id">m_src0</span> <span class="id">m_tgt0</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>) (<span class="id">F</span>: <span class="id"><a href="compcert.common.Values.html#meminj">meminj</a></span>): <span class="kwd">Prop</span> := <span class="id"><a name="mkmcompat">mkmcompat</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="mcompat_src">mcompat_src</a></span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#src">src</a></span>) = <span class="id"><a href="compcert.demo.SimMemInjInv.html#m_src0">m_src0</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="mcompat_tgt">mcompat_tgt</a></span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#tgt">tgt</a></span>) = <span class="id"><a href="compcert.demo.SimMemInjInv.html#m_tgt0">m_tgt0</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="mcompat_inj">mcompat_inj</a></span>: <span class="id"><a href="compcert.demo.SimMemInjInv.html#sm0">sm0</a></span>.(<span class="id"><a href="compcert.common.SimMemInj.html#inj">inj</a></span>) = <span class="id"><a href="compcert.demo.SimMemInjInv.html#F">F</a></span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">compat_tac</span> := <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="tactic">congruence</span>.<br/>
+<span class="kwd">Ltac</span> <span class="id">spl</span> := <span class="id">esplits</span>; [|<span class="tactic">reflexivity</span>].<br/>
+<span class="kwd">Ltac</span> <span class="id">spl_approx</span> <span class="id">sm</span> :=<br/>
+&nbsp;&nbsp;<span class="id">eexists</span> (<span class="id"><a href="compcert.demo.SimMemInjInv.html#mk">mk</a></span> (<span class="id"><a href="compcert.common.SimMemInj.html#mk">SimMemInj.mk</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">sm</span>.(<span class="id"><a href="compcert.common.SimMemInj.html#src_external">src_external</a></span>) <span class="id">sm</span>.(<span class="id"><a href="compcert.common.SimMemInj.html#tgt_external">tgt_external</a></span>) <span class="id">sm</span>.(<span class="id"><a href="compcert.common.SimMemInj.html#src_parent_nb">src_parent_nb</a></span>) <span class="id">sm</span>.(<span class="id"><a href="compcert.common.SimMemInj.html#tgt_parent_nb">tgt_parent_nb</a></span>)) <span class="id">sm</span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_src">mem_inv_src</a></span>) <span class="id">sm</span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_tgt">mem_inv_tgt</a></span>)); <span class="id">splits</span>; <span class="tactic">eauto</span>.<br/>
+<span class="kwd">Ltac</span> <span class="id">spl_approx2</span> <span class="id">sm</span> :=<br/>
+&nbsp;&nbsp;<span class="id">eexists</span> (<span class="id"><a href="compcert.demo.SimMemInjInv.html#mk">mk</a></span> <span class="id">_</span> <span class="id">sm</span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_src">mem_inv_src</a></span>) <span class="id">sm</span>.(<span class="id"><a href="compcert.demo.SimMemInjInv.html#mem_inv_tgt">mem_inv_tgt</a></span>)); <span class="id">splits</span>; <span class="tactic">eauto</span>.<br/>
+<span class="kwd">Ltac</span> <span class="id">spl_exact</span> <span class="id">sm</span> :=<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">sm</span>; <span class="id">splits</span>; [|<span class="tactic">try</span> <span class="id">etransitivity</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>; <span class="tactic">eauto</span>].<br/>
+<span class="kwd">Ltac</span> <span class="id">spl_exact2</span> <span class="id">sm</span> :=<br/>
+&nbsp;&nbsp;<span class="id">eexists</span> (<span class="id"><a href="compcert.demo.SimMemInjInv.html#mk">mk</a></span> <span class="id">sm</span> <span class="id">_</span> <span class="id">_</span>); <span class="id">splits</span>; [|<span class="tactic">try</span> <span class="id">etransitivity</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>; <span class="tactic">eauto</span>].<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>
