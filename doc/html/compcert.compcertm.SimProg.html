@@ -13,24 +13,24 @@
 <body onload="hideAll('proofscript')">
 <h1 class="title">Module SimProg</h1>
 <div class="coq">
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSem</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SimSymb</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Integers</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ASTC</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Maps</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LinkingC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Smallstep.html">Smallstep</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SimSymb.html">SimSymb</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ASTC.html">ASTC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.LinkingC.html">LinkingC</a></span>.<br/>
 <br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span> <span class="id">Sem</span> <span class="id">Mod</span> <span class="id">ModSem</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">SimMem</span> <span class="id">SimModSem</span> <span class="id">SimMod</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Sound</span> <span class="id">SemProps</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span> <span class="id"><a href="compcert.compcertm.Sem.html">Sem</a></span> <span class="id"><a href="compcert.compcertm.Mod.html">Mod</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SimMem.html">SimMem</a></span> <span class="id"><a href="compcert.compcertm.SimModSem.html">SimModSem</a></span> <span class="id"><a href="compcert.compcertm.SimMod.html">SimMod</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Sound.html">Sound</a></span> <span class="id"><a href="compcert.compcertm.SemProps.html">SemProps</a></span>.<br/>
 <br/>
 <span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
 <br/>
@@ -38,75 +38,75 @@
 <br/>
 <br/>
 <br/>
-<span class="kwd">Module</span> <span class="id">ProgPair</span>.<br/>
-<span class="kwd">Section</span> <span class="id">PROGPAIR</span>.<br/>
-<span class="kwd">Context</span> `{<span class="id">SM</span>: <span class="id">SimMem.class</span>} {<span class="id">SS</span>: <span class="id">SimSymb.class</span> <span class="id">SM</span>} {<span class="id">SU</span>: <span class="id">Sound.class</span>}.<br/>
+<span class="kwd">Module</span> <span class="id"><a name="ProgPair">ProgPair</a></span>.<br/>
+<span class="kwd">Section</span> <span class="id"><a name="ProgPair.PROGPAIR">PROGPAIR</a></span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">SM</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.class">SimMem.class</a></span>} {<span class="id">SS</span>: <span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.class">SimSymb.class</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#SM">SM</a></span>} {<span class="id">SU</span>: <span class="id"><a href="compcert.compcertm.Sound.html#Sound.class">Sound.class</a></span>}.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">t</span> := <span class="id">list</span> <span class="id">ModPair.t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ProgPair.t">t</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.compcertm.SimMod.html#ModPair.t">ModPair.t</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">sim</span> (<span class="id">pp</span>: <span class="id">t</span>) := <span class="id">List.Forall</span> <span class="id">ModPair.sim</span> <span class="id">pp</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ProgPair.sim">sim</a></span> (<span class="id">pp</span>: <span class="id"><a href="compcert.compcertm.SimProg.html#ProgPair.t">t</a></span>) := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">List.Forall</a></span> <span class="id"><a href="compcert.compcertm.SimMod.html#ModPair.sim">ModPair.sim</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#pp">pp</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">src</span> (<span class="id">pp</span>: <span class="id">t</span>): <span class="id">program</span> := <span class="id">List.map</span> <span class="id">ModPair.src</span> <span class="id">pp</span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">tgt</span> (<span class="id">pp</span>: <span class="id">t</span>): <span class="id">program</span> := <span class="id">List.map</span> <span class="id">ModPair.tgt</span> <span class="id">pp</span>.<br/>
-<br/>
-<br/>
-<span class="kwd">End</span> <span class="id">PROGPAIR</span>.<br/>
-<span class="kwd">End</span> <span class="id">ProgPair</span>.<br/>
-<br/>
-<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">ProgPair.sim</span> <span class="id">ProgPair.src</span> <span class="id">ProgPair.tgt</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ProgPair.src">src</a></span> (<span class="id">pp</span>: <span class="id"><a href="compcert.compcertm.SimProg.html#ProgPair.t">t</a></span>): <span class="id"><a href="compcert.compcertm.Syntax.html#program">program</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> <span class="id"><a href="compcert.compcertm.SimMod.html#ModPair.src">ModPair.src</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#pp">pp</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ProgPair.tgt">tgt</a></span> (<span class="id">pp</span>: <span class="id"><a href="compcert.compcertm.SimProg.html#ProgPair.t">t</a></span>): <span class="id"><a href="compcert.compcertm.Syntax.html#program">program</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> <span class="id"><a href="compcert.compcertm.SimMod.html#ModPair.tgt">ModPair.tgt</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#pp">pp</a></span>.<br/>
 <br/>
 <br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SimProg.html#ProgPair.PROGPAIR">PROGPAIR</a></span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SimProg.html#ProgPair">ProgPair</a></span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.SimProg.html#sim">ProgPair.sim</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#src">ProgPair.src</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#tgt">ProgPair.tgt</a></span>.<br/>
 <br/>
 <br/>
 <br/>
 <br/>
-<span class="kwd">Section</span> <span class="id">SIM</span>.<br/>
-<span class="kwd">Context</span> `{<span class="id">SM</span>: <span class="id">SimMem.class</span>} {<span class="id">SS</span>: <span class="id">SimSymb.class</span> <span class="id">SM</span>} {<span class="id">SU</span>: <span class="id">Sound.class</span>}.<br/>
-<br/>
-&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">pp</span>: <span class="id">ProgPair.t</span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id">SIMPROG</span>: <span class="id">ProgPair.sim</span> <span class="id">pp</span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">p_src</span> := <span class="id">pp</span>.(<span class="id">ProgPair.src</span>).<br/>
-&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">p_tgt</span> := <span class="id">pp</span>.(<span class="id">ProgPair.tgt</span>).<br/>
 <br/>
 <br/>
+<span class="kwd">Section</span> <span class="id"><a name="SIM">SIM</a></span>.<br/>
+<span class="kwd">Context</span> `{<span class="id">SM</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.class">SimMem.class</a></span>} {<span class="id">SS</span>: <span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.class">SimSymb.class</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#SM">SM</a></span>} {<span class="id">SU</span>: <span class="id"><a href="compcert.compcertm.Sound.html#Sound.class">Sound.class</a></span>}.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id">sim_link_sk</span><br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="SIM.pp">pp</a></span>: <span class="id"><a href="compcert.compcertm.SimProg.html#t">ProgPair.t</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="SIM.SIMPROG">SIMPROG</a></span>: <span class="id"><a href="compcert.compcertm.SimProg.html#sim">ProgPair.sim</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.pp">pp</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id"><a name="SIM.p_src">p_src</a></span> := <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.pp">pp</a></span>.(<span class="id"><a href="compcert.compcertm.SimProg.html#src">ProgPair.src</a></span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id"><a name="SIM.p_tgt">p_tgt</a></span> := <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.pp">pp</a></span>.(<span class="id"><a href="compcert.compcertm.SimProg.html#tgt">ProgPair.tgt</a></span>).<br/>
+<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id"><a name="sim_link_sk">sim_link_sk</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sk_link_src</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADSRC</span>: <span class="id">p_src</span>.(<span class="id">link_sk</span>) = <span class="id">Some</span> <span class="id">sk_link_src</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="kwd">forall</span> <span class="id">md</span>, <span class="id">In</span> <span class="id">md</span> <span class="id">p_src</span> -&gt; &lt;&lt;<span class="id">WF</span>: <span class="id">Sk.wf</span> <span class="id">md</span>&gt;&gt;):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LOADSRC</span>: <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.p_src">p_src</a></span>.(<span class="id"><a href="compcert.compcertm.Sem.html#link_sk">link_sk</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#sk_link_src">sk_link_src</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="kwd">forall</span> <span class="id">md</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#md">md</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.p_src">p_src</a></span> -&gt; &lt;&lt;<span class="id">WF</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#Sk.wf">Sk.wf</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#md">md</a></span>&gt;&gt;):<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">ss_link</span> <span class="id">sk_link_tgt</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LOADTGT</span>: <span class="id">p_tgt</span>.(<span class="id">link_sk</span>) = <span class="id">Some</span> <span class="id">sk_link_tgt</span>&gt;&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">SIMSK</span>: <span class="id">SimSymb.wf</span> <span class="id">ss_link</span>&gt;&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">SKSRC</span>: <span class="id">ss_link</span>.(<span class="id">SimSymb.src</span>) = <span class="id">sk_link_src</span>&gt;&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">SKTGT</span>: <span class="id">ss_link</span>.(<span class="id">SimSymb.tgt</span>) = <span class="id">sk_link_tgt</span>&gt;&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">LE</span>: <span class="id">Forall</span> (<span class="kwd">fun</span> <span class="id">mp</span> =&gt; (<span class="id">SimSymb.le</span> <span class="id">mp</span>.(<span class="id">ModPair.ss</span>) <span class="id">ss_link</span>)) <span class="id">pp</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LOADTGT</span>: <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.p_tgt">p_tgt</a></span>.(<span class="id"><a href="compcert.compcertm.Sem.html#link_sk">link_sk</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#sk_link_tgt">sk_link_tgt</a></span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">SIMSK</span>: <span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.wf">SimSymb.wf</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#ss_link">ss_link</a></span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">SKSRC</span>: <span class="id"><a href="compcert.compcertm.SimProg.html#ss_link">ss_link</a></span>.(<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.src">SimSymb.src</a></span>) = <span class="id"><a href="compcert.compcertm.SimProg.html#sk_link_src">sk_link_src</a></span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">SKTGT</span>: <span class="id"><a href="compcert.compcertm.SimProg.html#ss_link">ss_link</a></span>.(<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.tgt">SimSymb.tgt</a></span>) = <span class="id"><a href="compcert.compcertm.SimProg.html#sk_link_tgt">sk_link_tgt</a></span>&gt;&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ &lt;&lt;<span class="id">LE</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="kwd">fun</span> <span class="id">mp</span> =&gt; (<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.le">SimSymb.le</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html#mp">mp</a></span>.(<span class="id"><a href="compcert.compcertm.SimMod.html#ModPair.ss">ModPair.ss</a></span>) <span class="id"><a href="compcert.compcertm.SimProg.html#ss_link">ss_link</a></span>)) <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.pp">pp</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7301')">Proof.</div>
 <div class="proofscript" id="proof7301">
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span>. <span class="id">subst_locals</span>. <span class="id">ginduction</span> <span class="id">pp</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">ProgPair.src</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id">link_sk</span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">t</span> = [])).<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">clarify</span>; <span class="id">ss</span>. <span class="id">cbn</span> <span class="kwd">in</span> *. <span class="id">clarify</span>. <span class="tactic">clear</span> <span class="id">IHt</span>. <span class="id">inv</span> <span class="id">SIMPROG</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">inv</span> <span class="id">H1</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span>. <span class="id">subst_locals</span>. <span class="id">ginduction</span> <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.pp">pp</a></span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.SimProg.html#src">ProgPair.src</a></span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.Sem.html#link_sk">link_sk</a></span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Prop.html#classic">classic</a></span> (<span class="id">t</span> = [])).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">clarify</span>; <span class="id">ss</span>. <span class="id">cbn</span> <span class="kwd">in</span> *. <span class="id">clarify</span>. <span class="tactic">clear</span> <span class="id">IHt</span>. <span class="id">inv</span> <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.SIMPROG">SIMPROG</a></span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">inv</span> <span class="id">H1</span>. <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="id">refl</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rename</span> <span class="id">H</span> <span class="id">into</span> <span class="id">NNIL</span>. <span class="tactic">eapply</span> <span class="id">link_list_cons_inv</span> <span class="kwd">in</span> <span class="id">LOADSRC</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rename</span> <span class="id">H</span> <span class="id">into</span> <span class="id">NNIL</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_cons_inv">link_list_cons_inv</a></span> <span class="kwd">in</span> <span class="id">LOADSRC</span>; <span class="id">cycle</span> 1.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">t</span>; <span class="id">ss</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">rename</span> <span class="id">sk_link_src</span> <span class="id">into</span> <span class="id">sk_link_link_src</span>. <span class="tactic">rename</span> <span class="id">restl</span> <span class="id">into</span> <span class="id">sk_link_src</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SIMPROG</span>. <span class="id">exploit</span> <span class="id">IHt</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">IH</span>; <span class="id">des</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H1</span>. <span class="id">ss</span>. <span class="id">exploit</span> (<span class="id">SimSymb.wf_link</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id"><a href="compcert.compcertm.SimProg.html#SIM.SIMPROG">SIMPROG</a></span>. <span class="id">exploit</span> <span class="id">IHt</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">IH</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H1</span>. <span class="id">ss</span>. <span class="id">exploit</span> (<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.wf_link">SimSymb.wf_link</a></span>).<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;3: { <span class="tactic">rewrite</span> <span class="id">SKSRC</span>. <span class="tactic">eapply</span> <span class="id">HD</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">SKSRC</span>. <span class="tactic">eapply</span> <span class="id">WF</span>; <span class="id">et</span>. }<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">link_list_preserves_wf_sk</span>; <span class="tactic">eauto</span>. }<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">SimSymb.wf_preserves_wf</span>; <span class="id">et</span>. <span class="tactic">rewrite</span> <span class="id">SKSRC</span>. <span class="tactic">eapply</span> <span class="id">WF</span>; <span class="id">et</span>. }<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">SimSymb.wf_preserves_wf</span>; <span class="id">et</span>. <span class="tactic">eapply</span> <span class="id">link_list_preserves_wf_sk</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SemProps.html#link_list_preserves_wf_sk">link_list_preserves_wf_sk</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.wf_preserves_wf">SimSymb.wf_preserves_wf</a></span>; <span class="id">et</span>. <span class="tactic">rewrite</span> <span class="id">SKSRC</span>. <span class="tactic">eapply</span> <span class="id">WF</span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.wf_preserves_wf">SimSymb.wf_preserves_wf</a></span>; <span class="id">et</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SemProps.html#link_list_preserves_wf_sk">link_list_preserves_wf_sk</a></span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">link_list_cons</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_cons">link_list_cons</a></span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">SKTGT</span> <span class="kwd">in</span> <span class="id">LINKTGT</span>. <span class="id">ss</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">Forall_forall</span> <span class="kwd">in</span> *. <span class="id">ii</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span> <span class="id">ltac</span>:(<span class="kwd">fun</span> <span class="id">H</span> =&gt; <span class="tactic">apply</span> <span class="id">link_list_linkorder</span> <span class="kwd">in</span> <span class="id">H</span>). <span class="id">des</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Forall_forall</span> <span class="kwd">in</span> *. <span class="id">etrans</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall_forall">Forall_forall</a></span> <span class="kwd">in</span> *. <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span> <span class="id">ltac</span>:(<span class="kwd">fun</span> <span class="id">H</span> =&gt; <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_linkorder">link_list_linkorder</a></span> <span class="kwd">in</span> <span class="id">H</span>). <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall_forall">Forall_forall</a></span> <span class="kwd">in</span> *. <span class="id">etrans</span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;Qed.</div>
 <br/>
-<span class="kwd">End</span> <span class="id">SIM</span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SimProg.html#SIM">SIM</a></span>.<br/>
 <br/>
 <br/>
 <br/>

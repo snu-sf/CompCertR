@@ -13,50 +13,50 @@
 <body onload="hideAll('proofscript')">
 <h1 class="title">Module CtypingC</h1>
 <div class="coq">
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">String</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span> <span class="id">Integers</span> <span class="id">Floats</span> <span class="id">Errors</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span> <span class="id">Linking</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span> <span class="id">Memory</span> <span class="id">Globalenvs</span> <span class="id">Events</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CtypesC</span> <span class="id">Cop</span> <span class="id">Csyntax</span> <span class="id">Csem</span> <span class="id">ValuesC</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="compcert.lib.Floats.html">Floats</a></span> <span class="id"><a href="compcert.common.Errors.html">Errors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span> <span class="id"><a href="compcert.common.Linking.html">Linking</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CtypesC.html">CtypesC</a></span> <span class="id"><a href="compcert.cfrontend.Cop.html">Cop</a></span> <span class="id"><a href="compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="compcert.cfrontend.Csem.html">Csem</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html">ValuesC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
 <div class="doc">newly added *</div>
-<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Ctyping</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.cfrontend.Ctyping.html">Ctyping</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span>.<br/>
 <br/>
 <span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">error_monad_scope</span>.<br/>
 <br/>
 <span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
 <br/>
-<span class="kwd">Inductive</span> <span class="id">typify_c</span> (<span class="id">v</span>: <span class="id">val</span>) (<span class="id">ty</span>: <span class="id">type</span>): <span class="id">val</span> -&gt; <span class="kwd">Prop</span> :=<br/>
-| <span class="id">typify_c_ok</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id">wt_retval</span> <span class="id">v</span> <span class="id">ty</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">v</span><br/>
-| <span class="id">typify_c_no</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NWT</span>: ~ <span class="id">wt_retval</span> <span class="id">v</span> <span class="id">ty</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">Vundef</span>.<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="typify_c">typify_c</a></span> (<span class="id">v</span>: <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) (<span class="id">ty</span>: <span class="id"><a href="compcert.cfrontend.Ctypes.html#type">type</a></span>): <span class="id"><a href="compcert.common.Values.html#val">val</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="typify_c_ok">typify_c_ok</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_retval">wt_retval</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span><br/>
+| <span class="id"><a name="typify_c_no">typify_c_no</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NWT</span>: ~ <span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_retval">wt_retval</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span>.<br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">typify_c_dtm</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typify_c_dtm">typify_c_dtm</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span> <span class="id">tv0</span> <span class="id">tv1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY0</span>: <span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">tv0</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY1</span>: <span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">tv1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tv0</span> = <span class="id">tv1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY0</span>: <span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#tv0">tv0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY1</span>: <span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#tv1">tv1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CtypingC.html#tv0">tv0</a></span> = <span class="id"><a href="compcert.compcertm.CtypingC.html#tv1">tv1</a></span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6998')">Proof.</div>
 <div class="proofscript" id="proof6998">
  <span class="id">inv</span> <span class="id">TY0</span>; <span class="id">inv</span> <span class="id">TY1</span>; <span class="id">des</span>; <span class="id">ss</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">typify_c_ex</span>: <span class="kwd">forall</span> <span class="id">v</span> <span class="id">ty</span>,<br/>
-&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tv</span>, &lt;&lt;<span class="id">TYP</span>: <span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">tv</span>&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typify_c_ex">typify_c_ex</a></span>: <span class="kwd">forall</span> <span class="id">v</span> <span class="id">ty</span>,<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tv</span>, &lt;&lt;<span class="id">TYP</span>: <span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#tv">tv</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6999')">Proof.</div>
 <div class="proofscript" id="proof6999">
-&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">destruct</span> (<span class="id">classic</span> (<span class="id">wt_retval</span> <span class="id">v</span> <span class="id">ty</span>)).<br/>
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Prop.html#classic">classic</a></span> (<span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_retval">wt_retval</a></span> <span class="id">v</span> <span class="id">ty</span>)).<br/>
 &nbsp;&nbsp;- <span class="id">esplits</span>; <span class="id">econs</span> 1; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;- <span class="id">esplits</span>; <span class="id">econs</span> 2; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">typify_c_spec</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typify_c_spec">typify_c_spec</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span> <span class="id">tv</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY</span>: <span class="id">typify_c</span> <span class="id">v</span> <span class="id">ty</span> <span class="id">tv</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WT</span>: <span class="id">wt_retval</span> <span class="id">tv</span> <span class="id">ty</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY</span>: <span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#tv">tv</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WT</span>: <span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_retval">wt_retval</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#tv">tv</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7000')">Proof.</div>
 <div class="proofscript" id="proof7000">
 &nbsp;&nbsp;<span class="id">inv</span> <span class="id">TY</span>; <span class="id">des</span>; <span class="id">ss</span>. <span class="tactic">split</span>.<br/>
@@ -64,17 +64,17 @@ Qed.</div>
 &nbsp;&nbsp;- <span class="tactic">reflexivity</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">wt_initial_frame</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">cp</span>: <span class="id">Csyntax.program</span>) <span class="id">fptr</span> <span class="id">vs_arg</span> <span class="id">m</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="wt_initial_frame">wt_initial_frame</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">cp</span>: <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>) <span class="id">fptr</span> <span class="id">vs_arg</span> <span class="id">m</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ge</span>: <span class="id">genv</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INT</span>: <span class="id">exists</span> <span class="id">fd</span>, <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">fptr</span> = <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ge</span>: <span class="id"><a href="compcert.cfrontend.Csem.html#genv">genv</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INT</span>: <span class="id">exists</span> <span class="id">fd</span>, <span class="id"><a href="compcert.common.Globalenvs.html#Genv.find_funct">Genv.find_funct</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ge">ge</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#fptr">fptr</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#Internal">Internal</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#fd">fd</a></span>))<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WTLOCALS</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fd</span>, <span class="id">Genv.find_funct</span> <span class="id">ge</span> <span class="id">fptr</span> = <span class="id">Some</span> (<span class="id">Internal</span> <span class="id">fd</span>) -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Forall</span> (<span class="kwd">fun</span> <span class="id">t</span> : <span class="id">type</span> =&gt; <span class="id">wt_type</span> <span class="id">ge</span> <span class="id">t</span>) (<span class="id">map</span> <span class="id">snd</span> (<span class="id">fn_params</span> <span class="id">fd</span> ++ <span class="id">fn_vars</span> <span class="id">fd</span>)))<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WTARGS</span>: <span class="id">Forall2</span> <span class="id">val_casted</span> <span class="id">vs_arg</span> (<span class="id">typelist_to_listtype</span> <span class="id">targs</span>))<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id">Forall</span> (<span class="kwd">fun</span> <span class="id">ty</span> : <span class="id">type</span> =&gt; <span class="id">ty</span> &lt;&gt; <span class="id">Tvoid</span>) (<span class="id">typelist_to_listtype</span> <span class="id">targs</span>)):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wt_state</span> <span class="id">cp</span> <span class="id">ge</span> (<span class="id">Csem.Callstate</span> <span class="id">fptr</span> (<span class="id">Tfunction</span> <span class="id">targs</span> <span class="id">tres</span> <span class="id">cconv</span>) <span class="id">vs_arg</span> <span class="id">Kstop</span> <span class="id">m</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">fd</span>, <span class="id"><a href="compcert.common.Globalenvs.html#Genv.find_funct">Genv.find_funct</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ge">ge</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#fptr">fptr</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#Internal">Internal</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#fd">fd</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="kwd">fun</span> <span class="id">t</span> : <span class="id"><a href="compcert.cfrontend.Ctypes.html#type">type</a></span> =&gt; <span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_type">wt_type</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ge">ge</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#t">t</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> (<span class="id"><a href="compcert.cfrontend.Csyntax.html#fn_params">fn_params</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#fd">fd</a></span> ++ <span class="id"><a href="compcert.cfrontend.Csyntax.html#fn_vars">fn_vars</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#fd">fd</a></span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WTARGS</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall2">Forall2</a></span> <span class="id"><a href="compcert.cfrontend.Cop.html#val_casted">val_casted</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#vs_arg">vs_arg</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist_to_listtype">typelist_to_listtype</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#targs">targs</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="kwd">fun</span> <span class="id">ty</span> : <span class="id"><a href="compcert.cfrontend.Ctypes.html#type">type</a></span> =&gt; <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> &lt;&gt; <span class="id"><a href="compcert.cfrontend.Ctypes.html#Tvoid">Tvoid</a></span>) (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist_to_listtype">typelist_to_listtype</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#targs">targs</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_state">wt_state</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#cp">cp</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ge">ge</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#Callstate">Csem.Callstate</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#fptr">fptr</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#Tfunction">Tfunction</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#targs">targs</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#tres">tres</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#cconv">cconv</a></span>) <span class="id"><a href="compcert.compcertm.CtypingC.html#vs_arg">vs_arg</a></span> <span class="id"><a href="compcert.cfrontend.Csem.html#Kstop">Kstop</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#m">m</a></span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7001')">Proof.</div>
 <div class="proofscript" id="proof7001">
 &nbsp;&nbsp;<span class="id">des</span>. <span class="id">econs</span>; <span class="id">et</span>; <span class="id">ss</span>.<br/>
@@ -82,32 +82,32 @@ Qed.</div>
 &nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">exfalso</span>. <span class="tactic">eapply</span> <span class="id">EXT</span>; <span class="id">et</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">wt_val_has_type</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="wt_val_has_type">wt_val_has_type</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id">wt_val</span> <span class="id">v</span> <span class="id">ty</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id">ty</span> &lt;&gt; <span class="id">Tvoid</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TY</span>: <span class="id">Val.has_type</span> <span class="id">v</span> <span class="id">ty</span>.(<span class="id">typ_of_type</span>)&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_val">wt_val</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> &lt;&gt; <span class="id"><a href="compcert.cfrontend.Ctypes.html#Tvoid">Tvoid</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TY</span>: <span class="id"><a href="compcert.common.Values.html#Val.has_type">Val.has_type</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span>.(<span class="id"><a href="compcert.cfrontend.Ctypes.html#typ_of_type">typ_of_type</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7002')">Proof.</div>
 <div class="proofscript" id="proof7002">
  <span class="id">inv</span> <span class="id">WT</span>; <span class="id">ss</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">wt_retval_has_type</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="wt_retval_has_type">wt_retval_has_type</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id">wt_retval</span> <span class="id">v</span> <span class="id">ty</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TY</span>: <span class="id">Val.has_type</span> <span class="id">v</span> <span class="id">ty</span>.(<span class="id">typ_of_type</span>)&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_retval">wt_retval</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TY</span>: <span class="id"><a href="compcert.common.Values.html#Val.has_type">Val.has_type</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span>.(<span class="id"><a href="compcert.cfrontend.Ctypes.html#typ_of_type">typ_of_type</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7003')">Proof.</div>
 <div class="proofscript" id="proof7003">
  <span class="id">inv</span> <span class="id">WT</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">WTV</span>; <span class="id">ss</span>. <span class="id">erewrite</span> <span class="id">NVOID</span>; <span class="id">ss</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">typify_inject</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typify_inject">typify_inject</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v_src</span> <span class="id">ty</span> <span class="id">tv_src</span> <span class="id">v_tgt</span> <span class="id">j</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id">typify_c</span> <span class="id">v_src</span> <span class="id">ty</span> <span class="id">tv_src</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">INJ</span>: <span class="id">Val.inject</span> <span class="id">j</span> <span class="id">tv_src</span> (<span class="id">typify</span> <span class="id">v_tgt</span> (<span class="id">typ_of_type</span> <span class="id">ty</span>))&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v_src">v_src</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#tv_src">tv_src</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject">Val.inject</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v_src">v_src</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v_tgt">v_tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">INJ</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject">Val.inject</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#tv_src">tv_src</a></span> (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#v_tgt">v_tgt</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typ_of_type">typ_of_type</a></span> <span class="id"><a href="compcert.compcertm.CtypingC.html#ty">ty</a></span>))&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7004')">Proof.</div>
 <div class="proofscript" id="proof7004">
 &nbsp;&nbsp;<span class="id">inv</span> <span class="id">TYP</span>.<br/>
-&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">wt_retval_has_type</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id">typify</span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.CtypingC.html#wt_retval_has_type">wt_retval_has_type</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;- <span class="id">ss</span>.<br/>
 Qed.</div>
 

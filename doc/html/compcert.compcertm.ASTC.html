@@ -14,139 +14,137 @@
 <h1 class="title">Module ASTC</h1>
 <div class="coq">
 <div class="doc">copied &amp;&amp; added "C" *</div>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">String</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span> <span class="id">Errors</span> <span class="id">Integers</span> <span class="id">Floats</span>.<br/>
-<span class="kwd">Require</span> <span class="id">Archi</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span> <span class="id"><a href="compcert.common.Errors.html">Errors</a></span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="compcert.lib.Floats.html">Floats</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.x86_64.Archi.html">Archi</a></span>.<br/>
 <br/>
 <div class="doc">newly added *</div>
-<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">AST</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Errors</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Errors.html">Errors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
 <br/>
 <span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
 <br/>
 <span class="id">Generalizable</span> <span class="kwd">Variables</span> <span class="id">F</span>.<br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">prog_defmap_spec</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">p</span>: <span class="id">program</span> <span class="id">F</span> <span class="id">V</span>) <span class="id">id</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">In</span> <span class="id">id</span> <span class="id">p</span>.(<span class="id">prog_defs_names</span>) &lt;-&gt; <span class="id">exists</span> <span class="id">g</span>, <span class="id">p</span>.(<span class="id">prog_defmap</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">g</span>.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="prog_defmap_spec">prog_defmap_spec</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">p</span>: <span class="id"><a href="compcert.common.AST.html#program">program</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#V">V</a></span>) <span class="id">id</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defs_names">prog_defs_names</a></span>) &lt;-&gt; <span class="id">exists</span> <span class="id">g</span>, <span class="id"><a href="compcert.compcertm.ASTC.html#p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defmap">prog_defmap</a></span>) ! <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#g">g</a></span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6031')">Proof.</div>
 <div class="proofscript" id="proof6031">
 &nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">ii</span>.<br/>
-&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">prog_defmap_dom</span>; <span class="tactic">eauto</span>.<br/>
-&nbsp;&nbsp;- <span class="id">des</span>. <span class="id">exploit</span> <span class="id">in_prog_defmap</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> - <span class="id">H0</span>. <span class="tactic">destruct</span> <span class="id">p</span>; <span class="id">ss</span>. <span class="id">u</span>. <span class="tactic">apply</span> <span class="id">in_map_iff</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.common.AST.html#prog_defmap_dom">prog_defmap_dom</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">des</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.common.AST.html#in_prog_defmap">in_prog_defmap</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> - <span class="id">H0</span>. <span class="tactic">destruct</span> <span class="id">p</span>; <span class="id">ss</span>. <span class="id">u</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_map_iff">in_map_iff</a></span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">prog_defmap_image</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">p</span> : <span class="id">AST.program</span> <span class="id">F</span> <span class="id">V</span>) <span class="id">id</span> <span class="id">g</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GET</span>: (<span class="id">prog_defmap</span> <span class="id">p</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">g</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">IN</span>: <span class="id">In</span> <span class="id">id</span> (<span class="id">prog_defs_names</span> <span class="id">p</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="prog_defmap_image">prog_defmap_image</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">p</span> : <span class="id"><a href="compcert.common.AST.html#program">AST.program</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#V">V</a></span>) <span class="id">id</span> <span class="id">g</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GET</span>: (<span class="id"><a href="compcert.common.AST.html#prog_defmap">prog_defmap</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#p">p</a></span>) ! <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#g">g</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">IN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> (<span class="id"><a href="compcert.common.AST.html#prog_defs_names">prog_defs_names</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#p">p</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6032')">Proof.</div>
 <div class="proofscript" id="proof6032">
- <span class="tactic">eapply</span> <span class="id">prog_defmap_spec</span>; <span class="id">et</span>. Qed.</div>
+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ASTC.html#prog_defmap_spec">prog_defmap_spec</a></span>; <span class="id">et</span>. Qed.</div>
 <br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">prog_defmap_update_snd</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> <span class="id">Y</span> (<span class="id">f</span>: <span class="id">X</span> -&gt; <span class="id">Y</span>) (<span class="id">defs</span>: <span class="id">list</span> (<span class="id">positive</span> * <span class="id">X</span>)) <span class="id">id</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PTree_Properties.of_list</span> (<span class="id">map</span> (<span class="id">update_snd</span> <span class="id">f</span>) <span class="id">defs</span>)) ! <span class="id">id</span> =<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">option_map</span> <span class="id">f</span> ((<span class="id">PTree_Properties.of_list</span> <span class="id">defs</span>) ! <span class="id">id</span>).<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="prog_defmap_update_snd">prog_defmap_update_snd</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> <span class="id">Y</span> (<span class="id">f</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#X">X</a></span> -&gt; <span class="id"><a href="compcert.compcertm.ASTC.html#Y">Y</a></span>) (<span class="id">defs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span> * <span class="id"><a href="compcert.compcertm.ASTC.html#X">X</a></span>)) <span class="id">id</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.lib.Maps.html#PTree_Properties.of_list">PTree_Properties.of_list</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> (<span class="id"><a href="compcert.compcertm.CoqlibC.html#update_snd">update_snd</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span>) <span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span>)) ! <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Coqlib.html#option_map">option_map</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span> ((<span class="id"><a href="compcert.lib.Maps.html#PTree_Properties.of_list">PTree_Properties.of_list</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span>) ! <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6033')">Proof.</div>
 <div class="proofscript" id="proof6033">
-&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">PTree_Properties.of_list</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- ! <span class="id">fold_left_rev_right</span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> &lt;- <span class="id">map_rev</span>.  <span class="tactic">unfold</span> <span class="id">PTree.elt</span>.<br/>
-&nbsp;&nbsp;<span class="id">abstr</span> (<span class="id">rev</span> <span class="id">defs</span>) <span class="id">xs</span>. <span class="id">clear_tac</span>.  <span class="tactic">generalize</span> <span class="id">id</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">xs</span>; <span class="id">ii</span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id">PTree.gempty</span> <span class="kwd">in</span> *; <span class="id">ss</span>.<br/>
-&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">option_map</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gempty</span> <span class="kwd">in</span> *; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Maps.html#PTree_Properties.of_list">PTree_Properties.of_list</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_left_rev_right">fold_left_rev_right</a></span> <span class="kwd">in</span> *. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map_rev">map_rev</a></span>.  <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Maps.html#PTree.elt">PTree.elt</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">abstr</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev">rev</a></span> <span class="id">defs</span>) <span class="id">xs</span>. <span class="id">clear_tac</span>.  <span class="tactic">generalize</span> <span class="id">id</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">xs</span>; <span class="id">ii</span>; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Maps.html#PTree.gempty">PTree.gempty</a></span> <span class="kwd">in</span> *; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Coqlib.html#option_map">option_map</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Maps.html#PTree.gempty">PTree.gempty</a></span> <span class="kwd">in</span> *; <span class="id">ss</span>. }<br/>
 &nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">PTree.gsspec</span>. <span class="id">des_ifs</span>.<br/>
-&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id">option_map</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gsspec</span>. <span class="id">des_ifs</span>. }<br/>
-&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">IHxs</span>. <span class="tactic">rewrite</span> <span class="id">PTree.gsspec</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Maps.html#PTree.gsspec">PTree.gsspec</a></span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Coqlib.html#option_map">option_map</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Maps.html#PTree.gsspec">PTree.gsspec</a></span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">IHxs</span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Maps.html#PTree.gsspec">PTree.gsspec</a></span>. <span class="id">des_ifs</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Class</span> <span class="id">HasExternal</span> (<span class="id">X</span>: <span class="kwd">Type</span>): <span class="kwd">Type</span> := {<br/>
-&nbsp;&nbsp;<span class="id">is_external</span>: <span class="id">X</span> -&gt; <span class="id">bool</span>;<br/>
+<span class="kwd">Class</span> <span class="id"><a name="HasExternal">HasExternal</a></span> (<span class="id">X</span>: <span class="kwd">Type</span>): <span class="kwd">Type</span> := {<br/>
+&nbsp;&nbsp;<span class="id"><a name="is_external">is_external</a></span>: <span class="id"><a href="compcert.compcertm.ASTC.html#X">X</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>;<br/>
 }.<br/>
 <br/>
 <br/>
 <br/>
 <br/>
-<span class="kwd">Section</span> <span class="id">FUNCTIONS</span>.<br/>
+<span class="kwd">Section</span> <span class="id"><a name="FUNCTIONS">FUNCTIONS</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">is_external_fd</span> <span class="id">F</span> (<span class="id">f</span>: <span class="id">fundef</span> <span class="id">F</span>): <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">f</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">External</span> <span class="id">ef</span> =&gt; <span class="id">is_external_ef</span> <span class="id">ef</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="is_external_fd">is_external_fd</a></span> <span class="id">F</span> (<span class="id">f</span>: <span class="id"><a href="compcert.common.AST.html#fundef">fundef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id">ef</span> =&gt; <span class="id"><a href="compcert.common.AST.html#is_external_ef">is_external_ef</a></span> <span class="id">ef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">transf_fundef_is_external</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">transf</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) <span class="id">f</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISEXT</span>: <span class="id">is_external_fd</span> (<span class="id">transf_fundef</span> <span class="id">transf</span> <span class="id">f</span>)):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ISEXT</span>: <span class="id">is_external_fd</span> <span class="id">f</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="transf_fundef_is_external">transf_fundef_is_external</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">transf</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.compcertm.ASTC.html#B">B</a></span>) <span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISEXT</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_fd">is_external_fd</a></span> (<span class="id"><a href="compcert.common.AST.html#transf_fundef">transf_fundef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#transf">transf</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ISEXT</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_fd">is_external_fd</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6034')">Proof.</div>
 <div class="proofscript" id="proof6034">
  <span class="tactic">compute</span> <span class="kwd">in</span> <span class="id">ISEXT</span>. <span class="id">des_ifs</span>. Qed.</div>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">transf_fundef_external</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">transf</span>: <span class="id">A</span> -&gt; <span class="id">B</span>) <span class="id">f</span> <span class="id">ef</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: (<span class="id">transf_fundef</span> <span class="id">transf</span> <span class="id">f</span>) = <span class="id">External</span> <span class="id">ef</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">f</span> = <span class="id">External</span> <span class="id">ef</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="transf_fundef_external">transf_fundef_external</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">transf</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.compcertm.ASTC.html#B">B</a></span>) <span class="id">f</span> <span class="id">ef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: (<span class="id"><a href="compcert.common.AST.html#transf_fundef">transf_fundef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#transf">transf</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span>) = <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#ef">ef</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span> = <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#ef">ef</a></span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6035')">Proof.</div>
 <div class="proofscript" id="proof6035">
  <span class="tactic">compute</span> <span class="kwd">in</span> <span class="id">EXT</span>. <span class="id">des_ifs</span>. Qed.</div>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">transf_partial_fundef_is_external_fd</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">transf_partial</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) <span class="id">f</span> <span class="id">tf</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: (<span class="id">transf_partial_fundef</span> <span class="id">transf_partial</span> <span class="id">f</span>) = <span class="id">OK</span> <span class="id">tf</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISEXT</span>: <span class="id">is_external_fd</span> <span class="id">tf</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ISEXT</span>: <span class="id">is_external_fd</span> <span class="id">f</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="transf_partial_fundef_is_external_fd">transf_partial_fundef_is_external_fd</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">transf_partial</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#B">B</a></span>) <span class="id">f</span> <span class="id">tf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: (<span class="id"><a href="compcert.common.AST.html#transf_partial_fundef">transf_partial_fundef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#transf_partial">transf_partial</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span>) = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#tf">tf</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ISEXT</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_fd">is_external_fd</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#tf">tf</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ISEXT</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_fd">is_external_fd</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6036')">Proof.</div>
 <div class="proofscript" id="proof6036">
  <span class="tactic">compute</span> <span class="kwd">in</span> <span class="id">ISEXT</span>. <span class="id">des_ifs</span>. <span class="tactic">compute</span> <span class="kwd">in</span> <span class="id">TRANSF</span>. <span class="id">des_ifs</span>. Qed.</div>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">transf_partial_fundef_external</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">transf_partial</span>: <span class="id">A</span> -&gt; <span class="id">res</span> <span class="id">B</span>) <span class="id">f</span> <span class="id">ef</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: (<span class="id">transf_partial_fundef</span> <span class="id">transf_partial</span> <span class="id">f</span>) = <span class="id">OK</span> (<span class="id">External</span> <span class="id">ef</span>)):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ISEXT</span>: <span class="id">f</span> = <span class="id">External</span> <span class="id">ef</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="transf_partial_fundef_external">transf_partial_fundef_external</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">A</span> <span class="id">B</span> (<span class="id">transf_partial</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#B">B</a></span>) <span class="id">f</span> <span class="id">ef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: (<span class="id"><a href="compcert.common.AST.html#transf_partial_fundef">transf_partial_fundef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#transf_partial">transf_partial</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span>) = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> (<span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#ef">ef</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ISEXT</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#f">f</a></span> = <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#ef">ef</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6037')">Proof.</div>
 <div class="proofscript" id="proof6037">
  <span class="tactic">compute</span> <span class="kwd">in</span> <span class="id">TRANSF</span>. <span class="id">des_ifs</span>. Qed.</div>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">is_dtm_ef</span> (<span class="id">ef</span>: <span class="id">external_function</span>): <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">ef</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">EF_external</span> <span class="id">_</span> <span class="id">_</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">EF_builtin</span> <span class="id">_</span> <span class="id">_</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">EF_runtime</span> <span class="id">_</span> <span class="id">_</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">EF_inline_asm</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">false</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="is_dtm_ef">is_dtm_ef</a></span> (<span class="id">ef</span>: <span class="id"><a href="compcert.common.AST.html#external_function">external_function</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ASTC.html#ef">ef</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#EF_external">EF_external</a></span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#EF_builtin">EF_builtin</a></span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#EF_runtime">EF_runtime</a></span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#EF_inline_asm">EF_inline_asm</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">is_dtm_fd</span> <span class="id">F</span> (<span class="id">fd</span>: <span class="id">AST.fundef</span> <span class="id">F</span>): <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fd</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">External</span> <span class="id">ef</span> =&gt; <span class="id">is_dtm_ef</span> <span class="id">ef</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="is_dtm_fd">is_dtm_fd</a></span> <span class="id">F</span> (<span class="id">fd</span>: <span class="id"><a href="compcert.common.AST.html#fundef">AST.fundef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ASTC.html#fd">fd</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id">ef</span> =&gt; <span class="id"><a href="compcert.compcertm.ASTC.html#is_dtm_ef">is_dtm_ef</a></span> <span class="id">ef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
 <br/>
-<span class="kwd">End</span> <span class="id">FUNCTIONS</span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ASTC.html#FUNCTIONS">FUNCTIONS</a></span>.<br/>
 <br/>
-<span class="kwd">Definition</span> <span class="id">is_external_gd</span> `{<span class="id">HasExternal</span> <span class="id">F</span>} <span class="id">V</span> (<span class="id">gd</span>: <span class="id">globdef</span> <span class="id">F</span> <span class="id">V</span>): <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">gd</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;| <span class="id">Gfun</span> <span class="id">fd</span> =&gt; <span class="id">is_external</span> <span class="id">fd</span><br/>
-&nbsp;&nbsp;| <span class="id">Gvar</span> <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="is_external_gd">is_external_gd</a></span> `{<span class="id"><a href="compcert.compcertm.ASTC.html#HasExternal">HasExternal</a></span> <span class="id">F</span>} <span class="id">V</span> (<span class="id">gd</span>: <span class="id"><a href="compcert.common.AST.html#globdef">globdef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#V">V</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ASTC.html#gd">gd</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#Gfun">Gfun</a></span> <span class="id">fd</span> =&gt; <span class="id"><a href="compcert.compcertm.ASTC.html#is_external">is_external</a></span> <span class="id">fd</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#Gvar">Gvar</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
 &nbsp;&nbsp;<span class="kwd">end</span>.<br/>
 <br/>
-<span class="id">Arguments</span> <span class="id">is_external_fd</span> {<span class="id">F</span>}.<br/>
-<span class="id">Arguments</span> <span class="id">is_external_gd</span> {<span class="id">_</span>} {<span class="id">_</span>} {<span class="id">V</span>}.<br/>
-<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">is_external_gd</span> <span class="id">is_external_fd</span>.<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_fd">is_external_fd</a></span> {<span class="id">F</span>}.<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_gd">is_external_gd</a></span> {<span class="id">_</span>} {<span class="id">_</span>} {<span class="id">V</span>}.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_gd">is_external_gd</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_fd">is_external_fd</a></span>.<br/>
 <br/>
-<span class="kwd">Global</span> <span class="kwd">Instance</span> <span class="id">external_function_HasExternal</span>: <span class="id">HasExternal</span> <span class="id">external_function</span> :=<br/>
-&nbsp;&nbsp;<span class="id">Build_HasExternal</span> <span class="id">is_external_ef</span>.<br/>
-<span class="kwd">Global</span> <span class="kwd">Instance</span> <span class="id">fundef_HasExternal</span> {<span class="id">F</span>}: <span class="id">HasExternal</span> (<span class="id">AST.fundef</span> <span class="id">F</span>) :=<br/>
-&nbsp;&nbsp;<span class="id">Build_HasExternal</span> <span class="id">is_external_fd</span>.<br/>
-<span class="kwd">Global</span> <span class="kwd">Instance</span> <span class="id">globdef_HasExternal</span> `{<span class="id">HasExternal</span> <span class="id">F</span>} {<span class="id">V</span>}: <span class="id">HasExternal</span> (<span class="id">globdef</span> <span class="id">F</span> <span class="id">V</span>) :=<br/>
-&nbsp;&nbsp;<span class="id">Build_HasExternal</span> <span class="id">is_external_gd</span>.<br/>
-<br/>
-<br/>
+<span class="kwd">Global</span> <span class="kwd">Instance</span> <span class="id"><a name="external_function_HasExternal">external_function_HasExternal</a></span>: <span class="id"><a href="compcert.compcertm.ASTC.html#HasExternal">HasExternal</a></span> <span class="id"><a href="compcert.common.AST.html#external_function">external_function</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ASTC.html#Build_HasExternal">Build_HasExternal</a></span> <span class="id"><a href="compcert.common.AST.html#is_external_ef">is_external_ef</a></span>.<br/>
+<span class="kwd">Global</span> <span class="kwd">Instance</span> <span class="id"><a name="fundef_HasExternal">fundef_HasExternal</a></span> {<span class="id">F</span>}: <span class="id"><a href="compcert.compcertm.ASTC.html#HasExternal">HasExternal</a></span> (<span class="id"><a href="compcert.common.AST.html#fundef">AST.fundef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ASTC.html#Build_HasExternal">Build_HasExternal</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_fd">is_external_fd</a></span>.<br/>
+<span class="kwd">Global</span> <span class="kwd">Instance</span> <span class="id"><a name="globdef_HasExternal">globdef_HasExternal</a></span> `{<span class="id"><a href="compcert.compcertm.ASTC.html#HasExternal">HasExternal</a></span> <span class="id">F</span>} {<span class="id">V</span>}: <span class="id"><a href="compcert.compcertm.ASTC.html#HasExternal">HasExternal</a></span> (<span class="id"><a href="compcert.common.AST.html#globdef">globdef</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#V">V</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ASTC.html#Build_HasExternal">Build_HasExternal</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#is_external_gd">is_external_gd</a></span>.<br/>
 <br/>
 <br/>
 <br/>
@@ -154,81 +152,83 @@ Qed.</div>
 <br/>
 <br/>
 <br/>
-<span class="kwd">Section</span> <span class="id">PROGRAMS</span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">F</span> <span class="id">V</span>: <span class="kwd">Type</span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">p</span>: <span class="id">program</span> <span class="id">F</span> <span class="id">V</span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">good_prog</span> (<span class="id">p</span>: <span class="id">program</span> <span class="id">F</span> <span class="id">V</span>): <span class="kwd">Prop</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">incl</span> <span class="id">p</span>.(<span class="id">prog_public</span>) <span class="id">p</span>.(<span class="id">prog_defs_names</span>).<br/>
+<span class="kwd">Section</span> <span class="id"><a name="PROGRAMS">PROGRAMS</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">defs</span>: <span class="id">ident</span> -&gt; <span class="id">bool</span> := <span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id">In_dec</span> <span class="id">ident_eq</span> <span class="id">id</span> <span class="id">p</span>.(<span class="id">prog_defs_names</span>).<br/>
-&nbsp;&nbsp;<span class="kwd">Check</span> (<span class="id">defs</span>: <span class="id">ident</span> -&gt; <span class="kwd">Prop</span>).<br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">defs_old</span>: <span class="id">ident</span> -&gt; <span class="kwd">Prop</span> := <span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id">exists</span> <span class="id">gd</span>, <span class="id">p</span>.(<span class="id">prog_defmap</span>)!<span class="id">id</span> = <span class="id">Some</span> <span class="id">gd</span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Goal</span> <span class="id">defs</span> &lt;1= <span class="id">defs_old</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="PROGRAMS.F">F</a></span> <span class="id"><a name="PROGRAMS.V">V</a></span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="PROGRAMS.p">p</a></span>: <span class="id"><a href="compcert.common.AST.html#program">program</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS.F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS.V">V</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="good_prog">good_prog</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.common.AST.html#program">program</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS.F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS.V">V</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#incl">incl</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_public">prog_public</a></span>) <span class="id"><a href="compcert.compcertm.ASTC.html#p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defs_names">prog_defs_names</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="defs">defs</a></span>: <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> := <span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In_dec">In_dec</a></span> <span class="id"><a href="compcert.common.AST.html#ident_eq">ident_eq</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS.p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defs_names">prog_defs_names</a></span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Check</span> (<span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span>: <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="kwd">Prop</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="defs_old">defs_old</a></span>: <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="kwd">Prop</span> := <span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id">exists</span> <span class="id">gd</span>, <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS.p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defmap">prog_defmap</a></span>)!<span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#gd">gd</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Goal</span> <span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span> &lt;1= <span class="id"><a href="compcert.compcertm.ASTC.html#defs_old">defs_old</a></span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6038')">Proof.</div>
 <div class="proofscript" id="proof6038">
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">exploit</span> <span class="id">prog_defmap_dom</span>; <span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">PR</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">defs</span> <span class="kwd">in</span> *. <span class="id">des_sumbool</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.common.AST.html#prog_defmap_dom">prog_defmap_dom</a></span>; <span class="tactic">eauto</span>. <span class="id">inv</span> <span class="id">PR</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span> <span class="kwd">in</span> *. <span class="id">des_sumbool</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;Qed.</div>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">privs</span>: <span class="id">ident</span> -&gt; <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id">andb</span> (&lt;&lt;<span class="id">DEFS</span>: <span class="id">defs</span> <span class="id">id</span>&gt;&gt;) (&lt;&lt;<span class="id">PRIVS</span>: <span class="id">negb</span> (<span class="id">In_dec</span> <span class="id">ident_eq</span> <span class="id">id</span> <span class="id">p</span>.(<span class="id">prog_public</span>))&gt;&gt;).<br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">privs_old</span>: <span class="id">ident</span> -&gt; <span class="kwd">Prop</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DEFS</span>: <span class="id">defs_old</span>&gt;&gt; /1\ &lt;&lt;<span class="id">PRIVS</span>: (<span class="kwd">fun</span> <span class="id">id</span> =&gt; ~ <span class="id">In</span> <span class="id">id</span> <span class="id">p</span>.(<span class="id">prog_public</span>))&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="privs">privs</a></span>: <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span> (&lt;&lt;<span class="id">DEFS</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span>&gt;&gt;) (&lt;&lt;<span class="id">PRIVS</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In_dec">In_dec</a></span> <span class="id"><a href="compcert.common.AST.html#ident_eq">ident_eq</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS.p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_public">prog_public</a></span>))&gt;&gt;).<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="privs_old">privs_old</a></span>: <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DEFS</span>: <span class="id"><a href="compcert.compcertm.ASTC.html#defs_old">defs_old</a></span>&gt;&gt; /1\ &lt;&lt;<span class="id">PRIVS</span>: (<span class="kwd">fun</span> <span class="id">id</span> =&gt; ~ <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS.p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_public">prog_public</a></span>))&gt;&gt;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">privs_defs_old</span>: &lt;&lt;<span class="id">LE</span>: (<span class="id">privs_old</span> &lt;1= <span class="id">defs_old</span>)&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="privs_defs_old">privs_defs_old</a></span>: &lt;&lt;<span class="id">LE</span>: (<span class="id"><a href="compcert.compcertm.ASTC.html#privs_old">privs_old</a></span> &lt;1= <span class="id"><a href="compcert.compcertm.ASTC.html#defs_old">defs_old</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6039')">Proof.</div>
 <div class="proofscript" id="proof6039">
  <span class="id">ii</span>. <span class="id">inv</span> <span class="id">PR</span>. <span class="tactic">eauto</span>. Qed.</div>
 <br/>
-<span class="kwd">End</span> <span class="id">PROGRAMS</span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS">PROGRAMS</a></span>.<br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">defs_prog_defmap</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">prog</span>: <span class="id">AST.program</span> <span class="id">F</span> <span class="id">V</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">id</span>, (<span class="id">exists</span> <span class="id">gd</span>, (<span class="id">prog_defmap</span> <span class="id">prog</span>) ! <span class="id">id</span> = <span class="id">Some</span> <span class="id">gd</span>) &lt;-&gt; <span class="id">defs</span> <span class="id">prog</span> <span class="id">id</span>.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="defs_prog_defmap">defs_prog_defmap</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span> (<span class="id">prog</span>: <span class="id"><a href="compcert.common.AST.html#program">AST.program</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#V">V</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">id</span>, (<span class="id">exists</span> <span class="id">gd</span>, (<span class="id"><a href="compcert.common.AST.html#prog_defmap">prog_defmap</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#prog">prog</a></span>) ! <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#gd">gd</a></span>) &lt;-&gt; <span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#prog">prog</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6040')">Proof.</div>
 <div class="proofscript" id="proof6040">
 &nbsp;&nbsp;<span class="id">ii</span>. <span class="id">etrans</span>.<br/>
-&nbsp;&nbsp;{ <span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id">prog_defmap_spec</span>. }<br/>
-&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">defs</span>, <span class="id">prog_defs_names</span>. <span class="tactic">split</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="id">des_sumbool</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ASTC.html#prog_defmap_spec">prog_defmap_spec</a></span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span>, <span class="id"><a href="compcert.common.AST.html#prog_defs_names">prog_defs_names</a></span>. <span class="tactic">split</span>; <span class="id">i</span>; <span class="id">des</span>; <span class="id">des_sumbool</span>; <span class="id">ss</span>.<br/>
 Qed.</div>
 <br/>
 <br/>
 <br/>
 <br/>
-<span class="kwd">Section</span> <span class="id">PROGRAMS2</span>.<br/>
+<span class="kwd">Section</span> <span class="id"><a name="PROGRAMS2">PROGRAMS2</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id">HasExternal</span> <span class="id">F</span>} {<span class="id">V</span>: <span class="kwd">Type</span>}.<br/>
-&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">p</span>: <span class="id">program</span> <span class="id">F</span> <span class="id">V</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id"><a href="compcert.compcertm.ASTC.html#HasExternal">HasExternal</a></span> <span class="id">F</span>} {<span class="id">V</span>: <span class="kwd">Type</span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="PROGRAMS2.p">p</a></span>: <span class="id"><a href="compcert.common.AST.html#program">program</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS2.F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS2.V">V</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">internals</span>: <span class="id">ident</span> -&gt; <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="kwd">match</span> <span class="id">p</span>.(<span class="id">prog_defmap</span>)!<span class="id">id</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">gd</span> =&gt; <span class="id">negb</span> (<span class="id">is_external</span> <span class="id">gd</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="internals">internals</a></span>: <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS2.p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defmap">prog_defmap</a></span>)!<span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">gd</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="compcert.compcertm.ASTC.html#is_external">is_external</a></span> <span class="id">gd</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">internals</span>': <span class="id">ident</span> -&gt; <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id">is_some</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">List.find</span> (<span class="kwd">fun</span> <span class="id">idg</span> =&gt; <span class="id">andb</span> (<span class="id">ident_eq</span> <span class="id">id</span> <span class="id">idg</span>.(<span class="id">fst</span>)) (<span class="id">is_external</span> <span class="id">idg</span>.(<span class="id">snd</span>))) <span class="id">p</span>.(<span class="id">prog_defs</span>)).<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">internals</span>': <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">id</span> =&gt; <span class="id"><a href="compcert.compcertm.CoqlibC.html#is_some">is_some</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#find">List.find</a></span> (<span class="kwd">fun</span> <span class="id">idg</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb">andb</a></span> (<span class="id"><a href="compcert.common.AST.html#ident_eq">ident_eq</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#id">id</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#idg">idg</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span>)) (<span class="id"><a href="compcert.compcertm.ASTC.html#is_external">is_external</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#idg">idg</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span>))) <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS2.p">p</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defs">prog_defs</a></span>)).<br/>
 <br/>
-<span class="kwd">End</span> <span class="id">PROGRAMS2</span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ASTC.html#PROGRAMS2">PROGRAMS2</a></span>.<br/>
 <br/>
-<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">defs</span> <span class="id">privs</span> <span class="id">internals</span>.<br/>
-<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">defs_old</span> <span class="id">privs_old</span> <span class="id">internals</span>'.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#privs">privs</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#internals">internals</a></span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.ASTC.html#defs_old">defs_old</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#privs_old">privs_old</a></span> <span class="id">internals</span>'.<br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">internals_defs</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id">HasExternal</span> <span class="id">F</span>} <span class="id">V</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">p</span>: <span class="id">AST.program</span> <span class="id">F</span> <span class="id">V</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">p</span>.(<span class="id">internals</span>) &lt;1= <span class="id">p</span>.(<span class="id">defs</span>).<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="internals_defs">internals_defs</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id"><a href="compcert.compcertm.ASTC.html#HasExternal">HasExternal</a></span> <span class="id">F</span>} <span class="id">V</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">p</span>: <span class="id"><a href="compcert.common.AST.html#program">AST.program</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#F">F</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#V">V</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ASTC.html#p">p</a></span>.(<span class="id"><a href="compcert.compcertm.ASTC.html#internals">internals</a></span>) &lt;1= <span class="id"><a href="compcert.compcertm.ASTC.html#p">p</a></span>.(<span class="id"><a href="compcert.compcertm.ASTC.html#defs">defs</a></span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6041')">Proof.</div>
 <div class="proofscript" id="proof6041">
-&nbsp;&nbsp;<span class="id">u</span>. <span class="id">ii</span>. <span class="id">des_sumbool</span>. <span class="tactic">eapply</span> <span class="id">prog_defmap_spec</span>. <span class="id">des_ifs</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;<span class="id">u</span>. <span class="id">ii</span>. <span class="id">des_sumbool</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ASTC.html#prog_defmap_spec">prog_defmap_spec</a></span>. <span class="id">des_ifs</span>; <span class="id">et</span>.<br/>
 Qed.</div>
 <br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">chunk_type_chunk</span>: <span class="kwd">forall</span> <span class="id">ty</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">type_of_chunk</span> (<span class="id">chunk_of_type</span> <span class="id">ty</span>)) = <span class="id">ty</span>.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="chunk_type_chunk">chunk_type_chunk</a></span>: <span class="kwd">forall</span> <span class="id">ty</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.common.AST.html#type_of_chunk">type_of_chunk</a></span> (<span class="id"><a href="compcert.common.AST.html#chunk_of_type">chunk_of_type</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html#ty">ty</a></span>)) = <span class="id"><a href="compcert.compcertm.ASTC.html#ty">ty</a></span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6042')">Proof.</div>
 <div class="proofscript" id="proof6042">
  <span class="tactic">destruct</span> <span class="id">ty</span>; <span class="id">ss</span>. Qed.</div>

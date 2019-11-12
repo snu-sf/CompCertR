@@ -13,77 +13,77 @@
 <body onload="hideAll('proofscript')">
 <h1 class="title">Module ModSemProps</h1>
 <div class="coq">
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">EventsC</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.EventsC.html">EventsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Smallstep.html">Smallstep</a></span>.<br/>
 <span class="id">From</span> <span class="id">Paco</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">paco</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Simulation</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ModSem</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Simulation.html">Simulation</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span>.<br/>
 <br/>
 <span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
 <br/>
 <br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">spread_dstar</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="spread_dstar">spread_dstar</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="kwd">forall</span> <span class="id">st0</span>, <span class="id">determinate_at</span> <span class="id">ms</span> <span class="id">st0</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DSTAR</span>: <span class="id">DStar</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="kwd">forall</span> <span class="id">st0</span>, <span class="id"><a href="compcert.compcertm.Simulation.html#determinate_at">determinate_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DSTAR</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DStar">DStar</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6063')">Proof.</div>
 <div class="proofscript" id="proof6063">
  <span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">spread_dplus</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="spread_dplus">spread_dplus</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="kwd">forall</span> <span class="id">st0</span>, <span class="id">determinate_at</span> <span class="id">ms</span> <span class="id">st0</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DPLUS</span>: <span class="id">DPlus</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="kwd">forall</span> <span class="id">st0</span>, <span class="id"><a href="compcert.compcertm.Simulation.html#determinate_at">determinate_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DPLUS</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DPlus">DPlus</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6064')">Proof.</div>
 <div class="proofscript" id="proof6064">
- <span class="id">inv</span> <span class="id">PLUS</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">spread_dstar</span>; <span class="tactic">eauto</span>. Qed.</div>
+ <span class="id">inv</span> <span class="id">PLUS</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#spread_dstar">spread_dstar</a></span>; <span class="tactic">eauto</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">at_external_receptive_at</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="at_external_receptive_at">at_external_receptive_at</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms_src</span> <span class="id">lst_src</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id">ModSem.is_call</span> <span class="id">ms_src</span> <span class="id">lst_src</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">receptive_at</span> <span class="id">ms_src</span> <span class="id">lst_src</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.is_call">ModSem.is_call</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms_src">ms_src</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#lst_src">lst_src</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#receptive_at">receptive_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms_src">ms_src</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#lst_src">lst_src</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6065')">Proof.</div>
 <div class="proofscript" id="proof6065">
  <span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ModSem.tac</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">at_external_determinate_at</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="at_external_determinate_at">at_external_determinate_at</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms_src</span> <span class="id">lst_src</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id">ModSem.is_call</span> <span class="id">ms_src</span> <span class="id">lst_src</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">determinate_at</span> <span class="id">ms_src</span> <span class="id">lst_src</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.is_call">ModSem.is_call</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms_src">ms_src</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#lst_src">lst_src</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#determinate_at">determinate_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms_src">ms_src</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#lst_src">lst_src</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6066')">Proof.</div>
 <div class="proofscript" id="proof6066">
  <span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ModSem.tac</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">final_frame_receptive_at</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="final_frame_receptive_at">final_frame_receptive_at</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms_src</span> <span class="id">lst_src</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id">ModSem.is_return</span> <span class="id">ms_src</span> <span class="id">lst_src</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">receptive_at</span> <span class="id">ms_src</span> <span class="id">lst_src</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.is_return">ModSem.is_return</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms_src">ms_src</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#lst_src">lst_src</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#receptive_at">receptive_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms_src">ms_src</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#lst_src">lst_src</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6067')">Proof.</div>
 <div class="proofscript" id="proof6067">
  <span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ModSem.tac</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">final_frame_determinate_at</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="final_frame_determinate_at">final_frame_determinate_at</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms_src</span> <span class="id">lst_src</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id">ModSem.is_return</span> <span class="id">ms_src</span> <span class="id">lst_src</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">determinate_at</span> <span class="id">ms_src</span> <span class="id">lst_src</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CALL</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.is_return">ModSem.is_return</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms_src">ms_src</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#lst_src">lst_src</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#determinate_at">determinate_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms_src">ms_src</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#lst_src">lst_src</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6068')">Proof.</div>
 <div class="proofscript" id="proof6068">
  <span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ModSem.tac</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">atomic_step_continue_star</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_trace</span> <span class="id">tr</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Star</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) (<span class="id">tr</span>, <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st0</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="atomic_step_continue_star">atomic_step_continue_star</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Events.html#output_trace">output_trace</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Star</span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) (<span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6069')">Proof.</div>
 <div class="proofscript" id="proof6069">
 &nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">tr</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
@@ -92,54 +92,54 @@
 &nbsp;&nbsp;<span class="id">ss</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">step_atomic_step</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">Step</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Plus</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="step_atomic_step">step_atomic_step</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">Step</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Plus</span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6070')">Proof.</div>
 <div class="proofscript" id="proof6070">
 &nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">tr</span>.<br/>
-&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">plus_one</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Smallstep.html#plus_one">plus_one</a></span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;<span class="id">s</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">swap</span> 2 3.<br/>
 &nbsp;&nbsp;{ <span class="id">econs</span> 2; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;{ <span class="id">ss</span>. }<br/>
-&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">WBT</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">ss</span>. <span class="id">hexploit</span> <span class="id">atomic_step_continue_star</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">WBT</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">ss</span>. <span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#atomic_step_continue_star">atomic_step_continue_star</a></span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">star_atomic_star</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">Star</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="star_atomic_star">star_atomic_star</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">Star</span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6071')">Proof.</div>
 <div class="proofscript" id="proof6071">
 &nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>.<br/>
 &nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
-&nbsp;&nbsp;- <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">star_trans</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">step_atomic_step</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">plus_star</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;- <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_trans">star_trans</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#step_atomic_step">step_atomic_step</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#plus_star">plus_star</a></span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">plus_atomic_plus</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">Plus</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="plus_atomic_plus">plus_atomic_plus</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">Plus</span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6072')">Proof.</div>
 <div class="proofscript" id="proof6072">
-&nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>. <span class="tactic">eapply</span> <span class="id">plus_star_trans</span>.<br/>
-&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">step_atomic_step</span>; <span class="tactic">eauto</span>. }<br/>
-&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">star_atomic_star</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#plus_star_trans">plus_star_trans</a></span>.<br/>
+&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#step_atomic_step">step_atomic_step</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#star_atomic_star">star_atomic_star</a></span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;<span class="id">ss</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">determ_atomic_determ</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="id">determinate_at</span> <span class="id">ms</span> <span class="id">st0</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_trace</span> <span class="id">tr</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DTM</span>: <span class="id">determinate_at</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) (<span class="id">tr</span>, <span class="id">st0</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="determ_atomic_determ">determ_atomic_determ</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DTM</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#determinate_at">determinate_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Events.html#output_trace">output_trace</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">DTM</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#determinate_at">determinate_at</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) (<span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6073')">Proof.</div>
 <div class="proofscript" id="proof6073">
 &nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">DTM</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>; <span class="id">inv</span> <span class="id">H0</span>.<br/>
@@ -156,20 +156,20 @@ Qed.</div>
 <br/>
 <br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">output_trace_determinate_at</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>)<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="output_trace_determinate_at">output_trace_determinate_at</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ev</span> <span class="id">tr</span> <span class="id">st0</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_event</span> <span class="id">ev</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">determinate_at</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) (<span class="id">ev</span> :: <span class="id">tr</span>, <span class="id">st0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Events.html#output_event">output_event</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ev">ev</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Simulation.html#determinate_at">determinate_at</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) (<span class="id"><a href="compcert.compcertm.ModSemProps.html#ev">ev</a></span> :: <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6074')">Proof.</div>
 <div class="proofscript" id="proof6074">
 &nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">split</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">ev</span>; <span class="id">ss</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">atomic_dstep_continue_dstar</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_trace</span> <span class="id">tr</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">DStar</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) (<span class="id">tr</span>, <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st0</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="atomic_dstep_continue_dstar">atomic_dstep_continue_dstar</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Events.html#output_trace">output_trace</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DStar">DStar</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) (<span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6075')">Proof.</div>
 <div class="proofscript" id="proof6075">
 &nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">tr</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
@@ -179,75 +179,75 @@ Qed.</div>
 &nbsp;&nbsp;<span class="comment">(*&nbsp;intro&nbsp;DTM0;&nbsp;des.&nbsp;*)</span><br/>
 &nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">output_trace_determinate_at</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#output_trace_determinate_at">output_trace_determinate_at</a></span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;}<br/>
 &nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">IHtr</span>; <span class="tactic">eauto</span>. <span class="id">des</span>; <span class="id">ss</span>. }<br/>
 &nbsp;&nbsp;<span class="id">ss</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">dstep_atomic_dstep</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">DStep</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">DPlus</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="dstep_atomic_dstep">dstep_atomic_dstep</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DStep">DStep</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DPlus">DPlus</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6076')">Proof.</div>
 <div class="proofscript" id="proof6076">
 &nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">STEP</span>. <span class="id">des</span>.<br/>
-&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">determ_atomic_determ</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#determ_atomic_determ">determ_atomic_determ</a></span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;{ <span class="id">instantiate</span> (1:= []). <span class="id">ss</span>. }<br/>
 &nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">DTM</span>; <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">tr</span>.<br/>
-&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">plus_one</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Smallstep.html#plus_one">plus_one</a></span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;<span class="id">s</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">swap</span> 2 3.<br/>
 &nbsp;&nbsp;{ <span class="id">rr</span>. <span class="tactic">split</span>; <span class="id">ss</span>. <span class="id">instantiate</span> (1:= (<span class="id">_</span>, <span class="id">_</span>)). <span class="id">econs</span> 2; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;{ <span class="id">ss</span>. }<br/>
-&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">atomic_dstep_continue_dstar</span>; <span class="tactic">eauto</span>. <span class="id">exploit</span> <span class="id">WBT</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#atomic_dstep_continue_dstar">atomic_dstep_continue_dstar</a></span>; <span class="tactic">eauto</span>. <span class="id">exploit</span> <span class="id">WBT</span>; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">dstar_atomic_dstar</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">DStar</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">DStar</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="dstar_atomic_dstar">dstar_atomic_dstar</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DStar">DStar</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DStar">DStar</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6077')">Proof.</div>
 <div class="proofscript" id="proof6077">
 &nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
-&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id">star_trans</span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id">plus_star</span>. <span class="id">exploit</span> <span class="id">dstep_atomic_dstep</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id">IHSTAR</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_trans">star_trans</a></span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Smallstep.html#plus_star">plus_star</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#dstep_atomic_dstep">dstep_atomic_dstep</a></span>; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">dplus_atomic_dplus</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">DPlus</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">DPlus</span> (<span class="id">ModSem.Atomic.trans</span> <span class="id">ms</span>) ([], <span class="id">st0</span>) <span class="id">tr</span> ([], <span class="id">st1</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="dplus_atomic_dplus">dplus_atomic_dplus</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DPlus">DPlus</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DPlus">DPlus</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>) ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6078')">Proof.</div>
 <div class="proofscript" id="proof6078">
-&nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>. <span class="tactic">eapply</span> <span class="id">plus_star_trans</span>.<br/>
-&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id">dstep_atomic_dstep</span>; <span class="tactic">eauto</span>. }<br/>
-&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">dstar_atomic_dstar</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#plus_star_trans">plus_star_trans</a></span>.<br/>
+&nbsp;&nbsp;{ <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#dstep_atomic_dstep">dstep_atomic_dstep</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#dstar_atomic_dstar">dstar_atomic_dstar</a></span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;<span class="id">ss</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">atomic_single_events_at</span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id">ModSem.t</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SINGLE</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id">single_events_at</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>) <span class="id">st</span>&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="atomic_single_events_at">atomic_single_events_at</a></span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SINGLE</span>: <span class="kwd">forall</span> <span class="id">st</span>, <span class="id"><a href="compcert.compcertm.Simulation.html#single_events_at">single_events_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#st">st</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6079')">Proof.</div>
 <div class="proofscript" id="proof6079">
  <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>. <span class="id">xomega</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">atomic_single_evnents</span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id">ModSem.t</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SINGLE</span>: <span class="id">single_events</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="atomic_single_evnents">atomic_single_evnents</a></span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SINGLE</span>: <span class="id"><a href="compcert.common.Smallstep.html#single_events">single_events</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6080')">Proof.</div>
 <div class="proofscript" id="proof6080">
  <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>. <span class="id">xomega</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">atomic_receptive_at</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>) <span class="id">st0</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SSR</span>: <span class="id">strongly_receptive_at</span> <span class="id">ms</span> <span class="id">st0</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="kwd">forall</span> <span class="id">tr</span>, <span class="id">receptive_at</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>) (<span class="id">tr</span>, <span class="id">st0</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="atomic_receptive_at">atomic_receptive_at</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) <span class="id">st0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SSR</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#strongly_receptive_at">strongly_receptive_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="kwd">forall</span> <span class="id">tr</span>, <span class="id"><a href="compcert.compcertm.Simulation.html#receptive_at">receptive_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span>) (<span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6081')">Proof.</div>
 <div class="proofscript" id="proof6081">
-&nbsp;&nbsp;<span class="tactic">generalize</span> (@<span class="id">atomic_single_evnents</span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (@<span class="id"><a href="compcert.compcertm.ModSemProps.html#atomic_single_evnents">atomic_single_evnents</a></span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>.<br/>
 &nbsp;&nbsp;<span class="id">inv</span> <span class="id">SSR</span>. <span class="id">econs</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
@@ -260,14 +260,14 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">instantiate</span> (1:= (<span class="id">_</span>, <span class="id">_</span>)).<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">e0</span> = <span class="id">e</span>) <span class="tactic">by</span> (<span class="id">des</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>). <span class="id">clarify</span>. <span class="id">econs</span> 3; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;}<br/>
-&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">atomic_single_events_at</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#atomic_single_events_at">atomic_single_events_at</a></span>; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">atomic_receptive_at_nonnil</span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id">ModSem.t</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="kwd">forall</span> <span class="id">st0</span> <span class="id">ev</span> <span class="id">tr</span>, <span class="id">receptive_at</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>) (<span class="id">ev</span> :: <span class="id">tr</span>, <span class="id">st0</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="atomic_receptive_at_nonnil">atomic_receptive_at_nonnil</a></span>: <span class="kwd">forall</span> (<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="kwd">forall</span> <span class="id">st0</span> <span class="id">ev</span> <span class="id">tr</span>, <span class="id"><a href="compcert.compcertm.Simulation.html#receptive_at">receptive_at</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span>) (<span class="id"><a href="compcert.compcertm.ModSemProps.html#ev">ev</a></span> :: <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6082')">Proof.</div>
 <div class="proofscript" id="proof6082">
-&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">generalize</span> (@<span class="id">atomic_single_evnents</span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>. <span class="id">ii</span>. <span class="id">econs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">generalize</span> (@<span class="id"><a href="compcert.compcertm.ModSemProps.html#atomic_single_evnents">atomic_single_evnents</a></span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>. <span class="id">ii</span>. <span class="id">econs</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">SINGLE</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">LEN</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>. <span class="tactic">destruct</span> <span class="id">t2</span>; <span class="id">ss</span>.<br/>
@@ -277,16 +277,16 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>. <span class="id">des</span>. <span class="tactic">assert</span>(<span class="id">e</span> = <span class="id">e0</span>). { <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>. } <span class="id">clarify</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;}<br/>
-&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">atomic_single_events_at</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#atomic_single_events_at">atomic_single_events_at</a></span>; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">atomic_receptive</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id">ModSem.t</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SSR</span>: <span class="id">strongly_receptive</span> <span class="id">ms</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id">receptive</span> <span class="id">ms</span>.(<span class="id">ModSem.Atomic.trans</span>)&gt;&gt;.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="atomic_receptive">atomic_receptive</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SSR</span>: <span class="id"><a href="compcert.common.Smallstep.html#strongly_receptive">strongly_receptive</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">RCP</span>: <span class="id"><a href="compcert.common.Smallstep.html#receptive">receptive</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span>)&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6083')">Proof.</div>
 <div class="proofscript" id="proof6083">
-&nbsp;&nbsp;<span class="tactic">generalize</span> (@<span class="id">atomic_single_evnents</span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (@<span class="id"><a href="compcert.compcertm.ModSemProps.html#atomic_single_evnents">atomic_single_evnents</a></span> <span class="id">ms</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SINGLE</span>.<br/>
 &nbsp;&nbsp;<span class="id">inv</span> <span class="id">SSR</span>. <span class="id">econs</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">t1</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
@@ -302,43 +302,43 @@ Qed.</div>
 &nbsp;&nbsp;}<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">DStep_Step</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="DStep_Step">DStep_Step</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">DStep</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Step</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DStep">DStep</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#L">L</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STEP</span>: <span class="id">Step</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#L">L</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6084')">Proof.</div>
 <div class="proofscript" id="proof6084">
  <span class="id">rr</span> <span class="kwd">in</span> <span class="id">STEP</span>. <span class="id">des</span>. <span class="id">ss</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">DStar_Star</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="DStar_Star">DStar_Star</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">DStar</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DStar">DStar</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#L">L</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">STAR</span>: <span class="id">Star</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#L">L</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6085')">Proof.</div>
 <div class="proofscript" id="proof6085">
 &nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
-&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">star_refl</span>. }<br/>
-&nbsp;&nbsp;<span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">star_trans</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id">star_one</span>. <span class="tactic">eapply</span> <span class="id">DStep_Step</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_refl">star_refl</a></span>. }<br/>
+&nbsp;&nbsp;<span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_trans">star_trans</a></span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_one">star_one</a></span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#DStep_Step">DStep_Step</a></span>; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">DPlus_Plus</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="DPlus_Plus">DPlus_Plus</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id">DPlus</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id">L</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PLUS</span>: <span class="id"><a href="compcert.compcertm.Simulation.html#DPlus">DPlus</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#L">L</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PLUS</span>: <span class="id">Plus</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#L">L</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6086')">Proof.</div>
 <div class="proofscript" id="proof6086">
 &nbsp;&nbsp;<span class="id">inv</span> <span class="id">PLUS</span>.<br/>
 &nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
-&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">DStep_Step</span>; <span class="tactic">eauto</span>. }<br/>
-&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">DStar_Star</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#DStep_Step">DStep_Step</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#DStar_Star">DStar_Star</a></span>; <span class="tactic">eauto</span>. }<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Definition</span> <span class="id">safe_modsem</span> (<span class="id">ms</span>: <span class="id">ModSem.t</span>) (<span class="id">st0</span>: <span class="id">ms</span>.(<span class="id">ModSem.state</span>)): <span class="kwd">Prop</span> :=<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> (<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">E0</span> <span class="id">st1</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVCALL</span>: <span class="id">ms</span>.(<span class="id">ModSem.is_call</span>) <span class="id">st1</span>&gt;&gt;) \/<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVRET</span>: <span class="id">ms</span>.(<span class="id">ModSem.is_return</span>) <span class="id">st1</span>&gt;&gt;) \/<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVSTEP</span>: <span class="id">exists</span> <span class="id">tr</span> <span class="id">st2</span>, <span class="id">Step</span> <span class="id">ms</span> <span class="id">st1</span> <span class="id">tr</span> <span class="id">st2</span>&gt;&gt;).<br/>
-<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">safe_modsem</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="safe_modsem">safe_modsem</a></span> (<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>) (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.state">ModSem.state</a></span>)): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st1</span> (<span class="id">STAR</span>: <span class="id">Star</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st0">st0</a></span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVCALL</span>: <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.is_call">ModSem.is_call</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>&gt;&gt;) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVRET</span>: <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.is_return">ModSem.is_return</a></span>) <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span>&gt;&gt;) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">EVSTEP</span>: <span class="id">exists</span> <span class="id">tr</span> <span class="id">st2</span>, <span class="id">Step</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st1">st1</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#st2">st2</a></span>&gt;&gt;).<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.ModSemProps.html#safe_modsem">safe_modsem</a></span>.<br/>
 
 </div>
 <div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>

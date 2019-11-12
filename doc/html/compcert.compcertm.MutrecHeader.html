@@ -13,88 +13,88 @@
 <body onload="hideAll('proofscript')">
 <h1 class="title">Module MutrecHeader</h1>
 <div class="coq">
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">IntegersC</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Zwf</span>.<br/>
-<span class="kwd">Require</span> <span class="id">Coq.Program.Wf</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Recdef</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Intv</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AxiomsC</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.IntegersC.html">IntegersC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html">Zwf</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Program.Wf.html">Coq.Program.Wf</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.funind.Recdef.html">Recdef</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Intv.html">Intv</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AxiomsC.html">AxiomsC</a></span>.<br/>
 <br/>
-<span class="kwd">Definition</span> <span class="id">main_id</span> := (77%<span class="id">positive</span>).<br/>
-<span class="kwd">Definition</span> <span class="id">f_id</span> := (154%<span class="id">positive</span>).<br/>
-<span class="kwd">Definition</span> <span class="id">g_id</span> := (176%<span class="id">positive</span>).<br/>
-<span class="kwd">Definition</span> <span class="id">MAX</span>: <span class="id">Z</span> := 1000%<span class="id">Z</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="main_id">main_id</a></span> := (77%<span class="id">positive</span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="f_id">f_id</a></span> := (154%<span class="id">positive</span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="g_id">g_id</a></span> := (176%<span class="id">positive</span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="MAX">MAX</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> := 1000%<span class="id">Z</span>.<br/>
 <br/>
-<span class="kwd">Definition</span> <span class="id">sum</span> (<span class="id">i</span>: <span class="id">int</span>): <span class="id">int</span> :=<br/>
-&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sumz</span>: <span class="id">Z</span> := <span class="id">fold_rec</span> <span class="id">Z</span> <span class="id">Z.add</span> 0%<span class="id">Z</span> 0%<span class="id">Z</span> (<span class="id">i</span>.(<span class="id">Int.intval</span>) + 1)%<span class="id">Z</span> <span class="kwd">in</span><br/>
-&nbsp;&nbsp;<span class="id">Int.repr</span> <span class="id">sumz</span><br/>
+<span class="kwd">Definition</span> <span class="id"><a name="sum">sum</a></span> (<span class="id">i</span>: <span class="id"><a href="compcert.lib.Integers.html#int">int</a></span>): <span class="id"><a href="compcert.lib.Integers.html#int">int</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sumz</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> := <span class="id"><a href="compcert.lib.Intv.html#fold_rec">fold_rec</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add">Z.add</a></span> 0%<span class="id">Z</span> 0%<span class="id">Z</span> (<span class="id"><a href="compcert.compcertm.MutrecHeader.html#i">i</a></span>.(<span class="id"><a href="compcert.lib.Integers.html#Int.intval">Int.intval</a></span>) + 1)%<span class="id">Z</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Integers.html#Int.repr">Int.repr</a></span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#sumz">sumz</a></span><br/>
 .<br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">eta</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="eta">eta</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span> <span class="id">iproof</span> <span class="id">j</span> <span class="id">jproof</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="id">i</span> = <span class="id">j</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="id"><a href="compcert.compcertm.MutrecHeader.html#i">i</a></span> = <span class="id"><a href="compcert.compcertm.MutrecHeader.html#j">j</a></span>)<br/>
 &nbsp;&nbsp;:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Int.mkint</span> <span class="id">i</span> <span class="id">iproof</span> = <span class="id">Int.mkint</span> <span class="id">j</span> <span class="id">jproof</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Integers.html#Int.mkint">Int.mkint</a></span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#i">i</a></span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#iproof">iproof</a></span> = <span class="id"><a href="compcert.lib.Integers.html#Int.mkint">Int.mkint</a></span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#jproof">jproof</a></span><br/>
 .<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7205')">Proof.</div>
 <div class="proofscript" id="proof7205">
 &nbsp;&nbsp;<span class="id">clarify</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">iproof</span> = <span class="id">jproof</span>).<br/>
-&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">proof_irr</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Axioms.html#proof_irr">proof_irr</a></span>. }<br/>
 &nbsp;&nbsp;<span class="id">clarify</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">sum_recurse</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="sum_recurse">sum_recurse</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span><br/>
 &nbsp;&nbsp;:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sum</span> <span class="id">i</span>) = <span class="kwd">if</span> <span class="id">Z.eqb</span> <span class="id">i</span>.(<span class="id">Int.intval</span>) 0%<span class="id">Z</span> <span class="kwd">then</span> <span class="id">Int.zero</span> <span class="kwd">else</span> <span class="id">Int.add</span> (<span class="id">sum</span> (<span class="id">Int.sub</span> <span class="id">i</span> <span class="id">Int.one</span>)) <span class="id">i</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.MutrecHeader.html#sum">sum</a></span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#i">i</a></span>) = <span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#i">i</a></span>.(<span class="id"><a href="compcert.lib.Integers.html#Int.intval">Int.intval</a></span>) 0%<span class="id">Z</span> <span class="kwd">then</span> <span class="id"><a href="compcert.lib.Integers.html#Int.zero">Int.zero</a></span> <span class="kwd">else</span> <span class="id"><a href="compcert.lib.Integers.html#Int.add">Int.add</a></span> (<span class="id"><a href="compcert.compcertm.MutrecHeader.html#sum">sum</a></span> (<span class="id"><a href="compcert.lib.Integers.html#Int.sub">Int.sub</a></span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#i">i</a></span> <span class="id"><a href="compcert.lib.Integers.html#Int.one">Int.one</a></span>)) <span class="id"><a href="compcert.compcertm.MutrecHeader.html#i">i</a></span> <br/>
 .<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7206')">Proof.</div>
 <div class="proofscript" id="proof7206">
 &nbsp;&nbsp;<span class="id">des_ifs</span>.<br/>
-&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">Z.eqb_eq</span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="tactic">destruct</span> <span class="id">i</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="tactic">unfold</span> <span class="id">sum</span>. <span class="id">ss</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">fold_rec_equation</span>. <span class="id">des_ifs</span>. <span class="id">zsimpl</span>. <span class="tactic">rewrite</span> <span class="id">fold_rec_equation</span>. <span class="id">des_ifs</span>.<br/>
-&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">i</span>; <span class="id">ss</span>. <span class="tactic">apply</span> <span class="id">Z.eqb_neq</span> <span class="kwd">in</span> <span class="id">Heq</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="tactic">destruct</span> <span class="id">i</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#sum">sum</a></span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Intv.html#fold_rec_equation">fold_rec_equation</a></span>. <span class="id">des_ifs</span>. <span class="id">zsimpl</span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Intv.html#fold_rec_equation">fold_rec_equation</a></span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">i</span>; <span class="id">ss</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_neq">Z.eqb_neq</a></span> <span class="kwd">in</span> <span class="id">Heq</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">intval</span> &gt;= 1) <span class="tactic">by</span> <span class="id">xomega</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">Int.sub</span>. <span class="id">ss</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">sum</span> <span class="tactic">at</span> 1.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">fold_rec_equation</span>. <span class="id">ss</span>. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">exists</span> <span class="id">j</span>, <span class="id">j</span>.(<span class="id">Int.intval</span>) = <span class="id">intval</span> - 1).<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">unshelve</span> <span class="id">eexists</span> (<span class="id">Int.mkint</span> <span class="id">_</span> <span class="id">_</span>); <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Integers.html#Int.sub">Int.sub</a></span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#sum">sum</a></span> <span class="tactic">at</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Intv.html#fold_rec_equation">fold_rec_equation</a></span>. <span class="id">ss</span>. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">exists</span> <span class="id">j</span>, <span class="id"><a href="compcert.compcertm.MutrecHeader.html#j">j</a></span>.(<span class="id"><a href="compcert.lib.Integers.html#Int.intval">Int.intval</a></span>) = <span class="id">intval</span> - 1).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">unshelve</span> <span class="id">eexists</span> (<span class="id"><a href="compcert.lib.Integers.html#Int.mkint">Int.mkint</a></span> <span class="id">_</span> <span class="id">_</span>); <span class="tactic">simpl</span>; <span class="tactic">try</span> <span class="tactic">reflexivity</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">xomega</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Int.unsigned_one</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">sum</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">MOD0</span>: <span class="id">Int.Z_mod_modulus</span> <span class="id">intval</span> = <span class="id">intval</span>).<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">Int.Z_mod_modulus_eq</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id">Z.mod_unique_pos</span> <span class="kwd">with</span> (<span class="id">q</span> := 0%<span class="id">Z</span>); <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Integers.html#Int.unsigned_one">Int.unsigned_one</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#sum">sum</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">MOD0</span>: <span class="id"><a href="compcert.lib.Integers.html#Int.Z_mod_modulus">Int.Z_mod_modulus</a></span> <span class="id">intval</span> = <span class="id">intval</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Integers.html#Int.Z_mod_modulus_eq">Int.Z_mod_modulus_eq</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mod_unique_pos">Z.mod_unique_pos</a></span> <span class="kwd">with</span> (<span class="id">q</span> := 0%<span class="id">Z</span>); <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">MOD1</span>: <span class="id">Int.Z_mod_modulus</span> (<span class="id">intval</span> - 1) = <span class="id">intval</span> - 1).<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">Int.Z_mod_modulus_eq</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id">Z.mod_unique_pos</span> <span class="kwd">with</span> (<span class="id">q</span> := 0%<span class="id">Z</span>); <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id">MOD1</span>: <span class="id"><a href="compcert.lib.Integers.html#Int.Z_mod_modulus">Int.Z_mod_modulus</a></span> (<span class="id">intval</span> - 1) = <span class="id">intval</span> - 1).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Integers.html#Int.Z_mod_modulus_eq">Int.Z_mod_modulus_eq</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">symmetry</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mod_unique_pos">Z.mod_unique_pos</a></span> <span class="kwd">with</span> (<span class="id">q</span> := 0%<span class="id">Z</span>); <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> {| <span class="id">Int.intval</span> := <span class="id">intval</span>; <span class="id">Int.intrange</span> := <span class="id">conj</span> <span class="id">intrange</span> <span class="id">intrange0</span> |} <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Int.repr</span> <span class="id">intval</span>); <span class="id">cycle</span> 1.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">Int.repr</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">eta</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Int.repr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> {| <span class="id"><a href="compcert.lib.Integers.html#Int.mkint">Int.intval</a></span> := <span class="id">intval</span>; <span class="id">Int.intrange</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#conj">conj</a></span> <span class="id">intrange</span> <span class="id">intrange0</span> |} <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.lib.Integers.html#Int.repr">Int.repr</a></span> <span class="id">intval</span>); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id"><a href="compcert.lib.Integers.html#Int.repr">Int.repr</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.MutrecHeader.html#eta">eta</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="compcert.lib.Integers.html#Int.repr">Int.repr</a></span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Int.Ptrofs_add_repr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Integers.html#Int.Ptrofs_add_repr">Int.Ptrofs_add_repr</a></span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">f_equal</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">zsimpl</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">Z.add_comm</span>. <span class="tactic">f_equal</span>. <span class="tactic">f_equal</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id">Int.repr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add_comm">Z.add_comm</a></span>. <span class="tactic">f_equal</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id"><a href="compcert.lib.Integers.html#Int.repr">Int.repr</a></span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id">Int.repr</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="compcert.lib.Integers.html#Int.repr">Int.repr</a></span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">MOD1</span>. <span class="id">lia</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Require</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
 <br/>
-<span class="kwd">Definition</span> <span class="id">fg_sig</span>: <span class="id">AST.signature</span> := (<span class="id">AST.mksignature</span> [<span class="id">AST.Tint</span>] (<span class="id">Some</span> <span class="id">AST.Tint</span>) <span class="id">AST.cc_default</span> <span class="id">true</span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="fg_sig">fg_sig</a></span>: <span class="id"><a href="compcert.common.AST.html#signature">AST.signature</a></span> := (<span class="id"><a href="compcert.common.AST.html#mksignature">AST.mksignature</a></span> [<span class="id"><a href="compcert.common.AST.html#Tint">AST.Tint</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.common.AST.html#Tint">AST.Tint</a></span>) <span class="id"><a href="compcert.common.AST.html#cc_default">AST.cc_default</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>).<br/>
 <br/>
 
 </div>

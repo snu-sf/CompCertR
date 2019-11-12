@@ -13,65 +13,65 @@
 <body onload="hideAll('proofscript')">
 <h1 class="title">Module AsmregsC</h1>
 <div class="coq">
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span> <span class="id">Maps</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">ValuesC</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">LocationsC</span> <span class="id">Stacklayout</span> <span class="id">Conventions</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">MemoryC</span> <span class="id">Integers</span> <span class="id">AST</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ValuesC.html">ValuesC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.LocationsC.html">LocationsC</a></span> <span class="id"><a href="compcert.x86.Stacklayout.html">Stacklayout</a></span> <span class="id"><a href="compcert.backend.Conventions.html">Conventions</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MemoryC.html">MemoryC</a></span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
 <div class="doc">newly added *</div>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Asm</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Locations</span>.<br/>
-<span class="kwd">Require</span> <span class="id">Mach</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.x86.Asm.html">Asm</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.Locations.html">Locations</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Mach.html">Mach</a></span>.<br/>
 <br/>
 <span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">to_mreg_injective</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="to_mreg_injective">to_mreg_injective</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pr0</span> <span class="id">pr1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOME</span>: <span class="id">is_some</span> (<span class="id">pr0</span>.(<span class="id">to_mreg</span>)))<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="id">pr0</span>.(<span class="id">to_mreg</span>) = <span class="id">pr1</span>.(<span class="id">to_mreg</span>)):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">pr0</span> = <span class="id">pr1</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOME</span>: <span class="id"><a href="compcert.compcertm.CoqlibC.html#is_some">is_some</a></span> (<span class="id"><a href="compcert.compcertm.AsmregsC.html#pr0">pr0</a></span>.(<span class="id"><a href="compcert.x86.Asm.html#to_mreg">to_mreg</a></span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr0">pr0</a></span>.(<span class="id"><a href="compcert.x86.Asm.html#to_mreg">to_mreg</a></span>) = <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr1">pr1</a></span>.(<span class="id"><a href="compcert.x86.Asm.html#to_mreg">to_mreg</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr0">pr0</a></span> = <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr1">pr1</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7079')">Proof.</div>
 <div class="proofscript" id="proof7079">
  <span class="tactic">destruct</span> <span class="id">pr0</span>; <span class="id">ss</span>; <span class="tactic">destruct</span> <span class="id">pr1</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">preg_of_injective</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="preg_of_injective">preg_of_injective</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mr0</span> <span class="id">mr1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="id">preg_of</span> <span class="id">mr0</span> = <span class="id">preg_of</span> <span class="id">mr1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">mr0</span> = <span class="id">mr1</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQ</span>: <span class="id"><a href="compcert.x86.Asm.html#preg_of">preg_of</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr0">mr0</a></span> = <span class="id"><a href="compcert.x86.Asm.html#preg_of">preg_of</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr1">mr1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr0">mr0</a></span> = <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr1">mr1</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7080')">Proof.</div>
 <div class="proofscript" id="proof7080">
  <span class="tactic">destruct</span> <span class="id">mr0</span>, <span class="id">mr1</span>; <span class="id">ss</span>. Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">to_mreg_to_preg</span>: <span class="kwd">forall</span> <span class="id">pr0</span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">o_map</span> (<span class="id">pr0</span>.(<span class="id">to_mreg</span>)) (<span class="id">to_preg</span>) = <span class="id">Some</span> <span class="id">pr0</span> \/ <span class="id">pr0</span>.(<span class="id">to_mreg</span>) = <span class="id">None</span>.<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="to_mreg_to_preg">to_mreg_to_preg</a></span>: <span class="kwd">forall</span> <span class="id">pr0</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CoqlibC.html#o_map">o_map</a></span> (<span class="id"><a href="compcert.compcertm.AsmregsC.html#pr0">pr0</a></span>.(<span class="id"><a href="compcert.x86.Asm.html#to_mreg">to_mreg</a></span>)) (<span class="id"><a href="compcert.x86.Asm.html#to_preg">to_preg</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr0">pr0</a></span> \/ <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr0">pr0</a></span>.(<span class="id"><a href="compcert.x86.Asm.html#to_mreg">to_mreg</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7081')">Proof.</div>
 <div class="proofscript" id="proof7081">
  <span class="tactic">destruct</span> <span class="id">pr0</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="tactic">eauto</span>. Qed.</div>
 <br/>
-<span class="kwd">Corollary</span> <span class="id">to_mreg_some_to_preg</span><br/>
+<span class="kwd">Corollary</span> <span class="id"><a name="to_mreg_some_to_preg">to_mreg_some_to_preg</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pr0</span> <span class="id">mr0</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOME</span>: <span class="id">pr0</span>.(<span class="id">to_mreg</span>) = <span class="id">Some</span> <span class="id">mr0</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id">mr0</span>.(<span class="id">to_preg</span>) = <span class="id">pr0</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SOME</span>: <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr0">pr0</a></span>.(<span class="id"><a href="compcert.x86.Asm.html#to_mreg">to_mreg</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr0">mr0</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr0">mr0</a></span>.(<span class="id"><a href="compcert.x86.Asm.html#to_preg">to_preg</a></span>) = <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr0">pr0</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7082')">Proof.</div>
 <div class="proofscript" id="proof7082">
-&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">to_mreg_injective</span> <span class="kwd">with</span> (<span class="id">pr0</span> := <span class="id">mr0</span>.(<span class="id">to_preg</span>)) (<span class="id">pr1</span> := <span class="id">pr0</span>).<br/>
-&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id">to_preg_to_mreg</span>; <span class="id">ss</span>. }<br/>
-&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">to_preg_to_mreg</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#to_mreg_injective">to_mreg_injective</a></span> <span class="kwd">with</span> (<span class="id">pr0</span> := <span class="id">mr0</span>.(<span class="id"><a href="compcert.x86.Asm.html#to_preg">to_preg</a></span>)) (<span class="id">pr1</span> := <span class="id">pr0</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id"><a href="compcert.x86.Asm.html#to_preg_to_mreg">to_preg_to_mreg</a></span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.x86.Asm.html#to_preg_to_mreg">to_preg_to_mreg</a></span>; <span class="id">ss</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Definition</span> <span class="id">to_pregset</span> (<span class="id">mrs</span>: <span class="id">Mach.regset</span>): <span class="id">regset</span> :=<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="to_pregset">to_pregset</a></span> (<span class="id">mrs</span>: <span class="id"><a href="compcert.backend.Mach.html#regset">Mach.regset</a></span>): <span class="id"><a href="compcert.x86.Asm.html#regset">regset</a></span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">pr</span> =&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">pr</span>.(<span class="id">to_mreg</span>) <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">mr</span> =&gt; <span class="id">mrs</span> <span class="id">mr</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">Vundef</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr">pr</a></span>.(<span class="id"><a href="compcert.x86.Asm.html#to_mreg">to_mreg</a></span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">mr</span> =&gt; <span class="id"><a href="compcert.compcertm.AsmregsC.html#mrs">mrs</a></span> <span class="id">mr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
 <br/>
-<span class="kwd">Definition</span> <span class="id">to_mregset</span> (<span class="id">prs</span>: <span class="id">regset</span>): <span class="id">Mach.regset</span> :=<br/>
-&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">mr</span> =&gt; <span class="id">prs</span> (<span class="id">to_preg</span> <span class="id">mr</span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="to_mregset">to_mregset</a></span> (<span class="id">prs</span>: <span class="id"><a href="compcert.x86.Asm.html#regset">regset</a></span>): <span class="id"><a href="compcert.backend.Mach.html#regset">Mach.regset</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">mr</span> =&gt; <span class="id"><a href="compcert.compcertm.AsmregsC.html#prs">prs</a></span> (<span class="id"><a href="compcert.x86.Asm.html#to_preg">to_preg</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr">mr</a></span>).<br/>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">to_mreg_preg_of</span><br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="to_mreg_preg_of">to_mreg_preg_of</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pr</span> <span class="id">mr</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MR</span>: <span class="id">Asm.to_mreg</span> <span class="id">pr</span> = <span class="id">Some</span> <span class="id">mr</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PR</span>: <span class="id">preg_of</span> <span class="id">mr</span> = <span class="id">pr</span>&gt;&gt;.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MR</span>: <span class="id"><a href="compcert.x86.Asm.html#to_mreg">Asm.to_mreg</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr">pr</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr">mr</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PR</span>: <span class="id"><a href="compcert.x86.Asm.html#preg_of">preg_of</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html#mr">mr</a></span> = <span class="id"><a href="compcert.compcertm.AsmregsC.html#pr">pr</a></span>&gt;&gt;.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7083')">Proof.</div>
 <div class="proofscript" id="proof7083">
  <span class="tactic">destruct</span> <span class="id">mr</span>, <span class="id">pr</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>. Qed.</div>

@@ -13,249 +13,249 @@
 <body onload="hideAll('proofscript')">
 <h1 class="title">Module ModSem</h1>
 <div class="coq">
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Events</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Values</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">AST</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Memory</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Globalenvs</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Smallstep</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Smallstep.html">Smallstep</a></span>.<br/>
 <span class="id">From</span> <span class="id">Paco</span> <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">paco</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">sflib</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Skeleton</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">CoqlibC</span>.<br/>
-<span class="kwd">Require</span> <span class="id">Asm</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.x86.Asm.html">Asm</a></span>.<br/>
 <br/>
 <span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
 <br/>
 <br/>
 <br/>
-<span class="kwd">Module</span> <span class="id">Args</span>.<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Args">Args</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">t</span>: <span class="kwd">Type</span> :=<br/>
-&nbsp;&nbsp;| <span class="id">Cstyle</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">fptr</span>: <span class="id">val</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">vs</span>: <span class="id">list</span> <span class="id">val</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>: <span class="id">mem</span>)<br/>
-&nbsp;&nbsp;| <span class="id">Asmstyle</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">rs</span>: <span class="id">Asm.regset</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>: <span class="id">mem</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id"><a name="Args.t">t</a></span>: <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Args.Cstyle">Cstyle</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">fptr</span>: <span class="id"><a href="compcert.common.Values.html#val">val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">vs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Args.Asmstyle">Asmstyle</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">rs</span>: <span class="id"><a href="compcert.x86.Asm.html#regset">Asm.regset</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>).<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">get_fptr</span> (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="id">val</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">args</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Cstyle</span> <span class="id">fptr</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">fptr</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Asmstyle</span> <span class="id">rs</span> <span class="id">_</span> =&gt; <span class="id">rs</span> <span class="id">Asm.PC</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Args.get_fptr">get_fptr</a></span> (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>): <span class="id"><a href="compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Cstyle">Args.Cstyle</a></span> <span class="id">fptr</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">fptr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Asmstyle">Args.Asmstyle</a></span> <span class="id">rs</span> <span class="id">_</span> =&gt; <span class="id">rs</span> <span class="id"><a href="compcert.x86.Asm.html#PC">Asm.PC</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">get_m</span> (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="id">mem</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">args</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Cstyle</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Asmstyle</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Args.get_m">get_m</a></span> (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>): <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Cstyle">Args.Cstyle</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Asmstyle">Args.Asmstyle</a></span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">fptr</span> (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="id">val</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">args</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Cstyle</span> <span class="id">fptr</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">fptr</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Asmstyle</span> <span class="id">rs</span> <span class="id">_</span> =&gt; <span class="id">Vundef</span> <br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Args.fptr">fptr</a></span> (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>): <span class="id"><a href="compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Cstyle">Args.Cstyle</a></span> <span class="id">fptr</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">fptr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Asmstyle">Args.Asmstyle</a></span> <span class="id">rs</span> <span class="id">_</span> =&gt; <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span> <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">vs</span> (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="id">list</span> <span class="id">val</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">args</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Cstyle</span> <span class="id">_</span> <span class="id">vs</span> <span class="id">_</span> =&gt; <span class="id">vs</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Asmstyle</span> <span class="id">_</span> <span class="id">_</span> =&gt; [] <br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Args.vs">vs</a></span> (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Cstyle">Args.Cstyle</a></span> <span class="id">_</span> <span class="id">vs</span> <span class="id">_</span> =&gt; <span class="id">vs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Asmstyle">Args.Asmstyle</a></span> <span class="id">_</span> <span class="id">_</span> =&gt; [] <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">m</span> (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="id">mem</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">args</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Cstyle</span> <span class="id">_</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Args.Asmstyle</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">Mem.empty</span> <br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Args.m">m</a></span> (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>): <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Cstyle">Args.Cstyle</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Asmstyle">Args.Asmstyle</a></span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id"><a href="compcert.common.Memory.html#Mem.empty">Mem.empty</a></span> <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">mk</span> (<span class="id">fptr</span>: <span class="id">val</span>) (<span class="id">vs</span>: <span class="id">list</span> <span class="id">val</span>) (<span class="id">m</span>: <span class="id">mem</span>): <span class="id">t</span> := <span class="id">Args.Cstyle</span> <span class="id">fptr</span> <span class="id">vs</span> <span class="id">m</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Args.mk">mk</a></span> (<span class="id">fptr</span>: <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) (<span class="id">vs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) (<span class="id">m</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>): <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">t</a></span> := <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Cstyle">Args.Cstyle</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#fptr">fptr</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#vs">vs</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#m">m</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">is_cstyle</span> (<span class="id">args</span>: <span class="id">t</span>): <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">args</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Cstyle</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">true</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Args.is_cstyle">is_cstyle</a></span> (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">t</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Cstyle">Cstyle</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">get_m_m</span>: <span class="kwd">forall</span> <span class="id">args</span> (<span class="id">CSTYLE</span>: <span class="id">is_cstyle</span> <span class="id">args</span>), <span class="id">args</span>.(<span class="id">get_m</span>) = <span class="id">args</span>.(<span class="id">m</span>). <span class="kwd">Proof</span>. <span class="tactic">destruct</span> <span class="id">args</span>; <span class="id">ss</span>. Qed.</div>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Args.get_m_m">get_m_m</a></span>: <span class="kwd">forall</span> <span class="id">args</span> (<span class="id">CSTYLE</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.is_cstyle">is_cstyle</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span>), <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#Args.get_m">get_m</a></span>) = <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#Args.m">m</a></span>). <span class="kwd">Proof</span>. <span class="tactic">destruct</span> <span class="id">args</span>; <span class="id">ss</span>. Qed.</div>
 <br/>
-<span class="kwd">End</span> <span class="id">Args</span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ModSem.html#Args">Args</a></span>.<br/>
 <br/>
-<span class="kwd">Module</span> <span class="id">Retv</span>.<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Retv">Retv</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">t</span>: <span class="kwd">Type</span> :=<br/>
-&nbsp;&nbsp;| <span class="id">Cstyle</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">v</span>: <span class="id">val</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>: <span class="id">mem</span>)<br/>
-&nbsp;&nbsp;| <span class="id">Asmstyle</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">rs</span>: <span class="id">Asm.regset</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>: <span class="id">mem</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id"><a name="Retv.t">t</a></span>: <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Retv.Cstyle">Cstyle</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">v</span>: <span class="id"><a href="compcert.common.Values.html#val">val</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Retv.Asmstyle">Asmstyle</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">rs</span>: <span class="id"><a href="compcert.x86.Asm.html#regset">Asm.regset</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">m</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>).<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">get_m</span> (<span class="id">retv</span>: <span class="id">Retv.t</span>): <span class="id">mem</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">retv</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Retv.Cstyle</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Retv.Asmstyle</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Retv.get_m">get_m</a></span> (<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span>): <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Cstyle">Retv.Cstyle</a></span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Asmstyle">Retv.Asmstyle</a></span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">v</span> (<span class="id">retv</span>: <span class="id">Retv.t</span>): <span class="id">val</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">retv</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Retv.Cstyle</span> <span class="id">v</span> <span class="id">_</span> =&gt; <span class="id">v</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Retv.Asmstyle</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">Vundef</span> <br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Retv.v">v</a></span> (<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span>): <span class="id"><a href="compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Cstyle">Retv.Cstyle</a></span> <span class="id">v</span> <span class="id">_</span> =&gt; <span class="id">v</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Asmstyle">Retv.Asmstyle</a></span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span> <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">m</span> (<span class="id">retv</span>: <span class="id">Retv.t</span>): <span class="id">mem</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">retv</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Retv.Cstyle</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Retv.Asmstyle</span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">Mem.empty</span> <br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Retv.m">m</a></span> (<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span>): <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Cstyle">Retv.Cstyle</a></span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id">m</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Asmstyle">Retv.Asmstyle</a></span> <span class="id">_</span> <span class="id">m</span> =&gt; <span class="id"><a href="compcert.common.Memory.html#Mem.empty">Mem.empty</a></span> <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">mk</span> (<span class="id">v</span>: <span class="id">val</span>) (<span class="id">m</span>: <span class="id">mem</span>): <span class="id">t</span> := <span class="id">Retv.Cstyle</span> <span class="id">v</span> <span class="id">m</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Retv.mk">mk</a></span> (<span class="id">v</span>: <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) (<span class="id">m</span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>): <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">t</a></span> := <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Cstyle">Retv.Cstyle</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#m">m</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">is_cstyle</span> (<span class="id">retv</span>: <span class="id">t</span>): <span class="id">bool</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">retv</span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Cstyle</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">true</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Retv.is_cstyle">is_cstyle</a></span> (<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">t</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Cstyle">Cstyle</a></span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">get_m_m</span>: <span class="kwd">forall</span> <span class="id">retv</span> (<span class="id">CSTYLE</span>: <span class="id">is_cstyle</span> <span class="id">retv</span>), <span class="id">retv</span>.(<span class="id">get_m</span>) = <span class="id">retv</span>.(<span class="id">m</span>). <span class="kwd">Proof</span>. <span class="tactic">destruct</span> <span class="id">retv</span>; <span class="id">ss</span>. Qed.</div>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Retv.get_m_m">get_m_m</a></span>: <span class="kwd">forall</span> <span class="id">retv</span> (<span class="id">CSTYLE</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.is_cstyle">is_cstyle</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span>), <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#Retv.get_m">get_m</a></span>) = <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#Retv.m">m</a></span>). <span class="kwd">Proof</span>. <span class="tactic">destruct</span> <span class="id">retv</span>; <span class="id">ss</span>. Qed.</div>
 <br/>
-<span class="kwd">End</span> <span class="id">Retv</span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ModSem.html#Retv">Retv</a></span>.<br/>
 <br/>
-<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">Args.is_cstyle</span> <span class="id">Args.mk</span> <span class="id">Args.fptr</span> <span class="id">Args.vs</span> <span class="id">Args.m</span> <span class="id">Retv.is_cstyle</span> <span class="id">Retv.mk</span> <span class="id">Retv.v</span> <span class="id">Retv.m</span>.<br/>
-<span class="kwd">Hint</span> <span class="id">Constructors</span> <span class="id">Args.t</span> <span class="id">Retv.t</span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.ModSem.html#is_cstyle">Args.is_cstyle</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#mk">Args.mk</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#fptr">Args.fptr</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#vs">Args.vs</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#m">Args.m</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#is_cstyle">Retv.is_cstyle</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#mk">Retv.mk</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#v">Retv.v</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#m">Retv.m</a></span>.<br/>
+<span class="kwd">Hint</span> <span class="id">Constructors</span> <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span>.<br/>
 <br/>
-<span class="kwd">Module</span> <span class="id">ModSem</span>.<br/>
+<span class="kwd">Module</span> <span class="id"><a name="ModSem">ModSem</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Record</span> <span class="id">t</span>: <span class="kwd">Type</span> := <span class="id">mk</span> {<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state</span>: <span class="kwd">Type</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">genvtype</span>: <span class="kwd">Type</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step</span> (<span class="id">se</span>: <span class="id">Senv.t</span>) (<span class="id">ge</span>: <span class="id">genvtype</span>) (<span class="id">st0</span>: <span class="id">state</span>) (<span class="id">tr</span>: <span class="id">trace</span>) (<span class="id">st1</span>: <span class="id">state</span>): <span class="kwd">Prop</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">at_external</span> (<span class="id">st0</span>: <span class="id">state</span>) (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="kwd">Prop</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">initial_frame</span> (<span class="id">args</span>: <span class="id">Args.t</span>) (<span class="id">st0</span>: <span class="id">state</span>): <span class="kwd">Prop</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_frame</span> (<span class="id">st0</span>: <span class="id">state</span>) (<span class="id">retv</span>: <span class="id">Retv.t</span>): <span class="kwd">Prop</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">after_external</span> (<span class="id">st0</span>: <span class="id">state</span>) (<span class="id">retv</span>: <span class="id">Retv.t</span>) (<span class="id">st1</span>: <span class="id">state</span>): <span class="kwd">Prop</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">globalenv</span>: <span class="id">genvtype</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv</span>: <span class="id">SkEnv.t</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">skenv_link</span>: <span class="id">SkEnv.t</span>;<br/>
+&nbsp;&nbsp;<span class="kwd">Record</span> <span class="id"><a name="ModSem.t">t</a></span>: <span class="kwd">Type</span> := <span class="id"><a name="ModSem.mk">mk</a></span> {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.state">state</a></span>: <span class="kwd">Type</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.genvtype">genvtype</a></span>: <span class="kwd">Type</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.step">step</a></span> (<span class="id">se</span>: <span class="id"><a href="compcert.common.Globalenvs.html#Senv.t">Senv.t</a></span>) (<span class="id">ge</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#genvtype">genvtype</a></span>) (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>) (<span class="id">tr</span>: <span class="id"><a href="compcert.common.Events.html#trace">trace</a></span>) (<span class="id">st1</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>): <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.at_external">at_external</a></span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>) (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>): <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.initial_frame">initial_frame</a></span> (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>) (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>): <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.final_frame">final_frame</a></span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>) (<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span>): <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.after_external">after_external</a></span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>) (<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span>) (<span class="id">st1</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>): <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.globalenv">globalenv</a></span>: <span class="id"><a href="compcert.compcertm.ModSem.html#genvtype">genvtype</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.skenv">skenv</a></span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.t">SkEnv.t</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.skenv_link">skenv_link</a></span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.t">SkEnv.t</a></span>;<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">at_external_dtm</span>: <span class="kwd">forall</span> <span class="id">st</span> <span class="id">args0</span> <span class="id">args1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AT0</span>: <span class="id">at_external</span> <span class="id">st</span> <span class="id">args0</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AT1</span>: <span class="id">at_external</span> <span class="id">st</span> <span class="id">args1</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">args0</span> = <span class="id">args1</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.at_external_dtm">at_external_dtm</a></span>: <span class="kwd">forall</span> <span class="id">st</span> <span class="id">args0</span> <span class="id">args1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AT0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#at_external">at_external</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st">st</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#args0">args0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AT1</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#at_external">at_external</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st">st</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#args1">args1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#args0">args0</a></span> = <span class="id"><a href="compcert.compcertm.ModSem.html#args1">args1</a></span>;<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">final_frame_dtm</span>: <span class="kwd">forall</span> <span class="id">st</span> <span class="id">retv0</span> <span class="id">retv1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINAL0</span>: <span class="id">final_frame</span> <span class="id">st</span> <span class="id">retv0</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINAL1</span>: <span class="id">final_frame</span> <span class="id">st</span> <span class="id">retv1</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">retv0</span> = <span class="id">retv1</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">after_external_dtm</span>: <span class="kwd">forall</span> <span class="id">st_call</span> <span class="id">retv</span> <span class="id">st0</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AFTER0</span>: <span class="id">after_external</span> <span class="id">st_call</span> <span class="id">retv</span> <span class="id">st0</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AFTER0</span>: <span class="id">after_external</span> <span class="id">st_call</span> <span class="id">retv</span> <span class="id">st1</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st0</span> = <span class="id">st1</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.final_frame_dtm">final_frame_dtm</a></span>: <span class="kwd">forall</span> <span class="id">st</span> <span class="id">retv0</span> <span class="id">retv1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINAL0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#final_frame">final_frame</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st">st</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv0">retv0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">FINAL1</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#final_frame">final_frame</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st">st</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv1">retv1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#retv0">retv0</a></span> = <span class="id"><a href="compcert.compcertm.ModSem.html#retv1">retv1</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.after_external_dtm">after_external_dtm</a></span>: <span class="kwd">forall</span> <span class="id">st_call</span> <span class="id">retv</span> <span class="id">st0</span> <span class="id">st1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AFTER0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#after_external">after_external</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st_call">st_call</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">AFTER0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#after_external">after_external</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st_call">st_call</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span> = <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>;<br/>
 <br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_call</span> (<span class="id">st0</span>: <span class="id">state</span>): <span class="kwd">Prop</span> := <span class="id">exists</span> <span class="id">args</span>, <span class="id">at_external</span> <span class="id">st0</span> <span class="id">args</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_step</span> (<span class="id">st0</span>: <span class="id">state</span>): <span class="kwd">Prop</span> := <span class="id">exists</span> <span class="id">tr</span> <span class="id">st1</span>, <span class="id">step</span> <span class="id">skenv_link</span> <span class="id">globalenv</span> <span class="id">st0</span> <span class="id">tr</span> <span class="id">st1</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_return</span> (<span class="id">st0</span>: <span class="id">state</span>): <span class="kwd">Prop</span> := <span class="id">exists</span> <span class="id">retv</span>, <span class="id">final_frame</span> <span class="id">st0</span> <span class="id">retv</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_call</span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>): <span class="kwd">Prop</span> := <span class="id">exists</span> <span class="id">args</span>, <span class="id"><a href="compcert.compcertm.ModSem.html#at_external">at_external</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_step</span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>): <span class="kwd">Prop</span> := <span class="id">exists</span> <span class="id">tr</span> <span class="id">st1</span>, <span class="id"><a href="compcert.compcertm.ModSem.html#step">step</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#globalenv">globalenv</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_return</span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#state">state</a></span>): <span class="kwd">Prop</span> := <span class="id">exists</span> <span class="id">retv</span>, <span class="id"><a href="compcert.compcertm.ModSem.html#final_frame">final_frame</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span>;<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">call_step_disjoint</span>: <span class="id">is_call</span> /1\ <span class="id">is_step</span> &lt;1= <span class="id">bot1</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step_return_disjoint</span>: <span class="id">is_step</span> /1\ <span class="id">is_return</span> &lt;1= <span class="id">bot1</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">call_return_disjoint</span>: <span class="id">is_call</span> /1\ <span class="id">is_return</span> &lt;1= <span class="id">bot1</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.call_step_disjoint">call_step_disjoint</a></span>: <span class="id"><a href="compcert.compcertm.ModSem.html#is_call">is_call</a></span> /1\ <span class="id"><a href="compcert.compcertm.ModSem.html#is_step">is_step</a></span> &lt;1= <span class="id">bot1</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.step_return_disjoint">step_return_disjoint</a></span>: <span class="id"><a href="compcert.compcertm.ModSem.html#is_step">is_step</a></span> /1\ <span class="id"><a href="compcert.compcertm.ModSem.html#is_return">is_return</a></span> &lt;1= <span class="id">bot1</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="ModSem.call_return_disjoint">call_return_disjoint</a></span>: <span class="id"><a href="compcert.compcertm.ModSem.html#is_call">is_call</a></span> /1\ <span class="id"><a href="compcert.compcertm.ModSem.html#is_return">is_return</a></span> &lt;1= <span class="id">bot1</span>;<br/>
 &nbsp;&nbsp;}.<br/>
 <br/>
 &nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">tac</span> :=<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span>( <span class="kwd">let</span> <span class="id">TAC</span> := <span class="id">u</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span> <span class="kwd">in</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">u</span> <span class="kwd">in</span> *; <span class="id">des_safe</span>;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">first</span>[ <span class="id">exfalso</span>; <span class="tactic">eapply</span> <span class="id">ModSem.call_step_disjoint</span>; <span class="id">TAC</span>; <span class="tactic">fail</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">exfalso</span>; <span class="tactic">eapply</span> <span class="id">ModSem.step_return_disjoint</span>; <span class="id">TAC</span>; <span class="tactic">fail</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">exfalso</span>; <span class="tactic">eapply</span> <span class="id">ModSem.call_return_disjoint</span>; <span class="id">TAC</span>; <span class="tactic">fail</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">first</span>[ <span class="id">exfalso</span>; <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.call_step_disjoint">ModSem.call_step_disjoint</a></span>; <span class="id">TAC</span>; <span class="tactic">fail</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">exfalso</span>; <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.step_return_disjoint">ModSem.step_return_disjoint</a></span>; <span class="id">TAC</span>; <span class="tactic">fail</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">exfalso</span>; <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.call_return_disjoint">ModSem.call_return_disjoint</a></span>; <span class="id">TAC</span>; <span class="tactic">fail</span>]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;).<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">to_semantics</span> (<span class="id">ms</span>: <span class="id">t</span>) :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Semantics_gen</span> <span class="id">ms</span>.(<span class="id">step</span>) <span class="id">bot1</span> <span class="id">bot2</span> <span class="id">ms</span>.(<span class="id">globalenv</span>) <span class="id">ms</span>.(<span class="id">skenv_link</span>)).<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ModSem.to_semantics">to_semantics</a></span> (<span class="id">ms</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">t</a></span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.common.Smallstep.html#Semantics_gen">Semantics_gen</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.step">step</a></span>) <span class="id">bot1</span> <span class="id">bot2</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.globalenv">globalenv</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.skenv_link">skenv_link</a></span>)).<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Module</span> <span class="id">Atomic</span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Section</span> <span class="id">Atomic</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Module</span> <span class="id"><a name="ModSem.Atomic">Atomic</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Section</span> <span class="id"><a name="ModSem.Atomic.Atomic">Atomic</a></span>.<br/>
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Local</span> <span class="kwd">Coercion</span> <span class="id">ModSem.to_semantics</span>: <span class="id">ModSem.t</span> &gt;-&gt; <span class="id">Smallstep.semantics</span>.<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id">ms</span>: <span class="id">t</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="ModSem.Atomic.Atomic.ms">ms</a></span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">t</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id">state</span> := (<span class="id">trace</span> * <span class="id">ms</span>.(<span class="id">state</span>))%<span class="id">type</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id"><a name="ModSem.Atomic.Atomic.state">state</a></span> := (<span class="id"><a href="compcert.common.Events.html#trace">trace</a></span> * <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.state">state</a></span>))%<span class="id">type</span>.<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">step</span> (<span class="id">se</span>: <span class="id">Senv.t</span>) (<span class="id">ge</span>: <span class="id">ms</span>.(<span class="id">genvtype</span>)): <span class="id">state</span> -&gt; <span class="id">trace</span> -&gt; <span class="id">state</span> -&gt; <span class="kwd">Prop</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">step_silent</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id"><a name="ModSem.Atomic.step">step</a></span> (<span class="id">se</span>: <span class="id"><a href="compcert.common.Globalenvs.html#Senv.t">Senv.t</a></span>) (<span class="id">ge</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.genvtype">genvtype</a></span>)): <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.state">state</a></span> -&gt; <span class="id"><a href="compcert.common.Events.html#trace">trace</a></span> -&gt; <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.state">state</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a name="ModSem.Atomic.step_silent">step_silent</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st0</span> <span class="id">st1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEPSIL</span>: <span class="id">Step</span> <span class="id">ms</span> <span class="id">st0</span> <span class="id">E0</span> <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> (<span class="id">E0</span>, <span class="id">st0</span>) <span class="id">E0</span> (<span class="id">E0</span>, <span class="id">st1</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">step_start</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEPSIL</span>: <span class="id">Step</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#step">step</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#se">se</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ge">ge</a></span> (<span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>, <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>) <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> (<span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>, <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a name="ModSem.Atomic.step_start">step_start</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st0</span> <span class="id">st1</span> <span class="id">ev</span> <span class="id">tr</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEPEV</span>: <span class="id">Step</span> <span class="id">ms</span> <span class="id">st0</span> (<span class="id">ev</span> :: <span class="id">tr</span>) <span class="id">st1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> (<span class="id">E0</span>, <span class="id">st0</span>) [<span class="id">ev</span>] (<span class="id">tr</span>, <span class="id">st1</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">step_continue</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEPEV</span>: <span class="id">Step</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ev">ev</a></span> :: <span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#step">step</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#se">se</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ge">ge</a></span> (<span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>, <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>) [<span class="id"><a href="compcert.compcertm.ModSem.html#ev">ev</a></span>] (<span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a name="ModSem.Atomic.step_continue">step_continue</a></span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ev</span> <span class="id">tr</span> <span class="id">st0</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_trace</span> (<span class="id">ev</span> :: <span class="id">tr</span>)):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">step</span> <span class="id">se</span> <span class="id">ge</span> (<span class="id">ev</span> :: <span class="id">tr</span>, <span class="id">st0</span>) [<span class="id">ev</span>] (<span class="id">tr</span>, <span class="id">st0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Events.html#output_trace">output_trace</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ev">ev</a></span> :: <span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#step">step</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#se">se</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ge">ge</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ev">ev</a></span> :: <span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>) [<span class="id"><a href="compcert.compcertm.ModSem.html#ev">ev</a></span>] (<span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span>, <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>).<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">at_external</span> (<span class="id">st0</span>: <span class="id">state</span>) (<span class="id">args</span>: <span class="id">Args.t</span>): <span class="kwd">Prop</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st0</span>.(<span class="id">fst</span>) = [] /\ <span class="id">ms</span>.(<span class="id">at_external</span>) <span class="id">st0</span>.(<span class="id">snd</span>) <span class="id">args</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ModSem.Atomic.at_external">at_external</a></span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.state">state</a></span>) (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span>) = [] /\ <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.at_external">at_external</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">initial_frame</span> (<span class="id">args</span>: <span class="id">Args.t</span>) (<span class="id">st0</span>: <span class="id">state</span>): <span class="kwd">Prop</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st0</span>.(<span class="id">fst</span>) = [] /\ <span class="id">ms</span>.(<span class="id">initial_frame</span>) <span class="id">args</span> <span class="id">st0</span>.(<span class="id">snd</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ModSem.Atomic.initial_frame">initial_frame</a></span> (<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span>) (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.state">state</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span>) = [] /\ <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.initial_frame">initial_frame</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#args">args</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span>).<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">final_frame</span> (<span class="id">st0</span>: <span class="id">state</span>) (<span class="id">retv</span>: <span class="id">Retv.t</span>): <span class="kwd">Prop</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st0</span>.(<span class="id">fst</span>) = [] /\ <span class="id">ms</span>.(<span class="id">final_frame</span>) <span class="id">st0</span>.(<span class="id">snd</span>) <span class="id">retv</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ModSem.Atomic.final_frame">final_frame</a></span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.state">state</a></span>) (<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span>) = [] /\ <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.final_frame">final_frame</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span>.<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">after_external</span> (<span class="id">st0</span>: <span class="id">state</span>) (<span class="id">retv</span>: <span class="id">Retv.t</span>) (<span class="id">st1</span>: <span class="id">state</span>): <span class="kwd">Prop</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">st0</span>.(<span class="id">fst</span>) = [] /\ <span class="id">ms</span>.(<span class="id">after_external</span>) <span class="id">st0</span>.(<span class="id">snd</span>) <span class="id">retv</span> <span class="id">st1</span>.(<span class="id">snd</span>) /\ <span class="id">st1</span>.(<span class="id">fst</span>) = [].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="ModSem.Atomic.after_external">after_external</a></span> (<span class="id">st0</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.state">state</a></span>) (<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span>) (<span class="id">st1</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.state">state</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span>) = [] /\ <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.after_external">after_external</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#st0">st0</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#retv">retv</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span>) /\ <span class="id"><a href="compcert.compcertm.ModSem.html#st1">st1</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span>) = [].<br/>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">trans</span>: <span class="id">t</span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">mk</span> <span class="id">step</span> <span class="id">at_external</span> <span class="id">initial_frame</span> <span class="id">final_frame</span> <span class="id">after_external</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ms</span>.(<span class="id">globalenv</span>) <span class="id">ms</span>.(<span class="id">skenv</span>) <span class="id">ms</span>.(<span class="id">skenv_link</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="ModSem.Atomic.trans">trans</a></span>: <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">t</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.mk">mk</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.step">step</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.at_external">at_external</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.initial_frame">initial_frame</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.final_frame">final_frame</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.after_external">after_external</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.globalenv">globalenv</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.skenv_link">skenv_link</a></span>) <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7359')">Next Obligation.</div>
 <div class="proofscript" id="proof7359">
- <span class="id">rr</span> <span class="kwd">in</span> <span class="id">AT0</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">AT1</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id">at_external_dtm</span>; <span class="tactic">eauto</span>. Qed.</div>
+ <span class="id">rr</span> <span class="kwd">in</span> <span class="id">AT0</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">AT1</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.at_external_dtm">at_external_dtm</a></span>; <span class="tactic">eauto</span>. Qed.</div>
 <div class="toggleproof" onclick="toggleDisplay('proof7360')">Next Obligation.</div>
 <div class="proofscript" id="proof7360">
- <span class="id">rr</span> <span class="kwd">in</span> <span class="id">FINAL0</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">FINAL1</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id">final_frame_dtm</span>; <span class="tactic">eauto</span>. Qed.</div>
+ <span class="id">rr</span> <span class="kwd">in</span> <span class="id">FINAL0</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">FINAL1</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.final_frame_dtm">final_frame_dtm</a></span>; <span class="tactic">eauto</span>. Qed.</div>
 <div class="toggleproof" onclick="toggleDisplay('proof7361')">Next Obligation.</div>
 <div class="proofscript" id="proof7361">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">AFTER0</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">AFTER1</span>. <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">st0</span>, <span class="id">st1</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="tactic">f_equal</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">after_external_dtm</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.after_external_dtm">after_external_dtm</a></span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;Qed.</div>
 <div class="toggleproof" onclick="toggleDisplay('proof7362')">Next Obligation.</div>
 <div class="proofscript" id="proof7362">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">x0</span>, <span class="id">st1</span>; <span class="id">ss</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">PR</span>. <span class="id">ss</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">call_step_disjoint</span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.call_step_disjoint">call_step_disjoint</a></span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">inv</span> <span class="id">PR0</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;Qed.</div>
 <div class="toggleproof" onclick="toggleDisplay('proof7363')">Next Obligation.</div>
 <div class="proofscript" id="proof7363">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">x0</span>, <span class="id">st1</span>; <span class="id">ss</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">PR0</span>. <span class="id">ss</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">step_return_disjoint</span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.step_return_disjoint">step_return_disjoint</a></span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">cycle</span> 1.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">inv</span> <span class="id">PR</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;Qed.</div>
 <div class="toggleproof" onclick="toggleDisplay('proof7364')">Next Obligation.</div>
 <div class="proofscript" id="proof7364">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>. <span class="tactic">destruct</span> <span class="id">x0</span>; <span class="id">ss</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">PR</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">PR0</span>. <span class="id">ss</span>. <span class="id">des</span>. <span class="id">clarify</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">call_return_disjoint</span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">rr</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.call_return_disjoint">call_return_disjoint</a></span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">rr</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;Qed.</div>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">atomic_continue</span> <span class="id">tr0</span> <span class="id">tr1</span> <span class="id">st_src0</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">output_trace</span> (<span class="id">tr1</span> ** <span class="id">tr0</span>)):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">star</span> <span class="id">step</span> (<span class="id">skenv_link</span> <span class="id">ms</span>) (<span class="id">globalenv</span> <span class="id">ms</span>) (<span class="id">tr1</span> ** <span class="id">tr0</span>, <span class="id">st_src0</span>) <span class="id">tr1</span> (<span class="id">tr0</span>, <span class="id">st_src0</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="ModSem.Atomic.atomic_continue">atomic_continue</a></span> <span class="id">tr0</span> <span class="id">tr1</span> <span class="id">st_src0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Events.html#output_trace">output_trace</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#tr1">tr1</a></span> ** <span class="id"><a href="compcert.compcertm.ModSem.html#tr0">tr0</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Smallstep.html#star">star</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.step">step</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>) (<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.globalenv">globalenv</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>) (<span class="id"><a href="compcert.compcertm.ModSem.html#tr1">tr1</a></span> ** <span class="id"><a href="compcert.compcertm.ModSem.html#tr0">tr0</a></span>, <span class="id"><a href="compcert.compcertm.ModSem.html#st_src0">st_src0</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#tr1">tr1</a></span> (<span class="id"><a href="compcert.compcertm.ModSem.html#tr0">tr0</a></span>, <span class="id"><a href="compcert.compcertm.ModSem.html#st_src0">st_src0</a></span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7365')">Proof.</div>
 <div class="proofscript" id="proof7365">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">tr1</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
@@ -265,37 +265,37 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;Qed.</div>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">atomic_lift_step</span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">Step</span> <span class="id">ms</span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Star</span> <span class="id">trans</span> ([], <span class="id">st_src0</span>) <span class="id">tr</span> ([], <span class="id">st_src1</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="ModSem.Atomic.atomic_lift_step">atomic_lift_step</a></span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STEP</span>: <span class="id">Step</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st_src0">st_src0</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st_src1">st_src1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">trans</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSem.html#st_src0">st_src0</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSem.html#st_src1">st_src1</a></span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7366')">Proof.</div>
 <div class="proofscript" id="proof7366">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">tr</span>; <span class="id">ss</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id">star_one</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">star_trans</span>; <span class="id">swap</span> 2 3.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id">star_one</span> <span class="kwd">with</span> (<span class="id">t</span> := [<span class="id">e</span>]). <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_one">star_one</a></span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_trans">star_trans</a></span>; <span class="id">swap</span> 2 3.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_one">star_one</a></span> <span class="kwd">with</span> (<span class="id">t</span> := [<span class="id">e</span>]). <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ss</span>. }<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rpapply</span> <span class="id">atomic_continue</span>; <span class="id">ss</span>; <span class="tactic">unfold</span> <span class="id">Eapp</span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id">app_nil_r</span> <span class="kwd">in</span> *; <span class="tactic">eauto</span>. <span class="id">exploit</span> <span class="id">WBT</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rpapply</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.atomic_continue">atomic_continue</a></span>; <span class="id">ss</span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Events.html#Eapp">Eapp</a></span> <span class="kwd">in</span> *; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#app_nil_r">app_nil_r</a></span> <span class="kwd">in</span> *; <span class="tactic">eauto</span>. <span class="id">exploit</span> <span class="id">WBT</span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;Qed.</div>
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id">atomic_lift_star</span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id">well_behaved_traces</span> <span class="id">ms</span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id">ms</span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span>):<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Star</span> <span class="id">trans</span> ([], <span class="id">st_src0</span>) <span class="id">tr</span> ([], <span class="id">st_src1</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="ModSem.Atomic.atomic_lift_star">atomic_lift_star</a></span> <span class="id">st_src0</span> <span class="id">tr</span> <span class="id">st_src1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WBT</span>: <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">STAR</span>: <span class="id">Star</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic.ms">ms</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st_src0">st_src0</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#st_src1">st_src1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">trans</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSem.html#st_src0">st_src0</a></span>) <span class="id"><a href="compcert.compcertm.ModSem.html#tr">tr</a></span> ([], <span class="id"><a href="compcert.compcertm.ModSem.html#st_src1">st_src1</a></span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof7367')">Proof.</div>
 <div class="proofscript" id="proof7367">
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">STAR</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">star_trans</span>; <span class="tactic">eauto</span>. <span class="tactic">clear</span> - <span class="id">H</span> <span class="id">WBT</span>. <span class="id">exploit</span> <span class="id">atomic_lift_step</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_trans">star_trans</a></span>; <span class="tactic">eauto</span>. <span class="tactic">clear</span> - <span class="id">H</span> <span class="id">WBT</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.atomic_lift_step">atomic_lift_step</a></span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;Qed.</div>
 <br/>
-&nbsp;&nbsp;<span class="kwd">End</span> <span class="id">Atomic</span>.<br/>
-&nbsp;&nbsp;<span class="kwd">End</span> <span class="id">Atomic</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.Atomic">Atomic</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic">Atomic</a></span>.<br/>
 <br/>
-<span class="kwd">End</span> <span class="id">ModSem</span>.<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem">ModSem</a></span>.<br/>
 <br/>
-<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id">ModSem.is_call</span> <span class="id">ModSem.is_step</span> <span class="id">ModSem.is_return</span>.<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.ModSem.html#is_call">ModSem.is_call</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#is_step">ModSem.is_step</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html#is_return">ModSem.is_return</a></span>.<br/>
 <br/>
 <span class="kwd">Coercion</span> <span class="id">ModSem.to_semantics</span>: <span class="id">ModSem.t</span> &gt;-&gt; <span class="id">semantics</span>.<br/>
 

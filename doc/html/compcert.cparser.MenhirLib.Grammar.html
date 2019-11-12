@@ -14,161 +14,161 @@
 <h1 class="title">Module Grammar</h1>
 <div class="coq">
 <br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span>.<br/>
 <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html">Alphabet</a></span>.<br/>
-<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Structures.Orders.html">Orders</a></span>.<br/>
-<span class="kwd">Require</span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html">Tuples</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Alphabet</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Orders</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Tuples</span>.<br/>
 <br/>
 <div class="doc">The terminal non-terminal alphabets of the grammar. *</div>
-<span class="kwd">Module</span> <span class="kwd">Type</span> <span class="id"><a name="Alphs">Alphs</a></span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Parameters</span> <span class="id"><a name="Alphs.terminal">terminal</a></span> <span class="id"><a name="Alphs.nonterminal">nonterminal</a></span> : <span class="kwd">Type</span>.<br/>
-&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Instance</span> <span class="id"><a name="Alphs.TerminalAlph">TerminalAlph</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#Alphabet">Alphabet</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Alphs.terminal">terminal</a></span>.<br/>
-&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Instance</span> <span class="id"><a name="Alphs.NonTerminalAlph">NonTerminalAlph</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#Alphabet">Alphabet</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Alphs.nonterminal">nonterminal</a></span>.<br/>
-<span class="kwd">End</span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Alphs">Alphs</a></span>.<br/>
+<span class="kwd">Module</span> <span class="kwd">Type</span> <span class="id">Alphs</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Parameters</span> <span class="id">terminal</span> <span class="id">nonterminal</span> : <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Instance</span> <span class="id">TerminalAlph</span>: <span class="id">Alphabet</span> <span class="id">terminal</span>.<br/>
+&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Instance</span> <span class="id">NonTerminalAlph</span>: <span class="id">Alphabet</span> <span class="id">nonterminal</span>.<br/>
+<span class="kwd">End</span> <span class="id">Alphs</span>.<br/>
 <br/>
 <div class="doc">Definition of the alphabet of symbols, given the alphabet of terminals
     and the alphabet of non terminals *</div>
-<span class="kwd">Module</span> <span class="id"><a name="Symbol">Symbol</a></span>(<span class="kwd">Import</span> <span class="id">A</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Alphs">Alphs</a></span>).<br/>
+<span class="kwd">Module</span> <span class="id">Symbol</span>(<span class="kwd">Import</span> <span class="id">A</span>:<span class="id">Alphs</span>).<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id"><a name="Symbol.symbol">symbol</a></span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a name="Symbol.T">T</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#A.terminal">terminal</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#symbol">symbol</a></span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a name="Symbol.NT">NT</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#A.nonterminal">nonterminal</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#symbol">symbol</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">symbol</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">T</span>: <span class="id">terminal</span> -&gt; <span class="id">symbol</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span>: <span class="id">nonterminal</span> -&gt; <span class="id">symbol</span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Symbol.SymbolAlph">SymbolAlph</a></span> : <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#Alphabet">Alphabet</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.symbol">symbol</a></span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#AlphabetComparable">AlphabetComparable</a></span> := {| <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#Build_Comparable">compare</a></span> := <span class="kwd">fun</span> <span class="id">x</span> <span class="id">y</span> =&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#x">x</a></span>, <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#y">y</a></span> <span class="kwd">return</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#comparison">comparison</a></span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.T">T</a></span> <span class="id">_</span>, <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.NT">NT</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Gt">Gt</a></span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.NT">NT</a></span> <span class="id">_</span>, <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.T">T</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Lt">Lt</a></span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.T">T</a></span> <span class="id">x</span>, <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.T">T</a></span> <span class="id">y</span> =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare">compare</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#x">x</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#y">y</a></span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.NT">NT</a></span> <span class="id">x</span>, <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.NT">NT</a></span> <span class="id">y</span> =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare">compare</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#x">x</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#y">y</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">SymbolAlph</span> : <span class="id">Alphabet</span> <span class="id">symbol</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">AlphabetComparable</span> := {| <span class="id">compare</span> := <span class="kwd">fun</span> <span class="id">x</span> <span class="id">y</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">return</span> <span class="id">comparison</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">T</span> <span class="id">_</span>, <span class="id">NT</span> <span class="id">_</span> =&gt; <span class="id">Gt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">_</span>, <span class="id">T</span> <span class="id">_</span> =&gt; <span class="id">Lt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">T</span> <span class="id">x</span>, <span class="id">T</span> <span class="id">y</span> =&gt; <span class="id">compare</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">x</span>, <span class="id">NT</span> <span class="id">y</span> =&gt; <span class="id">compare</span> <span class="id">x</span> <span class="id">y</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span> |};<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#AlphabetFinite">AlphabetFinite</a></span> := {| <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#Build_Finite">all_list</a></span> :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.T">T</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#all_list">all_list</a></span>++<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol.NT">NT</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#all_list">all_list</a></span> |} }.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">AlphabetFinite</span> := {| <span class="id">all_list</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">map</span> <span class="id">T</span> <span class="id">all_list</span>++<span class="id">map</span> <span class="id">NT</span> <span class="id">all_list</span> |} }.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof6014')">Next Obligation.</div>
 <div class="proofscript" id="proof6014">
-&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">destruct</span> <span class="id">y</span>; <span class="tactic">intuition</span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_antisym">compare_antisym</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">destruct</span> <span class="id">y</span>; <span class="tactic">intuition</span>; <span class="tactic">apply</span> <span class="id">compare_antisym</span>.<br/>
 &nbsp;&nbsp;Qed.</div>
 <div class="toggleproof" onclick="toggleDisplay('proof6015')">Next Obligation.</div>
 <div class="proofscript" id="proof6015">
 &nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">destruct</span> <span class="id">y</span>; <span class="tactic">destruct</span> <span class="id">z</span>; <span class="tactic">intuition</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_trans">compare_trans</a></span> <span class="id">_</span> <span class="id">t0</span>); <span class="tactic">intuition</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_trans">compare_trans</a></span> <span class="id">_</span> <span class="id">n0</span>); <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">compare_trans</span> <span class="id">_</span> <span class="id">t0</span>); <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">compare_trans</span> <span class="id">_</span> <span class="id">n0</span>); <span class="tactic">intuition</span>.<br/>
 &nbsp;&nbsp;Qed.</div>
 <div class="toggleproof" onclick="toggleDisplay('proof6016')">Next Obligation.</div>
 <div class="proofscript" id="proof6016">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
 &nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">destruct</span> <span class="id">y</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>; <span class="tactic">intros</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_eq">compare_eq</a></span> <span class="id">t</span> <span class="id">t0</span>); <span class="tactic">intuition</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#compare_eq">compare_eq</a></span> <span class="id">n</span> <span class="id">n0</span>); <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id">compare_eq</span> <span class="id">t</span> <span class="id">t0</span>); <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id">compare_eq</span> <span class="id">n</span> <span class="id">n0</span>); <span class="tactic">intuition</span>.<br/>
 &nbsp;&nbsp;Qed.</div>
 <div class="toggleproof" onclick="toggleDisplay('proof6017')">Next Obligation.</div>
 <div class="proofscript" id="proof6017">
-&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_app_iff">in_app_iff</a></span>.<br/>
-&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; [<span class="id">left</span> | <span class="id">right</span>]; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_map">in_map</a></span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#all_list_forall">all_list_forall</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">in_app_iff</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; [<span class="id">left</span> | <span class="id">right</span>]; <span class="tactic">apply</span> <span class="id">in_map</span>; <span class="tactic">apply</span> <span class="id">all_list_forall</span>.<br/>
 &nbsp;&nbsp;Qed.</div>
 <br/>
-<span class="kwd">End</span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol">Symbol</a></span>.<br/>
+<span class="kwd">End</span> <span class="id">Symbol</span>.<br/>
 <br/>
-<span class="kwd">Module</span> <span class="kwd">Type</span> <span class="id"><a name="T">T</a></span>.<br/>
+<span class="kwd">Module</span> <span class="kwd">Type</span> <span class="id">T</span>.<br/>
 &nbsp;&nbsp;<span class="kwd">Export</span> <span class="id">Tuples</span>.<br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Include</span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Alphs">Alphs</a></span> &lt;+ <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Symbol">Symbol</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Include</span> <span class="id">Alphs</span> &lt;+ <span class="id">Symbol</span>.<br/>
 <br/>
 <div class="doc"><span class="bracket"><span class="id">symbol_semantic_type</span></span> maps a symbols to the type of its semantic
      values. *</div>
-&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id"><a name="T.symbol_semantic_type">symbol_semantic_type</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.symbol">symbol</a></span> -&gt; <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">symbol_semantic_type</span>: <span class="id">symbol</span> -&gt; <span class="kwd">Type</span>.<br/>
 <br/>
 <div class="doc">The type of productions identifiers *</div>
-&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id"><a name="T.production">production</a></span> : <span class="kwd">Type</span>.<br/>
-&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Instance</span> <span class="id"><a name="T.ProductionAlph">ProductionAlph</a></span> : <span class="id"><a href="compcert.cparser.MenhirLib.Alphabet.html#Alphabet">Alphabet</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.production">production</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">production</span> : <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Instance</span> <span class="id">ProductionAlph</span> : <span class="id">Alphabet</span> <span class="id">production</span>.<br/>
 <br/>
 <div class="doc">Accessors for productions: left hand side, right hand side,
      and semantic action. The semantic actions are given in the form
      of curryfied functions, that take arguments in the reverse order. *</div>
-&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id"><a name="T.prod_lhs">prod_lhs</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.production">production</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.nonterminal">nonterminal</a></span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id"><a name="T.prod_rhs_rev">prod_rhs_rev</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.production">production</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.symbol">symbol</a></span>.<br/>
-&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id"><a name="T.prod_action">prod_action</a></span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.production">production</a></span>,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#arrows_left">arrows_left</a></span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.symbol_semantic_type">symbol_semantic_type</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev">rev</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.prod_rhs_rev">prod_rhs_rev</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#p">p</a></span>)))<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.symbol_semantic_type">symbol_semantic_type</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.NT">NT</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T.prod_lhs">prod_lhs</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#p">p</a></span>))).<br/>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">prod_lhs</span>: <span class="id">production</span> -&gt; <span class="id">nonterminal</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">prod_rhs_rev</span>: <span class="id">production</span> -&gt; <span class="id">list</span> <span class="id">symbol</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">prod_action</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>:<span class="id">production</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">arrows_left</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">map</span> <span class="id">symbol_semantic_type</span> (<span class="id">rev</span> (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">symbol_semantic_type</span> (<span class="id">NT</span> (<span class="id">prod_lhs</span> <span class="id">p</span>))).<br/>
 <br/>
-<span class="kwd">End</span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T">T</a></span>.<br/>
+<span class="kwd">End</span> <span class="id">T</span>.<br/>
 <br/>
-<span class="kwd">Module</span> <span class="id"><a name="Defs">Defs</a></span>(<span class="kwd">Import</span> <span class="id">G</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#T">T</a></span>).<br/>
+<span class="kwd">Module</span> <span class="id">Defs</span>(<span class="kwd">Import</span> <span class="id">G</span>:<span class="id">T</span>).<br/>
 <br/>
 <div class="doc">A token is a terminal and a semantic value for this terminal. *</div>
-&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Defs.token">token</a></span> := {<span class="id">t</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.terminal">terminal</a></span> &amp; <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol_semantic_type">symbol_semantic_type</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.T">T</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#t">t</a></span>)}.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">token</span> := {<span class="id">t</span>:<span class="id">terminal</span> &amp; <span class="id">symbol_semantic_type</span> (<span class="id">T</span> <span class="id">t</span>)}.<br/>
 <br/>
 <div class="doc">A grammar creates a relation between word of tokens and semantic values.
      This relation is parametrized by the head symbol. It defines the
      "semantics" of the grammar. This relation is defined by a notion of
      parse tree. *</div>
-&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id"><a name="Defs.parse_tree">parse_tree</a></span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">head_symbol</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol">symbol</a></span>) (<span class="id">word</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.token">token</a></span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">semantic_value</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol_semantic_type">symbol_semantic_type</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbol">head_symbol</a></span>), <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">parse_tree</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">head_symbol</span>:<span class="id">symbol</span>) (<span class="id">word</span>:<span class="id">list</span> <span class="id">token</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">semantic_value</span>:<span class="id">symbol_semantic_type</span> <span class="id">head_symbol</span>), <span class="kwd">Type</span> :=<br/>
 <br/>
 <div class="doc">A single token has its semantic value as semantic value, for the
      corresponding terminal as head symbol. *</div>
-&nbsp;&nbsp;| <span class="id"><a name="Defs.Terminal_pt">Terminal_pt</a></span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">t</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.terminal">terminal</a></span>) (<span class="id">sem</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol_semantic_type">symbol_semantic_type</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.T">T</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#t">t</a></span>)),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#parse_tree">parse_tree</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.T">T</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#t">t</a></span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#existT">existT</a></span> (<span class="kwd">fun</span> <span class="id">t</span> =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol_semantic_type">symbol_semantic_type</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.T">T</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#t">t</a></span>)) <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#t">t</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#sem">sem</a></span>] <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#sem">sem</a></span><br/>
+&nbsp;&nbsp;| <span class="id">Terminal_pt</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">t</span>:<span class="id">terminal</span>) (<span class="id">sem</span>:<span class="id">symbol_semantic_type</span> (<span class="id">T</span> <span class="id">t</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">parse_tree</span> (<span class="id">T</span> <span class="id">t</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span class="id">existT</span> (<span class="kwd">fun</span> <span class="id">t</span> =&gt; <span class="id">symbol_semantic_type</span> (<span class="id">T</span> <span class="id">t</span>)) <span class="id">t</span> <span class="id">sem</span>] <span class="id">sem</span><br/>
 <br/>
 <div class="doc">Given a production, if a word has a list of semantic values for the
      right hand side as head symbols, then this word has the semantic value
      given by the semantic action of the production for the left hand side
      as head symbol.*</div>
-&nbsp;&nbsp;| <span class="id"><a name="Defs.Non_terminal_pt">Non_terminal_pt</a></span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">p</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.production">production</a></span>} {<span class="id">word</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.token">token</a></span>}<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">semantic_values</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#tuple">tuple</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol_semantic_type">symbol_semantic_type</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev">rev</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.prod_rhs_rev">prod_rhs_rev</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#p">p</a></span>)))},<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#parse_tree_list">parse_tree_list</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#rev">rev</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.prod_rhs_rev">prod_rhs_rev</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#p">p</a></span>)) <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#word">word</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#semantic_values">semantic_values</a></span> -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#parse_tree">parse_tree</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.NT">NT</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.prod_lhs">prod_lhs</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#p">p</a></span>)) <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#word">word</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#uncurry">uncurry</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.prod_action">prod_action</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#p">p</a></span>) <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#semantic_values">semantic_values</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id">Non_terminal_pt</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">p</span>:<span class="id">production</span>} {<span class="id">word</span>:<span class="id">list</span> <span class="id">token</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">semantic_values</span>:<span class="id">tuple</span> (<span class="id">map</span> <span class="id">symbol_semantic_type</span> (<span class="id">rev</span> (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)))},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">parse_tree_list</span> (<span class="id">rev</span> (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)) <span class="id">word</span> <span class="id">semantic_values</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">parse_tree</span> (<span class="id">NT</span> (<span class="id">prod_lhs</span> <span class="id">p</span>)) <span class="id">word</span> (<span class="id">uncurry</span> (<span class="id">prod_action</span> <span class="id">p</span>) <span class="id">semantic_values</span>)<br/>
 <br/>
 <div class="doc">Basically the same relation as before, but for list of head symbols (ie.
      We are building a forest of syntax trees. It is mutually recursive with the
      previous relation *</div>
-&nbsp;&nbsp;<span class="kwd">with</span> <span class="id"><a name="Defs.parse_tree_list">parse_tree_list</a></span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">head_symbols</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol">symbol</a></span>) (<span class="id">word</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.token">token</a></span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">semantic_values</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#tuple">tuple</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol_semantic_type">symbol_semantic_type</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbols">head_symbols</a></span>)),<br/>
+&nbsp;&nbsp;<span class="kwd">with</span> <span class="id">parse_tree_list</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">head_symbols</span>:<span class="id">list</span> <span class="id">symbol</span>) (<span class="id">word</span>:<span class="id">list</span> <span class="id">token</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">semantic_values</span>:<span class="id">tuple</span> (<span class="id">map</span> <span class="id">symbol_semantic_type</span> <span class="id">head_symbols</span>)),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Type</span> :=<br/>
 <br/>
 <div class="doc">The empty word has <span class="bracket">()</span> as semantic for <span class="bracket">[]</span> as head symbols list *</div>
-&nbsp;&nbsp;| <span class="id"><a name="Defs.Nil_ptl">Nil_ptl</a></span>: <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#parse_tree_list">parse_tree_list</a></span> [] [] ()<br/>
+&nbsp;&nbsp;| <span class="id">Nil_ptl</span>: <span class="id">parse_tree_list</span> [] [] ()<br/>
 <br/>
 <div class="doc">The cons of the semantic value for one head symbol and for a list of head
      symbols *</div>
-&nbsp;&nbsp;| <span class="id"><a name="Defs.Cons_ptl">Cons_ptl</a></span>:<br/>
+&nbsp;&nbsp;| <span class="id">Cons_ptl</span>:<br/>
 <div class="doc">The semantic for the head *</div>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">head_symbolt</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol">symbol</a></span>} {<span class="id">wordt</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.token">token</a></span>}<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">semantic_valuet</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol_semantic_type">symbol_semantic_type</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbolt">head_symbolt</a></span>},<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#parse_tree">parse_tree</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbolt">head_symbolt</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#wordt">wordt</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#semantic_valuet">semantic_valuet</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">head_symbolt</span>:<span class="id">symbol</span>} {<span class="id">wordt</span>:<span class="id">list</span> <span class="id">token</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">semantic_valuet</span>:<span class="id">symbol_semantic_type</span> <span class="id">head_symbolt</span>},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">parse_tree</span> <span class="id">head_symbolt</span> <span class="id">wordt</span> <span class="id">semantic_valuet</span> -&gt;<br/>
 <br/>
 <div class="doc">and the semantic for the tail *</div>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">head_symbolsq</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol">symbol</a></span>} {<span class="id">wordq</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.token">token</a></span>}<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">semantic_valuesq</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#tuple">tuple</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#G.symbol_semantic_type">symbol_semantic_type</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbolsq">head_symbolsq</a></span>)},<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#parse_tree_list">parse_tree_list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbolsq">head_symbolsq</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#wordq">wordq</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#semantic_valuesq">semantic_valuesq</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">head_symbolsq</span>:<span class="id">list</span> <span class="id">symbol</span>} {<span class="id">wordq</span>:<span class="id">list</span> <span class="id">token</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id">semantic_valuesq</span>:<span class="id">tuple</span> (<span class="id">map</span> <span class="id">symbol_semantic_type</span> <span class="id">head_symbolsq</span>)},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">parse_tree_list</span> <span class="id">head_symbolsq</span> <span class="id">wordq</span> <span class="id">semantic_valuesq</span> -&gt;<br/>
 <br/>
 <div class="doc">give the semantic of the cons *</div>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#parse_tree_list">parse_tree_list</a></span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbolt">head_symbolt</a></span>::<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbolsq">head_symbolsq</a></span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#wordt">wordt</a></span>++<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#wordq">wordq</a></span>)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#semantic_valuet">semantic_valuet</a></span>, <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#semantic_valuesq">semantic_valuesq</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">parse_tree_list</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">head_symbolt</span>::<span class="id">head_symbolsq</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">wordt</span>++<span class="id">wordq</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">semantic_valuet</span>, <span class="id">semantic_valuesq</span>).<br/>
 <br/>
 <br/>
-&nbsp;&nbsp;<span class="kwd">Fixpoint</span> <span class="id"><a name="Defs.pt_size">pt_size</a></span> {<span class="id">head_symbol</span> <span class="id">word</span> <span class="id">sem</span>} (<span class="id">tree</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.parse_tree">parse_tree</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbol">head_symbol</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#word">word</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#sem">sem</a></span>) :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#tree">tree</a></span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.Terminal_pt">Terminal_pt</a></span> <span class="id">_</span> <span class="id">_</span> =&gt; 1<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.Non_terminal_pt">Non_terminal_pt</a></span> <span class="id">l</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> (<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#ptl_size">ptl_size</a></span> <span class="id">l</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">Fixpoint</span> <span class="id">pt_size</span> {<span class="id">head_symbol</span> <span class="id">word</span> <span class="id">sem</span>} (<span class="id">tree</span>:<span class="id">parse_tree</span> <span class="id">head_symbol</span> <span class="id">word</span> <span class="id">sem</span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">tree</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Terminal_pt</span> <span class="id">_</span> <span class="id">_</span> =&gt; 1<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Non_terminal_pt</span> <span class="id">l</span> =&gt; <span class="id">S</span> (<span class="id">ptl_size</span> <span class="id">l</span>)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
-&nbsp;&nbsp;<span class="kwd">with</span> <span class="id"><a name="Defs.ptl_size">ptl_size</a></span> {<span class="id">head_symbols</span> <span class="id">word</span> <span class="id">sems</span>} (<span class="id">tree</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.parse_tree_list">parse_tree_list</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#head_symbols">head_symbols</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#word">word</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#sems">sems</a></span>) :=<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#tree">tree</a></span> <span class="kwd">with</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.Nil_ptl">Nil_ptl</a></span> =&gt; 0<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs.Cons_ptl">Cons_ptl</a></span> <span class="id">t</span> <span class="id">q</span> =&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#pt_size">pt_size</a></span> <span class="id">t</span> + <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#ptl_size">ptl_size</a></span> <span class="id">q</span><br/>
+&nbsp;&nbsp;<span class="kwd">with</span> <span class="id">ptl_size</span> {<span class="id">head_symbols</span> <span class="id">word</span> <span class="id">sems</span>} (<span class="id">tree</span>:<span class="id">parse_tree_list</span> <span class="id">head_symbols</span> <span class="id">word</span> <span class="id">sems</span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">tree</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Nil_ptl</span> =&gt; 0<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Cons_ptl</span> <span class="id">t</span> <span class="id">q</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pt_size</span> <span class="id">t</span> + <span class="id">ptl_size</span> <span class="id">q</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
-<span class="kwd">End</span> <span class="id"><a href="compcert.cparser.MenhirLib.Grammar.html#Defs">Defs</a></span>.<br/>
+<span class="kwd">End</span> <span class="id">Defs</span>.<br/>
 
 </div>
 <div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
