@@ -11,10 +11,14 @@ We needed to prove additional properties for injection passes only.
 2) Changing "Callstate" of each language to carry function pointer, instead of function definition.  
 External module's function definition may not be visible in the local module, but it should be able to call it with function pointer.  
 
-3) Relax each translation's simulation relation so that first stack (`main`, in CompCert) may have called with arguments.  
+3) Relaxing each translation's simulation relation so that first stack (`main`, in CompCert) may have called with arguments.  
 This change affects only three passes, and except for the Stackingproof the change is very small.  
 
-4) Changing "step" relation to respect "symbol environment".  
+4) Generalizing "step" relation to respect "symbol environment".  
+
+Note that, in spite of these technical modifications, mathematical meaning of the semantics is unchanged.  
+- For source languages, see `/cfrontend/ClightBigstep.v` and `/cfrontend/Cstrategy.v` which proves the small-step variant and big-step variant of the semantics are equivalent. We modified small-step variant but it is still equivalent to (unmodified) big-step semantics.
+- For target language (`/x86/Asm.v`), we didn't modify the semantics at all.
 
 ## Installation Instructions
 Our development is tested with Coq 8.9.1. CompCertR only supports x86_64 architecture.
