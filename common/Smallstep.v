@@ -452,16 +452,17 @@ Qed.
 (** Infinitely many non-silent transitions *)
 
 CoInductive forever_reactive (ge: genv): state -> traceinf -> Prop :=
-  | forever_reactive_intro: forall s1 s2 t T,
+  | forever_reactive_intro: forall s1 s2 t T (INTACT: trace_intact t),
       star ge s1 t s2 -> t <> E0 -> forever_reactive ge s2 T ->
       forever_reactive ge s1 (t *** T).
 
 Lemma star_forever_reactive:
-  forall ge s1 t s2 T,
+  forall ge s1 t s2 T (INTACT: trace_intact t),
   star ge s1 t s2 -> forever_reactive ge s2 T ->
   forever_reactive ge s1 (t *** T).
 Proof.
   intros. inv H0. rewrite <- Eappinf_assoc. econstructor.
+  eapply trace_intact_app; eauto.
   eapply star_trans; eauto.
   red; intro. exploit Eapp_E0_inv; eauto. intros [P Q]. contradiction.
   auto.

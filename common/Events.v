@@ -25,6 +25,7 @@ Require Import Values.
 Require Import Memory.
 Require Import Globalenvs.
 Require Import Builtins.
+Require Import sflib.
 
 (** * Events and traces *)
 
@@ -63,6 +64,7 @@ Inductive eventval: Type :=
   | EVptr_global: ident -> ptrofs -> eventval.
 
 Inductive event: Type :=
+  | Event_pterm
   | Event_syscall: string -> list eventval -> eventval -> event
   | Event_vload: memory_chunk -> ident -> ptrofs -> eventval -> event
   | Event_vstore: memory_chunk -> ident -> ptrofs -> eventval -> event
@@ -255,6 +257,25 @@ Lemma traceinf_prefix_app:
 Proof.
   intros. destruct H as [T3 EQ]. exists T3. subst T2. traceEq.
 Qed.
+
+Definition trace_intact (tr: trace): Prop := ~In Event_pterm tr.
+
+Lemma trace_intact_app
+      t0 t1
+      (INTACT0: trace_intact t0)
+      (INTACT1: trace_intact t1)
+  :
+    <<INTACT: trace_intact (t0 ** t1)>>.
+Proof.
+  ii. unfold trace_intact in *. rewrite in_app_iff in *. tauto.
+Qed.
+
+Fixpoint trace_cut_pterm (tr: trace): trace :=
+  match tr with
+  | nil => nil
+  | Event_pterm :: _ => nil
+  | hd :: tl => hd :: (trace_cut_pterm tl)
+  end.
 
 (** * Relating values and event values *)
 
@@ -540,6 +561,7 @@ End MATCH_TRACES_INV.
 
 Definition output_event (ev: event) : Prop :=
   match ev with
+  | Event_pterm => True
   | Event_syscall _ _ _ => False
   | Event_vload _ _ _ _ => False
   | Event_vstore _ _ _ _ => True
