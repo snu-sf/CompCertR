@@ -523,35 +523,52 @@ Qed.
 Lemma backward_simulation_star:
   forall s2 t s2' (INTACT: trace_intact t), Star L2 s2 t s2' ->
   forall i s1 b, match_states i s1 s2 -> safe_along_behavior s1 (behavior_app t b) ->
-  exists i', exists s1', Star L1 s1 t s1' /\ match_states i' s1' s2'.
+  (exists i', exists s1', Star L1 s1 t s1' /\ match_states i' s1' s2') \/
+  (<<PTERM: ~trace_intact t>> /\ exists s1' t',
+       <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
 Proof.
   induction 2; intros.
+  {
+  left.
   exists i; exists s1; split; auto. apply star_refl.
+  }
   exploit (bsim_simulation S); eauto. eapply safe_along_safe; eauto.
-  intros [i' [s1' [A B]]].
+  intros [[i' [s1' [A B]]] | PTERM].
+  {
   assert (Star L1 s0 t1 s1'). intuition. apply plus_star; auto.
   assert(INTACT0: trace_intact t1 /\ trace_intact t2). { admit "ez". } desH INTACT0.
   exploit IHstar; eauto. eapply star_safe_along; [M|..]; Mskip eauto. ss.
   subst t; apply behavior_app_assoc.
-  intros [i'' [s2'' [C D]]].
+  intros [[i'' [s2'' [C D]]] | PTERM]; cycle 1.
+  { desH PTERM. clarify. }
+  left.
   exists i''; exists s2''; split; auto. eapply star_trans; eauto.
+  }
+  { des. right. clarify. splits; eauto.
+    { admit "ez". }
+    esplits; eauto. instantiate (1:= E0).
+    admit "ez - make lemma. t1 is cut".
+  }
 Qed.
 
 Lemma backward_simulation_star_pterm:
   forall s2 t s2' (PTERM: ~trace_intact t), Star L2 s2 t s2' ->
   forall i s1 b, match_states i s1 s2 -> safe_along_behavior s1 (behavior_app t b) ->
-  exists i', exists s1', Star L1 s1 t s1' /\ match_states i' s1' s2'.
+  (exists s1' t', <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
 Proof.
   induction 2; intros.
-  exists i; exists s1; split; auto. apply star_refl.
+  { contradict PTERM. ss. }
   exploit (bsim_simulation S); eauto. eapply safe_along_safe; eauto.
-  intros [i' [s1' [A B]]].
+  intros [[i' [s1' [A B]]] | PTERM0]; cycle 1.
+  { des. clarify. esplits; eauto. instantiate (1:= E0). admit "ez - make lemma". }
   assert (Star L1 s0 t1 s1'). intuition. apply plus_star; auto.
-  assert(INTACT0: trace_intact t1 /\ trace_intact t2). { admit "ez". } desH INTACT0.
-  exploit IHstar; eauto. eapply star_safe_along; [M|..]; Mskip eauto. ss.
-  subst t; apply behavior_app_assoc.
-  intros [i'' [s2'' [C D]]].
-  exists i''; exists s2''; split; auto. eapply star_trans; eauto.
+  destruct (classic (trace_intact t1)).
+  - assert(PTERM0: ~trace_intact t2).
+    { admit "ez". }
+    exploit IHstar; eauto. eapply star_safe_along; [M|..]; Mskip eauto. ss.
+    subst t; apply behavior_app_assoc.
+    { i; des_safe. esplits. { eapply star_trans; eauto. } instantiate (1:= E0). admit "ez - make lemma". }
+  - esplits; eauto. instantiate (1:= E0). clarify. admit "ez - make lemma".
 Qed.
 
 Lemma backward_simulation_forever_silent:
@@ -563,12 +580,13 @@ Proof.
          Forever_silent L2 s2 -> match_states i s1 s2 -> safe L1 s1 ->
          forever_silent_N (step L1) order (globalenv L1) i s1).
     cofix COINDHYP; intros.
-    inv H.  destruct (bsim_simulation S _ _ _ H2 _ H0 H1) as [i' [s2' [A B]]].
+    inv H.  destruct (bsim_simulation S _ _ _ H2 _ H0 H1) as [[i' [s2' [A B]]] | PTERM].
     destruct A as [C | [C D]].
     eapply forever_silent_N_plus; eauto. eapply COINDHYP; eauto.
       eapply star_safe; eauto. apply plus_star; auto.
     eapply forever_silent_N_star; eauto. eapply COINDHYP; eauto.
       eapply star_safe; eauto.
+    { des. contradict PTERM0. ss. (* TODO: make lemma *) }
   intros. eapply forever_silent_N_forever; eauto. eapply bsim_order_wf; eauto.
 Qed.
 
@@ -578,8 +596,9 @@ Lemma backward_simulation_forever_reactive:
   Forever_reactive L1 s1 T.
 Proof.
   cofix COINDHYP; intros. inv H.
-  destruct (backward_simulation_star INTACT H2 (Reacts T0) H0) as [i' [s1' [A B]]]; eauto.
+  destruct (backward_simulation_star INTACT H2 (Reacts T0) H0) as [[i' [s1' [A B]]] | PTERM]; eauto.
   econstructor; eauto. eapply COINDHYP; eauto. eapply star_safe_along; eauto.
+  des. clarify.
 Qed.
 
 Lemma backward_simulation_state_behaves:
@@ -589,34 +608,30 @@ Lemma backward_simulation_state_behaves:
 Proof.
   intros. destruct (classic (safe_along_behavior s1 beh2)).
 - (* 1. Safe along *)
-  exists beh2; split; [idtac|apply behavior_improves_refl].
-  inv H0.
+  pose (beh2_ := beh2).
+  inv H0; [|M|..]; Mskip (exists beh2_; split; [idtac|apply behavior_improves_refl]).
 + (* termination *)
   assert (Terminates t r = behavior_app t (Terminates E0 r)).
     simpl. rewrite E0_right; auto.
   rewrite H0 in H1.
   exploit backward_simulation_star; eauto.
-  intros [i' [s1' [A B]]].
+  intros [[i' [s1' [A B]]] | PTERM].
   exploit (bsim_match_final_states S); eauto.
     eapply safe_along_safe. eapply star_safe_along; eauto.
   intros [s1'' [C D]].
   econstructor. auto. eapply star_trans; eauto. traceEq. auto.
+  des; ss.
 + (* partial termination *)
-  (* assert (Partial_terminates t = behavior_app t (Partial_terminates E0)). *)
-  (*   simpl. rewrite E0_right; auto. *)
-  (* rewrite H0 in H1. *)
-  exploit backward_simulation_star; eauto.
-  intros [i' [s1' [A B]]].
-  exploit (bsim_progress S); eauto. eapply safe_along_safe. eapply star_safe_along; eauto.
-  intros [[r FIN] | [t' [s2' STEP2]]].
-  elim (H4 _ FIN).
-  elim (H3 _ _ STEP2).
+  exploit backward_simulation_star_pterm; eauto.
+  generalize (state_behaves_exists L1 s1); intro T. des. esplits; eauto. rr. right. right. esplits; eauto.
+  admit "---------------".
 + (* silent divergence *)
   assert (Diverges t = behavior_app t (Diverges E0)).
     simpl. rewrite E0_right; auto.
   rewrite H0 in H1.
   exploit backward_simulation_star; eauto.
-  intros [i' [s1' [A B]]].
+  intros [[i' [s1' [A B]]] | PTERM]; cycle 1.
+  { des; ss. }
   econstructor. eauto. eauto. eapply backward_simulation_forever_silent; eauto.
   eapply safe_along_safe. eapply star_safe_along; eauto.
 + (* reactive divergence *)
@@ -626,7 +641,8 @@ Proof.
     simpl. rewrite E0_right; auto.
   rewrite H0 in H1.
   exploit backward_simulation_star; eauto.
-  intros [i' [s1' [A B]]].
+  intros [[i' [s1' [A B]]] | PTERM]; cycle 1.
+  { des; ss. }
   exploit (bsim_progress S); eauto. eapply safe_along_safe. eapply star_safe_along; eauto.
   intros [[r FIN] | [t' [s2' STEP2]]].
   elim (H4 _ FIN).
