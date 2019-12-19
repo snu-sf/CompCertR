@@ -553,7 +553,7 @@ Qed.
 
 Lemma backward_simulation_star_pterm:
   forall s2 t s2' (PTERM: ~trace_intact t), Star L2 s2 t s2' ->
-  forall i s1 b, match_states i s1 s2 -> safe_along_behavior s1 (behavior_app t b) ->
+  forall i s1 b, match_states i s1 s2 -> safe_along_behavior s1 (behavior_app (trace_cut_pterm t) b) ->
   (exists s1' t', <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
 Proof.
   induction 2; intros.
@@ -566,7 +566,8 @@ Proof.
   - assert(PTERM0: ~trace_intact t2).
     { admit "ez". }
     exploit IHstar; eauto. eapply star_safe_along; [M|..]; Mskip eauto. ss.
-    subst t; apply behavior_app_assoc.
+    subst t. instantiate (1:= b). admit "ez - make lemma".
+    (* subst t; apply behavior_app_assoc. *)
     { i; des_safe. esplits. { eapply star_trans; eauto. } instantiate (1:= E0). admit "ez - make lemma". }
   - esplits; eauto. instantiate (1:= E0). clarify. admit "ez - make lemma".
 Qed.
@@ -621,6 +622,21 @@ Proof.
   intros [s1'' [C D]].
   econstructor. auto. eapply star_trans; eauto. traceEq. auto.
   des; ss.
++ (exists beh2_; split; [idtac|apply behavior_improves_refl]).
+  assert (Partial_terminates (trace_cut_pterm t) = behavior_app (trace_cut_pterm t) (Partial_terminates E0)).
+    simpl. rewrite E0_right; auto.
+  rewrite H0 in H1.
+  exploit backward_simulation_star_pterm; eauto. i; des. clarify.
+  subst beh2_. replace (trace_cut_pterm t) with (trace_cut_pterm ((trace_cut_pterm t) ** tl)) by admit "this should hold".
+  econs; eauto.
+  ii.
+  intros [[i' [s1' [A B]]] | PTERM].
+  exploit (bsim_match_final_states S); eauto.
+    eapply safe_along_safe. eapply star_safe_along; eauto.
+  intros [s1'' [C D]].
+  econstructor. auto. eapply star_trans; eauto. traceEq. auto.
+  des; ss.
+  exploit backward_simulation_star_pterm; eauto.
 + (* partial termination *)
   exploit backward_simulation_star_pterm; eauto.
   generalize (state_behaves_exists L1 s1); intro T. des. esplits; eauto. rr. right. right. esplits; eauto.
