@@ -1343,7 +1343,7 @@ Proof.
   right; split. apply star_refl. right; auto.
   eapply bb_match_at; eauto.
 - des. right. split; ss.
-  admit "WE WILL REMOVE THIS LEMMA".
+  admit "WE WILL REMOVE THIS LEMMA - BB COMPOSE".
   (* assert(exists t1 s1', Star L1 s1 t1 s1' /\ exists tl1, t1 = trace_cut_pterm t' ** tl1). *)
   (* { clear - H2 H0 STAR S12. *)
   (*   ginduction STAR; ii; ss. *)
@@ -1362,7 +1362,7 @@ Lemma bb_simulation:
     (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ bb_order i' i))
     /\ bb_match_states i' s1' s3'.
 Proof.
-  admit "WE WILL REMOVE THIS LEMMA".
+  admit "WE WILL REMOVE THIS LEMMA - BB COMPOSE".
 (*   intros. inv H0. *)
 (*   exploit star_inv; eauto. intros [[EQ1 EQ2] | PLUS]. *)
 (* - (* 1. match at *) *)
@@ -1423,7 +1423,7 @@ Proof.
   intros i s1 s3 MS SAFE. inv MS.
   eapply (bsim_progress props'). eauto. eapply star_safe; eauto. eapply bsim_safe; eauto.
 - (* simulation *)
-  admit "WE WILL REMOVE THIS LEMMA".
+  admit "WE WILL REMOVE THIS LEMMA - BB COMPOSE".
   (* apply bb_simulation; auto. *)
 - (* symbols *)
   intros. transitivity (Senv.public_symbol (symbolenv L2) id); eapply bsim_public_preserved; eauto.
