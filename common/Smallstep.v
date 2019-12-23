@@ -42,16 +42,18 @@ Variable state: Type.
   captures the observable events possibly generated during the
   transition. *)
 
-Variable step: genv -> state -> trace -> state -> Prop.
+Variable _step: Senv.t -> genv -> state -> trace -> state -> Prop.
 
 (** No transitions: stuck state *)
 
-Definition nostep (ge: genv) (s: state) : Prop :=
-  forall t s', ~(step ge s t s').
+Definition nostep (se: Senv.t) (ge: genv) (s: state) : Prop :=
+  forall t s', ~(_step se ge s t s').
 
 (** Zero, one or several transitions.  Also known as Kleene closure,
     or reflexive transitive closure. *)
 
+Variable se: Senv.t.
+Let step := _step se.
 Inductive star (ge: genv): state -> trace -> state -> Prop :=
   | star_refl: forall s,
       star ge s E0 s
@@ -476,7 +478,7 @@ End CLOSURES.
 Record semantics : Type := Semantics_gen {
   state: Type;
   genvtype: Type;
-  step : genvtype -> state -> trace -> state -> Prop;
+  step : Senv.t -> genvtype -> state -> trace -> state -> Prop;
   initial_state: state -> Prop;
   final_state: state -> int -> Prop;
   globalenv: genvtype;
@@ -486,7 +488,7 @@ Record semantics : Type := Semantics_gen {
 (** The form used in earlier CompCert versions, for backward compatibility. *)
 
 Definition Semantics {state funtype vartype: Type}
-                     (step: Genv.t funtype vartype -> state -> trace -> state -> Prop)
+                     (step: Senv.t -> Genv.t funtype vartype -> state -> trace -> state -> Prop)
                      (initial_state: state -> Prop)
                      (final_state: state -> int -> Prop)
                      (globalenv: Genv.t funtype vartype) :=
@@ -500,12 +502,12 @@ Definition Semantics {state funtype vartype: Type}
 
 (** Handy notations. *)
 
-Notation " 'Step' L " := (step L (globalenv L)) (at level 1) : smallstep_scope.
-Notation " 'Star' L " := (star (step L) (globalenv L)) (at level 1) : smallstep_scope.
-Notation " 'Plus' L " := (plus (step L) (globalenv L)) (at level 1) : smallstep_scope.
-Notation " 'Forever_silent' L " := (forever_silent (step L) (globalenv L)) (at level 1) : smallstep_scope.
-Notation " 'Forever_reactive' L " := (forever_reactive (step L) (globalenv L)) (at level 1) : smallstep_scope.
-Notation " 'Nostep' L " := (nostep (step L) (globalenv L)) (at level 1) : smallstep_scope.
+Notation " 'Step' L " := (step L (symbolenv L) (globalenv L)) (at level 1) : smallstep_scope.
+Notation " 'Star' L " := (star (step L) (symbolenv L) (globalenv L)) (at level 1) : smallstep_scope.
+Notation " 'Plus' L " := (plus (step L) (symbolenv L) (globalenv L)) (at level 1) : smallstep_scope.
+Notation " 'Forever_silent' L " := (forever_silent (step L) (symbolenv L) (globalenv L)) (at level 1) : smallstep_scope.
+Notation " 'Forever_reactive' L " := (forever_reactive (step L) (symbolenv L) (globalenv L)) (at level 1) : smallstep_scope.
+Notation " 'Nostep' L " := (nostep (step L) (symbolenv L) (globalenv L)) (at level 1) : smallstep_scope.
 
 Open Scope smallstep_scope.
 
@@ -759,7 +761,7 @@ Lemma simulation_forever_silent:
 Proof.
   assert (forall i s1 s2,
           Forever_silent L1 s1 -> match_states i s1 s2 ->
-          forever_silent_N (step L2) order (globalenv L2) i s2).
+          forever_silent_N (step L2) (symbolenv L2) order (globalenv L2) i s2).
     cofix COINDHYP; intros.
     inv H. destruct (fsim_simulation S _ _ _ H1 _ _ H0) as [i' [s2' [A B]]].
     destruct A as [C | [C D]].
@@ -1109,8 +1111,6 @@ Record bsim_properties (L1 L2: semantics) (index: Type)
       exists i', exists s1',
          (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ order i' i))
       /\ match_states i' s1' s2';
-    bsim_public_preserved:
-      forall id, Senv.public_symbol (symbolenv L2) id = Senv.public_symbol (symbolenv L1) id
   }.
 
 Arguments bsim_properties: clear implicits.
@@ -1398,8 +1398,6 @@ Proof.
   eapply (bsim_progress props'). eauto. eapply star_safe; eauto. eapply bsim_safe; eauto.
 - (* simulation *)
   apply bb_simulation; auto.
-- (* symbols *)
-  intros. transitivity (Senv.public_symbol (symbolenv L2) id); eapply bsim_public_preserved; eauto.
 Qed.
 
 (** ** Converting a forward simulation to a backward simulation *)
@@ -1547,17 +1545,17 @@ Inductive f2b_match_states: f2b_index -> state L1 -> state L2 -> Prop :=
   | f2b_match_before: forall s1 t s1' s2b s2 n s2a i,
       Step L1 s1 t s1' ->  t <> E0 ->
       Star L2 s2b E0 s2 ->
-      starN (step L2) (globalenv L2) n s2 t s2a ->
+      starN (step L2) (symbolenv L2) (globalenv L2) n s2 t s2a ->
       match_states i s1 s2b ->
       f2b_match_states (F2BI_before n) s1 s2
   | f2b_match_after: forall n s2 s2a s1 i,
-      starN (step L2) (globalenv L2) (S n) s2 E0 s2a ->
+      starN (step L2) (symbolenv L2) (globalenv L2) (S n) s2 E0 s2a ->
       match_states i s1 s2a ->
       f2b_match_states (F2BI_after (S n)) s1 s2.
 
 Remark f2b_match_after':
   forall n s2 s2a s1 i,
-  starN (step L2) (globalenv L2) n s2 E0 s2a ->
+  starN (step L2) (symbolenv L2) (globalenv L2) n s2 E0 s2a ->
   match_states i s1 s2a ->
   f2b_match_states (F2BI_after n) s1 s2.
 Proof.
@@ -1693,8 +1691,6 @@ Proof.
   inv H1. right; econstructor; econstructor; eauto.
 - (* simulation *)
   eapply f2b_simulation_step; eauto.
-- (* symbols preserved *)
-  exact (fsim_public_preserved FS).
 Qed.
 
 (** * Transforming a semantics into a single-event, equivalent semantics *)
@@ -1723,7 +1719,7 @@ Inductive atomic_step (ge: genvtype L): (trace * state L) -> trace -> (trace * s
 Definition atomic : semantics := {|
   state := (trace * state L)%type;
   genvtype := genvtype L;
-  step := atomic_step;
+  step := fun _ => atomic_step;
   initial_state := fun s => initial_state L (snd s) /\ fst s = E0;
   final_state := fun s r => final_state L (snd s) r /\ fst s = E0;
   globalenv := globalenv L;
@@ -1920,8 +1916,6 @@ Proof.
   eapply fbs_progress; eauto.
 - (* simulation *)
   eapply fbs_simulation; eauto.
-- (* symbols *)
-  simpl. exact (bsim_public_preserved sim).
 Qed.
 
 (** Receptiveness of [atomic L]. *)
@@ -1979,6 +1973,6 @@ Record bigstep_sound (B: bigstep_semantics) (L: semantics) : Prop :=
     bigstep_diverges_sound:
       forall T,
       bigstep_diverges B T ->
-      exists s1, initial_state L s1 /\ forever (step L) (globalenv L) s1 T
+      exists s1, initial_state L s1 /\ forever (step L) (symbolenv L) (globalenv L) s1 T
 }.
 

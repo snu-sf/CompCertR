@@ -25,6 +25,7 @@ Require Import Locations.
 Require Import Conventions.
 Require Import LTL.
 Require Import Linear.
+Require Import sflib.
 
 (** The rules are presented as boolean-valued functions so that we
   get an executable type-checker for free. *)
@@ -259,13 +260,12 @@ Inductive wt_state: state -> Prop :=
         (WTC: wt_code f c = true)
         (WTRS: wt_locset rs),
       wt_state (State s f sp c rs m)
-  | wt_call_state: forall s fd rs m
+  | wt_call_state: forall s fptr sg rs m
         (WTSTK: wt_callstack s)
-        (WTFD: wt_fundef fd)
         (WTRS: wt_locset rs)
         (AGCS: agree_callee_save rs (parent_locset s))
-        (AGARGS: agree_outgoing_arguments (funsig fd) rs (parent_locset s)),
-      wt_state (Callstate s fd rs m)
+        (AGARGS: agree_outgoing_arguments sg rs (parent_locset s)),
+      wt_state (Callstate s fptr sg rs m)
   | wt_return_state: forall s rs m
         (WTSTK: wt_callstack s)
         (WTRS: wt_locset rs)
@@ -278,27 +278,26 @@ Inductive wt_state: state -> Prop :=
 Section SOUNDNESS.
 
 Variable prog: program.
-Let ge := Genv.globalenv prog.
+Variable se: Senv.t.
+Variable ge: genv.
+Hypothesis CONTAINED: forall fptr f
+    (FINDF: Genv.find_funct ge fptr = Some f),
+    exists i, In (i, Gfun f) (prog_defs prog).
 
 Hypothesis wt_prog:
   forall i fd, In (i, Gfun fd) prog.(prog_defs) -> wt_fundef fd.
 
-Lemma wt_find_function:
-  forall ros rs f, find_function ge ros rs = Some f -> wt_fundef f.
+Lemma wt_find_funct:
+  forall fptr f, Genv.find_funct ge fptr = Some f -> wt_fundef f.
 Proof.
   intros.
   assert (X: exists i, In (i, Gfun f) prog.(prog_defs)).
-  {
-    destruct ros as [r | s]; simpl in H.
-    eapply Genv.find_funct_inversion; eauto.
-    destruct (Genv.find_symbol ge s) as [b|]; try discriminate.
-    eapply Genv.find_funct_ptr_inversion; eauto.
-  }
+  { eauto. }
   destruct X as [i IN]. eapply wt_prog; eauto.
 Qed.
 
 Theorem step_type_preservation:
-  forall S1 t S2, step ge S1 t S2 -> wt_state S1 -> wt_state S2.
+  forall S1 t S2, step se ge S1 t S2 -> wt_state S1 -> wt_state S2.
 Proof.
 Local Opaque mreg_type.
   induction 1; intros WTS; inv WTS.
@@ -339,16 +338,14 @@ Local Opaque mreg_type.
 - (* call *)
   simpl in *; InvBooleans.
   econstructor; eauto. econstructor; eauto.
-  eapply wt_find_function; eauto.
   red; simpl; auto.
   red; simpl; auto.
 - (* tailcall *)
   simpl in *; InvBooleans.
   econstructor; eauto.
-  eapply wt_find_function; eauto.
   apply wt_return_regs; auto. apply wt_parent_locset; auto.
-  red; simpl; intros. destruct l; simpl in *. rewrite H3; auto. destruct sl; auto; congruence.
-  red; simpl; intros. apply zero_size_arguments_tailcall_possible in H. apply H in H3. contradiction.
+  red; simpl; intros. destruct l; simpl in *. rewrite H4; auto. destruct sl; auto; congruence.
+  red; simpl; intros. apply zero_size_arguments_tailcall_possible in H. apply H in H4. contradiction.
 - (* builtin *)
   simpl in *; InvBooleans.
   econstructor; eauto.
@@ -374,6 +371,7 @@ Local Opaque mreg_type.
   red; simpl; intros. destruct l; simpl in *. rewrite H0; auto. destruct sl; auto; congruence.
   red; simpl; intros. auto.
 - (* internal function *)
+  assert(WTFD: wt_fundef (Internal f)). { eapply wt_find_funct; eauto. }
   simpl in WTFD.
   econstructor. eauto. eauto. eauto.
   apply wt_undef_regs. apply wt_call_regs. auto.
@@ -393,8 +391,7 @@ Theorem wt_initial_state:
   forall S, initial_state prog S -> wt_state S.
 Proof.
   induction 1. econstructor. constructor.
-  unfold ge0 in H1. exploit Genv.find_funct_ptr_inversion; eauto.
-  intros [id IN]. eapply wt_prog; eauto.
+  unfold ge0 in H1.
   apply wt_init.
   red; auto.
   red; auto.
@@ -437,17 +434,17 @@ Proof.
 Qed.
 
 Lemma wt_callstate_wt_regs:
-  forall s f rs m,
-  wt_state (Callstate s f rs m) ->
+  forall s fptr sg rs m,
+  wt_state (Callstate s fptr sg rs m) ->
   forall r, Val.has_type (rs (R r)) (mreg_type r).
 Proof.
   intros. inv H. apply WTRS.
 Qed.
 
 Lemma wt_callstate_agree:
-  forall s f rs m,
-  wt_state (Callstate s f rs m) ->
-  agree_callee_save rs (parent_locset s) /\ agree_outgoing_arguments (funsig f) rs (parent_locset s).
+  forall s fptr sg rs m,
+  wt_state (Callstate s fptr sg rs m) ->
+  agree_callee_save rs (parent_locset s) /\ agree_outgoing_arguments sg rs (parent_locset s).
 Proof.
   intros. inv H; auto.
 Qed.

@@ -393,30 +393,30 @@ Definition standard_builtin_table : list (string * standard_builtin) :=
 Definition standard_builtin_sig (b: standard_builtin) : signature :=
   match b with
   | BI_select t =>
-      mksignature (Tint :: t :: t :: nil) (Some t) cc_default
+      mksignature (Tint :: t :: t :: nil) (Some t) cc_default true
   | BI_fabs | BI_fsqrt =>
-      mksignature (Tfloat :: nil) (Some Tfloat) cc_default
+      mksignature (Tfloat :: nil) (Some Tfloat) cc_default true
   | BI_negl =>
-      mksignature (Tlong :: nil) (Some Tlong) cc_default
+      mksignature (Tlong :: nil) (Some Tlong) cc_default true
   | BI_addl | BI_subl | BI_i64_umulh| BI_i64_smulh 
   | BI_i64_sdiv | BI_i64_udiv | BI_i64_smod | BI_i64_umod =>
-      mksignature (Tlong :: Tlong :: nil) (Some Tlong) cc_default
+      mksignature (Tlong :: Tlong :: nil) (Some Tlong) cc_default true
   | BI_mull =>
-      mksignature (Tint :: Tint :: nil) (Some Tlong) cc_default
+      mksignature (Tint :: Tint :: nil) (Some Tlong) cc_default true
   | BI_i32_bswap =>
-      mksignature (Tint :: nil) (Some Tint) cc_default
+      mksignature (Tint :: nil) (Some Tint) cc_default true
   | BI_i64_bswap =>
-      mksignature (Tlong :: nil) (Some Tlong) cc_default
+      mksignature (Tlong :: nil) (Some Tlong) cc_default true
   | BI_i16_bswap =>
-      mksignature (Tint :: nil) (Some Tint) cc_default
+      mksignature (Tint :: nil) (Some Tint) cc_default true
   | BI_i64_shl  | BI_i64_shr | BI_i64_sar =>
-      mksignature (Tlong :: Tint :: nil) (Some Tlong) cc_default
+      mksignature (Tlong :: Tint :: nil) (Some Tlong) cc_default true
   | BI_i64_dtos | BI_i64_dtou =>
-      mksignature (Tfloat :: nil) (Some Tlong) cc_default
+      mksignature (Tfloat :: nil) (Some Tlong) cc_default true
   | BI_i64_stod | BI_i64_utod =>
-      mksignature (Tlong :: nil) (Some Tfloat) cc_default
+      mksignature (Tlong :: nil) (Some Tfloat) cc_default true
   | BI_i64_stof | BI_i64_utof =>
-      mksignature (Tlong :: nil) (Some Tsingle) cc_default
+      mksignature (Tlong :: nil) (Some Tsingle) cc_default true
   end.
 
 Program Definition standard_builtin_sem (b: standard_builtin) : builtin_sem (proj_sig_res (standard_builtin_sig b)) :=

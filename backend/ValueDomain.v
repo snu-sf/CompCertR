@@ -15,22 +15,23 @@ Require Import Zwf Coqlib Maps Zbits Integers Floats Lattice.
 Require Import Compopts AST.
 Require Import Values Memory Globalenvs Builtins Events.
 Require Import Registers RTL.
+Require Import sflib.
 
 (** The abstract domains for value analysis *)
 
 Inductive block_class : Type :=
   | BCinvalid
-  | BCglob (id: ident)
+  | BCglob (id: option ident)
   | BCstack
   | BCother.
 
 Definition block_class_eq: forall (x y: block_class), {x=y} + {x<>y}.
-Proof. decide equality. apply peq. Defined.
+Proof. decide equality. destruct id, id0; decide equality; apply peq. Defined.
 
 Record block_classification : Type := BC {
   bc_img :> block -> block_class;
   bc_stack: forall b1 b2, bc_img b1 = BCstack -> bc_img b2 = BCstack -> b1 = b2;
-  bc_glob: forall b1 b2 id, bc_img b1 = BCglob id -> bc_img b2 = BCglob id -> b1 = b2
+  bc_glob: forall b1 b2 id, bc_img b1 = BCglob (Some id) -> bc_img b2 = BCglob (Some id) -> b1 = b2
 }.
 
 Definition bc_below (bc: block_classification) (bound: block) : Prop :=
@@ -133,10 +134,10 @@ Defined.
 
 Inductive pmatch (b: block) (ofs: ptrofs): aptr -> Prop :=
   | pmatch_gl: forall id,
-      bc b = BCglob id ->
+      bc b = BCglob (Some id) ->
       pmatch b ofs (Gl id ofs)
   | pmatch_glo: forall id,
-      bc b = BCglob id ->
+      bc b = BCglob (Some id) ->
       pmatch b ofs (Glo id)
   | pmatch_glob: forall id,
       bc b = BCglob id ->
@@ -1113,12 +1114,16 @@ Qed.
 
 (** Loading constants *)
 
-Definition genv_match (ge: genv) : Prop :=
-  (forall id b, Genv.find_symbol ge id = Some b <-> bc b = BCglob id)
-/\(forall b, Plt b (Genv.genv_next ge) -> bc b <> BCinvalid /\ bc b <> BCstack).
+Definition genv_match {F V} (ge: Genv.t F V) : Prop :=
+  (forall id b, Genv.find_symbol ge id = Some b <-> bc b = BCglob (Some id))
+/\(forall b, Plt b (Genv.genv_next ge) -> exists id, bc b = BCglob id)
+/\(forall b, bc b = BCglob None -> Plt b (Genv.genv_next ge)).
+
+Definition senv_match (se: Senv.t): Prop :=
+  forall b, bc b = BCglob None -> exists id, Senv.find_symbol se id = Some b.
 
 Lemma symbol_address_sound:
-  forall ge id ofs,
+  forall F V (ge: Genv.t F V) id ofs,
   genv_match ge ->
   vmatch (Genv.symbol_address ge id ofs) (Ptr (Gl id ofs)).
 Proof.
@@ -1128,7 +1133,7 @@ Proof.
 Qed.
 
 Lemma vmatch_ptr_gl:
-  forall ge v id ofs,
+  forall F V (ge: Genv.t F V) v id ofs,
   genv_match ge ->
   vmatch v (Ptr (Gl id ofs)) ->
   Val.lessdef v (Genv.symbol_address ge id ofs).
@@ -3738,7 +3743,7 @@ Definition romem := PTree.t ablock.
 
 Definition romatch  (m: mem) (rm: romem) : Prop :=
   forall b id ab,
-  bc b = BCglob id ->
+  bc b = BCglob (Some id) ->
   rm!id = Some ab ->
   pge Glob ab.(ab_summary)
   /\ bmatch m b ab
@@ -3776,8 +3781,8 @@ Qed.
 Lemma romatch_ext:
   forall m rm m',
   romatch m rm ->
-  (forall b id ofs n bytes, bc b = BCglob id -> Mem.loadbytes m' b ofs n = Some bytes -> Mem.loadbytes m b ofs n = Some bytes) ->
-  (forall b id ofs p, bc b = BCglob id -> Mem.perm m' b ofs Max p -> Mem.perm m b ofs Max p) ->
+  (forall b id ofs n bytes (ROMEM: exists ab, rm ! id = Some ab), bc b = BCglob (Some id) -> Mem.loadbytes m' b ofs n = Some bytes -> Mem.loadbytes m b ofs n = Some bytes) ->
+  (forall b id ofs p (ROMEM: exists ab, rm ! id = Some ab), bc b = BCglob (Some id) -> Mem.perm m' b ofs Max p -> Mem.perm m b ofs Max p) ->
   romatch m' rm.
 Proof.
   intros; red; intros. exploit H; eauto. intros (A & B & C).
@@ -3825,7 +3830,7 @@ Record mmatch (m: mem) (am: amem) : Prop := mk_mem_match {
     bc b = BCstack ->
     bmatch m b am.(am_stack);
   mmatch_glob: forall id ab b,
-    bc b = BCglob id ->
+    bc b = BCglob (Some id) ->
     am.(am_glob)!id = Some ab ->
     bmatch m b ab;
   mmatch_nonstack: forall b,
@@ -4017,7 +4022,7 @@ Proof.
 
 - (* Globals *)
   rename b0 into b'.
-  assert (DFL: bc b <> BCglob id -> (am_glob am)!id = Some ab ->
+  assert (DFL: bc b <> BCglob (Some id) -> (am_glob am)!id = Some ab ->
                bmatch m' b' ab).
   { intros. apply bmatch_inv with m. eapply mmatch_glob; eauto.
     intros. eapply Mem.loadbytes_store_other; eauto. left; congruence. }
@@ -4129,7 +4134,7 @@ Proof.
 
 - (* Globals *)
   rename b0 into b'.
-  assert (DFL: bc b <> BCglob id -> (am_glob am)!id = Some ab ->
+  assert (DFL: bc b <> BCglob (Some id) -> (am_glob am)!id = Some ab ->
                bmatch m' b' ab).
   { intros. apply bmatch_inv with m. eapply mmatch_glob; eauto.
     intros. eapply Mem.loadbytes_storebytes_other; eauto. left; congruence. }
@@ -4286,19 +4291,16 @@ End MATCH.
 (** * Monotonicity properties when the block classification changes. *)
 
 Lemma genv_match_exten:
-  forall ge (bc1 bc2: block_classification),
+  forall F V (ge: Genv.t F V) (bc1 bc2: block_classification),
   genv_match bc1 ge ->
   (forall b id, bc1 b = BCglob id <-> bc2 b = BCglob id) ->
   (forall b, bc1 b = BCother -> bc2 b = BCother) ->
   genv_match bc2 ge.
 Proof.
-  intros. destruct H as [A B]. split; intros.
+  intros. destruct H as [A [B C]]. split; [|split]; intros.
 - rewrite <- H0. eauto.
-- exploit B; eauto. destruct (bc1 b) eqn:BC1.
-  + intuition congruence.
-  + rewrite H0 in BC1. intuition congruence.
-  + intuition congruence.
-  + erewrite H1 by eauto. intuition congruence.
+- exploit B; eauto. i; des. esplit. rewrite <- H0. eauto.
+- eapply C. rewrite H0; eauto.
 Qed.
 
 Lemma romatch_exten:
@@ -4447,11 +4449,11 @@ Proof.
 Qed.
 
 Lemma inj_of_bc_preserves_globals:
-  forall bc ge, genv_match bc ge -> meminj_preserves_globals ge (inj_of_bc bc).
+  forall bc F V (ge: Genv.t F V), genv_match bc ge -> meminj_preserves_globals ge (inj_of_bc bc).
 Proof.
-  intros. destruct H as [A B].
+  intros. destruct H as [A [B C]].
   split. intros. apply inj_of_bc_valid. rewrite A in H. congruence.
-  split. intros. apply inj_of_bc_valid. apply B.
+  split. intros. apply inj_of_bc_valid. ii. exploit B; eauto; cycle 1. { i; des. rewrite H0 in *. ss. }
     rewrite Genv.find_var_info_iff in H. eapply Genv.genv_defs_range; eauto.
   intros. exploit inj_of_bc_inv; eauto. intros (P & Q & R). auto.
 Qed.

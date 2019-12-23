@@ -43,6 +43,7 @@ Definition empty_env: env := (PTree.empty (block * type)).
 
 Section SEMANTICS.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** [deref_loc ty m b ofs t v] computes the value of a datum
@@ -61,7 +62,7 @@ Inductive deref_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs) : trace -> val 
       deref_loc ty m b ofs E0 v
   | deref_loc_volatile: forall chunk t v,
       access_mode ty = By_value chunk -> type_is_volatile ty = true ->
-      volatile_load ge chunk m b ofs t v ->
+      volatile_load se chunk m b ofs t v ->
       deref_loc ty m b ofs t v
   | deref_loc_reference:
       access_mode ty = By_reference ->
@@ -86,7 +87,7 @@ Inductive assign_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs):
       assign_loc ty m b ofs v E0 m'
   | assign_loc_volatile: forall v chunk t m',
       access_mode ty = By_value chunk -> type_is_volatile ty = true ->
-      volatile_store ge chunk m b ofs v t m' ->
+      volatile_store se chunk m b ofs v t m' ->
       assign_loc ty m b ofs v t m'
   | assign_loc_copy: forall b' ofs' bytes m',
       access_mode ty = By_copy ->
@@ -298,7 +299,7 @@ Inductive rred: expr -> mem -> trace -> expr -> mem -> Prop :=
         E0 (Eval v ty) m
   | red_builtin: forall ef tyargs el ty m vargs t vres m',
       cast_arguments m el tyargs vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       rred (Ebuiltin ef tyargs el ty) m
          t (Eval vres ty) m'.
 
@@ -306,14 +307,14 @@ Inductive rred: expr -> mem -> trace -> expr -> mem -> Prop :=
 (** Head reduction for function calls.
     (More exactly, identification of function calls that can reduce.) *)
 
-Inductive callred: expr -> mem -> fundef -> list val -> type -> Prop :=
-  | red_call: forall vf tyf m tyargs tyres cconv el ty fd vargs,
-      Genv.find_funct ge vf = Some fd ->
+Inductive callred: expr -> mem -> val -> type -> list val -> type -> Prop :=
+  | red_call: forall vf tyf m tyargs tyres cconv el ty vargs,
+      DUMMY_PROP ->
       cast_arguments m el tyargs vargs ->
-      type_of_fundef fd = Tfunction tyargs tyres cconv ->
+      DUMMY_PROP ->
       classify_fun tyf = fun_case_f tyargs tyres cconv ->
       callred (Ecall (Eval vf tyf) el ty) m
-              fd vargs ty.
+              vf (Tfunction tyargs tyres cconv) vargs ty.
 
 (** Reduction contexts.  In accordance with C's nondeterministic semantics,
   we allow reduction both to the left and to the right of a binary operator.
@@ -418,8 +419,8 @@ Inductive imm_safe: kind -> expr -> mem -> Prop :=
       rred e m t e' m' ->
       context RV to C ->
       imm_safe to (C e) m
-  | imm_safe_callred: forall to C e m fd args ty,
-      callred e m fd args ty ->
+  | imm_safe_callred: forall to C e m fd args tyf ty,
+      callred e m fd tyf args ty ->
       context RV to C ->
       imm_safe to (C e) m.
 
@@ -444,7 +445,7 @@ Lemma red_selection:
 Proof.
   intros. unfold Eselection.
   set (t := typ_of_type ty).
-  set (sg := mksignature (AST.Tint :: t :: t :: nil) (Some t) cc_default).
+  set (sg := mksignature (AST.Tint :: t :: t :: nil) (Some t) cc_default true).
   assert (LK: lookup_builtin_function "__builtin_sel"%string sg = Some (BI_standard (BI_select t))).
   { unfold sg, t; destruct ty as   [ | ? ? ? | ? | [] ? | ? ? | ? ? ? | ? ? ? | ? ? | ? ? ];
     simpl; unfold Tptr; destruct Archi.ptr64; reflexivity. }
@@ -537,6 +538,12 @@ Definition is_call_cont (k: cont) : Prop :=
   | _ => False
   end.
 
+Definition is_call_cont_strong (k: cont) : Prop :=
+  match k with
+  | Kcall _ _ _ _ _ => True
+  | _ => False
+  end.
+
 (** Execution states of the program are grouped in 4 classes corresponding
   to the part of the program we are currently executing.  It can be
   a statement ([State]), an expression ([ExprState]), a transition
@@ -558,7 +565,8 @@ Inductive state: Type :=
       (e: env)
       (m: mem) : state
   | Callstate                           (**r calling a function *)
-      (fd: fundef)
+      (fptr: val)
+      (ty: type)
       (args: list val)
       (k: cont)
       (m: mem) : state
@@ -636,11 +644,11 @@ Inductive estep: state -> trace -> state -> Prop :=
       estep (ExprState f (C a) k e m)
           t (ExprState f (C a') k e m')
 
-  | step_call: forall C f a k e m fd vargs ty,
-      callred a m fd vargs ty ->
+  | step_call: forall C f a k e m fptr tyf vargs ty,
+      callred a m fptr tyf vargs ty ->
       context RV RV C ->
       estep (ExprState f (C a) k e m)
-         E0 (Callstate fd vargs (Kcall f e C ty k) m)
+         E0 (Callstate fptr tyf vargs (Kcall f e C ty k) m)
 
   | step_stuck: forall C f a k e m K,
       context K RV C -> ~(imm_safe e K a m) ->
@@ -783,16 +791,20 @@ Inductive sstep: state -> trace -> state -> Prop :=
       sstep (State f (Sgoto lbl) k e m)
          E0 (State f s' k' e m)
 
-  | step_internal_function: forall f vargs k m e m1 m2,
+  | step_internal_function: forall fptr tyf f vargs k m e m1 m2
+      (FPTR: Genv.find_funct ge fptr = Some (Internal f))
+      (TYPE: type_of_fundef (Internal f) = tyf),
       list_norepet (var_names (fn_params f) ++ var_names (fn_vars f)) ->
       alloc_variables empty_env m (f.(fn_params) ++ f.(fn_vars)) e m1 ->
       bind_parameters e m1 f.(fn_params) vargs m2 ->
-      sstep (Callstate (Internal f) vargs k m)
+      sstep (Callstate fptr tyf vargs k m)
          E0 (State f f.(fn_body) k e m2)
 
-  | step_external_function: forall ef targs tres cc vargs k m vres t m',
-      external_call ef  ge vargs m t vres m' ->
-      sstep (Callstate (External ef targs tres cc) vargs k m)
+  | step_external_function: forall fptr tyf ef targs tres cc vargs k m vres t m'
+      (FPTR: Genv.find_funct ge fptr = Some (External ef targs tres cc))
+      (TYPE: type_of_fundef (External ef targs tres cc) = tyf),
+      external_call ef  se vargs m t vres m' ->
+      sstep (Callstate fptr tyf vargs k m)
           t (Returnstate vres k m')
 
   | step_returnstate: forall v f e C ty k m,
@@ -812,13 +824,13 @@ End SEMANTICS.
   without arguments and with an empty continuation. *)
 
 Inductive initial_state (p: program): state -> Prop :=
-  | initial_state_intro: forall b f m0,
+  | initial_state_intro: forall b m0,
       let ge := globalenv p in
       Genv.init_mem p = Some m0 ->
       Genv.find_symbol ge p.(prog_main) = Some b ->
-      Genv.find_funct_ptr ge b = Some f ->
-      type_of_fundef f = Tfunction Tnil type_int32s cc_default ->
-      initial_state p (Callstate f nil Kstop m0).
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      initial_state p (Callstate (Vptr b Ptrofs.zero) (Tfunction Tnil type_int32s cc_default) nil Kstop m0).
 
 (** A final state is a [Returnstate] with an empty continuation. *)
 
@@ -840,7 +852,7 @@ Proof.
   set (ge := globalenv p) in *.
   assert (DEREF: forall chunk m b ofs t v, deref_loc ge chunk m b ofs t v -> (length t <= 1)%nat).
     intros. inv H0; simpl; try omega. inv H3; simpl; try omega.
-  assert (ASSIGN: forall chunk m b ofs t v m', assign_loc ge chunk m b ofs v t m' -> (length t <= 1)%nat).
+  assert (ASSIGN: forall chunk m b ofs t v m', assign_loc ge ge chunk m b ofs v t m' -> (length t <= 1)%nat).
     intros. inv H0; simpl; try omega. inv H3; simpl; try omega.
   destruct H.
   inv H; simpl; try omega. inv H0; eauto; simpl; try omega.

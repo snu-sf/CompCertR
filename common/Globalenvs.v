@@ -37,6 +37,7 @@ Require Import Recdef.
 Require Import Zwf.
 Require Import Axioms Coqlib Errors Maps AST Linking.
 Require Import Integers Floats Values Memory.
+Require Import sflib.
 
 Notation "s #1" := (fst s) (at level 9, format "s '#1'") : pair_scope.
 Notation "s #2" := (snd s) (at level 9, format "s '#2'") : pair_scope.
@@ -263,7 +264,7 @@ Proof.
 Qed.
 
 Program Definition empty_genv (pub: list ident): t :=
-  @mkgenv pub (PTree.empty _) (PTree.empty _) 1%positive _ _ _.
+  @mkgenv pub (PTree.empty _) (PTree.empty _) 2%positive _ _ _.
 Next Obligation.
   rewrite PTree.gempty in H. discriminate.
 Qed.
@@ -833,7 +834,7 @@ Proof.
   induction gl.
   simpl; intros. inv H. tauto.
   simpl; intros. destruct (alloc_global m a) as [m1|] eqn:?; try discriminate.
-  erewrite alloc_global_perm; eauto. eapply IHgl; eauto.
+  erewrite alloc_global_perm; try eapply IHgl; eauto.
   unfold Mem.valid_block in *. erewrite alloc_global_nextblock; eauto.
   apply Plt_trans_succ; auto.
 Qed.
@@ -1674,7 +1675,9 @@ Record match_genvs (ge1: t A V) (ge2: t B W): Prop := {
   mge_symb:
     forall id, PTree.get id (genv_symb ge2) = PTree.get id (genv_symb ge1);
   mge_defs:
-    forall b, option_rel R (PTree.get b (genv_defs ge1)) (PTree.get b (genv_defs ge2))
+    forall b, option_rel R (PTree.get b (genv_defs ge1)) (PTree.get b (genv_defs ge2));
+  mge_pubs:
+    ge1.(genv_public) = ge2.(genv_public)
 }.
 
 Lemma add_global_match:
@@ -1683,7 +1686,7 @@ Lemma add_global_match:
   R g1 g2 ->
   match_genvs (add_global ge1 (id, g1)) (add_global ge2 (id, g2)).
 Proof.
-  intros. destruct H. constructor; simpl; intros.
+  intros. destruct H. constructor; simpl; intros; auto.
 - congruence.
 - rewrite mge_next0, ! PTree.gsspec. destruct (peq id0 id); auto.
 - rewrite mge_next0, ! PTree.gsspec. destruct (peq b (genv_next ge1)).
@@ -1720,6 +1723,7 @@ Lemma globalenvs_match:
 Proof.
   intros. apply add_globals_match. apply progmatch.
   constructor; simpl; intros; auto. rewrite ! PTree.gempty. constructor.
+  symmetry. apply progmatch.
 Qed.
 
 Theorem find_def_match_2:
@@ -1775,7 +1779,7 @@ Theorem find_symbol_match:
   forall (s : ident),
   find_symbol (globalenv tp) s = find_symbol (globalenv p) s.
 Proof.
-  intros. destruct globalenvs_match. apply mge_symb0.
+  intros. destruct globalenvs_match. unfold find_symbol. congruence.
 Qed.
 
 Theorem senv_match:
@@ -1935,6 +1939,193 @@ Qed.
 
 End TRANSFORM_TOTAL.
 
+Section MATCH_PROGRAMS_GENV.
+
+Context {C F1 V1 F2 V2: Type} {LC: Linker C} {LF: Linker F1} {LV: Linker V1}.
+Variable match_fundef: C -> F1 -> F2 -> Prop.
+Variable match_varinfo: V1 -> V2 -> Prop.
+Variable ctx: C.
+Variable ge: t F1 V1.
+Variable tge: t F2 V2.
+Hypothesis MATCH_GENV: Genv.match_genvs (match_globdef match_fundef match_varinfo ctx) ge tge.
+
+Theorem find_funct_ptr_match_genv:
+  forall b f,
+  find_funct_ptr ge b = Some f ->
+  exists cunit tf,
+  find_funct_ptr tge b = Some tf /\ match_fundef cunit f tf /\ linkorder cunit ctx.
+Proof.
+  ii; ss. inv MATCH_GENV. unfold Genv.find_funct_ptr, Genv.find_def in *. des_ifs_safe.
+  specialize (mge_defs0 b). inv mge_defs0; ss; eq_closure_tac. inv H1.
+  eexists. eexists. split; eauto.
+Qed.
+
+Theorem find_funct_match_genv:
+  forall v f,
+  find_funct ge v = Some f ->
+  exists cunit tf,
+  find_funct tge v = Some tf /\ match_fundef cunit f tf /\ linkorder cunit ctx.
+Proof.
+  intros. exploit find_funct_inv; eauto. intros [b EQ]. subst v.
+  rewrite find_funct_find_funct_ptr in H.
+  rewrite find_funct_find_funct_ptr.
+  apply find_funct_ptr_match_genv. auto.
+Qed.
+
+Lemma find_symbol_match_genv:
+  forall id,
+  Genv.find_symbol tge id = Genv.find_symbol ge id.
+Proof.
+  inv MATCH_GENV. unfold find_symbol. i. congruence.
+Qed.
+
+Lemma senv_match_genv:
+  Senv.equiv (to_senv ge) (to_senv tge).
+Proof.
+  econs. ii; ss.
+  { apply MATCH_GENV. }
+  esplits; ii; ss.
+  unfold Genv.public_symbol; ii; ss.
+  { rewrite find_symbol_match_genv. inv MATCH_GENV. rewrite mge_pubs0. ss. }
+  inv MATCH_GENV.
+  unfold Genv.block_is_volatile, Genv.find_var_info, Genv.find_def.
+  specialize (mge_defs0 b). inv mge_defs0; ss; des_ifs_safe.
+  inv H1; ss. inv H2; ss.
+Qed.
+
+End MATCH_PROGRAMS_GENV.
+
+Section TRANSFORM_PARTIAL_GENV.
+
+Context {C F1 V1 F2 V2: Type} {LC: Linker C} {LF: Linker F1} {LV: Linker V1}.
+Context {transf: F1 -> res F2}.
+Variable match_varinfo: V1 -> V2 -> Prop.
+Variable ctx: C.
+Variable ge: t F1 V1.
+Variable tge: t F2 V2.
+Hypothesis MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => transf f = OK tf) match_varinfo ctx) ge tge.
+
+Lemma find_funct_ptr_transf_partial_genv:
+  forall b f,
+  find_funct_ptr ge b = Some f ->
+  exists tf,
+  find_funct_ptr tge b = Some tf /\ transf f = OK tf.
+Proof.
+  intros. exploit (find_funct_ptr_match_genv MATCH_GENV); eauto.
+  intros (cu & tf & P & Q & R); exists tf; auto.
+Qed.
+
+Theorem find_funct_transf_partial_genv:
+  forall v f,
+  find_funct ge v = Some f ->
+  exists tf,
+  find_funct tge v = Some tf /\ transf f = OK tf.
+Proof.
+  intros. exploit (find_funct_match_genv MATCH_GENV); eauto.
+  intros (cu & tf & P & Q & R); exists tf; auto.
+Qed.
+
+Theorem find_symbol_transf_partial_genv:
+  forall (s : ident),
+  find_symbol tge s = find_symbol ge s.
+Proof.
+  intros. eapply (find_symbol_match_genv MATCH_GENV).
+Qed.
+
+Theorem senv_transf_partial_genv:
+  Senv.equiv (to_senv ge) (to_senv tge).
+Proof.
+  intros. eapply (senv_match_genv MATCH_GENV).
+Qed.
+
+End TRANSFORM_PARTIAL_GENV.
+
+Section TRANSFORM_TOTAL_GENV.
+
+Context {C F1 V1 F2 V2: Type} {LC: Linker C} {LF: Linker F1} {LV: Linker V1}.
+Context {transf: F1 -> F2}.
+Variable match_varinfo: V1 -> V2 -> Prop.
+Variable ctx: C.
+Variable ge: t F1 V1.
+Variable tge: t F2 V2.
+Hypothesis MATCH_GENV: Genv.match_genvs (match_globdef (fun cu f tf => tf = transf f) match_varinfo ctx) ge tge.
+
+Theorem find_funct_ptr_transf_genv:
+  forall b f,
+  find_funct_ptr ge b = Some f ->
+  find_funct_ptr tge b = Some (transf f).
+Proof.
+  intros. exploit (find_funct_ptr_match_genv MATCH_GENV); eauto.
+  intros (cu & tf & P & Q & R). congruence.
+Qed.
+
+Theorem find_funct_transf_genv:
+  forall v f,
+  find_funct ge v = Some f ->
+  find_funct tge v = Some (transf f).
+Proof.
+  intros. exploit (find_funct_match_genv MATCH_GENV); eauto.
+  intros (cu & tf & P & Q & R). congruence.
+Qed.
+
+Theorem find_symbol_transf_genv:
+  forall (s : ident),
+  find_symbol tge s = find_symbol ge s.
+Proof.
+  intros. eapply (find_symbol_match_genv MATCH_GENV).
+Qed.
+
+Theorem senv_transf_genv:
+  Senv.equiv (to_senv ge) (to_senv tge).
+Proof.
+  intros. eapply (senv_match_genv MATCH_GENV).
+Qed.
+
+End TRANSFORM_TOTAL_GENV.
+
 End Genv.
 
 Coercion Genv.to_senv: Genv.t >-> Senv.t.
+
+Lemma find_funct_lessdef
+      {F V} (ge: Genv.t F V)
+      fptr tfptr f
+      (FPTR: Genv.find_funct ge fptr = Some f)
+      (LD: Val.lessdef fptr tfptr):
+    <<EQ: fptr = tfptr>>.
+Proof.
+  exploit Genv.find_funct_inv; eauto. i; des. clarify. inv LD; ss.
+Qed.
+
+Inductive genv_compat {F V} (ge: Genv.t (AST.fundef F) V) (p: program (AST.fundef F) V): Prop :=
+| genv_compat_intro
+    (FIND_MAP: forall id g,
+        (prog_defmap p) ! id = Some g ->
+        (exists b, Genv.find_symbol ge id = Some b /\
+              match g with
+              | Gfun (External ef) => is_external_ef ef = false -> Genv.find_def ge b = Some g
+              | _ => Genv.find_def ge b = Some g
+              end))
+    (FIND_MAP_INV: forall id b g,
+        (Genv.find_symbol ge id = Some b /\ Genv.find_def ge b = Some g) ->
+        (prog_defmap p) ! id = Some g).
+
+Lemma genv_compat_match {F V} (p: program (AST.fundef F) V) : genv_compat (Genv.globalenv p) p.
+Proof.
+  split.
+  - i. exploit Genv.find_def_symbol. i. eapply H0 in H. destruct H as [x [H1 H2]].
+    exists x. split; auto. des_ifs.
+  - i. eapply Genv.find_def_symbol. esplit; eauto.
+Qed.
+
+Inductive senv_genv_compat {F V} (se: Senv.t) (ge: Genv.t F V): Prop :=
+| senv_genv_compat_intro
+    (INCL: forall id blk (SYMB: Genv.find_symbol ge id = Some blk), <<SYMB: Senv.find_symbol se id = Some blk>>)
+    (NB: se.(Senv.nextblock) = ge.(Genv.genv_next)).
+
+Lemma senv_genv_compat_refl
+      F V (ge: Genv.t F V):
+    senv_genv_compat ge ge.
+Proof. econs; eauto. Qed.
+
+Hint Resolve senv_genv_compat_refl.

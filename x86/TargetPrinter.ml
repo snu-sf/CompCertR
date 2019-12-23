@@ -352,13 +352,13 @@ module Target(System: SYSTEM):TARGET =
       | Cond_e -> "e" | Cond_ne -> "ne"
       | Cond_b -> "b" | Cond_be -> "be" | Cond_ae -> "ae" | Cond_a -> "a"
       | Cond_l -> "l" | Cond_le -> "le" | Cond_ge -> "ge" | Cond_g -> "g"
-      | Cond_p -> "p" | Cond_np -> "np"
+      | Cond_p -> "p" | Cond_np -> "np" | Cond_s -> "s"
 
     let name_of_neg_condition = function
       | Cond_e -> "ne" | Cond_ne -> "e"
       | Cond_b -> "ae" | Cond_be -> "a" | Cond_ae -> "b" | Cond_a -> "be"
       | Cond_l -> "ge" | Cond_le -> "g" | Cond_ge -> "l" | Cond_g -> "le"
-      | Cond_p -> "np" | Cond_np -> "p"
+      | Cond_p -> "np" | Cond_np -> "p" | Cond_s -> "ns"
 
 
 (* Names of sections *)

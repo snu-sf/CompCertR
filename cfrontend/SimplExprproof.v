@@ -18,6 +18,7 @@ Require Import AST Linking.
 Require Import Values Memory Events Globalenvs Smallstep.
 Require Import Ctypes Cop Csyntax Csem Cstrategy Clight.
 Require Import SimplExpr SimplExprspec.
+Require Import sflib.
 
 (** ** Relational specification of the translation. *)
 
@@ -30,8 +31,8 @@ Lemma transf_program_match:
 Proof.
   unfold transl_program; intros. monadInv H. split; auto.
   unfold program_of_program; simpl. destruct x; simpl.
-  eapply match_transform_partial_program_contextual. eexact EQ. 
-  intros. apply transl_fundef_spec; auto. 
+  eapply match_transform_partial_program_contextual. eexact EQ.
+  intros. apply transl_fundef_spec; auto.
 Qed.
 
 (** ** Semantic preservation *)
@@ -42,25 +43,35 @@ Variable prog: Csyntax.program.
 Variable tprog: Clight.program.
 Hypothesis TRANSL: match_prog prog tprog.
 
-Let ge := Csem.globalenv prog.
-Let tge := Clight.globalenv tprog.
+Section CORELEMMA.
+
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
+Variable ge : Csem.genv.
+Variable tge : Clight.genv.
+Hypothesis SECOMPATSRC: senv_genv_compat se ge.
+Hypothesis SECOMPATTGT: senv_genv_compat tse tge.
 
 (** Invariance properties. *)
+
+Hypothesis (MATCH_CGENV:
+              Genv.match_genvs (match_globdef (fun (ctx : AST.program Csyntax.fundef type) f tf =>
+                                                 tr_fundef f tf) eq prog) ge tge /\
+              genv_cenv tge = Csem.genv_cenv ge).
 
 Lemma comp_env_preserved:
   Clight.genv_cenv tge = Csem.genv_cenv ge.
 Proof.
-  simpl. destruct TRANSL. generalize (prog_comp_env_eq tprog) (prog_comp_env_eq prog). 
-  congruence.
+  apply MATCH_CGENV.
 Qed.
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match (proj1 TRANSL)).
+Proof (Genv.find_symbol_match_genv (proj1 MATCH_CGENV)).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match (proj1 TRANSL)).
+Proof (Genv.senv_match_genv (proj1 MATCH_CGENV)).
 
 Lemma function_ptr_translated:
   forall b f,
@@ -69,7 +80,7 @@ Lemma function_ptr_translated:
   Genv.find_funct_ptr tge b = Some tf /\ tr_fundef f tf.
 Proof.
   intros.
-  edestruct (Genv.find_funct_ptr_match (proj1 TRANSL)) as (ctx & tf & A & B & C); eauto.
+  edestruct (Genv.find_funct_ptr_match_genv (proj1 MATCH_CGENV)) as (ctx & tf & A & B & C); eauto.
 Qed.
 
 Lemma functions_translated:
@@ -79,7 +90,7 @@ Lemma functions_translated:
   Genv.find_funct tge v = Some tf /\ tr_fundef f tf.
 Proof.
   intros.
-  edestruct (Genv.find_funct_match (proj1 TRANSL)) as (ctx & tf & A & B & C); eauto.
+  edestruct (Genv.find_funct_match_genv (proj1 MATCH_CGENV)) as (ctx & tf & A & B & C); eauto.
 Qed.
 
 Lemma type_of_fundef_preserved:
@@ -108,14 +119,14 @@ Proof.
   intros. unfold Ederef'; destruct a; auto using eval_Ederef.
   destruct (type_eq t (typeof a)); auto using eval_Ederef.
   inv H.
-- auto. 
+- auto.
 - inv H0.
 Qed.
 
 Lemma typeof_Ederef':
   forall a t, typeof (Ederef' a t) = t.
 Proof.
-  unfold Ederef'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto. 
+  unfold Ederef'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto.
 Qed.
 
 Lemma eval_Eaddrof':
@@ -131,7 +142,7 @@ Qed.
 Lemma typeof_Eaddrof':
   forall a t, typeof (Eaddrof' a t) = t.
 Proof.
-  unfold Eaddrof'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto. 
+  unfold Eaddrof'; intros; destruct a; auto. destruct (type_eq t (typeof a)); auto.
 Qed.
 
 (** Translation of simple expressions. *)
@@ -173,17 +184,17 @@ Proof (proj2 tr_simple_nil).
 
 Remark deref_loc_translated:
   forall ty m b ofs t v,
-  Csem.deref_loc ge ty m b ofs t v ->
+  Csem.deref_loc se ty m b ofs t v ->
   match chunk_for_volatile_type ty with
   | None => t = E0 /\ Clight.deref_loc ty m b ofs v
-  | Some chunk => volatile_load tge chunk m b ofs t v
+  | Some chunk => volatile_load tse chunk m b ofs t v
   end.
 Proof.
   intros. unfold chunk_for_volatile_type. inv H.
   (* By_value, not volatile *)
   rewrite H1. split; auto. eapply deref_loc_value; eauto.
   (* By_value, volatile *)
-  rewrite H0; rewrite H1. eapply volatile_load_preserved with (ge1 := ge); auto. apply senv_preserved.
+  rewrite H0; rewrite H1. eapply volatile_load_preserved with (ge1 := se); auto.
   (* By reference *)
   rewrite H0. destruct (type_is_volatile ty); split; auto; eapply deref_loc_reference; eauto.
   (* By copy *)
@@ -192,17 +203,17 @@ Qed.
 
 Remark assign_loc_translated:
   forall ty m b ofs v t m',
-  Csem.assign_loc ge ty m b ofs v t m' ->
+  Csem.assign_loc se ge ty m b ofs v t m' ->
   match chunk_for_volatile_type ty with
   | None => t = E0 /\ Clight.assign_loc tge ty m b ofs v m'
-  | Some chunk => volatile_store tge chunk m b ofs v t m'
+  | Some chunk => volatile_store tse chunk m b ofs v t m'
   end.
 Proof.
   intros. unfold chunk_for_volatile_type. inv H.
   (* By_value, not volatile *)
   rewrite H1. split; auto. eapply assign_loc_value; eauto.
   (* By_value, volatile *)
-  rewrite H0; rewrite H1. eapply volatile_store_preserved with (ge1 := ge); auto. apply senv_preserved.
+  rewrite H0; rewrite H1. eapply volatile_store_preserved with (ge1 := se); auto.
   (* By copy *)
   rewrite H0. rewrite <- comp_env_preserved in *.
   destruct (type_is_volatile ty); split; auto; eapply assign_loc_copy; eauto.
@@ -213,7 +224,7 @@ Qed.
 Lemma tr_simple:
  forall e m,
  (forall r v,
-  eval_simple_rvalue ge e m r v ->
+  eval_simple_rvalue se ge e m r v ->
   forall le dst sl a tmps,
   tr_expr le dst r sl a tmps ->
   match dst with
@@ -226,14 +237,14 @@ Lemma tr_simple:
   end)
 /\
  (forall l b ofs,
-  eval_simple_lvalue ge e m l b ofs ->
+  eval_simple_lvalue se ge e m l b ofs ->
   forall le sl a tmps,
   tr_expr le For_val l sl a tmps ->
   sl = nil /\ Csyntax.typeof l = typeof a /\ eval_lvalue tge e le m a b ofs).
 Proof.
 Opaque makeif.
   intros e m.
-  apply (eval_simple_rvalue_lvalue_ind ge e m); intros until tmps; intros TR; inv TR.
+  apply (eval_simple_rvalue_lvalue_ind se ge e m); intros until tmps; intros TR; inv TR.
 (* value *)
   auto.
   auto.
@@ -253,7 +264,7 @@ Opaque makeif.
   subst sl1; simpl.
   assert (eval_expr tge e le m (Eaddrof' a1 ty) (Vptr b ofs)) by (apply eval_Eaddrof'; auto).
   assert (typeof (Eaddrof' a1 ty) = ty) by (apply typeof_Eaddrof').
-  destruct dst; auto. simpl; econstructor; eauto.  
+  destruct dst; auto. simpl; econstructor; eauto.
 (* unop *)
   exploit H0; eauto. intros [A [B C]].
   subst sl1; simpl.
@@ -289,7 +300,7 @@ Opaque makeif.
     rewrite symbols_preserved; auto.
 (* deref *)
   exploit H0; eauto. intros [A [B C]]. subst sl1.
-  split; auto. split. rewrite typeof_Ederef'; auto. apply eval_Ederef'; auto. 
+  split; auto. split. rewrite typeof_Ederef'; auto. apply eval_Ederef'; auto.
 (* field struct *)
   rewrite <- comp_env_preserved in *.
   exploit H0; eauto. intros [A [B C]]. subst sl1.
@@ -302,7 +313,7 @@ Qed.
 
 Lemma tr_simple_rvalue:
   forall e m r v,
-  eval_simple_rvalue ge e m r v ->
+  eval_simple_rvalue se ge e m r v ->
   forall le dst sl a tmps,
   tr_expr le dst r sl a tmps ->
   match dst with
@@ -319,7 +330,7 @@ Qed.
 
 Lemma tr_simple_lvalue:
   forall e m l b ofs,
-  eval_simple_lvalue ge e m l b ofs ->
+  eval_simple_lvalue se ge e m l b ofs ->
   forall le sl a tmps,
   tr_expr le For_val l sl a tmps ->
   sl = nil /\ Csyntax.typeof l = typeof a /\ eval_lvalue tge e le m a b ofs.
@@ -331,7 +342,7 @@ Lemma tr_simple_exprlist:
   forall le rl sl al tmps,
   tr_exprlist le rl sl al tmps ->
   forall e m tyl vl,
-  eval_simple_list ge e m rl tyl vl ->
+  eval_simple_list se ge e m rl tyl vl ->
   sl = nil /\ eval_exprlist tge e le m al tyl vl.
 Proof.
   induction 1; intros.
@@ -779,7 +790,7 @@ Proof.
   destruct (Mem.weak_valid_pointer m1 b (Ptrofs.unsigned i)); inv H.
   destruct (Mem.weak_valid_pointer m2 b (Ptrofs.unsigned i)); inv H0.
   auto.
-- destruct v; try congruence. 
+- destruct v; try congruence.
   destruct (negb Archi.ptr64); try discriminate.
   destruct (Mem.weak_valid_pointer m1 b (Ptrofs.unsigned i)); inv H.
   destruct (Mem.weak_valid_pointer m2 b (Ptrofs.unsigned i)); inv H0.
@@ -802,7 +813,7 @@ Lemma static_bool_val_sound:
 Proof.
   assert (A: forall b ofs, Mem.weak_valid_pointer Mem.empty b ofs = false).
   { unfold Mem.weak_valid_pointer, Mem.valid_pointer, proj_sumbool; intros.
-    rewrite ! pred_dec_false by (apply Mem.perm_empty). auto. }  
+    rewrite ! pred_dec_false by (apply Mem.perm_empty). auto. }
   intros until b; unfold bool_val.
   destruct (classify_bool t); destruct v; destruct Archi.ptr64 eqn:SF; auto.
 - rewrite A; congruence.
@@ -813,7 +824,7 @@ Lemma step_makeif:
   forall f a s1 s2 k e le m v1 b,
   eval_expr tge e le m a v1 ->
   bool_val v1 (typeof a) m = Some b ->
-  star step1 tge (State f (makeif a s1 s2) k e le m)
+  star step1 tse tge (State f (makeif a s1 s2) k e le m)
              E0 (State f (if b then s1 else s2) k e le m).
 Proof.
   intros. functional induction (makeif a s1 s2).
@@ -829,10 +840,10 @@ Qed.
 
 Lemma step_make_set:
   forall id a ty m b ofs t v e le f k,
-  Csem.deref_loc ge ty m b ofs t v ->
+  Csem.deref_loc se ty m b ofs t v ->
   eval_lvalue tge e le m a b ofs ->
   typeof a = ty ->
-  step1 tge (State f (make_set id a) k e le m)
+  step1 tse tge (State f (make_set id a) k e le m)
           t (State f Sskip k e (PTree.set id v le) m).
 Proof.
   intros. exploit deref_loc_translated; eauto. rewrite <- H1.
@@ -848,12 +859,12 @@ Qed.
 
 Lemma step_make_assign:
   forall a1 a2 ty m b ofs t v m' v2 e le f k,
-  Csem.assign_loc ge ty m b ofs v t m' ->
+  Csem.assign_loc se ge ty m b ofs v t m' ->
   eval_lvalue tge e le m a1 b ofs ->
   eval_expr tge e le m a2 v2 ->
   sem_cast v2 (typeof a2) ty m = Some v ->
   typeof a1 = ty ->
-  step1 tge (State f (make_assign a1 a2) k e le m)
+  step1 tse tge (State f (make_assign a1 a2) k e le m)
           t (State f Sskip k e le m').
 Proof.
   intros. exploit assign_loc_translated; eauto. rewrite <- H3.
@@ -883,7 +894,7 @@ Qed.
 
 Lemma push_seq:
   forall f sl k e le m,
-  star step1 tge (State f (makeseq sl) k e le m)
+  star step1 tse tge (State f (makeseq sl) k e le m)
               E0 (State f Sskip (Kseqlist sl k) e le m).
 Proof.
   intros. unfold makeseq. generalize Sskip. revert sl k.
@@ -894,12 +905,12 @@ Qed.
 
 Lemma step_tr_rvalof:
   forall ty m b ofs t v e le a sl a' tmp f k,
-  Csem.deref_loc ge ty m b ofs t v ->
+  Csem.deref_loc se ty m b ofs t v ->
   eval_lvalue tge e le m a b ofs ->
   tr_rvalof ty a sl a' tmp ->
   typeof a = ty ->
   exists le',
-    star step1 tge (State f Sskip (Kseqlist sl k) e le m)
+    star step1 tse tge (State f Sskip (Kseqlist sl k) e le m)
                  t (State f Sskip k e le' m)
   /\ eval_expr tge e le' m a' v
   /\ typeof a' = typeof a
@@ -1041,11 +1052,11 @@ Inductive match_states: Csem.state -> state -> Prop :=
       match_cont k tk ->
       match_states (Csem.State f s k e m)
                    (State tf ts tk e le m)
-  | match_callstates: forall fd args k m tfd tk,
-      tr_fundef fd tfd ->
+  | match_callstates: forall fptr ty args k m tk,
+      DUMMY_PROP ->
       match_cont k tk ->
-      match_states (Csem.Callstate fd args k m)
-                   (Callstate tfd args tk m)
+      match_states (Csem.Callstate fptr ty args k m)
+                   (Callstate fptr ty args tk m)
   | match_returnstates: forall res k m tk,
       match_cont k tk ->
       match_states (Csem.Returnstate res k m)
@@ -1427,11 +1438,11 @@ Proof.
 Qed.
 
 Lemma estep_simulation:
-  forall S1 t S2, Cstrategy.estep ge S1 t S2 ->
+  forall S1 t S2, Cstrategy.estep se ge S1 t S2 ->
   forall S1' (MS: match_states S1 S1'),
   exists S2',
-     (plus step1 tge S1' t S2' \/
-       (star step1 tge S1' t S2' /\ measure S2 < measure S1)%nat)
+     (plus step1 tse tge S1' t S2' \/
+       (star step1 tse tge S1' t S2' /\ measure S2 < measure S1)%nat)
   /\ match_states S2 S2'.
 Proof.
   induction 1; intros; inv MS.
@@ -1702,10 +1713,10 @@ Proof.
   subst; simpl Kseqlist.
   econstructor; split.
   left. eapply plus_left. constructor.
-  eapply star_left. constructor. econstructor. eauto. rewrite <- TY2; eauto. 
+  eapply star_left. constructor. econstructor. eauto. rewrite <- TY2; eauto.
   eapply star_left. constructor.
   apply star_one. eapply step_make_assign; eauto.
-  constructor. apply PTree.gss. simpl. eapply cast_idempotent; eauto. 
+  constructor. apply PTree.gss. simpl. eapply cast_idempotent; eauto.
   reflexivity. reflexivity. traceEq.
   econstructor. auto. apply S.
   apply tr_val_gen. auto. intros. constructor.
@@ -1902,11 +1913,9 @@ Proof.
   exploit tr_simple_rvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit tr_simple_exprlist; eauto. intros [SL2 EV2].
   subst. simpl Kseqlist.
-  exploit functions_translated; eauto. intros [tfd [J K]].
   econstructor; split.
   left. eapply plus_left. constructor.  apply star_one.
   econstructor; eauto. rewrite <- TY1; eauto.
-  exploit type_of_fundef_preserved; eauto. congruence.
   traceEq.
   constructor; auto. econstructor; eauto.
   intros. change sl2 with (nil ++ sl2). apply S.
@@ -1915,11 +1924,9 @@ Proof.
   exploit tr_simple_rvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit tr_simple_exprlist; eauto. intros [SL2 EV2].
   subst. simpl Kseqlist.
-  exploit functions_translated; eauto. intros [tfd [J K]].
   econstructor; split.
   left. eapply plus_left. constructor.  apply star_one.
   econstructor; eauto. rewrite <- TY1; eauto.
-  exploit type_of_fundef_preserved; eauto. congruence.
   traceEq.
   constructor; auto. econstructor; eauto.
   intros. apply S.
@@ -1939,7 +1946,7 @@ Proof.
   econstructor; split.
   left. eapply plus_left. constructor.  apply star_one.
   econstructor; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   traceEq.
   econstructor; eauto.
   change sl2 with (nil ++ sl2). apply S. constructor. simpl; auto. auto.
@@ -1949,7 +1956,7 @@ Proof.
   econstructor; split.
   left. eapply plus_left. constructor. apply star_one.
   econstructor; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   traceEq.
   econstructor; eauto.
   change sl2 with (nil ++ sl2). apply S.
@@ -1978,7 +1985,7 @@ Qed.
 
 Lemma bind_parameters_preserved:
   forall e m params args m',
-  Csem.bind_parameters ge e m params args m' ->
+  Csem.bind_parameters se ge e m params args m' ->
   bind_parameters tge e m params args m'.
 Proof.
   induction 1; econstructor; eauto. inv H0.
@@ -1996,11 +2003,11 @@ Proof.
 Qed.
 
 Lemma sstep_simulation:
-  forall S1 t S2, Csem.sstep ge S1 t S2 ->
+  forall S1 t S2, Csem.sstep se ge S1 t S2 ->
   forall S1' (MS: match_states S1 S1'),
   exists S2',
-     (plus step1 tge S1' t S2' \/
-       (star step1 tge S1' t S2' /\ measure S2 < measure S1)%nat)
+     (plus step1 tse tge S1' t S2' \/
+       (star step1 tse tge S1' t S2' /\ measure S2 < measure S1)%nat)
   /\ match_states S2 S2'.
 Proof.
   induction 1; intros; inv MS.
@@ -2244,9 +2251,11 @@ Proof.
   econstructor; eauto.
 
 (* internal function *)
-  inv H7. inversion H3; subst.
+  exploit functions_translated; eauto. intros [tfd [J K]].
+  inv K. inversion H3; subst.
   econstructor; split.
-  left; apply plus_one. eapply step_internal_function. econstructor.
+  left; apply plus_one. eapply step_internal_function; eauto.
+  erewrite type_of_fundef_preserved; eauto. econstructor. econstructor; eauto. econstructor.
   rewrite H6; rewrite H7; auto.
   rewrite H6; rewrite H7. eapply alloc_variables_preserved; eauto.
   rewrite H6. eapply bind_parameters_preserved; eauto.
@@ -2254,10 +2263,10 @@ Proof.
   constructor; auto.
 
 (* external function *)
-  inv H5.
+  exploit functions_translated; eauto. intros [tfd [J K]]. inv K.
   econstructor; split.
   left; apply plus_one. econstructor; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   constructor; auto.
 
 (* return *)
@@ -2270,11 +2279,11 @@ Qed.
 (** Semantic preservation *)
 
 Theorem simulation:
-  forall S1 t S2, Cstrategy.step ge S1 t S2 ->
+  forall S1 t S2, Cstrategy.step se ge S1 t S2 ->
   forall S1' (MS: match_states S1 S1'),
   exists S2',
-     (plus step1 tge S1' t S2' \/
-       (star step1 tge S1' t S2' /\ measure S2 < measure S1)%nat)
+     (plus step1 tse tge S1' t S2' \/
+       (star step1 tse tge S1' t S2' /\ measure S2 < measure S1)%nat)
   /\ match_states S2 S2'.
 Proof.
   intros S1 t S2 STEP. destruct STEP.
@@ -2282,27 +2291,42 @@ Proof.
   apply sstep_simulation; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Csem.globalenv prog.
+Let tge := globalenv tprog.
+
+Let MATCH_CGENV:
+  Genv.match_genvs (match_globdef (fun (ctx : AST.program Csyntax.fundef type) f tf =>
+                                     tr_fundef f tf) eq prog) ge tge /\
+  genv_cenv tge = Csem.genv_cenv ge.
+Proof.
+  intros. constructor.
+  - apply Genv.globalenvs_match. apply TRANSL.
+  - unfold tge, ge. destruct prog, tprog; simpl. destruct TRANSL as [_ EQ]. simpl in EQ. congruence.
+Qed.
+
 Lemma transl_initial_states:
   forall S,
   Csem.initial_state prog S ->
-  exists S', Clight.initial_state tprog S' /\ match_states S S'.
+  exists S', Clight.initial_state tprog S' /\ match_states tge S S'.
 Proof.
   intros. inv H.
-  exploit function_ptr_translated; eauto. intros [tf [FIND TR]].
   econstructor; split.
-  econstructor.
+  econstructor; eauto.
   eapply (Genv.init_mem_match (proj1 TRANSL)); eauto.
   replace (prog_main tprog) with (prog_main prog).
-  rewrite symbols_preserved. eauto. 
-  destruct TRANSL. destruct H as (A & B & C). simpl in B. auto. 
-  eexact FIND.
-  rewrite <- H3. apply type_of_fundef_preserved. auto.
+  assert (Genv.globalenv tprog = tge.(genv_genv)) by auto. rewrite H.
+  erewrite symbols_preserved; eauto.
+  destruct TRANSL. destruct H as (A & B & C). simpl in B. auto.
   constructor. auto. constructor.
 Qed.
 
 Lemma transl_final_states:
   forall S S' r,
-  match_states S S' -> Csem.final_state S r -> Clight.final_state S' r.
+  match_states tge S S' -> Csem.final_state S r -> Clight.final_state S' r.
 Proof.
   intros. inv H0. inv H. inv H4. constructor.
 Qed.
@@ -2311,12 +2335,14 @@ Theorem transl_program_correct:
   forward_simulation (Cstrategy.semantics prog) (Clight.semantics1 tprog).
 Proof.
   eapply forward_simulation_star_wf with (order := ltof _ measure).
-  eapply senv_preserved.
+  eapply senv_preserved; auto.
   eexact transl_initial_states.
   eexact transl_final_states.
   apply well_founded_ltof.
-  exact simulation.
+  apply simulation; auto. eapply senv_preserved; auto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.
 
@@ -2324,7 +2350,7 @@ End PRESERVATION.
 
 Instance TransfSimplExprLink : TransfLink match_prog.
 Proof.
-  red; intros. eapply Ctypes.link_match_program; eauto. 
+  red; intros. eapply Ctypes.link_match_program; eauto.
 - intros.
 Local Transparent Linker_fundef.
   simpl in *; unfold link_fundef in *. inv H3; inv H4; try discriminate.

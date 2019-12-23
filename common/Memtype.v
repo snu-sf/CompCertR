@@ -275,7 +275,7 @@ Axiom valid_pointer_implies:
 
 (** ** Properties of the initial memory state. *)
 
-Axiom nextblock_empty: nextblock empty = 1%positive.
+Axiom nextblock_empty: nextblock empty = 2%positive.
 Axiom perm_empty: forall b ofs k p, ~perm empty b ofs k p.
 Axiom valid_access_empty:
   forall chunk b ofs p, ~valid_access empty chunk b ofs p.

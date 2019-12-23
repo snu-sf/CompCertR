@@ -313,6 +313,7 @@ Definition negate_testcond (c: testcond) : testcond :=
   | Cond_l => Cond_ge  | Cond_le => Cond_g
   | Cond_ge => Cond_l  | Cond_g => Cond_le
   | Cond_p => Cond_np  | Cond_np => Cond_p
+  | Cond_s => Cond_ns  | Cond_ns => Cond_s
   end.
 
 Definition mk_sel (cond: extcond) (rd r2: ireg) (k: code) :=

@@ -32,6 +32,7 @@
 Require Import Setoid Program.Basics.
 Require Import Coqlib Decidableplus.
 Require Import AST Integers Values Memory Events Globalenvs.
+Require Import sflib.
 
 (** * Assertions about memory *)
 
@@ -805,7 +806,7 @@ Inductive globalenv_preserved {F V: Type} (ge: Genv.t F V) (j: meminj) (bound: b
       (VARINFOS: forall b gv, Genv.find_var_info ge b = Some gv -> Plt b bound).
 
 Program Definition globalenv_inject {F V: Type} (ge: Genv.t F V) (j: meminj) : massert := {|
-  m_pred := fun m => exists bound, Ple bound (Mem.nextblock m) /\ globalenv_preserved ge j bound;
+  m_pred := fun m => exists bound, Ple bound (Mem.nextblock m) /\ globalenv_preserved ge j bound /\ <<HI: bound = ge.(Genv.genv_next)>>;
   m_footprint := fun b ofs => False
 |}.
 Next Obligation.
@@ -820,7 +821,7 @@ Lemma globalenv_inject_preserves_globals:
   m |= globalenv_inject ge j ->
   meminj_preserves_globals ge j.
 Proof.
-  intros. destruct H as (bound & A & B). destruct B.
+  intros. destruct H as (bound & A & B & _). destruct B.
   split; [|split]; intros.
 - eauto.
 - eauto.
@@ -834,9 +835,9 @@ Lemma globalenv_inject_incr:
   m |= globalenv_inject ge j ** P ->
   m |= globalenv_inject ge j' ** P.
 Proof.
-  intros. destruct H1 as (A & B & C). destruct A as (bound & D & E).
+  intros. destruct H1 as (A & B & C). destruct A as (bound & D & E & HI).
   split; [|split]; auto.
-  exists bound; split; auto.
+  exists bound; splits; auto.
   inv E; constructor; intros.
 - eauto.
 - destruct (j b1) as [[b0 delta0]|] eqn:JB1.
@@ -848,21 +849,22 @@ Proof.
 Qed.
 
 Lemma external_call_parallel_rule:
-  forall (F V: Type) ef (ge: Genv.t F V) vargs1 m1 t vres1 m1' m2 j P vargs2,
-  external_call ef ge vargs1 m1 t vres1 m1' ->
+  forall (F V: Type) ef se tse (ge: Genv.t F V) vargs1 m1 t vres1 m1' m2 j (SYMBINJ: symbols_inject j se tse) P vargs2,
+  external_call ef se vargs1 m1 t vres1 m1' ->
   m2 |= minjection j m1 ** globalenv_inject ge j ** P ->
   Val.inject_list j vargs1 vargs2 ->
   exists j' vres2 m2',
-     external_call ef ge vargs2 m2 t vres2 m2'
+     external_call ef tse vargs2 m2 t vres2 m2'
   /\ Val.inject j' vres1 vres2
   /\ m2' |= minjection j' m1' ** globalenv_inject ge j' ** P
   /\ inject_incr j j'
-  /\ inject_separated j j' m1 m2.
+  /\ inject_separated j j' m1 m2
+  /\ Mem.unchanged_on (loc_unmapped j) m1 m1'
+  /\ Mem.unchanged_on (loc_out_of_reach j m1) m2 m2'.
 Proof.
   intros until vargs2; intros CALL SEP ARGS.
   destruct SEP as (A & B & C). simpl in A.
-  exploit external_call_mem_inject; eauto.
-  eapply globalenv_inject_preserves_globals. eapply sep_pick1; eauto.
+  exploit external_call_mem_inject_gen; eauto.
   intros (j' & vres2 & m2' & CALL' & RES & INJ' & UNCH1 & UNCH2 & INCR & ISEP).
   assert (MAXPERMS: forall b ofs p,
             Mem.valid_block m1 b -> Mem.perm m1' b ofs Max p -> Mem.perm m1 b ofs Max p).
@@ -896,7 +898,8 @@ Lemma alloc_parallel_rule_2:
   exists j',
      m2' |= range b2 0 lo ** range b2 hi sz2 ** minjection j' m1' ** globalenv_inject ge j' ** P
   /\ inject_incr j j'
-  /\ j' b1 = Some(b2, delta).
+  /\ j' b1 = Some(b2, delta)
+  /\ inject_separated j j' m1 m2.
 Proof.
   intros.
   set (j1 := fun b => if eq_block b b1 then Some(b2, delta) else j b).
@@ -916,4 +919,7 @@ Proof.
   rewrite sep_swap4 in A. rewrite sep_swap4. apply globalenv_inject_incr with j1 m1; auto.
 - red; unfold j1; intros. destruct (eq_block b b1). congruence. rewrite D; auto.
 - red; unfold j1; intros. destruct (eq_block b0 b1). congruence. rewrite D in H9 by auto. congruence.
+- split; eauto. split; auto. unfold inject_separated. intros. destruct (eq_block b1 b0).
+  + subst b0. rewrite C in H9. inv H9. split; eapply Mem.fresh_block_alloc; eauto.
+  + exploit D; eauto. congruence.
 Qed.

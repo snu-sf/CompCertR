@@ -30,6 +30,7 @@ Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Ctypes.
 Require Import Cop.
+Require Import sflib.
 
 (** * Abstract syntax *)
 
@@ -239,6 +240,7 @@ Inductive assign_loc (ce: composite_env) (ty: type) (m: mem) (b: block) (ofs: pt
 
 Section SEMANTICS.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** Allocation of function-local variables.
@@ -303,6 +305,14 @@ Definition block_of_binding (id_b_ty: ident * (block * type)) :=
 
 Definition blocks_of_env (e: env) : list (block * Z * Z) :=
   List.map block_of_binding (PTree.elements e).
+
+Lemma blocks_of_env_in:
+  forall b lo hi e, In (b, lo, hi) (blocks_of_env e) ->
+  exists id ty, e!id = Some (b, ty) /\ lo = 0 /\ hi = sizeof ge ty.
+Proof.
+  ii. unfold blocks_of_env in H. rewrite in_map_iff in H. des. destruct x, p; ss. clarify.
+  eapply PTree.elements_complete in H0. exists i. exists t. esplits; eauto.
+Qed.
 
 (** Optional assignment to a temporary *)
 
@@ -473,6 +483,17 @@ Definition is_call_cont (k: cont) : Prop :=
   | _ => False
   end.
 
+Fixpoint Forall_cont_ext (k: cont) (ext: block -> Z -> Prop): Prop :=
+  match k with
+  | Kstop => True
+  | Kseq _ k => Forall_cont_ext k ext
+  | Kloop1 _ _ k => Forall_cont_ext k ext
+  | Kloop2 _ _ k => Forall_cont_ext k ext
+  | Kswitch k => Forall_cont_ext k ext
+  | (Kcall _ _ e _ k) => (forall id b ty i, PTree.get id e = Some (b, ty) -> ~ ext b i)
+                        /\ Forall_cont_ext k ext
+  end.
+
 (** States *)
 
 Inductive state: Type :=
@@ -484,7 +505,8 @@ Inductive state: Type :=
       (le: temp_env)
       (m: mem) : state
   | Callstate
-      (fd: fundef)
+      (fptr: val)
+      (ty: type)
       (args: list val)
       (k: cont)
       (m: mem) : state
@@ -559,18 +581,18 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State f (Sset id a) k e le m)
         E0 (State f Sskip k e (PTree.set id v le) m)
 
-  | step_call:   forall f optid a al k e le m tyargs tyres cconv vf vargs fd,
+  | step_call:   forall f optid a al k e le m tyargs tyres cconv vf vargs,
       classify_fun (typeof a) = fun_case_f tyargs tyres cconv ->
       eval_expr e le m a vf ->
       eval_exprlist e le m al tyargs vargs ->
-      Genv.find_funct ge vf = Some fd ->
-      type_of_fundef fd = Tfunction tyargs tyres cconv ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
       step (State f (Scall optid a al) k e le m)
-        E0 (Callstate fd vargs (Kcall optid f e le k) m)
+        E0 (Callstate vf (Tfunction tyargs tyres cconv) vargs (Kcall optid f e le k) m)
 
   | step_builtin:   forall f optid ef tyargs al k e le m vargs t vres m',
       eval_exprlist e le m al tyargs vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       step (State f (Sbuiltin optid ef tyargs al) k e le m)
          t (State f Sskip k e (set_opttemp optid vres le) m')
 
@@ -648,14 +670,18 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State f (Sgoto lbl) k e le m)
         E0 (State f s' k' e le m)
 
-  | step_internal_function: forall f vargs k m e le m1,
+  | step_internal_function: forall fptr ty f vargs k m e le m1
+      (FPTR: Genv.find_funct ge fptr = Some (Internal f))
+      (TY: type_of_fundef (Internal f) = ty),
       function_entry f vargs m e le m1 ->
-      step (Callstate (Internal f) vargs k m)
+      step (Callstate fptr ty vargs k m)
         E0 (State f f.(fn_body) k e le m1)
 
-  | step_external_function: forall ef targs tres cconv vargs k m vres t m',
-      external_call ef ge vargs m t vres m' ->
-      step (Callstate (External ef targs tres cconv) vargs k m)
+  | step_external_function: forall fptr ty ef targs tres cconv vargs k m vres t m'
+      (FPTR: Genv.find_funct ge fptr = Some (External ef targs tres cconv))
+      (TY: type_of_fundef (External ef targs tres cconv) = ty),
+      external_call ef se vargs m t vres m' ->
+      step (Callstate fptr ty vargs k m)
          t (Returnstate vres k m')
 
   | step_returnstate: forall v optid f e le k m,
@@ -670,13 +696,13 @@ Inductive step: state -> trace -> state -> Prop :=
   without arguments and with an empty continuation. *)
 
 Inductive initial_state (p: program): state -> Prop :=
-  | initial_state_intro: forall b f m0,
+  | initial_state_intro: forall b m0,
       let ge := Genv.globalenv p in
       Genv.init_mem p = Some m0 ->
       Genv.find_symbol ge p.(prog_main) = Some b ->
-      Genv.find_funct_ptr ge b = Some f ->
-      type_of_fundef f = Tfunction Tnil type_int32s cc_default ->
-      initial_state p (Callstate f nil Kstop m0).
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      initial_state p (Callstate (Vptr b Ptrofs.zero) (Tfunction Tnil type_int32s cc_default )nil Kstop m0).
 
 (** A final state is a [Returnstate] with an empty continuation. *)
 
@@ -696,7 +722,7 @@ Inductive function_entry1 (ge: genv) (f: function) (vargs: list val) (m: mem) (e
       le = create_undef_temps f.(fn_temps) ->
       function_entry1 ge f vargs m e le m'.
 
-Definition step1 (ge: genv) := step ge (function_entry1 ge).
+Definition step1 (se: Senv.t) (ge: genv) := step se ge (function_entry1 ge).
 
 (** Second, parameters as temporaries. *)
 
@@ -709,7 +735,7 @@ Inductive function_entry2 (ge: genv)  (f: function) (vargs: list val) (m: mem) (
       bind_parameter_temps f.(fn_params) vargs (create_undef_temps f.(fn_temps)) = Some le ->
       function_entry2 ge f vargs m e le m'.
 
-Definition step2 (ge: genv) := step ge (function_entry2 ge).
+Definition step2 (se: Senv.t) (ge: genv) := step se ge (function_entry2 ge).
 
 (** Wrapping up these definitions in two small-step semantics. *)
 
@@ -729,7 +755,7 @@ Proof.
   intros. unfold semantics1.
   set (ge := globalenv p). constructor; simpl; intros.
 (* receptiveness *)
-  assert (t1 = E0 -> exists s2, step1 ge s t2 s2).
+  assert (t1 = E0 -> exists s2, step1 ge ge s t2 s2).
     intros. subst. inv H0. exists s1; auto.
   inversion H; subst; auto.
   (* builtin *)
@@ -743,3 +769,67 @@ Proof.
   eapply external_call_trace_length; eauto.
   eapply external_call_trace_length; eauto.
 Qed.
+
+Lemma alloc_variables_perm: forall l ge e m e' m' b i k p,
+    Mem.valid_block m b -> alloc_variables ge e m l e' m' -> Mem.perm m' b i k p -> Mem.perm m b i k p.
+Proof.
+  induction 2; ii; eauto.
+  eapply Mem.perm_alloc_4; eauto.
+  - eapply IHalloc_variables; eauto. eapply Mem.valid_block_alloc; eauto.
+  - ii. subst b1. exploit Mem.fresh_block_alloc; eauto.
+Qed.
+
+Lemma alloc_variables_unchanged_on: forall ge e m l e' m' P,
+    alloc_variables ge e m l e' m' -> Mem.unchanged_on P m m'.
+Proof.
+  induction 1; ii.
+  - eapply Mem.unchanged_on_refl.
+  - eapply Mem.unchanged_on_trans; eauto. eapply Mem.alloc_unchanged_on; eauto.
+Qed.
+
+Definition assign_loc_size (ce: composite_env) (ty: type) : Z :=
+  match access_mode ty with
+  | By_value chunk => size_chunk chunk
+  | By_cypy => sizeof ce ty
+  end.
+
+Lemma assign_loc_perm: forall ce ty m b ofs v m' b' i k p,
+    assign_loc ce ty m b ofs v m' -> Mem.perm m' b' i k p -> Mem.perm m b' i k p.
+Proof.
+  ii. inv H.
+  - inv H2. eapply Mem.perm_store_2; eauto.
+  - eapply Mem.perm_storebytes_2; eauto.
+Qed.
+
+Lemma assign_loc_perm2: forall ce ty m b ofs v m',
+    assign_loc ce ty m b ofs v m' ->
+    Mem.range_perm m b (Ptrofs.unsigned ofs) (Ptrofs.unsigned ofs + (assign_loc_size ce ty)) Cur Writable.
+Proof.
+  clear. ii. unfold assign_loc_size in *. inv H; rewrite H1 in H0.
+  - unfold Mem.storev in *. eapply Mem.store_valid_access_3; eauto.
+  - hexploit (sizeof_pos ce ty). i. eapply Mem.storebytes_range_perm; eauto.
+    erewrite Mem.loadbytes_length; eauto. rewrite Z2Nat.id; eauto. xomega.
+Qed.
+
+Lemma assign_loc_unchanged_on: forall ce ty m b ofs v m' P,
+    assign_loc ce ty m b ofs v m' ->
+    (forall i : Z, Ptrofs.unsigned ofs <= i < Ptrofs.unsigned ofs + assign_loc_size ce ty -> ~ P b i) ->
+    Mem.unchanged_on P m m'.
+Proof.
+  induction 1; intros; unfold assign_loc_size in *; simpl.
+  - inv H0. eapply Mem.store_unchanged_on. eauto. rewrite H in H1. auto.
+  - eapply Mem.storebytes_unchanged_on; eauto. rewrite H in H5.
+    erewrite Mem.loadbytes_length; eauto. rewrite Z2Nat.id; eauto. generalize (sizeof_pos ce ty); i. xomega.
+Qed.
+
+Lemma bind_parameters_perm: forall ge e m l vargs m' b i k p,
+    bind_parameters ge e m l vargs m' -> Mem.perm m' b i k p -> Mem.perm m b i k p.
+Proof.
+  induction 1; ii; eauto.
+  eapply assign_loc_perm; eauto.
+Qed.
+
+Lemma Forall_cont_ext_call_cont: forall k ext,
+    Forall_cont_ext k ext -> Forall_cont_ext (call_cont k) ext.
+Proof. induction k; simpl; auto. Qed.
+
