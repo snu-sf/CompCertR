@@ -54,6 +54,7 @@ let print_eventval_list p = function
       List.iter (fun v -> fprintf p ",@ %a" print_eventval v) vl
 
 let print_event p = function
+  | Event_pterm -> fprintf p "Partial Termination!"
   | Event_syscall(id, args, res) ->
       fprintf p "extcall %s(%a) -> %a"
                 (camlstring_of_coqstring id)

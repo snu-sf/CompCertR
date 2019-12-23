@@ -299,18 +299,21 @@ Qed.
 (** Infinitely many transitions *)
 
 CoInductive forever (ge: genv): state -> traceinf -> Prop :=
-  | forever_intro: forall s1 t s2 T,
+  | forever_intro: forall s1 t s2 T (INTACT: trace_intact t),
       step ge s1 t s2 -> forever ge s2 T ->
       forever ge s1 (t *** T).
 
 Lemma star_forever:
-  forall ge s1 t s2, star ge s1 t s2 ->
+  forall ge s1 t s2 (INTACT: trace_intact t), star ge s1 t s2 ->
   forall T, forever ge s2 T ->
   forever ge s1 (t *** T).
 Proof.
-  induction 1; intros. simpl. auto.
+  induction 2; intros. simpl. auto.
   subst t. rewrite Eappinf_assoc.
   econstructor; eauto.
+  admit "ez - make lemma".
+  eapply IHstar; eauto.
+  admit "ez - make lemma".
 Qed.
 
 (** An alternate, equivalent definition of [forever] that is useful
@@ -325,11 +328,13 @@ CoInductive forever_N (ge: genv) : A -> state -> traceinf -> Prop :=
       order a2 a1 ->
       forever_N ge a2 s2 T2 ->
       T1 = t *** T2 ->
+      forall (INTACT: trace_intact t),
       forever_N ge a1 s1 T1
   | forever_N_plus: forall s1 t s2 a1 a2 T1 T2,
       plus ge s1 t s2 ->
       forever_N ge a2 s2 T2 ->
       T1 = t *** T2 ->
+      forall (INTACT: trace_intact t),
       forever_N ge a1 s1 T1.
 
 Hypothesis order_wf: well_founded order.
@@ -338,7 +343,7 @@ Lemma forever_N_inv:
   forall ge a s T,
   forever_N ge a s T ->
   exists t, exists s', exists a', exists T',
-  step ge s t s' /\ forever_N ge a' s' T' /\ T = t *** T'.
+  step ge s t s' /\ forever_N ge a' s' T' /\ T = t *** T' /\ <<INTACT: trace_intact t>>.
 Proof.
   intros ge a0. pattern a0. apply (well_founded_ind order_wf).
   intros. inv H0.
@@ -349,6 +354,7 @@ Proof.
   (* at least one transition *)
   exists t1; exists s0; exists x; exists (t2 *** T2).
   split. auto. split. eapply forever_N_star; eauto.
+  admit "ez". split; cycle 1. admit "ez".
   apply Eappinf_assoc.
   (* plus case *)
   inv H1.
@@ -356,6 +362,7 @@ Proof.
   split. auto.
   split. inv H3. auto.
   eapply forever_N_plus. econstructor; eauto. eauto. auto.
+  admit "ez". split; cycle 1. admit "ez".
   apply Eappinf_assoc.
 Qed.
 
@@ -363,8 +370,8 @@ Lemma forever_N_forever:
   forall ge a s T, forever_N ge a s T -> forever ge s T.
 Proof.
   cofix COINDHYP; intros.
-  destruct (forever_N_inv H) as [t [s' [a' [T' [P [Q R]]]]]].
-  rewrite R. apply forever_intro with s'. auto.
+  destruct (forever_N_inv H) as [t [s' [a' [T' [P [Q [R INTACT]]]]]]].
+  rewrite R. apply forever_intro with s'. auto. auto.
   apply COINDHYP with a'; auto.
 Qed.
 
@@ -375,18 +382,20 @@ CoInductive forever_plus (ge: genv) : state -> traceinf -> Prop :=
       plus ge s1 t s2 ->
       forever_plus ge s2 T2 ->
       T1 = t *** T2 ->
+      forall (INTACT: trace_intact t),
       forever_plus ge s1 T1.
 
 Lemma forever_plus_inv:
   forall ge s T,
   forever_plus ge s T ->
   exists s', exists t, exists T',
-  step ge s t s' /\ forever_plus ge s' T' /\ T = t *** T'.
+  step ge s t s' /\ forever_plus ge s' T' /\ T = t *** T' /\ <<INTACT: trace_intact t>>.
 Proof.
   intros. inv H. inv H0. exists s0; exists t1; exists (t2 *** T2).
   split. auto.
   split. exploit star_inv; eauto. intros [[P Q] | R].
     subst. simpl. auto. econstructor; eauto.
+    admit "ez". split; cycle 1. admit "ez".
   traceEq.
 Qed.
 
@@ -394,7 +403,7 @@ Lemma forever_plus_forever:
   forall ge s T, forever_plus ge s T -> forever ge s T.
 Proof.
   cofix COINDHYP; intros.
-  destruct (forever_plus_inv H) as [s' [t [T' [P [Q R]]]]].
+  destruct (forever_plus_inv H) as [s' [t [T' [P [Q [R INTACT]]]]]].
   subst. econstructor; eauto.
 Qed.
 
@@ -2035,6 +2044,7 @@ Qed.
 Record bigstep_semantics : Type :=
   Bigstep_semantics {
     bigstep_terminates: trace -> int -> Prop;
+    bigstep_partial_terminates: trace -> Prop;
     bigstep_diverges: traceinf -> Prop
   }.
 
@@ -2045,10 +2055,15 @@ Record bigstep_sound (B: bigstep_semantics) (L: semantics) : Prop :=
     bigstep_terminates_sound:
       forall t r,
       bigstep_terminates B t r ->
-      exists s1, exists s2, initial_state L s1 /\ Star L s1 t s2 /\ final_state L s2 r;
+      exists s1, exists s2, initial_state L s1 /\ Star L s1 t s2 /\ final_state L s2 r /\ <<INTACT: trace_intact t>>;
+    bigstep_partial_terminates_sound:
+      forall t,
+      bigstep_partial_terminates B t ->
+      exists s1, exists s2 t', initial_state L s1 /\ Star L s1 t' s2 /\ <<PTERM: ~trace_intact t'>> /\ <<TRACE: trace_cut_pterm t' = t>>;
     bigstep_diverges_sound:
       forall T,
       bigstep_diverges B T ->
       exists s1, initial_state L s1 /\ forever (step L) (globalenv L) s1 T
 }.
 
+(* Note: there is no "completenes"!. E.g. A safe program (no UB) in smallstep has some behavior in bigstep. *)

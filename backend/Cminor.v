@@ -26,6 +26,7 @@ Require Import Memory.
 Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Switch.
+Require Import sflib.
 
 (** * Abstract syntax *)
 
@@ -867,6 +868,7 @@ with execinf_stmt:
       exec_stmt f sp e m s1 t1 e1 m1 Out_normal ->
       execinf_stmt f sp e1 m1 s2 t2 ->
       t = t1 *** t2 ->
+      forall (INTACT: trace_intact t1),
       execinf_stmt f sp e m (Sseq s1 s2) t
   | execinf_Sloop_body:
       forall f sp e m s t,
@@ -877,6 +879,7 @@ with execinf_stmt:
       exec_stmt f sp e m s t1 e1 m1 Out_normal ->
       execinf_stmt f sp e1 m1 (Sloop s) t2 ->
       t = t1 *** t2 ->
+      forall (INTACT: trace_intact t1),
       execinf_stmt f sp e m (Sloop s) t
   | execinf_Sblock:
       forall f sp e m s t,
@@ -905,7 +908,20 @@ Inductive bigstep_program_terminates (p: program): trace -> int -> Prop :=
       Genv.find_funct_ptr ge b = Some f ->
       funsig f = signature_main ->
       eval_funcall ge m0 f nil t m (Vint r) ->
+      forall (INTACT: trace_intact t),
       bigstep_program_terminates p t r.
+
+Inductive bigstep_program_partial_terminates (p: program): trace -> Prop :=
+  | bigstep_program_partial_terminates_intro:
+      forall b f m0 t m r,
+      let ge := Genv.globalenv p in
+      Genv.init_mem p = Some m0 ->
+      Genv.find_symbol ge p.(prog_main) = Some b ->
+      Genv.find_funct_ptr ge b = Some f ->
+      funsig f = signature_main ->
+      eval_funcall ge m0 f nil t m r ->
+      forall (PTERM: ~trace_intact t),
+      bigstep_program_partial_terminates p (trace_cut_pterm t).
 
 Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
   | bigstep_program_diverges_intro:
@@ -919,7 +935,7 @@ Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
       bigstep_program_diverges p t.
 
 Definition bigstep_semantics (p: program) :=
-  Bigstep_semantics (bigstep_program_terminates p) (bigstep_program_diverges p).
+  Bigstep_semantics (bigstep_program_terminates p) (bigstep_program_partial_terminates p) (bigstep_program_diverges p).
 
 (** ** Correctness of the big-step semantics with respect to the transition semantics *)
 
@@ -1163,16 +1179,19 @@ Proof.
   eapply forever_plus_intro.
   apply plus_one. econstructor; eauto.
   apply CIH_FUN. eauto. traceEq.
+  red; auto.
 
 (* ifthenelse *)
   eapply forever_plus_intro with (s2 := State f (if b then s1 else s2) k sp e m).
   apply plus_one. econstructor; eauto.
   apply CIH_STMT. eauto. traceEq.
+  red; auto.
 
 (* seq 1 *)
   eapply forever_plus_intro.
   apply plus_one. constructor.
   apply CIH_STMT. eauto. traceEq.
+  red; auto.
 
 (* seq 2 *)
   destruct (exec_stmt_steps _ _ _ _ _ _ _ _ _ H0 (Kseq s2 k))
@@ -1182,11 +1201,13 @@ Proof.
   eapply star_right. eexact A. constructor.
   reflexivity. reflexivity.
   apply CIH_STMT. eauto. traceEq.
+  admit "ez".
 
 (* loop body *)
   eapply forever_plus_intro.
   apply plus_one. econstructor; eauto.
   apply CIH_STMT. eauto. traceEq.
+  red; auto.
 
 (* loop loop *)
   destruct (exec_stmt_steps _ _ _ _ _ _ _ _ _ H0 (Kseq (Sloop s0) k))
@@ -1196,16 +1217,19 @@ Proof.
   eapply star_right. eexact A. constructor.
   reflexivity. reflexivity.
   apply CIH_STMT. eauto. traceEq.
+  admit "ez".
 
 (* block *)
   eapply forever_plus_intro.
   apply plus_one. econstructor; eauto.
   apply CIH_STMT. eauto. traceEq.
+  red; auto.
 
 (* tailcall *)
   eapply forever_plus_intro.
   apply plus_one. econstructor; eauto.
   apply CIH_FUN. eauto. traceEq.
+  red; auto.
 
 (* function call *)
   intros. inv H0.
@@ -1213,6 +1237,7 @@ Proof.
   apply plus_one. econstructor; eauto.
   apply H. eauto.
   traceEq.
+  red; auto.
 Qed.
 
 Theorem bigstep_semantics_sound:
@@ -1223,7 +1248,12 @@ Proof.
   inv H. econstructor; econstructor.
   split. econstructor; eauto.
   split. apply eval_funcall_steps. eauto. red; auto.
+  split; auto.
   econstructor.
+(* partial termination *)
+  inv H. esplits; eauto.
+  econstructor; eauto.
+  apply eval_funcall_steps. eauto. red; auto.
 (* divergence *)
   inv H. econstructor.
   split. econstructor; eauto.

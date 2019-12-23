@@ -458,13 +458,13 @@ Corollary forward_simulation_same_safe_behavior:
   forall L1 L2, forward_simulation L1 L2 ->
   forall beh,
   program_behaves L1 beh -> not_wrong beh ->
-  program_behaves L2 beh \/ (exists beh', program_behaves L2 beh' /\ ~intact beh' /\ behavior_improves beh beh').
+  program_behaves L2 beh \/ (<<PTERM: exists t, program_behaves L2 (Partial_terminates t) /\ behavior_prefix t beh>>).
 Proof.
   intros. exploit forward_simulation_behavior_improves; eauto.
   intros [beh' [A B]]. destruct B.
   left. congruence.
   destruct H2 as [[t [C D]] | PTERM]. subst. contradiction.
-  des. clarify. right. esplits; eauto. r. right. right. esplits; eauto.
+  des. clarify. right. esplits; eauto.
 Qed.
 
 (** * Backward simulations and program behaviors *)
@@ -714,15 +714,15 @@ Proof.
 Qed.
 
 Corollary backward_simulation_same_safe_behavior:
-  forall L1 L2 (TGTINTACT: forall beh, program_behaves L2 beh -> intact beh), backward_simulation L1 L2 ->
+  forall L1 L2 (* (TGTINTACT: forall beh, program_behaves L2 beh -> intact beh) *), backward_simulation L1 L2 ->
   (forall beh, program_behaves L1 beh -> not_wrong beh) ->
-  (forall beh, program_behaves L2 beh -> program_behaves L1 beh).
+  (forall beh, program_behaves L2 beh -> program_behaves L1 beh \/ <<PTERM: exists t beh', program_behaves L1 beh' /\ beh = Partial_terminates t /\ behavior_prefix t beh'>>).
 Proof.
   intros. exploit backward_simulation_behavior_improves; eauto.
   intros [beh' [A B]]. destruct B.
-  congruence.
+  left. congruence.
   destruct H2 as [[t [C D]] | PTERM]. subst. elim (H0 (Goes_wrong t)). auto.
-  des. clarify. exploit TGTINTACT; eauto. ss.
+  des. clarify. right. esplits; eauto.
 Qed.
 
 Lemma forever_recative_intact
@@ -981,8 +981,8 @@ Definition traceinf_of_tstate (S: tstate) : traceinf :=
   match S with ST s T F => T end.
 
 Inductive tstep: trace -> tstate -> tstate -> Prop :=
-  | tstep_intro: forall s1 t T s2 S F,
-      tstep t (ST s1 (t *** T) (@forever_intro genv state step ge s1 t s2 T S F))
+  | tstep_intro: forall s1 t T s2 S F (INTACT: trace_intact t),
+      tstep t (ST s1 (t *** T) (@forever_intro genv state step ge s1 t s2 T INTACT S F))
               (ST s2 T F).
 
 Inductive tsteps: tstate -> tstate -> Prop :=
@@ -1023,14 +1023,15 @@ Qed.
 Lemma tsteps_star:
   forall S1 S2, tsteps S1 S2 ->
   exists t, star step ge (state_of_tstate S1) t (state_of_tstate S2)
-         /\ traceinf_of_tstate S1 = t *** traceinf_of_tstate S2.
+         /\ traceinf_of_tstate S1 = t *** traceinf_of_tstate S2 /\ <<INTACT: trace_intact t>>.
 Proof.
   induction 1.
-  exists E0; split. apply star_refl. auto.
-  inv H. destruct IHtsteps as [t' [A B]].
-  exists (t ** t'); split.
+  exists E0; splits. apply star_refl. auto. ss.
+  inv H. destruct IHtsteps as [t' [A [B INTACT0]]].
+  exists (t ** t'); splits.
   simpl; eapply star_left; eauto.
   simpl in *. subst T. traceEq.
+  apply trace_intact_app; eauto.
 Qed.
 
 Lemma tsilent_forever_silent:
@@ -1038,7 +1039,7 @@ Lemma tsilent_forever_silent:
   tsilent S -> forever_silent step ge (state_of_tstate S).
 Proof.
   cofix COINDHYP; intro S. case S. intros until f. simpl. case f. intros.
-  assert (tstep t (ST s1 (t *** T0) (forever_intro s1 t s0 f0))
+  assert (tstep t (ST s1 (t *** T0) (forever_intro s1 INTACT s0 f0))
                   (ST s2 T0 f0)).
     constructor.
   assert (t = E0).
@@ -1055,9 +1056,10 @@ Lemma treactive_forever_reactive:
 Proof.
   cofix COINDHYP; intros.
   destruct (H S) as [S1 [S2 [t [A [B C]]]]]. apply tsteps_refl.
-  destruct (tsteps_star _ _ A) as [t' [P Q]].
+  destruct (tsteps_star _ _ A) as [t' [P [Q INTACT]]].
   inv B. simpl in *. rewrite Q. rewrite <- Eappinf_assoc.
   apply forever_reactive_intro with s2.
+  apply trace_intact_app; eauto.
   eapply star_right; eauto.
   red; intros. destruct (Eapp_E0_inv _ _ H0). contradiction.
   change (forever_reactive step ge (state_of_tstate (ST s2 T F)) (traceinf_of_tstate (ST s2 T F))).
@@ -1072,7 +1074,7 @@ Theorem forever_silent_or_reactive:
   forever step ge s T ->
   forever_reactive step ge s T \/
   exists t, exists s', exists T',
-  star step ge s t s' /\ forever_silent step ge s' /\ T = t *** T'.
+  star step ge s t s' /\ forever_silent step ge s' /\ T = t *** T' /\ <<INTACT: trace_intact t>>.
 Proof.
   intros.
   destruct (treactive_or_tsilent (ST s T H)).
@@ -1080,7 +1082,7 @@ Proof.
   change (forever_reactive step ge (state_of_tstate (ST s T H)) (traceinf_of_tstate (ST s T H))).
   apply treactive_forever_reactive. auto.
   destruct H0 as [S' [A B]].
-  exploit tsteps_star; eauto. intros [t [C D]]. simpl in *.
+  exploit tsteps_star; eauto. intros [t [C [D INTACT]]]. simpl in *.
   right. exists t; exists (state_of_tstate S'); exists (traceinf_of_tstate S').
   split. auto.
   split. apply tsilent_forever_silent. auto.
@@ -1104,7 +1106,7 @@ Lemma behavior_bigstep_terminates:
   bigstep_terminates B t r -> program_behaves L (Terminates t r).
 Proof.
   intros. exploit (bigstep_terminates_sound sound); eauto.
-  intros [s1 [s2 [P [Q R]]]].
+  intros [s1 [s2 [P [Q [R INTACT]]]]].
   econstructor; eauto. econstructor; eauto.
 Qed.
 
@@ -1115,7 +1117,7 @@ Lemma behavior_bigstep_diverges:
   \/ exists t, program_behaves L (Diverges t) /\ traceinf_prefix t T.
 Proof.
   intros. exploit (bigstep_diverges_sound sound); eauto. intros [s1 [P Q]].
-  exploit forever_silent_or_reactive; eauto. intros [X | [t [s' [T' [X [Y Z]]]]]].
+  exploit forever_silent_or_reactive; eauto. intros [X | [t [s' [T' [X [Y [Z INTACT]]]]]]].
   left. econstructor; eauto. constructor; auto.
   right. exists t; split. econstructor; eauto. econstructor; eauto. exists T'; auto.
 Qed.

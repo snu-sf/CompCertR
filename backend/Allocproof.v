@@ -2122,7 +2122,7 @@ Proof.
   { replace (rs##args) with ((rs#dst<-v)##args).
     eapply add_equations_lessdef; eauto.
     apply list_map_exten; intros. rewrite Regmap.gso; auto.
-    eapply addressing_not_long; eauto.
+    (* eapply addressing_not_long; eauto. *)
   }
   exploit eval_addressing_lessdef. eexact LD3.
   eapply eval_offset_addressing; eauto; apply Archi.splitlong_ptr32; auto.
