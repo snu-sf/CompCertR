@@ -1365,7 +1365,7 @@ Proof.
   intros [rs'' [tm'' [E [F [G [J Y]]]]]].
   econstructor; split.
   left; eapply plus_right. eexact E.
-  eapply exec_Icall; eauto. simpl. rewrite symbols_preserved. rewrite H4.
+  eapply exec_Icall; eauto. simpl. rewrite symbols_preserved. reflexivity.
   econs; eauto. traceEq.
   constructor; auto. econstructor; eauto.
 
@@ -1394,8 +1394,8 @@ Proof.
   edestruct Mem.free_parallel_extends as [tm''' []]; eauto.
   econstructor; split.
   left; eapply plus_right. eexact E.
-  eapply exec_Itailcall; eauto. simpl. rewrite symbols_preserved. rewrite H5.
-  econs; eauto. rewrite H; eauto.
+  eapply exec_Itailcall; eauto. simpl. rewrite symbols_preserved. reflexivity.
+  rewrite H; eauto.
   traceEq.
   constructor; auto.
 

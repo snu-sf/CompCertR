@@ -246,9 +246,12 @@ Inductive eval_expr_or_symbol: letenv -> expr + ident -> val -> Prop :=
   | eval_eos_e: forall le e v,
       eval_expr le e v ->
       eval_expr_or_symbol le (inl _ e) v
-  | eval_eos_s: forall le id b,
-      Genv.find_symbol ge id = Some b ->
-      eval_expr_or_symbol le (inr _ id) (Vptr b Ptrofs.zero).
+  (* | eval_eos_s: forall le id b, *)
+  (*     Genv.find_symbol ge id = Some b -> *)
+  (*     eval_expr_or_symbol le (inr _ id) (Vptr b Ptrofs.zero). *)
+  | eval_eos_s: forall le id fptr,
+      fptr = Genv.symbol_address ge id Ptrofs.zero ->
+      eval_expr_or_symbol le (inr _ id) fptr.
 
 Inductive eval_builtin_arg: builtin_arg expr -> val -> Prop :=
   | eval_BA: forall a v,

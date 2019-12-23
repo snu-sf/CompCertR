@@ -547,7 +547,12 @@ Variable p: program.
 
 Hypothesis wt_p: wt_program p.
 
-Let ge := Genv.globalenv p.
+Variable se: Senv.t.
+Variable ge: genv.
+
+Hypothesis CONTAINED: forall fptr f
+    (FINDF: Genv.find_funct ge fptr = Some f),
+    exists i, In (i, Gfun f) (prog_defs p).
 
 Ltac VHT :=
   match goal with
@@ -582,7 +587,6 @@ Lemma type_constant_sound: forall sp cst v,
   Val.has_type v (type_constant cst).
 Proof.
   intros until v; intros EV. destruct cst; simpl in *; inv EV; VHT.
-  des_ifs.
 Qed.
 
 Lemma type_unop_sound: forall op v1 v,
@@ -628,11 +632,11 @@ Qed.
 Lemma wt_find_funct: forall v fd,
   Genv.find_funct ge v = Some fd -> wt_fundef fd.
 Proof.
-  intros. eapply Genv.find_funct_prop; eauto.
+  intros. exploit CONTAINED; eauto. i; des. eapply wt_p; eauto.
 Qed.
 
 Lemma subject_reduction:
-  forall st1 t st2, step ge ge st1 t st2 ->
+  forall st1 t st2, step se ge st1 t st2 ->
   forall (WT: wt_state st1), wt_state st2.
 Proof.
   destruct 1; intros; inv WT.
@@ -687,7 +691,7 @@ Proof.
 Qed.
 
 Lemma subject_reduction_star:
-  forall st1 t st2, star step ge ge st1 t st2 ->
+  forall st1 t st2, star step se ge st1 t st2 ->
   forall (WT: wt_state st1), wt_state st2.
 Proof.
   induction 1; eauto using subject_reduction.

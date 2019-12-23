@@ -260,11 +260,7 @@ Definition eval_constant (sp: val) (cst: constant) : option val :=
   | Ofloatconst n => Some (Vfloat n)
   | Osingleconst n => Some (Vsingle n)
   | Olongconst n => Some (Vlong n)
-  | Oaddrsymbol s ofs =>
-    match Genv.find_symbol ge s with
-    | Some b => Some (Vptr b ofs)
-    | None => None
-    end
+  | Oaddrsymbol s ofs => Some (Genv.symbol_address ge s ofs)
   | Oaddrstack ofs => Some (Val.offset_ptr sp ofs)
   end.
 
