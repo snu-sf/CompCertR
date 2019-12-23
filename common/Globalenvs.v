@@ -1993,6 +1993,13 @@ Proof.
   inv H1; ss. inv H2; ss.
 Qed.
 
+Lemma symbol_address_match_genv:
+  forall id ofs,
+    Genv.symbol_address ge id ofs = Genv.symbol_address tge id ofs.
+Proof.
+  i. unfold symbol_address. rewrite find_symbol_match_genv. ss.
+Qed.
+
 End MATCH_PROGRAMS_GENV.
 
 Section TRANSFORM_PARTIAL_GENV.

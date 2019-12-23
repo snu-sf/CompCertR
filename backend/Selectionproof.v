@@ -432,8 +432,7 @@ Lemma classify_call_correct:
   DUMMY_PROP ->
   match classify_call (prog_defmap unit) a with
   | Call_default => True
-  (* | Call_imm id => exists b, Genv.find_symbol ge id = Some b /\ v = Vptr b Ptrofs.zero *)
-  | Call_imm id => True
+  | Call_imm id => expr_is_addrof_ident a = Some id
   | Call_builtin ef => Genv.find_funct ge v = Some (External ef)
   end.
 Proof.
@@ -442,11 +441,7 @@ Proof.
   exploit expr_is_addrof_ident_correct; eauto. intros EQ; subst a.
   inv H0. inv H3. unfold Genv.symbol_address in *.
   destruct (Genv.find_symbol ge id) as [b|] eqn:FS; try discriminate; cycle 1.
-  (* { clarify. ss. des_ifs_safe. clear_tac. unfold globdef. destruct ((prog_defmap unit) ! id) eqn:T. *)
-  (*   - hexploit (prog_defmap_linkorder _ _ _ _ H T); eauto. i; des. inv GENV_COMPAT. *)
-  (*     exploit FIND_MAP; eauto. i; des. unfold Cminor.fundef in *; clarify. *)
-  (*   - } *)
-  { clarify. ss. des_ifs_safe. clear_tac. hexploit (prog_defmap_linkorder _ _ _ _ H Heq0); eauto. i; des.
+  { clarify. ss. des_ifs_safe. clear_tac. hexploit (prog_defmap_linkorder _ _ _ _ H Heq); eauto. i; des.
     inv GENV_COMPAT. exploit FIND_MAP; eauto. i; des. unfold Cminor.fundef in *; clarify. }
   assert (DFL: exists b1, Genv.find_symbol ge id = Some b1 /\ Vptr b Ptrofs.zero = Vptr b1 Ptrofs.zero) by (exists b; auto).
   unfold globdef; destruct (prog_defmap unit)!id as [[[f|ef] |gv] |] eqn:G; auto.
@@ -1263,13 +1258,6 @@ Lemma sel_step_correct:
   \/ (exists S3 T2, star Cminor.step se ge S2 E0 S3 /\ step tse tge T1 t T2 /\ match_states S3 T2).
 Proof.
   induction 1; intros T1 ME WTS; inv ME; try (monadInv TS).
-(* <<<<<<< HEAD *)
-(*   induction 1; intros T1 ME WTS; inv ME; try (monadInv TS). *)
-(* ||||||| merged common ancestors *)
-(*   induction 1; intros T1 ME; inv ME; try (monadInv TS). *)
-(* ======= *)
-(*   induction 1; intros T1 ME; assert(MEE := ME); inv ME; try (monadInv TS). *)
-(* >>>>>>> v3.5_adapt *)
 - (* skip seq *)
   inv MC. left; econstructor; split. econstructor. econstructor; eauto.
   inv H.
@@ -1306,47 +1294,18 @@ Proof.
   eapply match_cont_call with (cunit := cunit) (hf := hf); eauto.
 + (* direct *)
   intro DUMMY.
-  (* intros [b [U V]]. *)
   exploit sel_exprlist_correct; eauto. intros [vargs' [C D]].
   left; econstructor; split.
   econstructor; eauto.
-  (* subst vf. *) econstructor; eauto. (* admit "". *) (* rewrite symbols_preserved; eauto. *)
+  econstructor; eauto.
   eapply match_callstate; eauto.
   eapply match_cont_call with (cunit := cunit) (hf := hf); eauto.
-  unfold classify_call in *. des_ifs_safe. destruct a; ss. des_ifs_safe. inv H. ss. clarify.
-  admit "".
-  (* subst vf. econs; eauto. *)
-(* <<<<<<< HEAD *)
-(*   eapply sig_function_translated; eauto. *)
-(*   eapply match_callstate with (cunit := cunit'); eauto. *)
-(*   eapply match_cont_call with (cunit := cunit) (hf := hf); eauto. *)
-(* ||||||| merged common ancestors *)
-(*   eapply sig_function_translated; eauto. *)
-(*   eapply match_callstate with (cunit := cunit'); eauto. *)
-(*   red; intros; eapply match_cont_call with (cunit := cunit) (hf := hf); eauto. *)
-(* ======= *)
-(*   eapply match_callstate; eauto. *)
-(*   red; intros; eapply match_cont_call with (cunit := cunit) (hf := hf); eauto. *)
-(*   subst vf. econs; eauto. *)
-(* >>>>>>> v3.5_adapt *)
+  destruct a; ss. des_ifs_safe. inv H. ss. apply Ptrofs.same_if_eq in Heq. clarify.
+  erewrite (Genv.symbol_address_match_genv MATCH_GENV); eauto.
 + (* turned into Sbuiltin *)
   exploit sel_builtin_args_correct; eauto. intros [vargs' [C D]].
   right. left. split. simpl. omega. split. auto.
   econstructor; eauto.
-(* <<<<<<< HEAD *)
-(*   intros EQ. subst fd. *)
-(*   right; left; split. simpl; omega. split; auto. econstructor; eauto. *)
-(* ||||||| merged common ancestors *)
-(*   intros EQ. subst fd. *)
-(*   exploit sel_builtin_args_correct; eauto. intros [vargs' [C D]]. *)
-(*   right; split. simpl. omega. split. auto. *)
-(*   econstructor; eauto. *)
-(* ======= *)
-(*   intros EQ. *)
-(*   exploit sel_builtin_args_correct; eauto. intros [vargs' [C D]]. *)
-(*   right; split. simpl. omega. split. auto. *)
-(*   econstructor; eauto. *)
-(* >>>>>>> v3.5_adapt *)
 - (* Stailcall *)
   clear H2. exploit Mem.free_parallel_extends; eauto. intros [m2' [P Q]].
   erewrite <- stackspace_function_translated in P by eauto.
@@ -1354,34 +1313,19 @@ Proof.
   exploit sel_exprlist_correct; eauto. intros [vargs' [C D]].
   left; econstructor; split.
   exploit classify_call_correct. eexact LINK. eauto. eauto.
-  destruct (classify_call (prog_defmap cunit)) as [ | id | ef] eqn:G; intros.
+  destruct (classify_call (prog_defmap cunit)) as [ | id | ef]; intros.
   econstructor; eauto. econstructor; eauto.
-  destruct H2 as [b [U V]]. (* subst vf. inv B. *)
-  econstructor; eauto. econstructor; eauto. { unfold classify_call in G. des_ifs_safe. destruct a; ss. des_ifs_safe. inv H. ss. clarify. admit "". (* rewrite symbols_preserved; eauto. *) }
+  econstructor; eauto. econstructor; eauto.
+  { destruct a; ss. des_ifs_safe. apply Ptrofs.same_if_eq in Heq. clarify. inv H; ss. clarify.
+    unfold addrsymbol in *. des_ifs_safe. des_ifs; inv A; ss.
+    { inv H5. clarify. }
+    { rewrite eval_Olea_ptr in *. unfold Op.eval_addressing in *. ss. des_ifs. } }
   econstructor; eauto. econstructor; eauto.
   eapply match_callstate; eauto.
   eapply call_cont_commut; eauto.
 - (* Sbuiltin *)
   exploit sel_builtin_correct; eauto. intros (e2' & m2' & P & Q & R).
   left; econstructor; split. eexact P. econstructor; eauto.
-(* <<<<<<< HEAD *)
-(*   exploit sel_builtin_correct; eauto. intros (e2' & m2' & P & Q & R). *)
-(*   left; econstructor; split. eexact P. econstructor; eauto. *)
-(* ||||||| merged common ancestors *)
-(*   exploit sel_builtin_args_correct; eauto. intros [vargs' [P Q]]. *)
-(*   exploit external_call_mem_extends; eauto. *)
-(*   intros [vres' [m2 [A [B [C D]]]]]. *)
-(*   left; econstructor; split. *)
-(*   econstructor. eauto. eapply external_call_symbols_preserved; eauto. apply senv_preserved. *)
-(*   econstructor; eauto. apply sel_builtin_res_correct; auto. *)
-(* ======= *)
-(*   exploit sel_builtin_args_correct; eauto. intros [vargs' [P Q]]. *)
-(*   exploit external_call_mem_extends; eauto. *)
-(*   intros [vres' [m2 [A [B [C D]]]]]. *)
-(*   left; econstructor; split. *)
-(*   econstructor. eauto. eapply external_call_symbols_preserved; eauto. *)
-(*   econstructor; eauto. apply sel_builtin_res_correct; auto. *)
-(* >>>>>>> v3.5_adapt *)
 - (* Seq *)
   left; econstructor; split.
   constructor.
@@ -1456,14 +1400,6 @@ Proof.
 - (* internal function *)
   exploit functions_translated; eauto. intros (cunit & f' & TFPTR & TF & LINK).
   destruct TF as (hf & HF & TF).
-(* <<<<<<< HEAD *)
-(*   destruct TF as (hf & HF & TF).  *)
-(* ||||||| merged common ancestors *)
-(*   destruct TF as (hf & HF & TF). specialize (MC cunit hf). *)
-(* ======= *)
-(*   exploit functions_translated; eauto. intros (cunit & f' & TFPTR & TF & LINK). *)
-(*   destruct TF as (hf & HF & TF). specialize (MC cunit hf). *)
-(* >>>>>>> v3.5_adapt *)
   monadInv TF. generalize EQ; intros TF; monadInv TF.
   exploit Mem.alloc_extends. eauto. eauto. apply Z.le_refl. apply Z.le_refl.
   intros [m2' [A B]].
@@ -1473,16 +1409,6 @@ Proof.
   apply match_cont_other; auto.
   apply set_locals_lessdef. apply set_params_lessdef; auto.
 - clarify.
-(* <<<<<<< HEAD *)
-(*   econstructor; simpl; eauto. *)
-(*   apply match_cont_other; auto. *)
-(*   apply set_locals_lessdef. apply set_params_lessdef; auto. *)
-(* ||||||| merged common ancestors *)
-(*   econstructor; simpl; eauto. apply set_locals_lessdef. apply set_params_lessdef; auto. *)
-(* ======= *)
-(*   econstructor; simpl; eauto. apply set_locals_lessdef. apply set_params_lessdef; auto. *)
-(* - clarify. *)
-(* >>>>>>> v3.5_adapt *)
 - (* external call *)
   exploit functions_translated; eauto. intros (cunit' & f'' & TFPTR & TF & LINK).
   destruct TF as (hf & HF & TF).
@@ -1496,22 +1422,6 @@ Proof.
   clarify.
   exploit sel_builtin_correct; eauto. intros (e2' & m2' & P & Q & R).
   left; econstructor; split. eexact P. econstructor; eauto.
-(* <<<<<<< HEAD *)
-(*   exploit sel_builtin_correct; eauto. intros (e2' & m2' & P & Q & R). *)
-(*   left; econstructor; split. eexact P. econstructor; eauto. *)
-(* ||||||| merged common ancestors *)
-(*   exploit external_call_mem_extends; eauto. *)
-(*   intros [vres' [m2 [A [B [C D]]]]]. *)
-(*   left; econstructor; split. *)
-(*   econstructor. eauto. eapply external_call_symbols_preserved; eauto. apply senv_preserved. *)
-(*   econstructor; eauto. *)
-(* ======= *)
-(*   clarify. exploit external_call_mem_extends; eauto. *)
-(*   intros [vres' [m2 [A [B [C D]]]]]. *)
-(*   left; econstructor; split. *)
-(*   econstructor. eauto. eapply external_call_symbols_preserved; eauto. *)
-(*   econstructor; eauto. *)
-(* >>>>>>> v3.5_adapt *)
 - (* return *)
   inv MC.
   left; econstructor; split.
