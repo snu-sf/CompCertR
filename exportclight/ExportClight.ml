@@ -234,10 +234,11 @@ let name_of_chunk = function
   | Many64 -> "Many64"
 
 let signatur p sg =
-  fprintf p "@[<hov 2>(mksignature@ %a@ %a@ %a)@]"
+  fprintf p "@[<hov 2>(mksignature@ %a@ %a@ %a@ %B)@]"
      (print_list asttype) sg.sig_args
      (print_option asttype) sg.sig_res
      callconv sg.sig_cc
+     sg.sig_cstyle
 
 let assertions = ref ([]: (string * typ list) list)
 
