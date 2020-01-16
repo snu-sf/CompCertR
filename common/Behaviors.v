@@ -231,9 +231,10 @@ Proof.
   intros.
   inv H0; simpl; try (by econstructor; eauto; try (eapply star_trans; eauto); try eapply trace_intact_app; eauto).
   - replace (t ** trace_cut_pterm t0) with (trace_cut_pterm (t ** t0)); cycle 1.
-    { admit "ez - This should hold". }
+    { apply trace_cut_pterm_intact_app; auto. }
     econs; eauto. eapply star_trans; eauto.
-    { admit "ez". }
+    { intros INTACT1. apply PTERM.
+      apply trace_intact_app_rev in INTACT1. des. auto. }
   - econs; eauto.
     eapply star_forever_reactive; eauto.
 Qed.
@@ -362,10 +363,11 @@ Proof.
     { exfalso. eauto. }
     exists (Partial_terminates (t1 ** (trace_cut_pterm t2))).
     replace (t1 ** trace_cut_pterm t2) with (trace_cut_pterm (t1 ** t2)); cycle 1.
-    { admit "ez". }
+    { apply trace_cut_pterm_intact_app; auto. }
     econs; eauto.
     { eapply star_trans; eauto. apply star_one. eauto. }
-    admit "ez".
+    intros INTACT1. apply H0.
+    apply trace_intact_app_rev in INTACT1. des. auto.
   }
   {
 (* 2.3 Going wrong *)
@@ -536,7 +538,8 @@ Proof.
   intros [[i' [s1' [A B]]] | PTERM].
   {
   assert (Star L1 s0 t1 s1'). intuition. apply plus_star; auto.
-  assert(INTACT0: trace_intact t1 /\ trace_intact t2). { admit "ez". } desH INTACT0.
+  assert(INTACT0: trace_intact t1 /\ trace_intact t2).
+  { apply trace_intact_app_rev. subst. auto. } desH INTACT0.
   exploit IHstar; eauto. eapply star_safe_along; [M|..]; Mskip eauto. ss.
   subst t; apply behavior_app_assoc.
   intros [[i'' [s2'' [C D]]] | PTERM]; cycle 1.
@@ -545,9 +548,9 @@ Proof.
   exists i''; exists s2''; split; auto. eapply star_trans; eauto.
   }
   { des. right. clarify. splits; eauto.
-    { admit "ez". }
-    esplits; eauto. instantiate (1:= E0).
-    admit "ez - make lemma. t1 is cut".
+    { intros INTACT1. apply PTERM0.
+      apply trace_intact_app_rev in INTACT1. des. auto. }
+    esplits; eauto. rewrite trace_cut_pterm_pterm_app; auto.
   }
 Qed.
 
@@ -560,16 +563,19 @@ Proof.
   { contradict PTERM. ss. }
   exploit (bsim_simulation S); eauto. eapply safe_along_safe; eauto.
   intros [[i' [s1' [A B]]] | PTERM0]; cycle 1.
-  { des. clarify. esplits; eauto. instantiate (1:= E0). admit "ez - make lemma". }
+  { des. clarify. esplits; eauto. rewrite trace_cut_pterm_pterm_app; auto. }
   assert (Star L1 s0 t1 s1'). intuition. apply plus_star; auto.
   destruct (classic (trace_intact t1)).
   - assert(PTERM0: ~trace_intact t2).
-    { admit "ez". }
+    { subst. intros INTACT2. apply PTERM. apply trace_intact_app; auto. }
     exploit IHstar; eauto. eapply star_safe_along; [M|..]; Mskip eauto. ss.
-    subst t. instantiate (1:= b). admit "ez - make lemma".
+    subst t. instantiate (1:= b).
+    rewrite trace_cut_pterm_intact_app; auto. rewrite behavior_app_assoc; auto.
     (* subst t; apply behavior_app_assoc. *)
-    { i; des_safe. esplits. { eapply star_trans; eauto. } instantiate (1:= E0). admit "ez - make lemma". }
-  - esplits; eauto. instantiate (1:= E0). clarify. admit "ez - make lemma".
+    { i; des_safe. esplits. { eapply star_trans; eauto. }
+      rewrite trace_cut_pterm_intact_app; auto. apply app_assoc. }
+  - destruct (trace_cut_pterm_split t1) as [t3 SPLIT]. esplits; eauto.
+    subst. rewrite trace_cut_pterm_pterm_app; eauto.
 Qed.
 
 Lemma backward_simulation_forever_silent:
@@ -633,13 +639,16 @@ Proof.
     - eexists (behavior_app (trace_cut_pterm t ** tl) beh). esplits; eauto.
       + clear - T STAR0 H2.
         assert(T2: trace_intact (trace_cut_pterm t)).
-        { admit "ez - make lemma". }
+        { eapply trace_cut_pterm_intact. }
         inv T; try econs; eauto; repeat (eapply trace_intact_app; eauto); eauto using star_trans.
         * ss. replace ((trace_cut_pterm t ** tl) ** trace_cut_pterm t0) with
                   (trace_cut_pterm ((trace_cut_pterm t ** tl) ** t0)); cycle 1.
-          { admit "everything is intact". }
+          { repeat rewrite trace_cut_pterm_intact_app; ss.
+            apply trace_intact_app; auto. }
           econs; eauto.
           eapply star_trans; eauto.
+          intros INTACT.
+
           admit "ez - make lemma".
         * destruct (trace_cut_pterm t ** tl) eqn:Q.
           { ss. clear - STAR0 H. revert_until L1. cofix CIH. i. inv H. econs; eauto. eapply star_trans; eauto. }

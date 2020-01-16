@@ -260,6 +260,11 @@ Qed.
 
 Definition trace_intact (tr: trace): Prop := ~In Event_pterm tr.
 
+Lemma trace_intact_E0
+  :
+    trace_intact E0.
+Proof. ii. ss. Qed.
+
 Lemma trace_intact_app
       t0 t1
       (INTACT0: trace_intact t0)
@@ -270,12 +275,68 @@ Proof.
   ii. unfold trace_intact in *. rewrite in_app_iff in *. tauto.
 Qed.
 
+Lemma trace_intact_app_rev
+      t0 t1
+      (INTACT: trace_intact (t0 ** t1))
+  :
+    <<INTACT0: trace_intact t0>> /\ <<INTACT1: trace_intact t1>>.
+Proof.
+  ginduction t0; ss; i; split; auto.
+  - ii. inv H.
+  - ii. apply INTACT. apply in_app_iff. ss. des; auto.
+  - ii. apply INTACT. apply in_app_iff. auto.
+Qed.
+
 Fixpoint trace_cut_pterm (tr: trace): trace :=
   match tr with
   | nil => nil
   | Event_pterm :: _ => nil
   | hd :: tl => hd :: (trace_cut_pterm tl)
   end.
+
+Lemma trace_cut_pterm_intact t
+  :
+    trace_intact (trace_cut_pterm t).
+Proof.
+  ginduction t; ss. des_ifs; ii; ss; des; clarify.
+Qed.    
+
+Lemma trace_cut_pterm_intact_app t0 t1
+      (INTACT: trace_intact t0)
+  :
+    trace_cut_pterm (t0 ** t1) = t0 ** trace_cut_pterm t1.
+Proof.
+  ginduction t0; ss. i.
+  Transparent Eapp. ss. rewrite IHt0.
+  - unfold trace_intact in INTACT. ss.
+    apply Classical_Prop.not_or_and in INTACT. des. destruct a; ss.
+  - ii. apply INTACT. ss. auto.
+Qed.    
+
+Lemma trace_cut_pterm_pterm_app t0 t1
+      (PTERM: ~ trace_intact t0)
+  :
+    trace_cut_pterm (t0 ** t1) = trace_cut_pterm t0.
+Proof.
+  ginduction t0; ss. i.
+  - exfalso. apply PTERM. ii. ss.
+  - i. unfold trace_intact in PTERM.
+    apply Classical_Prop.NNPP in PTERM. ss. des; subst; auto.
+    rewrite IHt0; auto.
+Qed.
+
+Lemma trace_cut_pterm_split t
+  :
+    exists t1,
+      t = trace_cut_pterm t ** t1.
+Proof.
+  ginduction t; ss; eauto. des.
+  exists (match a with
+          | Event_pterm => a :: t
+          | _ => t1
+          end). des_ifs; ss; f_equal; auto.
+Qed.
+Opaque Eapp.
 
 (** * Relating values and event values *)
 

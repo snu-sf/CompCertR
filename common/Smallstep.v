@@ -311,9 +311,9 @@ Proof.
   induction 2; intros. simpl. auto.
   subst t. rewrite Eappinf_assoc.
   econstructor; eauto.
-  admit "ez - make lemma".
+  apply trace_intact_app_rev in INTACT. des. auto.
   eapply IHstar; eauto.
-  admit "ez - make lemma".
+  apply trace_intact_app_rev in INTACT. des. auto.
 Qed.
 
 (** An alternate, equivalent definition of [forever] that is useful
@@ -353,16 +353,18 @@ Proof.
   change (E0 *** T2) with T2. apply H with a2. auto. auto.
   (* at least one transition *)
   exists t1; exists s0; exists x; exists (t2 *** T2).
+  apply trace_intact_app_rev in INTACT. des.
   split. auto. split. eapply forever_N_star; eauto.
-  admit "ez". split; cycle 1. admit "ez".
+  split; cycle 1. auto.
   apply Eappinf_assoc.
   (* plus case *)
   inv H1.
   exists t1; exists s0; exists a2; exists (t2 *** T2).
   split. auto.
+  apply trace_intact_app_rev in INTACT. des.
   split. inv H3. auto.
   eapply forever_N_plus. econstructor; eauto. eauto. auto.
-  admit "ez". split; cycle 1. admit "ez".
+  auto. split; cycle 1. auto.
   apply Eappinf_assoc.
 Qed.
 
@@ -393,9 +395,9 @@ Lemma forever_plus_inv:
 Proof.
   intros. inv H. inv H0. exists s0; exists t1; exists (t2 *** T2).
   split. auto.
+  apply trace_intact_app_rev in INTACT. des.
   split. exploit star_inv; eauto. intros [[P Q] | R].
     subst. simpl. auto. econstructor; eauto.
-    admit "ez". split; cycle 1. admit "ez".
   traceEq.
 Qed.
 
