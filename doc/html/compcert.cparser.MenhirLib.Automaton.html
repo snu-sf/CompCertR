@@ -1,0 +1,175 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Automaton</title>
+<meta name="description" content="Documentation of Coq module Automaton" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Automaton</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Grammar</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Orders</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">Alphabet</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id">List</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="kwd">Syntax</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="kwd">Type</span> <span class="id">AutInit</span>.<br/>
+<div class="doc">The grammar of the automaton. *</div>
+&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Module</span> <span class="id">Gram</span>:<span class="id">Grammar.T</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Export</span> <span class="id">Gram</span>.<br/>
+<br/>
+<div class="doc">The set of non initial state is considered as an alphabet. *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">noninitstate</span> : <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Instance</span> <span class="id">NonInitStateAlph</span> : <span class="id">Alphabet</span> <span class="id">noninitstate</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">initstate</span> : <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="id">Declare</span> <span class="kwd">Instance</span> <span class="id">InitStateAlph</span> : <span class="id">Alphabet</span> <span class="id">initstate</span>.<br/>
+<br/>
+<div class="doc">When we are at this state, we know that this symbol is the top of the
+     stack. *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">last_symb_of_non_init_state</span>: <span class="id">noninitstate</span> -&gt; <span class="id">symbol</span>.<br/>
+<span class="kwd">End</span> <span class="id">AutInit</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="kwd">Types</span>(<span class="kwd">Import</span> <span class="id">Init</span>:<span class="id">AutInit</span>).<br/>
+<div class="doc">In many ways, the behaviour of the initial state is different from the
+     behaviour of the other states. So we have chosen to explicitaly separate
+     them: the user has to provide the type of non initial states. *</div>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">state</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Init</span>: <span class="id">initstate</span> -&gt; <span class="id">state</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Ninit</span>: <span class="id">noninitstate</span> -&gt; <span class="id">state</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id">StateAlph</span> : <span class="id">Alphabet</span> <span class="id">state</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">AlphabetComparable</span> := {| <span class="id">compare</span> := <span class="kwd">fun</span> <span class="id">x</span> <span class="id">y</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">x</span>, <span class="id">y</span> <span class="kwd">return</span> <span class="id">comparison</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Init</span> <span class="id">_</span>, <span class="id">Ninit</span> <span class="id">_</span> =&gt; <span class="id">Lt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Init</span> <span class="id">x</span>, <span class="id">Init</span> <span class="id">y</span> =&gt; <span class="id">compare</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Ninit</span> <span class="id">_</span>, <span class="id">Init</span> <span class="id">_</span> =&gt; <span class="id">Gt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Ninit</span> <span class="id">x</span>, <span class="id">Ninit</span> <span class="id">y</span> =&gt; <span class="id">compare</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span> |};<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">AlphabetFinite</span> := {| <span class="id">all_list</span> := <span class="id">map</span> <span class="id">Init</span> <span class="id">all_list</span> ++ <span class="id">map</span> <span class="id">Ninit</span> <span class="id">all_list</span> |} }.<br/>
+&nbsp;&nbsp;<span class="kwd">Local</span> <span class="kwd">Obligation</span> <span class="kwd">Tactic</span> := <span class="tactic">intros</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5992')">Next Obligation.</div>
+<div class="proofscript" id="proof5992">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">intuition</span>; <span class="tactic">apply</span> <span class="id">compare_antisym</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof5993')">Next Obligation.</div>
+<div class="proofscript" id="proof5993">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>, <span class="id">z</span>; <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">compare_trans</span> <span class="id">_</span> <span class="id">i0</span>); <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id">compare_trans</span> <span class="id">_</span> <span class="id">n0</span>); <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof5994')">Next Obligation.</div>
+<div class="proofscript" id="proof5994">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="tactic">intuition</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id">compare_eq</span> <span class="id">i</span> <span class="id">i0</span>); <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id">compare_eq</span> <span class="id">n</span> <span class="id">n0</span>); <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof5995')">Next Obligation.</div>
+<div class="proofscript" id="proof5995">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">in_or_app</span>; <span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">intuition</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[<span class="id">left</span>|<span class="id">right</span>]; <span class="tactic">apply</span> <span class="id">in_map</span>; <span class="tactic">apply</span>  <span class="id">all_list_forall</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Coercion</span> <span class="id">Ninit</span> : <span class="id">noninitstate</span> &gt;-&gt; <span class="id">state</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Coercion</span> <span class="id">Init</span> : <span class="id">initstate</span> &gt;-&gt; <span class="id">state</span>.<br/>
+<br/>
+<div class="doc">For an LR automaton, there are four kind of actions that can be done at a
+     given state:
+       - Shifting, that is reading a token and putting it into the stack,
+       - Reducing a production, that is popping the right hand side of the
+          production from the stack, and pushing the left hand side,
+       - Failing
+       - Accepting the word (special case of reduction)
+     As in the menhir parser generator, we do not want our parser to read after
+     the end of stream. That means that once the parser has read a word in the
+     grammar language, it should stop without peeking the input stream. So, for
+     the automaton to be complete, the grammar must be particular: if a word is
+     in its language, then it is not a prefix of an other word of the language
+     (otherwise, menhir reports an end of stream conflict).
+     As a consequence of that, there is two notions of action: the first one is
+     an action performed before having read the stream, the second one is after
+  *</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">lookahead_action</span> (<span class="id">term</span>:<span class="id">terminal</span>) :=<br/>
+&nbsp;&nbsp;| <span class="id">Shift_act</span>: <span class="kwd">forall</span> <span class="id">s</span>:<span class="id">noninitstate</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">T</span> <span class="id">term</span> = <span class="id">last_symb_of_non_init_state</span> <span class="id">s</span> -&gt; <span class="id">lookahead_action</span> <span class="id">term</span><br/>
+&nbsp;&nbsp;| <span class="id">Reduce_act</span>: <span class="id">production</span> -&gt; <span class="id">lookahead_action</span> <span class="id">term</span><br/>
+&nbsp;&nbsp;| <span class="id">Fail_act</span>: <span class="id">lookahead_action</span> <span class="id">term</span>.<br/>
+&nbsp;&nbsp;<span class="id">Arguments</span> <span class="id">Shift_act</span> [<span class="id">term</span>].<br/>
+&nbsp;&nbsp;<span class="id">Arguments</span> <span class="id">Reduce_act</span> [<span class="id">term</span>].<br/>
+&nbsp;&nbsp;<span class="id">Arguments</span> <span class="id">Fail_act</span> [<span class="id">term</span>].<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id">action</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">Default_reduce_act</span>: <span class="id">production</span> -&gt; <span class="id">action</span><br/>
+&nbsp;&nbsp;| <span class="id">Lookahead_act</span> : (<span class="kwd">forall</span> <span class="id">term</span>:<span class="id">terminal</span>, <span class="id">lookahead_action</span> <span class="id">term</span>) -&gt; <span class="id">action</span>.<br/>
+<br/>
+<div class="doc">Types used for the annotations of the automaton. *</div>
+<br/>
+<div class="doc">An item is a part of the annotations given to the validator.
+     It is acually a set of LR(1) items sharing the same core. It is needed
+     to validate completeness. *</div>
+&nbsp;&nbsp;<span class="kwd">Record</span> <span class="id">item</span> := {<br/>
+<div class="doc">The pseudo-production of the item. *</div>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prod_item</span>: <span class="id">production</span>;<br/>
+<br/>
+<div class="doc">The position of the dot. *</div>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">dot_pos_item</span>: <span class="id">nat</span>;<br/>
+<br/>
+<div class="doc">The lookahead symbol of the item. We are using a list, so we can store
+     together multiple LR(1) items sharing the same core. *</div>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lookaheads_item</span>: <span class="id">list</span> <span class="id">terminal</span><br/>
+&nbsp;&nbsp;}.<br/>
+<span class="kwd">End</span> <span class="kwd">Types</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="kwd">Type</span> <span class="id">T</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Include</span> <span class="id">AutInit</span> &lt;+ <span class="kwd">Types</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Module</span> <span class="kwd">Export</span> <span class="id">GramDefs</span> := <span class="id">Grammar.Defs</span> <span class="id">Gram</span>.<br/>
+<br/>
+<div class="doc">For each initial state, the non terminal it recognizes. *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">start_nt</span>: <span class="id">initstate</span> -&gt; <span class="id">nonterminal</span>.<br/>
+<br/>
+<div class="doc">The action table maps a state to either a map terminal -&gt; action. *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">action_table</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state</span> -&gt; <span class="id">action</span>.<br/>
+<div class="doc">The goto table of an LR(1) automaton. *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">goto_table</span>: <span class="id">state</span> -&gt; <span class="kwd">forall</span> <span class="id">nt</span>:<span class="id">nonterminal</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">option</span> { <span class="id">s</span>:<span class="id">noninitstate</span> | <span class="id">NT</span> <span class="id">nt</span> = <span class="id">last_symb_of_non_init_state</span> <span class="id">s</span> }.<br/>
+<br/>
+<div class="doc">Some annotations on the automaton to help the validation. *</div>
+<br/>
+<div class="doc">When we are at this state, we know that these symbols are just below
+     the top of the stack. The list is ordered such that the head correspond
+     to the (almost) top of the stack. *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">past_symb_of_non_init_state</span>: <span class="id">noninitstate</span> -&gt; <span class="id">list</span> <span class="id">symbol</span>.<br/>
+<br/>
+<div class="doc">When we are at this state, the (strictly) previous states verify these
+     predicates. *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">past_state_of_non_init_state</span>: <span class="id">noninitstate</span> -&gt; <span class="id">list</span> (<span class="id">state</span> -&gt; <span class="id">bool</span>).<br/>
+<br/>
+<div class="doc">The items of the state. *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">items_of_state</span>: <span class="id">state</span> -&gt; <span class="id">list</span> <span class="id">item</span>.<br/>
+<br/>
+<div class="doc">The nullable predicate for non terminals :
+     true if and only if the symbol produces the empty string *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">nullable_nterm</span>: <span class="id">nonterminal</span> -&gt; <span class="id">bool</span>.<br/>
+<br/>
+<div class="doc">The first predicates for non terminals, symbols or words of symbols. A
+     terminal is in the returned list if, and only if the parameter produces a
+     word that begins with the given terminal *</div>
+&nbsp;&nbsp;<span class="kwd">Parameter</span> <span class="id">first_nterm</span>: <span class="id">nonterminal</span> -&gt; <span class="id">list</span> <span class="id">terminal</span>.<br/>
+<span class="kwd">End</span> <span class="id">T</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

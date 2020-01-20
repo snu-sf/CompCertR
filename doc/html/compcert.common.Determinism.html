@@ -1,0 +1,585 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Determinism</title>
+<meta name="description" content="Documentation of Coq module Determinism" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Determinism</h1>
+<div class="coq">
+<br/>
+<div class="doc">Characterization and properties of deterministic external worlds
+  and deterministic semantics </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Smallstep.html">Smallstep</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Behaviors.html">Behaviors</a></span>.<br/>
+<br/>
+<h1> Deterministic worlds </h1>
+<br/>
+<div class="doc">One source of possible nondeterminism is that our semantics leave
+  unspecified the results of system calls.
+  Different results to e.g. a "read" operation can of
+  course lead to different behaviors for the program.
+  We address this issue by modeling a notion of deterministic
+  external world that uniquely determines the results of external calls. </div>
+<br/>
+<div class="doc">An external world is a function that, given the name of an
+  external call and its arguments, returns either <span class="bracket"><span class="id">None</span></span>, meaning
+  that this external call gets stuck, or <span class="bracket"><span class="id">Some</span>(<span class="id">r</span>,<span class="id">w</span>)</span>, meaning
+  that this external call succeeds, has result <span class="bracket"><span class="id">r</span></span>, and changes
+  the world to <span class="bracket"><span class="id">w</span></span>. </div>
+<br/>
+<span class="kwd">CoInductive</span> <span class="id"><a name="world">world</a></span>: <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a name="World">World</a></span> (<span class="id">io</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">string</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Events.html#eventval">eventval</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="compcert.common.Events.html#eventval">eventval</a></span> * <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">vload</span>: <span class="id"><a href="compcert.common.AST.html#memory_chunk">memory_chunk</a></span> -&gt; <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="compcert.lib.Integers.html#ptrofs">ptrofs</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="compcert.common.Events.html#eventval">eventval</a></span> * <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">vstore</span>: <span class="id"><a href="compcert.common.AST.html#memory_chunk">memory_chunk</a></span> -&gt; <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span> -&gt; <span class="id"><a href="compcert.lib.Integers.html#ptrofs">ptrofs</a></span> -&gt; <span class="id"><a href="compcert.common.Events.html#eventval">eventval</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nextworld_io">nextworld_io</a></span> (<span class="id">w</span>: <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>) (<span class="id">evname</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">string</a></span>) (<span class="id">evargs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Events.html#eventval">eventval</a></span>) :<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="compcert.common.Events.html#eventval">eventval</a></span> * <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="kwd">with</span> <span class="id"><a href="compcert.common.Determinism.html#World">World</a></span> <span class="id">io</span> <span class="id">vl</span> <span class="id">vs</span> =&gt; <span class="id">io</span> <span class="id"><a href="compcert.common.Determinism.html#evname">evname</a></span> <span class="id"><a href="compcert.common.Determinism.html#evargs">evargs</a></span> <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nextworld_vload">nextworld_vload</a></span> (<span class="id">w</span>: <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>) (<span class="id">chunk</span>: <span class="id"><a href="compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">id</span>: <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span>) (<span class="id">ofs</span>: <span class="id"><a href="compcert.lib.Integers.html#ptrofs">ptrofs</a></span>) :<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="compcert.common.Events.html#eventval">eventval</a></span> * <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="kwd">with</span> <span class="id"><a href="compcert.common.Determinism.html#World">World</a></span> <span class="id">io</span> <span class="id">vl</span> <span class="id">vs</span> =&gt; <span class="id">vl</span> <span class="id"><a href="compcert.common.Determinism.html#chunk">chunk</a></span> <span class="id"><a href="compcert.common.Determinism.html#id">id</a></span> <span class="id"><a href="compcert.common.Determinism.html#ofs">ofs</a></span> <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="nextworld_vstore">nextworld_vstore</a></span> (<span class="id">w</span>: <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>) (<span class="id">chunk</span>: <span class="id"><a href="compcert.common.AST.html#memory_chunk">memory_chunk</a></span>) (<span class="id">id</span>: <span class="id"><a href="compcert.common.AST.html#ident">ident</a></span>) (<span class="id">ofs</span>: <span class="id"><a href="compcert.lib.Integers.html#ptrofs">ptrofs</a></span>) (<span class="id">v</span>: <span class="id"><a href="compcert.common.Events.html#eventval">eventval</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="kwd">with</span> <span class="id"><a href="compcert.common.Determinism.html#World">World</a></span> <span class="id">io</span> <span class="id">vl</span> <span class="id">vs</span> =&gt; <span class="id">vs</span> <span class="id"><a href="compcert.common.Determinism.html#chunk">chunk</a></span> <span class="id"><a href="compcert.common.Determinism.html#id">id</a></span> <span class="id"><a href="compcert.common.Determinism.html#ofs">ofs</a></span> <span class="id"><a href="compcert.common.Determinism.html#v">v</a></span> <span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">A trace is possible in a given world if all events correspond
+  to non-stuck external calls according to the given world.
+  Two predicates are defined, for finite and infinite traces respectively:
+<ul>
+<li>
+ <span class="bracket"><span class="id">possible_trace</span> <span class="id">w</span> <span class="id">t</span> <span class="id">w</span>'</span>, where <span class="bracket"><span class="id">w</span></span> is the initial state of the
+  world, <span class="bracket"><span class="id">t</span></span> the finite trace of interest, and <span class="bracket"><span class="id">w</span>'</span> the state of the
+  world after performing trace <span class="bracket"><span class="id">t</span></span>.
+</li>
+<li>
+ <span class="bracket"><span class="id">possible_traceinf</span> <span class="id">w</span> <span class="id">T</span></span>, where <span class="bracket"><span class="id">w</span></span> is the initial state of the
+  world and <span class="bracket"><span class="id">T</span></span> the infinite trace of interest.
+</li>
+</ul>
+</div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="possible_event">possible_event</a></span>: <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span> -&gt; <span class="id"><a href="compcert.common.Events.html#event">event</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="possible_event_syscall">possible_event_syscall</a></span>: <span class="kwd">forall</span> <span class="id">w1</span> <span class="id">evname</span> <span class="id">evargs</span> <span class="id">evres</span> <span class="id">w2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#nextworld_io">nextworld_io</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#evname">evname</a></span> <span class="id"><a href="compcert.common.Determinism.html#evargs">evargs</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.common.Determinism.html#evres">evres</a></span>, <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_event">possible_event</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> (<span class="id"><a href="compcert.common.Events.html#Event_syscall">Event_syscall</a></span> <span class="id"><a href="compcert.common.Determinism.html#evname">evname</a></span> <span class="id"><a href="compcert.common.Determinism.html#evargs">evargs</a></span> <span class="id"><a href="compcert.common.Determinism.html#evres">evres</a></span>) <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="possible_event_vload">possible_event_vload</a></span>: <span class="kwd">forall</span> <span class="id">w1</span> <span class="id">chunk</span> <span class="id">id</span> <span class="id">ofs</span> <span class="id">evres</span> <span class="id">w2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#nextworld_vload">nextworld_vload</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#chunk">chunk</a></span> <span class="id"><a href="compcert.common.Determinism.html#id">id</a></span> <span class="id"><a href="compcert.common.Determinism.html#ofs">ofs</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.common.Determinism.html#evres">evres</a></span>, <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_event">possible_event</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> (<span class="id"><a href="compcert.common.Events.html#Event_vload">Event_vload</a></span> <span class="id"><a href="compcert.common.Determinism.html#chunk">chunk</a></span> <span class="id"><a href="compcert.common.Determinism.html#id">id</a></span> <span class="id"><a href="compcert.common.Determinism.html#ofs">ofs</a></span> <span class="id"><a href="compcert.common.Determinism.html#evres">evres</a></span>) <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="possible_event_vstore">possible_event_vstore</a></span>: <span class="kwd">forall</span> <span class="id">w1</span> <span class="id">chunk</span> <span class="id">id</span> <span class="id">ofs</span> <span class="id">evarg</span> <span class="id">w2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#nextworld_vstore">nextworld_vstore</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#chunk">chunk</a></span> <span class="id"><a href="compcert.common.Determinism.html#id">id</a></span> <span class="id"><a href="compcert.common.Determinism.html#ofs">ofs</a></span> <span class="id"><a href="compcert.common.Determinism.html#evarg">evarg</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_event">possible_event</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> (<span class="id"><a href="compcert.common.Events.html#Event_vstore">Event_vstore</a></span> <span class="id"><a href="compcert.common.Determinism.html#chunk">chunk</a></span> <span class="id"><a href="compcert.common.Determinism.html#id">id</a></span> <span class="id"><a href="compcert.common.Determinism.html#ofs">ofs</a></span> <span class="id"><a href="compcert.common.Determinism.html#evarg">evarg</a></span>) <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="possible_event_annot">possible_event_annot</a></span>: <span class="kwd">forall</span> <span class="id">w1</span> <span class="id">id</span> <span class="id">args</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_event">possible_event</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> (<span class="id"><a href="compcert.common.Events.html#Event_annot">Event_annot</a></span> <span class="id"><a href="compcert.common.Determinism.html#id">id</a></span> <span class="id"><a href="compcert.common.Determinism.html#args">args</a></span>) <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="possible_trace">possible_trace</a></span>: <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span> -&gt; <span class="id"><a href="compcert.common.Events.html#trace">trace</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="possible_trace_nil">possible_trace_nil</a></span>: <span class="kwd">forall</span> <span class="id">w</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="possible_trace_cons">possible_trace_cons</a></span>: <span class="kwd">forall</span> <span class="id">w1</span> <span class="id">ev</span> <span class="id">w2</span> <span class="id">t</span> <span class="id">w3</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_event">possible_event</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#ev">ev</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id"><a href="compcert.common.Determinism.html#w3">w3</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> (<span class="id"><a href="compcert.common.Determinism.html#ev">ev</a></span> :: <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span>) <span class="id"><a href="compcert.common.Determinism.html#w3">w3</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="possible_trace_app">possible_trace_app</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t2</span> <span class="id">w2</span> <span class="id">w0</span> <span class="id">t1</span> <span class="id">w1</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> (<span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> ** <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span>) <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2095')">Proof.</div>
+<div class="proofscript" id="proof2095">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="possible_trace_app_inv">possible_trace_app_inv</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t2</span> <span class="id">w2</span> <span class="id">t1</span> <span class="id">w0</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> (<span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> ** <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span>) <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">w1</span>, <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> /\ <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2096')">Proof.</div>
+<div class="proofscript" id="proof2096">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">t1</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">w0</span>; <span class="tactic">split</span>. <span class="id">constructor</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>. <span class="id">exploit</span> <span class="id">IHt1</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> [<span class="id">w1</span> [<span class="id">A</span> <span class="id">B</span>]].<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">w1</span>; <span class="tactic">split</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="match_possible_traces">match_possible_traces</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">ge</span> <span class="id">t1</span> <span class="id">t2</span> <span class="id">w0</span> <span class="id">w1</span> <span class="id">w2</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Events.html#match_traces">match_traces</a></span> <span class="id"><a href="compcert.common.Determinism.html#ge">ge</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> /\ <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2097')">Proof.</div>
+<div class="proofscript" id="proof2097">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H1</span>; <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H7</span>; <span class="id">inv</span> <span class="id">H6</span>. <span class="id">inv</span> <span class="id">H9</span>; <span class="id">inv</span> <span class="id">H10</span>. <span class="tactic">split</span>; <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H7</span>; <span class="id">inv</span> <span class="id">H6</span>. <span class="id">inv</span> <span class="id">H9</span>; <span class="id">inv</span> <span class="id">H10</span>. <span class="tactic">split</span>; <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H4</span>; <span class="id">inv</span> <span class="id">H3</span>. <span class="id">inv</span> <span class="id">H6</span>; <span class="id">inv</span> <span class="id">H7</span>. <span class="tactic">split</span>; <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H4</span>; <span class="id">inv</span> <span class="id">H3</span>. <span class="id">inv</span> <span class="id">H7</span>; <span class="id">inv</span> <span class="id">H6</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">CoInductive</span> <span class="id"><a name="possible_traceinf">possible_traceinf</a></span>: <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span> -&gt; <span class="id"><a href="compcert.common.Events.html#traceinf">traceinf</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="possible_traceinf_cons">possible_traceinf_cons</a></span>: <span class="kwd">forall</span> <span class="id">w1</span> <span class="id">ev</span> <span class="id">w2</span> <span class="id">T</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_event">possible_event</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#ev">ev</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> (<span class="id"><a href="compcert.common.Events.html#Econsinf">Econsinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#ev">ev</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="possible_traceinf_app">possible_traceinf_app</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t2</span> <span class="id">w0</span> <span class="id">t1</span> <span class="id">w1</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> (<span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> *** <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2098')">Proof.</div>
+<div class="proofscript" id="proof2098">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">econstructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="possible_traceinf_app_inv">possible_traceinf_app_inv</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t2</span> <span class="id">t1</span> <span class="id">w0</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> (<span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> *** <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">w1</span>, <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w0">w0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> /\ <span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2099')">Proof.</div>
+<div class="proofscript" id="proof2099">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">t1</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">w0</span>; <span class="tactic">split</span>. <span class="id">constructor</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>. <span class="id">exploit</span> <span class="id">IHt1</span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> [<span class="id">w1</span> [<span class="id">A</span> <span class="id">B</span>]].<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">w1</span>; <span class="tactic">split</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">possibleTraceInv</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [<span class="id">H</span>: <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id">_</span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> <span class="id">_</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">clear</span> <span class="id">H</span>; <span class="tactic">subst</span>; <span class="id">possibleTraceInv</span><br/>
+&nbsp;&nbsp;| [<span class="id">H</span>: <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id">_</span> (<span class="id">_</span> ** <span class="id">_</span>) <span class="id">_</span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">P1</span> := <span class="tactic">fresh</span> "<span class="id">P</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">w</span> := <span class="tactic">fresh</span> "<span class="id">w</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">P2</span> := <span class="tactic">fresh</span> "<span class="id">P</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">elim</span> (<span class="id"><a href="compcert.common.Determinism.html#possible_trace_app_inv">possible_trace_app_inv</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span>); <span class="tactic">clear</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">w</span> [<span class="id">P1</span> <span class="id">P2</span>];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">possibleTraceInv</span><br/>
+&nbsp;&nbsp;| [<span class="id">H</span>: <span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id">_</span> (<span class="id">_</span> *** <span class="id">_</span>) |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">P1</span> := <span class="tactic">fresh</span> "<span class="id">P</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">w</span> := <span class="tactic">fresh</span> "<span class="id">w</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">P2</span> := <span class="tactic">fresh</span> "<span class="id">P</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">elim</span> (<span class="id"><a href="compcert.common.Determinism.html#possible_traceinf_app_inv">possible_traceinf_app_inv</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span>); <span class="tactic">clear</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">w</span> [<span class="id">P1</span> <span class="id">P2</span>];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">possibleTraceInv</span><br/>
+&nbsp;&nbsp;| [<span class="id">H</span>: <span class="id">exists</span> <span class="id">w</span>, <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> |- <span class="id">_</span>] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">P</span> := <span class="tactic">fresh</span> "<span class="id">P</span>" <span class="kwd">in</span> <span class="kwd">let</span> <span class="id">w</span> := <span class="tactic">fresh</span> "<span class="id">w</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">w</span> <span class="id">P</span>]; <span class="id">possibleTraceInv</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">idtac</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="possible_behavior">possible_behavior</a></span> (<span class="id">w</span>: <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>) (<span class="id">b</span>: <span class="id"><a href="compcert.common.Behaviors.html#program_behavior">program_behavior</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Determinism.html#b">b</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Behaviors.html#Terminates">Terminates</a></span> <span class="id">t</span> <span class="id">r</span> =&gt; <span class="id">exists</span> <span class="id">w</span>', <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="id">t</span> <span class="id">w</span>'<br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Behaviors.html#Diverges">Diverges</a></span> <span class="id">t</span> =&gt; <span class="id">exists</span> <span class="id">w</span>', <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="id">t</span> <span class="id">w</span>'<br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Behaviors.html#Reacts">Reacts</a></span> <span class="id">T</span> =&gt; <span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="id">T</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Behaviors.html#Goes_wrong">Goes_wrong</a></span> <span class="id">t</span> =&gt; <span class="id">exists</span> <span class="id">w</span>', <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="id">t</span> <span class="id">w</span>'<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">CoInductive</span> <span class="id">possible_traceinf</span>': <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span> -&gt; <span class="id"><a href="compcert.common.Events.html#traceinf">traceinf</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">possible_traceinf</span>'<span class="id">_app</span>: <span class="kwd">forall</span> <span class="id">w1</span> <span class="id">t</span> <span class="id">w2</span> <span class="id">T</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> &lt;&gt; <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">possible_traceinf</span>' <span class="id"><a href="compcert.common.Determinism.html#w2">w2</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">possible_traceinf</span>' <span class="id"><a href="compcert.common.Determinism.html#w1">w1</a></span> (<span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> *** <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">possible_traceinf</span>'<span class="id">_traceinf</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">w</span> <span class="id">T</span>, <span class="id">possible_traceinf</span>' <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#possible_traceinf">possible_traceinf</a></span> <span class="id"><a href="compcert.common.Determinism.html#w">w</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2100')">Proof.</div>
+<div class="proofscript" id="proof2100">
+&nbsp;&nbsp;<span class="id">cofix</span> <span class="id">COINDHYP</span>; <span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="id">econstructor</span>. <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id">COINDHYP</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H3</span>. <span class="tactic">simpl</span>. <span class="tactic">auto</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>; <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Definition and properties of deterministic semantics </h1>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="sem_deterministic">sem_deterministic</a></span> (<span class="id">L</span>: <span class="id"><a href="compcert.common.Smallstep.html#semantics">semantics</a></span>) := <span class="id"><a name="mk_deterministic">mk_deterministic</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="det_step">det_step</a></span>: <span class="kwd">forall</span> <span class="id">s0</span> <span class="id">t1</span> <span class="id">s1</span> <span class="id">t2</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">Step</span> <span class="id"><a href="compcert.common.Determinism.html#L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s0">s0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt; <span class="id">Step</span> <span class="id"><a href="compcert.common.Determinism.html#L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s0">s0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> /\ <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="det_initial_state">det_initial_state</a></span>: <span class="kwd">forall</span> <span class="id">s1</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Smallstep.html#initial_state">initial_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt; <span class="id"><a href="compcert.common.Smallstep.html#initial_state">initial_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="det_final_state">det_final_state</a></span>: <span class="kwd">forall</span> <span class="id">s</span> <span class="id">r1</span> <span class="id">r2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Smallstep.html#final_state">final_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#r1">r1</a></span> -&gt; <span class="id"><a href="compcert.common.Smallstep.html#final_state">final_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#r2">r2</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#r1">r1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#r2">r2</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="det_final_nostep">det_final_nostep</a></span>: <span class="kwd">forall</span> <span class="id">s</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Smallstep.html#final_state">final_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#r">r</a></span> -&gt; <span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span><br/>
+}.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="DETERM_SEM">DETERM_SEM</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="DETERM_SEM.L">L</a></span>: <span class="id"><a href="compcert.common.Smallstep.html#semantics">semantics</a></span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="DETERM_SEM.DET">DET</a></span>: <span class="id"><a href="compcert.common.Determinism.html#sem_deterministic">sem_deterministic</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">use_step_deterministic</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [ <span class="id">S1</span>: <span class="id">Step</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">_</span> ?<span class="id">t1</span> <span class="id">_</span>, <span class="id">S2</span>: <span class="id">Step</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">_</span> ?<span class="id">t2</span> <span class="id">_</span> |- <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Determinism.html#det_step">det_step</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.DET">DET</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">S1</span> <span class="id">S2</span>) <span class="kwd">as</span> [<span class="id">EQ1</span> <span class="id">EQ2</span>]; <span class="tactic">subst</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">Determinism for finite transition sequences. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="star_step_diamond">star_step_diamond</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s0</span> <span class="id">t1</span> <span class="id">s1</span>, <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s0">s0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t2</span> <span class="id">s2</span>, <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s0">s0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">t</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> /\ <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> ** <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span>)<br/>
+&nbsp;&nbsp;\/ (<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> /\ <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> ** <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2101')">Proof.</div>
+<div class="proofscript" id="proof2101">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">t2</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H2</span>. <span class="id">exists</span> (<span class="id">t1</span> ** <span class="id">t2</span>); <span class="id">right</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">split</span>. <span class="id">econstructor</span>; <span class="tactic">eauto</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">use_step_deterministic</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHstar</span>. <span class="id">eexact</span> <span class="id">H4</span>. <span class="tactic">intros</span> [<span class="id">t</span> <span class="id">A</span>]. <span class="id">exists</span> <span class="id">t</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">A</span>. <span class="id">left</span>; <span class="tactic">intuition</span>. <span class="id">traceEq</span>. <span class="id">right</span>; <span class="tactic">intuition</span>. <span class="id">traceEq</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">use_star_step_diamond</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [ <span class="id">S1</span>: <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">_</span> ?<span class="id">t1</span> <span class="id">_</span>, <span class="id">S2</span>: <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">_</span> ?<span class="id">t2</span> <span class="id">_</span> |- <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">t</span> := <span class="tactic">fresh</span> "<span class="id">t</span>" <span class="kwd">in</span> <span class="kwd">let</span> <span class="id">P</span> := <span class="tactic">fresh</span> "<span class="id">P</span>" <span class="kwd">in</span> <span class="kwd">let</span> <span class="id">EQ</span> := <span class="tactic">fresh</span> "<span class="id">EQ</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Determinism.html#star_step_diamond">star_step_diamond</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">S1</span> <span class="id">_</span> <span class="id">_</span> <span class="id">S2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">as</span> [<span class="id">t</span> [ [<span class="id">P</span> <span class="id">EQ</span>] | [<span class="id">P</span> <span class="id">EQ</span>] ]]; <span class="tactic">subst</span><br/>
+&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">use_nostep</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [ <span class="id">S</span>: <span class="id">Step</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> ?<span class="id">s</span> <span class="id">_</span> <span class="id">_</span>, <span class="id">NO</span>: <span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> ?<span class="id">s</span> |- <span class="id">_</span> ] =&gt; <span class="tactic">elim</span> (<span class="id">NO</span> <span class="id">_</span> <span class="id">_</span> <span class="id">S</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="star_step_triangle">star_step_triangle</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s0</span> <span class="id">t1</span> <span class="id">s1</span> <span class="id">t2</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s0">s0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s0">s0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">t</span>,<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> /\ <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> ** <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2102')">Proof.</div>
+<div class="proofscript" id="proof2102">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">use_star_step_diamond</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">t</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">P</span>. <span class="id">exists</span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>. <span class="tactic">split</span>. <span class="id">constructor</span>. <span class="id">traceEq</span>.<br/>
+&nbsp;&nbsp;<span class="id">use_nostep</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">use_star_step_triangle</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [ <span class="id">S1</span>: <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">_</span> ?<span class="id">t1</span> <span class="id">_</span>, <span class="id">S2</span>: <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">_</span> ?<span class="id">t2</span> ?<span class="id">s2</span>, <span class="id">NO</span>: <span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> ?<span class="id">s2</span> |- <span class="id">_</span> ] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">t</span> := <span class="tactic">fresh</span> "<span class="id">t</span>" <span class="kwd">in</span> <span class="kwd">let</span> <span class="id">P</span> := <span class="tactic">fresh</span> "<span class="id">P</span>" <span class="kwd">in</span> <span class="kwd">let</span> <span class="id">EQ</span> := <span class="tactic">fresh</span> "<span class="id">EQ</span>" <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Determinism.html#star_step_triangle">star_step_triangle</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">S1</span> <span class="id">S2</span> <span class="id">NO</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">as</span> [<span class="id">t</span> [<span class="id">P</span> <span class="id">EQ</span>]]; <span class="tactic">subst</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="steps_deterministic">steps_deterministic</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s0</span> <span class="id">t1</span> <span class="id">s1</span> <span class="id">t2</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s0">s0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt; <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s0">s0</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt; <span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> /\ <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2103')">Proof.</div>
+<div class="proofscript" id="proof2103">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">use_star_step_triangle</span>. <span class="id">inv</span> <span class="id">P</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>; <span class="id">traceEq</span>. <span class="id">use_nostep</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="terminates_not_goes_wrong">terminates_not_goes_wrong</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">t1</span> <span class="id">s1</span> <span class="id">r</span> <span class="id">t2</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt; <span class="id"><a href="compcert.common.Smallstep.html#final_state">final_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> <span class="id"><a href="compcert.common.Determinism.html#r">r</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt; <span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">r</span>, ~<span class="id"><a href="compcert.common.Smallstep.html#final_state">final_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> <span class="id"><a href="compcert.common.Determinism.html#r">r</a></span>) -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2104')">Proof.</div>
+<div class="proofscript" id="proof2104">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">t1</span> = <span class="id">t2</span> /\ <span class="id">s1</span> = <span class="id">s2</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#steps_deterministic">steps_deterministic</a></span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#det_final_nostep">det_final_nostep</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H4</span>; <span class="tactic">subst</span>. <span class="tactic">elim</span> (<span class="id">H3</span> <span class="id">_</span> <span class="id">H0</span>).<br/>
+Qed.</div>
+<br/>
+<div class="doc">Determinism for infinite transition sequences. </div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="star_final_not_forever_silent">star_final_not_forever_silent</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>', <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Forever_silent</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2105')">Proof.</div>
+<div class="proofscript" id="proof2105">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H0</span>. <span class="id">use_nostep</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H3</span>. <span class="id">use_step_deterministic</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="star2_final_not_forever_silent">star2_final_not_forever_silent</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">t1</span> <span class="id">s1</span> <span class="id">t2</span> <span class="id">s2</span>,<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt; <span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt; <span class="id">Forever_silent</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2106')">Proof.</div>
+<div class="proofscript" id="proof2106">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">use_star_step_triangle</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star_final_not_forever_silent">star_final_not_forever_silent</a></span>. <span class="id">eexact</span> <span class="id">P</span>. <span class="tactic">eauto</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="star_final_not_forever_reactive">star_final_not_forever_reactive</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>', <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">T</span>, <span class="id">Nostep</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">s</span>' -&gt; <span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2107')">Proof.</div>
+<div class="proofscript" id="proof2107">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H0</span>. <span class="id">inv</span> <span class="id">H1</span>. <span class="tactic">congruence</span>. <span class="id">use_nostep</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H3</span>. <span class="id">inv</span> <span class="id">H4</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">use_step_deterministic</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">IHstar</span> <span class="kwd">with</span> (<span class="id">T</span> := <span class="id">t4</span> *** <span class="id">T0</span>). <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_forever_reactive">star_forever_reactive</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="star_forever_silent_inv">star_forever_silent_inv</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>', <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Forever_silent</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> = <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> /\ <span class="id">Forever_silent</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">s</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2108')">Proof.</div>
+<div class="proofscript" id="proof2108">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span>. <span class="id">inv</span> <span class="id">H2</span>. <span class="id">use_step_deterministic</span>. <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="forever_silent_reactive_exclusive">forever_silent_reactive_exclusive</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">T</span>,<br/>
+&nbsp;&nbsp;<span class="id">Forever_silent</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> -&gt; <span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2109')">Proof.</div>
+<div class="proofscript" id="proof2109">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.common.Determinism.html#star_forever_silent_inv">star_forever_silent_inv</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">A</span> <span class="id">B</span>]. <span class="id">contradiction</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="forever_reactive_inv2">forever_reactive_inv2</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">t1</span> <span class="id">s1</span>, <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t2</span> <span class="id">s2</span> <span class="id">T1</span> <span class="id">T2</span>,<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> &lt;&gt; <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> &lt;&gt; <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s1">s1</a></span> <span class="id"><a href="compcert.common.Determinism.html#T1">T1</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s2">s2</a></span> <span class="id"><a href="compcert.common.Determinism.html#T2">T2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">s</span>', <span class="id">exists</span> <span class="id">t</span>, <span class="id">exists</span> <span class="id">T1</span>', <span class="id">exists</span> <span class="id">T2</span>',<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> &lt;&gt; <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span> /\<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">s</span>' <span class="id">T1</span>' /\<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">s</span>' <span class="id">T2</span>' /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#t1">t1</a></span> *** <span class="id"><a href="compcert.common.Determinism.html#T1">T1</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> *** <span class="id">T1</span>' /\<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#t2">t2</a></span> *** <span class="id"><a href="compcert.common.Determinism.html#T2">T2</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> *** <span class="id">T2</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2110')">Proof.</div>
+<div class="proofscript" id="proof2110">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H2</span>. <span class="tactic">congruence</span>. <span class="id">use_step_deterministic</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">t3</span>.<br/>
+&nbsp;&nbsp;<span class="comment">(*&nbsp;inductive&nbsp;case&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> *. <span class="tactic">eapply</span> <span class="id">IHstar</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="comment">(*&nbsp;base&nbsp;case&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">s5</span>; <span class="id">exists</span> (<span class="id">e</span> :: <span class="id">t3</span>);<br/>
+&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">t2</span> *** <span class="id">T1</span>); <span class="id">exists</span> (<span class="id">t4</span> *** <span class="id">T2</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>; <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_forever_reactive">star_forever_reactive</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_forever_reactive">star_forever_reactive</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="id">traceEq</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">forever_reactive_determ</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">T1</span> <span class="id">T2</span>,<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#T1">T1</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#T2">T2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">traceinf_sim</span>' <span class="id"><a href="compcert.common.Determinism.html#T1">T1</a></span> <span class="id"><a href="compcert.common.Determinism.html#T2">T2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2111')">Proof.</div>
+<div class="proofscript" id="proof2111">
+&nbsp;&nbsp;<span class="id">cofix</span> <span class="id">COINDHYP</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H</span>. <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Determinism.html#forever_reactive_inv2">forever_reactive_inv2</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span> <span class="id">t</span> <span class="id">s2</span> <span class="id">T0</span> <span class="id">T</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">as</span> [<span class="id">s</span>' [<span class="id">t</span>' [<span class="id">T1</span>' [<span class="id">T2</span>' [<span class="id">A</span> [<span class="id">B</span> [<span class="id">C</span> [<span class="id">D</span> <span class="id">E</span>]]]]]]]]; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">D</span>; <span class="tactic">rewrite</span> <span class="id">E</span>. <span class="id">constructor</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">COINDHYP</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="forever_reactive_determ">forever_reactive_determ</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">T1</span> <span class="id">T2</span>,<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#T1">T1</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#T2">T2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Events.html#traceinf_sim">traceinf_sim</a></span> <span class="id"><a href="compcert.common.Determinism.html#T1">T1</a></span> <span class="id"><a href="compcert.common.Determinism.html#T2">T2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2112')">Proof.</div>
+<div class="proofscript" id="proof2112">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id">traceinf_sim</span>'<span class="id">_sim</span>. <span class="tactic">eapply</span> <span class="id">forever_reactive_determ</span>'; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="star_forever_reactive_inv">star_forever_reactive_inv</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>', <span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">T</span>, <span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">T</span>', <span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">s</span>' <span class="id">T</span>' /\ <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span> = <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> *** <span class="id">T</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2113')">Proof.</div>
+<div class="proofscript" id="proof2113">
+&nbsp;&nbsp;<span class="tactic">induction</span> 1; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">T</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H2</span>. <span class="id">inv</span> <span class="id">H3</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="id">use_step_deterministic</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHstar</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#star_forever_reactive">star_forever_reactive</a></span>. 2: <span class="tactic">eauto</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">T</span>' [<span class="id">A</span> <span class="id">B</span>]]. <span class="id">exists</span> <span class="id">T</span>'; <span class="tactic">intuition</span>. <span class="id">traceEq</span>. <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="forever_silent_reactive_exclusive2">forever_silent_reactive_exclusive2</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>' <span class="id">T</span>,<br/>
+&nbsp;&nbsp;<span class="id">Star</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id">s</span>' -&gt; <span class="id">Forever_silent</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id">s</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id">Forever_reactive</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#T">T</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2114')">Proof.</div>
+<div class="proofscript" id="proof2114">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.common.Determinism.html#star_forever_reactive_inv">star_forever_reactive_inv</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">T</span>' [<span class="id">A</span> <span class="id">B</span>]]. <span class="tactic">subst</span> <span class="id">T</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#forever_silent_reactive_exclusive">forever_silent_reactive_exclusive</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Determinism for program executions </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="same_behaviors">same_behaviors</a></span> (<span class="id">beh1</span> <span class="id">beh2</span>: <span class="id"><a href="compcert.common.Behaviors.html#program_behavior">program_behavior</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Determinism.html#beh1">beh1</a></span>, <span class="id"><a href="compcert.common.Determinism.html#beh2">beh2</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Behaviors.html#Terminates">Terminates</a></span> <span class="id">t1</span> <span class="id">r1</span>, <span class="id"><a href="compcert.common.Behaviors.html#Terminates">Terminates</a></span> <span class="id">t2</span> <span class="id">r2</span> =&gt; <span class="id">t1</span> = <span class="id">t2</span> /\ <span class="id">r1</span> = <span class="id">r2</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Behaviors.html#Diverges">Diverges</a></span> <span class="id">t1</span>, <span class="id"><a href="compcert.common.Behaviors.html#Diverges">Diverges</a></span> <span class="id">t2</span> =&gt; <span class="id">t1</span> = <span class="id">t2</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Behaviors.html#Reacts">Reacts</a></span> <span class="id">t1</span>, <span class="id"><a href="compcert.common.Behaviors.html#Reacts">Reacts</a></span> <span class="id">t2</span> =&gt; <span class="id"><a href="compcert.common.Events.html#traceinf_sim">traceinf_sim</a></span> <span class="id">t1</span> <span class="id">t2</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Behaviors.html#Goes_wrong">Goes_wrong</a></span> <span class="id">t1</span>, <span class="id"><a href="compcert.common.Behaviors.html#Goes_wrong">Goes_wrong</a></span> <span class="id">t2</span> =&gt; <span class="id">t1</span> = <span class="id">t2</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="state_behaves_deterministic">state_behaves_deterministic</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">beh1</span> <span class="id">beh2</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#state_behaves">state_behaves</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#beh1">beh1</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#state_behaves">state_behaves</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span> <span class="id"><a href="compcert.common.Determinism.html#beh2">beh2</a></span> -&gt; <span class="id"><a href="compcert.common.Determinism.html#same_behaviors">same_behaviors</a></span> <span class="id"><a href="compcert.common.Determinism.html#beh1">beh1</a></span> <span class="id"><a href="compcert.common.Determinism.html#beh2">beh2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2115')">Proof.</div>
+<div class="proofscript" id="proof2115">
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="compcert.common.Determinism.html#det_final_nostep">det_final_nostep</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.DET">DET</a></span>); <span class="tactic">intro</span> <span class="id">dfns</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">beh2</span>; <span class="tactic">intros</span> <span class="id">BEH1</span> <span class="id">BEH2</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">BEH1</span>; <span class="id">inv</span> <span class="id">BEH2</span>; <span class="tactic">red</span>.<br/>
+<span class="comment">(*&nbsp;terminates,&nbsp;terminates&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">t</span> = <span class="id">t0</span> /\ <span class="id">s</span>' = <span class="id">s</span>'0). <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#steps_deterministic">steps_deterministic</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H3</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">subst</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#det_final_state">det_final_state</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;terminates,&nbsp;diverges&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star2_final_not_forever_silent">star2_final_not_forever_silent</a></span> <span class="kwd">with</span> (<span class="id">s1</span> := <span class="id">s</span>') (<span class="id">s2</span> := <span class="id">s</span>'0); <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;terminates,&nbsp;reacts&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star_final_not_forever_reactive">star_final_not_forever_reactive</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;terminates,&nbsp;goes_wrong&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#terminates_not_goes_wrong">terminates_not_goes_wrong</a></span> <span class="kwd">with</span> (<span class="id">s1</span> := <span class="id">s</span>') (<span class="id">s2</span> := <span class="id">s</span>'0); <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;diverges,&nbsp;terminates&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star2_final_not_forever_silent">star2_final_not_forever_silent</a></span> <span class="kwd">with</span> (<span class="id">s2</span> := <span class="id">s</span>') (<span class="id">s1</span> := <span class="id">s</span>'0); <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;diverges,&nbsp;diverges&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="id">use_star_step_diamond</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.common.Determinism.html#star_forever_silent_inv">star_forever_silent_inv</a></span>. <span class="id">eexact</span> <span class="id">P</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">A</span> <span class="id">B</span>]. <span class="tactic">subst</span>; <span class="id">traceEq</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.common.Determinism.html#star_forever_silent_inv">star_forever_silent_inv</a></span>. <span class="id">eexact</span> <span class="id">P</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">A</span> <span class="id">B</span>]. <span class="tactic">subst</span>; <span class="id">traceEq</span>.<br/>
+<span class="comment">(*&nbsp;diverges,&nbsp;reacts&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#forever_silent_reactive_exclusive2">forever_silent_reactive_exclusive2</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;diverges,&nbsp;goes&nbsp;wrong&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star2_final_not_forever_silent">star2_final_not_forever_silent</a></span> <span class="kwd">with</span> (<span class="id">s1</span> := <span class="id">s</span>'0) (<span class="id">s2</span> := <span class="id">s</span>'); <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;reacts,&nbsp;terminates&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star_final_not_forever_reactive">star_final_not_forever_reactive</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;reacts,&nbsp;diverges&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#forever_silent_reactive_exclusive2">forever_silent_reactive_exclusive2</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;reacts,&nbsp;reacts&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#forever_reactive_determ">forever_reactive_determ</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;reacts,&nbsp;goes&nbsp;wrong&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star_final_not_forever_reactive">star_final_not_forever_reactive</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;goes&nbsp;wrong,&nbsp;terminate&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#terminates_not_goes_wrong">terminates_not_goes_wrong</a></span> <span class="kwd">with</span> (<span class="id">s1</span> := <span class="id">s</span>'0) (<span class="id">s2</span> := <span class="id">s</span>'); <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;goes&nbsp;wrong,&nbsp;diverges&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star2_final_not_forever_silent">star2_final_not_forever_silent</a></span> <span class="kwd">with</span> (<span class="id">s1</span> := <span class="id">s</span>') (<span class="id">s2</span> := <span class="id">s</span>'0); <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;goes&nbsp;wrong,&nbsp;reacts&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#star_final_not_forever_reactive">star_final_not_forever_reactive</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;goes&nbsp;wrong,&nbsp;goes&nbsp;wrong&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">t</span> = <span class="id">t0</span> /\ <span class="id">s</span>' = <span class="id">s</span>'0). <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#steps_deterministic">steps_deterministic</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="program_behaves_deterministic">program_behaves_deterministic</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh1</span> <span class="id">beh2</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#beh1">beh1</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#beh2">beh2</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Determinism.html#same_behaviors">same_behaviors</a></span> <span class="id"><a href="compcert.common.Determinism.html#beh1">beh1</a></span> <span class="id"><a href="compcert.common.Determinism.html#beh2">beh2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2116')">Proof.</div>
+<div class="proofscript" id="proof2116">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">beh2</span>; <span class="tactic">intros</span> <span class="id">BEH1</span> <span class="id">BEH2</span>. <span class="id">inv</span> <span class="id">BEH1</span>; <span class="id">inv</span> <span class="id">BEH2</span>.<br/>
+<span class="comment">(*&nbsp;both&nbsp;initial&nbsp;states&nbsp;defined&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">s</span> = <span class="id">s0</span>) <span class="tactic">by</span> (<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#det_initial_state">det_initial_state</a></span>; <span class="tactic">eauto</span>). <span class="tactic">subst</span> <span class="id">s0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Determinism.html#state_behaves_deterministic">state_behaves_deterministic</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;one&nbsp;initial&nbsp;state&nbsp;defined,&nbsp;the&nbsp;other&nbsp;undefined&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">elim</span> (<span class="id">H1</span> <span class="id">_</span> <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">elim</span> (<span class="id">H</span> <span class="id">_</span> <span class="id">H0</span>).<br/>
+<span class="comment">(*&nbsp;both&nbsp;initial&nbsp;states&nbsp;undefined&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.common.Determinism.html#DETERM_SEM">DETERM_SEM</a></span>.<br/>
+<br/>
+<h1> Integrating an external world in a semantics. </h1>
+<br/>
+<div class="doc">Given a transition semantics, we can build another semantics that
+  integrates an external world in its state and allows only world-possible
+  transitions. </div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WORLD_SEM">WORLD_SEM</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WORLD_SEM.L">L</a></span>: <span class="id"><a href="compcert.common.Smallstep.html#semantics">semantics</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WORLD_SEM.initial_world">initial_world</a></span>: <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "<span class="id">s</span> #1" := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">s</span>) (<span class="tactic">at</span> <span class="id">level</span> 9, <span class="id">format</span> "<span class="id">s</span> '#1'") : <span class="id">pair_scope</span>.<br/>
+<span class="kwd">Notation</span> "<span class="id">s</span> #2" := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">s</span>) (<span class="tactic">at</span> <span class="id">level</span> 9, <span class="id">format</span> "<span class="id">s</span> '#2'") : <span class="id">pair_scope</span>.<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">pair_scope</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="world_sem">world_sem</a></span> : <span class="id"><a href="compcert.common.Smallstep.html#semantics">semantics</a></span> := @<span class="id"><a href="compcert.common.Smallstep.html#Semantics_gen">Semantics_gen</a></span><br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.common.Smallstep.html#state">state</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.L">L</a></span> * <span class="id"><a href="compcert.common.Determinism.html#world">world</a></span>)%<span class="id">type</span><br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.common.Smallstep.html#genvtype">genvtype</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.L">L</a></span>)<br/>
+&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">se</span> <span class="id">ge</span> <span class="id">s</span> <span class="id">t</span> <span class="id">s</span>' =&gt; <span class="id"><a href="compcert.common.Smallstep.html#step">step</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#se">se</a></span> <span class="id"><a href="compcert.common.Determinism.html#ge">ge</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span>#1 <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id">s</span>'#1 /\ <span class="id"><a href="compcert.common.Determinism.html#possible_trace">possible_trace</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span>#2 <span class="id"><a href="compcert.common.Determinism.html#t">t</a></span> <span class="id">s</span>'#2)<br/>
+&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">s</span> =&gt; <span class="id"><a href="compcert.common.Smallstep.html#initial_state">initial_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span>#1 /\ <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span>#2 = <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.initial_world">initial_world</a></span>)<br/>
+&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">s</span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.common.Smallstep.html#final_state">final_state</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.L">L</a></span> <span class="id"><a href="compcert.common.Determinism.html#s">s</a></span>#1 <span class="id"><a href="compcert.common.Determinism.html#r">r</a></span>)<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.common.Smallstep.html#globalenv">globalenv</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.L">L</a></span>)<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.common.Smallstep.html#symbolenv">symbolenv</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.L">L</a></span>).<br/>
+<br/>
+<div class="doc">If the original semantics is determinate, the world-aware semantics is deterministic. </div>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="WORLD_SEM.D">D</a></span>: <span class="id"><a href="compcert.common.Smallstep.html#determinate">determinate</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.L">L</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="world_sem_deterministic">world_sem_deterministic</a></span>: <span class="id"><a href="compcert.common.Determinism.html#sem_deterministic">sem_deterministic</a></span> <span class="id"><a href="compcert.common.Determinism.html#world_sem">world_sem</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof2117')">Proof.</div>
+<div class="proofscript" id="proof2117">
+&nbsp;&nbsp;<span class="id">constructor</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+<span class="comment">(*&nbsp;steps&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>; <span class="tactic">destruct</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> (<span class="id"><a href="compcert.common.Smallstep.html#sd_determ">sd_determ</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.D">D</a></span>). <span class="id">eexact</span> <span class="id">H</span>. <span class="id">eexact</span> <span class="id">H0</span>. <span class="tactic">intros</span> [<span class="id">A</span> <span class="id">B</span>].<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.common.Determinism.html#match_possible_traces">match_possible_traces</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> [<span class="id">EQ1</span> <span class="id">EQ2</span>]. <span class="tactic">subst</span> <span class="id">t2</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#surjective_pairing">surjective_pairing</a></span> <span class="id">s1</span>). <span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#surjective_pairing">surjective_pairing</a></span> <span class="id">s2</span>). <span class="tactic">intuition</span> <span class="tactic">congruence</span>.<br/>
+<span class="comment">(*&nbsp;initial&nbsp;states&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>; <span class="tactic">destruct</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#surjective_pairing">surjective_pairing</a></span> <span class="id">s1</span>). <span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#surjective_pairing">surjective_pairing</a></span> <span class="id">s2</span>). <span class="id">decEq</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> (<span class="id"><a href="compcert.common.Smallstep.html#sd_initial_determ">sd_initial_determ</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.D">D</a></span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+<span class="comment">(*&nbsp;final&nbsp;states&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> (<span class="id"><a href="compcert.common.Smallstep.html#sd_final_determ">sd_final_determ</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.D">D</a></span>); <span class="tactic">eauto</span>.<br/>
+<span class="comment">(*&nbsp;final&nbsp;no&nbsp;step&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">red</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="tactic">red</span>; <span class="tactic">intros</span> [<span class="id">A</span> <span class="id">B</span>]. <span class="id">exploit</span> (<span class="id"><a href="compcert.common.Smallstep.html#sd_final_nostep">sd_final_nostep</a></span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM.D">D</a></span>); <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.common.Determinism.html#WORLD_SEM">WORLD_SEM</a></span>.<br/>
+<br/>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

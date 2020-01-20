@@ -1,0 +1,699 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Fappli_IEEE_bits</title>
+<meta name="description" content="Documentation of Coq module Fappli_IEEE_bits" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Fappli_IEEE_bits</h1>
+<div class="coq">
+<br/>
+<h1> IEEE-754 encoding of binary floating-point data </h1>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore.html">Fcore</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html">Fcore_digits</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_digits.html">Fcalc_digits</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html">Fappli_IEEE</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Binary_Bits">Binary_Bits</a></span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#exist">exist</a></span> {<span class="id">A</span> <span class="id">P</span>} <span class="id">x</span> <span class="id">_</span>.<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_zero">B754_zero</a></span> {<span class="id">prec</span> <span class="id">emax</span>} <span class="id">_</span>.<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_infinity">B754_infinity</a></span> {<span class="id">prec</span> <span class="id">emax</span>} <span class="id">_</span>.<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> {<span class="id">prec</span> <span class="id">emax</span>} <span class="id">_</span> <span class="id">_</span>.<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_finite">B754_finite</a></span> {<span class="id">prec</span> <span class="id">emax</span>} <span class="id">_</span> <span class="id">m</span> <span class="id">e</span> <span class="id">_</span>.<br/>
+<br/>
+<div class="doc">Number of bits for the fraction and exponent </div>
+<span class="kwd">Variable</span> <span class="id"><a name="Binary_Bits.mw">mw</a></span> <span class="id"><a name="Binary_Bits.ew">ew</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="Binary_Bits.Hmw">Hmw</a></span> : (0 &lt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="Binary_Bits.Hew">Hew</a></span> : (0 &lt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="Binary_Bits.emax">emax</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1).<br/>
+<span class="kwd">Let</span> <span class="id"><a name="Binary_Bits.prec">prec</a></span> := (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + 1)%<span class="id">Z</span>.<br/>
+<span class="kwd">Let</span> <span class="id"><a name="Binary_Bits.emin">emin</a></span> := (3 - <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span> - <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span>)%<span class="id">Z</span>.<br/>
+<span class="kwd">Let</span> <span class="id"><a name="Binary_Bits.binary_float">binary_float</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#binary_float">binary_float</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span>.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="Binary_Bits.Hprec">Hprec</a></span> : (0 &lt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_lt_succ">Zle_lt_succ</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="Binary_Bits.Hm_gt_0">Hm_gt_0</a></span> : (0 &lt; 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="Binary_Bits.He_gt_0">He_gt_0</a></span> : (0 &lt; 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="Binary_Bits.Hmax">Hmax</a></span> : (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span> &lt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span>)%<span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="join_bits">join_bits</a></span> (<span class="id">s</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) <span class="id">m</span> <span class="id">e</span> :=<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.shiftl">Z.shiftl</a></span> ((<span class="kwd">if</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#s">s</a></span> <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> <span class="kwd">else</span> 0) + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#e">e</a></span>) <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span>)%<span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="join_bits_range">join_bits_range</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">m</span> <span class="id">e</span>,<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span> &lt; 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#e">e</a></span> &lt; 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#s">s</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#e">e</a></span> &lt; 2 ^ (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> + 1))%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5925')">Proof.</div>
+<div class="proofscript" id="proof5925">
+<span class="tactic">intros</span> <span class="id">s</span> <span class="id">m</span> <span class="id">e</span> <span class="id">Hm</span> <span class="id">He</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.shiftl_mul_pow2">Z.shiftl_mul_pow2</a></span> <span class="tactic">by</span> <span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">split</span>.<br/>
+- <span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_le_compat">Zplus_le_compat</a></span> 0 <span class="id">_</span> 0) <span class="kwd">with</span> (2 := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> <span class="id">Hm</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_0_l">Zmult_0_l</a></span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_le_compat_r">Zmult_le_compat_r</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> <span class="id">s</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">He</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_0_l">Zmult_0_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">Hm</span> ; <span class="tactic">omega</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_trans">Zlt_le_trans</a></span> <span class="kwd">with</span> (((<span class="kwd">if</span> <span class="id">s</span> <span class="kwd">then</span> 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> <span class="kwd">else</span> 0) + <span class="id">e</span> + 1) * 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_plus_distr_l">Zmult_plus_distr_l</a></span> <span class="id">_</span> 1).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_lt_compat_l">Zplus_lt_compat_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_l">Zmult_1_l</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_assoc">Zplus_assoc</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>), (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_comm">Zplus_comm</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>), <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_plus">Zpower_plus</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_le_compat_r">Zmult_le_compat_r</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_plus">Zpower_plus</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">change</span> (2^1)%<span class="id">Z</span> <span class="kwd">with</span> 2%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> <span class="id">s</span> ; <span class="tactic">clear</span> -<span class="id">He</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">easy</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">Hm</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">Hew</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="split_bits">split_bits</a></span> <span class="id">x</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">mm</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">em</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#mm">mm</a></span> * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#em">em</a></span>) <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod">Zmod</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#mm">mm</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod">Zmod</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv">Zdiv</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#mm">mm</a></span>) <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#em">em</a></span>)%<span class="id">Z</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="split_join_bits">split_join_bits</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">m</span> <span class="id">e</span>,<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#e">e</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#s">s</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#e">e</a></span>) = (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#s">s</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#e">e</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5926')">Proof.</div>
+<div class="proofscript" id="proof5926">
+<span class="tactic">intros</span> <span class="id">s</span> <span class="id">m</span> <span class="id">e</span> <span class="id">Hm</span> <span class="id">He</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.shiftl_mul_pow2">Z.shiftl_mul_pow2</a></span> <span class="tactic">by</span> <span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#f_equal2">f_equal2</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#f_equal2">f_equal2</a></span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">case</span> <span class="id">s</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_true">Zle_bool_true</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_0_minus_le">Zle_0_minus_le</a></span>.<br/>
+<span class="id">ring_simplify</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_le_0_compat">Zplus_le_0_compat</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_le_0_compat">Zmult_le_0_compat</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id">He</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id">Hm</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_false">Zle_bool_false</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_lt_reg_l">Zplus_lt_reg_l</a></span> <span class="kwd">with</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> * (-<span class="id">e</span>))%<span class="id">Z</span>.<br/>
+<span class="tactic">replace</span> (2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> * - <span class="id">e</span> + ((0 + <span class="id">e</span>) * 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + <span class="id">m</span>))%<span class="id">Z</span> <span class="kwd">with</span> (<span class="id">m</span> * 1)%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_plus_distr_r">Zmult_plus_distr_r</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_trans">Zlt_le_trans</a></span> <span class="kwd">with</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> * 1)%<span class="id">Z</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_lt_compat_r">Zmult_lt_compat_r</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_le_compat_l">Zmult_le_compat_l</a></span>.<br/>
+<span class="tactic">clear</span> -<span class="id">He</span>. <span class="tactic">omega</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_comm">Zplus_comm</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_plus_full">Z_mod_plus_full</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_small">Zmod_small</a></span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_div_plus_full_l">Z_div_plus_full_l</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_small">Zdiv_small</a></span> <span class="kwd">with</span> (1 := <span class="id">Hm</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_0_r">Zplus_0_r</a></span>.<br/>
+<span class="tactic">case</span> <span class="id">s</span>.<br/>
+<span class="tactic">replace</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> + <span class="id">e</span>)%<span class="id">Z</span> <span class="kwd">with</span> (<span class="id">e</span> + 1 * 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_plus_full">Z_mod_plus_full</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_small">Zmod_small</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_small">Zmod_small</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zgt_not_eq">Zgt_not_eq</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="join_split_bits">join_split_bits</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> + 1))%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id">s</span>, <span class="id">m</span>, <span class="id">e</span>) := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span> <span class="id">s</span> <span class="id">m</span> <span class="id">e</span> = <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5927')">Proof.</div>
+<div class="proofscript" id="proof5927">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">Hx</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.shiftl_mul_pow2">Z.shiftl_mul_pow2</a></span> <span class="tactic">by</span> <span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">pattern</span> <span class="id">x</span> <span class="tactic">at</span> 4 ; <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_div_mod_eq_full">Z_div_mod_eq_full</a></span> <span class="kwd">with</span> <span class="id">x</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> (<span class="tactic">f_equal</span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt; (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#v">v</a></span> + <span class="id">_</span>)%<span class="id">Z</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_comm">Zmult_comm</a></span>.<br/>
+<span class="tactic">apply</span> <span class="tactic">f_equal</span>.<br/>
+<span class="tactic">pattern</span> (<span class="id">x</span> / (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>))%<span class="id">Z</span> <span class="tactic">at</span> 2 ; <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_div_mod_eq_full">Z_div_mod_eq_full</a></span> <span class="kwd">with</span> (<span class="id">x</span> / (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>))%<span class="id">Z</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> (<span class="tactic">f_equal</span> (<span class="kwd">fun</span> <span class="id">v</span> =&gt; (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#v">v</a></span> + <span class="id">_</span>)%<span class="id">Z</span>)).<br/>
+<span class="tactic">replace</span> (<span class="id">x</span> / 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> / 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span> <span class="kwd">with</span> (<span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> (2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> * 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>) <span class="id">x</span> <span class="kwd">then</span> 1 <span class="kwd">else</span> 0)%<span class="id">Z</span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_r">Zmult_1_r</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_0_r">Zmult_0_r</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_Zdiv">Zdiv_Zdiv</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#sym_eq">sym_eq</a></span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_spec">Zle_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">Hs</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_antisym">Zle_antisym</a></span>.<br/>
+<span class="tactic">cut</span> (<span class="id">x</span> / (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> * 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>) &lt; 2)%<span class="id">Z</span>. <span class="tactic">clear</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_lt_upper_bound">Zdiv_lt_upper_bound</a></span>.<br/>
+<span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Hx</span>. <span class="comment">(*&nbsp;8.2/8.3&nbsp;compatibility&nbsp;*)</span><br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_lt_0_compat">Zmult_lt_0_compat</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span> ; <span class="tactic">try</span> ( <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_ge">Zle_ge</a></span> ; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span> ; <span class="tactic">assumption</span> ).<br/>
+<span class="id">change</span> 2%<span class="id">Z</span> <span class="tactic">at</span> 1 <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 1).<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_comm">Zplus_comm</a></span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_ge">Zle_ge</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_le_0_compat">Zplus_le_0_compat</a></span> ; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_le_lower_bound">Zdiv_le_lower_bound</a></span>.<br/>
+<span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">Hx</span>. <span class="comment">(*&nbsp;8.2/8.3&nbsp;compatibility&nbsp;*)</span><br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_lt_0_compat">Zmult_lt_0_compat</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_l">Zmult_1_l</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_small">Zdiv_small</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">split</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zgt_not_eq">Zgt_not_eq</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zgt_not_eq">Zgt_not_eq</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="split_bits_inj">split_bits_inj</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>,<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> + 1))%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#y">y</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> + 1))%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#y">y</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#y">y</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5928')">Proof.</div>
+<div class="proofscript" id="proof5928">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span> <span class="id">Hx</span> <span class="id">Hy</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_split_bits">join_split_bits</a></span> <span class="id">x</span> <span class="id">Hx</span>) (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_split_bits">join_split_bits</a></span> <span class="id">y</span> <span class="id">Hy</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> <span class="id">x</span>) <span class="kwd">as</span> ((<span class="id">sx</span>, <span class="id">mx</span>), <span class="id">ex</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> <span class="id">y</span>) <span class="kwd">as</span> ((<span class="id">sy</span>, <span class="id">my</span>), <span class="id">ey</span>).<br/>
+<span class="tactic">intros</span> <span class="id">Jx</span> <span class="id">Jy</span> <span class="id">H</span>. <span class="id">revert</span> <span class="id">Jx</span> <span class="id">Jy</span>.<br/>
+<span class="tactic">inversion_clear</span> <span class="id">H</span>.<br/>
+<span class="tactic">intros</span> <span class="id">Jx</span> <span class="id">Jy</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id">Jx</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="bits_of_binary_float">bits_of_binary_float</a></span> (<span class="id">x</span> : <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.binary_float">binary_float</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_zero">B754_zero</a></span> <span class="id">sx</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span> <span class="id">sx</span> 0 0<br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_infinity">B754_infinity</a></span> <span class="id">sx</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span> <span class="id">sx</span> 0 (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> <span class="id">sx</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#exist">exist</a></span> <span class="id">plx</span> <span class="id">_</span>) =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span> <span class="id">sx</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">plx</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_finite">B754_finite</a></span> <span class="id">sx</span> <span class="id">mx</span> <span class="id">ex</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">m</span> := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span> - <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> 0 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span> <span class="id">sx</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span> (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> + 1)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits">join_bits</a></span> <span class="id">sx</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span>) 0<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="split_bits_of_binary_float">split_bits_of_binary_float</a></span> (<span class="id">x</span> : <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.binary_float">binary_float</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_zero">B754_zero</a></span> <span class="id">sx</span> =&gt; (<span class="id">sx</span>, 0, 0)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_infinity">B754_infinity</a></span> <span class="id">sx</span> =&gt; (<span class="id">sx</span>, 0, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> <span class="id">sx</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#exist">exist</a></span> <span class="id">plx</span> <span class="id">_</span>) =&gt; (<span class="id">sx</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">plx</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_finite">B754_finite</a></span> <span class="id">sx</span> <span class="id">mx</span> <span class="id">ex</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">m</span> := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span> - <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> 0 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sx</span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#m">m</a></span>, <span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> + 1)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">sx</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span>, 0)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="split_bits_of_binary_float_correct">split_bits_of_binary_float_correct</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>) = <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits_of_binary_float">split_bits_of_binary_float</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5929')">Proof.</div>
+<div class="proofscript" id="proof5929">
+<span class="tactic">intros</span> [<span class="id">sx</span>|<span class="id">sx</span>|<span class="id">sx</span> [<span class="id">plx</span> <span class="id">Hplx</span>]|<span class="id">sx</span> <span class="id">mx</span> <span class="id">ex</span> <span class="id">Hx</span>] ;<br/>
+&nbsp;&nbsp;<span class="tactic">try</span> ( <span class="tactic">simpl</span> ; <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_join_bits">split_join_bits</a></span> ; <span class="tactic">split</span> ; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_refl">Zle_refl</a></span> ; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_pred">Zlt_pred</a></span> ; <span class="tactic">trivial</span> ; <span class="tactic">omega</span> ).<br/>
+<span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_join_bits">split_join_bits</a></span>; <span class="tactic">split</span>; <span class="tactic">try</span> (<span class="id">zify</span>; <span class="tactic">omega</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#digits2_Pnat_correct">digits2_Pnat_correct</a></span> <span class="id">plx</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpos_digits2_pos">Zpos_digits2_pos</a></span>, &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Z_of_nat_S_digits2_Pnat">Z_of_nat_S_digits2_Pnat</a></span> <span class="kwd">in</span> <span class="id">Hplx</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_nat_Z">Zpower_nat_Z</a></span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_trans">Zlt_le_trans</a></span>. <span class="tactic">apply</span> <span class="id">H0</span>.<br/>
+<span class="id">change</span> 2%<span class="id">Z</span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix_val">radix_val</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_le">Zpower_le</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb_lt">Z.ltb_lt</a></span> <span class="kwd">in</span> <span class="id">Hplx</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span> <span class="kwd">in</span> *. <span class="id">zify</span>; <span class="tactic">omega</span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits_of_binary_float">split_bits_of_binary_float</a></span>.<br/>
+<span class="tactic">assert</span> (<span class="id">Hf</span>: (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> &lt;= <span class="id">ex</span> /\ <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits">Zdigits</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span>) &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span>)%<span class="id">Z</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb_prop">andb_prop</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Hx</span>) <span class="kwd">as</span> (<span class="id">Hx</span>', <span class="id">_</span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#canonic_mantissa">canonic_mantissa</a></span> <span class="kwd">in</span> <span class="id">Hx</span>'.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpos_digits2_pos">Zpos_digits2_pos</a></span> <span class="kwd">in</span> <span class="id">Hx</span>'.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool_eq">Zeq_bool_eq</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Hx</span>').<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLT.html#FLT_exp">FLT_exp</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>.<br/>
+<span class="tactic">clear</span> ; <span class="id">zify</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_spec">Zle_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">H</span> ;<br/>
+&nbsp;&nbsp;[ <span class="tactic">apply</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.le_0_sub">Z.le_0_sub</a></span> <span class="kwd">in</span> <span class="id">H</span> | <span class="tactic">apply</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_sub_0">Z.lt_sub_0</a></span> <span class="kwd">in</span> <span class="id">H</span> ] ;<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_join_bits">split_join_bits</a></span> ; <span class="tactic">try</span> <span class="id">now</span> <span class="tactic">split</span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">clear</span> -<span class="id">He_gt_0</span> <span class="id">H</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">cut</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span> &lt; 2 * 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>. <span class="tactic">clear</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">replace</span> (2 * 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> <span class="kwd">with</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpower_gt_Zdigits">Zpower_gt_Zdigits</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> <span class="id">_</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span>)).<br/>
+<span class="tactic">apply</span> <span class="id">Hf</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_comm">Zplus_comm</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span> ; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_ge">Zle_ge</a></span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> <span class="id">Hf</span>).<br/>
+<span class="tactic">clear</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb_prop">andb_prop</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Hx</span>) <span class="kwd">as</span> (<span class="id">_</span>, <span class="id">Hx</span>').<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>.<br/>
+<span class="tactic">replace</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span> <span class="kwd">with</span> (2 * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool_imp_le">Zle_bool_imp_le</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Hx</span>').<br/>
+<span class="tactic">clear</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#sym_eq">sym_eq</a></span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zsucc_pred">Zsucc_pred</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.succ">Zsucc</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_comm">Zplus_comm</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span> ; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_ge">Zle_ge</a></span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_0_le_0_pred">Zlt_0_le_0_pred</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="bits_of_binary_float_range">bits_of_binary_float_range</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, (0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> &lt; 2^(<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>+<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>+1))%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5930')">Proof.</div>
+<div class="proofscript" id="proof5930">
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span>.<br/>
+<span class="tactic">intros</span> [<span class="id">sx</span>|<span class="id">sx</span>|<span class="id">sx</span> [<span class="id">pl</span> <span class="id">pl_range</span>]|<span class="id">sx</span> <span class="id">mx</span> <span class="id">ex</span> <span class="id">H</span>].<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits_range">join_bits_range</a></span> ; <span class="id">now</span> <span class="tactic">split</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits_range">join_bits_range</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">He_gt_0</span> ; <span class="tactic">omega</span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb_lt">Z.ltb_lt</a></span> <span class="kwd">in</span> <span class="id">pl_range</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits_range">join_bits_range</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="id">easy</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpower_gt_Zdigits">Zpower_gt_Zdigits</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> <span class="id">_</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">pl</span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_succ_r">Z.lt_succ_r</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits2_Zdigits">Zdigits2_Zdigits</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">He_gt_0</span> ; <span class="tactic">omega</span>.<br/>
+- <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#bounded">bounded</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">Bool.andb_true_iff</a></span> <span class="kwd">in</span> <span class="id">H</span> ; <span class="tactic">destruct</span> <span class="id">H</span> <span class="kwd">as</span> [<span class="id">A</span> <span class="id">B</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.leb_le">Z.leb_le</a></span> <span class="kwd">in</span> <span class="id">B</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#canonic_mantissa">canonic_mantissa</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_FLT.html#FLT_exp">FLT_exp</a></span> <span class="kwd">in</span> <span class="id">A</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool_eq">Zeq_bool_eq</a></span> <span class="kwd">in</span> <span class="id">A</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_spec">Zle_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits_range">join_bits_range</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">H</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpos_digits2_pos">Zpos_digits2_pos</a></span> <span class="kwd">in</span> <span class="id">A</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">cut</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span> &lt; 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span>)%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_plus">Zpower_plus</a></span> <span class="tactic">by</span> (<span class="tactic">clear</span> -<span class="id">Hmw</span> ; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">change</span> (2^1)%<span class="id">Z</span> <span class="kwd">with</span> 2%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpower_gt_Zdigits">Zpower_gt_Zdigits</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> <span class="id">_</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">A</span> ; <span class="id">zify</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span> ; <span class="tactic">clear</span> -<span class="id">A</span> ; <span class="id">zify</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> <span class="kwd">with</span> ((<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1) + 1)%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_plus">Zpower_plus</a></span> <span class="tactic">by</span> (<span class="tactic">clear</span> - <span class="id">Hew</span> ; <span class="tactic">omega</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emax">emax</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">change</span> (2^1)%<span class="id">Z</span> <span class="kwd">with</span> 2%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> -<span class="id">B</span> ; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">apply</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_sub_0">Z.lt_sub_0</a></span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_bits_range">join_bits_range</a></span> ; <span class="id">now</span> <span class="tactic">split</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="binary_float_of_bits_aux">binary_float_of_bits_aux</a></span> <span class="id">x</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id">sx</span>, <span class="id">mx</span>, <span class="id">ex</span>) := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool">Zeq_bool</a></span> <span class="id">ex</span> 0 <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">mx</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#F754_zero">F754_zero</a></span> <span class="id">sx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">px</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#F754_finite">F754_finite</a></span> <span class="id">sx</span> <span class="id">px</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#F754_nan">F754_nan</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool">Zeq_bool</a></span> <span class="id">ex</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">mx</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#F754_infinity">F754_infinity</a></span> <span class="id">sx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">plx</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#F754_nan">F754_nan</a></span> <span class="id">sx</span> <span class="id">plx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#F754_nan">F754_nan</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> (<span class="id">mx</span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> 2 <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">px</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#F754_finite">F754_finite</a></span> <span class="id">sx</span> <span class="id">px</span> (<span class="id">ex</span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> - 1)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#F754_nan">F754_nan</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="binary_float_of_bits_aux_correct">binary_float_of_bits_aux_correct</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#valid_binary">valid_binary</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits_aux">binary_float_of_bits_aux</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5931')">Proof.</div>
+<div class="proofscript" id="proof5931">
+<span class="tactic">intros</span> <span class="id">x</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits_aux">binary_float_of_bits_aux</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_spec">Zeq_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">He1</span>.<br/>
+<span class="id">case_eq</span> (<span class="id">x</span> <span class="id">mod</span> 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="comment">(*&nbsp;subnormal&nbsp;*)</span><br/>
+<span class="tactic">intros</span> <span class="id">px</span> <span class="id">Hm</span>.<br/>
+<span class="tactic">assert</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits">Zdigits</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">px</span>) &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits_le_Zpower">Zdigits_le_Zpower</a></span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">Hm</span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_lt">Z_mod_lt</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#bounded_canonic_lt_emax">bounded_canonic_lt_emax</a></span> ; <span class="tactic">try</span> <span class="tactic">assumption</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#canonic">canonic</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#canonic_exp">canonic_exp</a></span>.<br/>
+<span class="id">fold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_digits.html#ln_beta_F2R_Zdigits">ln_beta_F2R_Zdigits</a></span>. 2: <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fexp">Fexp</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_FLT.html#FLT_exp">FLT_exp</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#sym_eq">sym_eq</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zmax.html#Zmax_right">Zmax_right</a></span>.<br/>
+<span class="tactic">clear</span> -<span class="id">H</span> <span class="id">Hprec</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rnot_le_lt">Rnot_le_lt</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">H0</span>.<br/>
+<span class="tactic">refine</span> (<span class="id">_</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta_le">ln_beta_le</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H0</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta_bpow">ln_beta_bpow</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_digits.html#ln_beta_F2R_Zdigits">ln_beta_F2R_Zdigits</a></span>. 2: <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_not_le">Zlt_not_le</a></span>.<br/>
+<span class="tactic">cut</span> (0 &lt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span>)%<span class="id">Z</span>. <span class="tactic">clear</span> -<span class="id">H</span> <span class="id">Hew</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>).<br/>
+<span class="tactic">clear</span> -<span class="id">Hew</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_gt_0">bpow_gt_0</a></span>.<br/>
+<span class="tactic">simpl</span>. <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb_lt">Z.ltb_lt</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>. <span class="id">zify</span>; <span class="tactic">omega</span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_spec">Zeq_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">He2</span>.<br/>
+<span class="id">case_eq</span> (<span class="id">x</span> <span class="id">mod</span> 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="comment">(*&nbsp;nan&nbsp;*)</span><br/>
+<span class="tactic">intros</span> <span class="id">plx</span> <span class="id">Eqplx</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb_lt">Z.ltb_lt</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpos_digits2_pos">Zpos_digits2_pos</a></span>.<br/>
+<span class="tactic">assert</span> (<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#a">a</a></span> &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#b">b</a></span> -&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#a">a</a></span> &lt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#b">b</a></span>+1)%<span class="id">Z</span> <span class="tactic">by</span> (<span class="tactic">intros</span>; <span class="tactic">omega</span>). <span class="tactic">apply</span> <span class="id">H</span>. <span class="tactic">clear</span> <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits_le_Zpower">Zdigits_le_Zpower</a></span>. <span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">Eqplx</span>. <span class="id">edestruct</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_lt">Z_mod_lt</a></span>; <span class="tactic">eauto</span>.<br/>
+<span class="id">change</span> 2%<span class="id">Z</span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix_val">radix_val</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_gt">Z.lt_gt</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span>. <span class="tactic">omega</span>.<br/>
+<span class="tactic">simpl</span>. <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb_lt">Z.ltb_lt</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>. <span class="id">zify</span>; <span class="tactic">omega</span>.<br/>
+<span class="id">case_eq</span> (<span class="id">x</span> <span class="id">mod</span> 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="tactic">simpl</span>. <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb_lt">Z.ltb_lt</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>. <span class="id">zify</span>; <span class="tactic">omega</span>.<br/>
+<span class="comment">(*&nbsp;normal&nbsp;*)</span><br/>
+<span class="tactic">intros</span> <span class="id">px</span> <span class="id">Hm</span>.<br/>
+<span class="tactic">assert</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits">Zdigits</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">px</span>)).<br/>
+<span class="comment">(*&nbsp;.&nbsp;*)</span><br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_digits.html#Zdigits_ln_beta">Zdigits_ln_beta</a></span>. 2: <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#sym_eq">sym_eq</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta_unique">ln_beta_unique</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_abs">Z2R_abs</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.abs">Zabs</a></span>.<br/>
+<span class="tactic">replace</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span> - 1)%<span class="id">Z</span> <span class="kwd">with</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> <span class="tactic">by</span> ( <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span> ; <span class="tactic">ring</span> ).<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_Zpower">Z2R_Zpower</a></span> <span class="kwd">with</span> (1 := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.Hmw">Hmw</a></span>).<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_Zpower">Z2R_Zpower</a></span>. 2: <span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">Hm</span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_le">Z2R_le</a></span>.<br/>
+<span class="id">change</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> <span class="kwd">with</span> (0 + 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_le_compat_r">Zplus_le_compat_r</a></span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_lt">Z_mod_lt</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_lt">Z2R_lt</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span>. 2: <span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_ge">Zle_ge</a></span> ; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>. 2: <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_diag_eq_mult_2">Zplus_diag_eq_mult_2</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_lt_compat_r">Zplus_lt_compat_r</a></span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_lt">Z_mod_lt</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="comment">(*&nbsp;.&nbsp;*)</span><br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#bounded_canonic_lt_emax">bounded_canonic_lt_emax</a></span> ; <span class="tactic">try</span> <span class="tactic">assumption</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#canonic">canonic</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_generic_fmt.html#canonic_exp">canonic_exp</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_digits.html#ln_beta_F2R_Zdigits">ln_beta_F2R_Zdigits</a></span>. 2: <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fexp">Fexp</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_FLT.html#FLT_exp">FLT_exp</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">H</span>.<br/>
+<span class="tactic">set</span> (<span class="id">ex</span> := ((<span class="id">x</span> / 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>) <span class="id">mod</span> 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span>).<br/>
+<span class="tactic">replace</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span> + (<span class="id">ex</span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> - 1) - <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span>)%<span class="id">Z</span> <span class="kwd">with</span> (<span class="id">ex</span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> - 1)%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#sym_eq">sym_eq</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zmax.html#Zmax_left">Zmax_left</a></span>.<br/>
+<span class="id">revert</span> <span class="id">He1</span>.<br/>
+<span class="id">fold</span> <span class="id">ex</span>.<br/>
+<span class="tactic">cut</span> (0 &lt;= <span class="id">ex</span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>.<br/>
+<span class="tactic">clear</span> ; <span class="tactic">intros</span> <span class="id">H1</span> <span class="id">H2</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_lt">Z_mod_lt</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rnot_le_lt">Rnot_le_lt</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">H0</span>.<br/>
+<span class="tactic">refine</span> (<span class="id">_</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta_le">ln_beta_le</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H0</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#ln_beta_bpow">ln_beta_bpow</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_digits.html#ln_beta_F2R_Zdigits">ln_beta_F2R_Zdigits</a></span>. 2: <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_not_le">Zlt_not_le</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_lt_reg_r">Zplus_lt_reg_r</a></span> <span class="kwd">with</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span> - 1)%<span class="id">Z</span>.<br/>
+<span class="id">ring_simplify</span>.<br/>
+<span class="id">revert</span> <span class="id">He2</span>.<br/>
+<span class="tactic">set</span> (<span class="id">ex</span> := ((<span class="id">x</span> / 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>) <span class="id">mod</span> 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span>).<br/>
+<span class="tactic">cut</span> (<span class="id">ex</span> &lt; 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">replace</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span> <span class="kwd">with</span> (2 * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">clear</span> ; <span class="tactic">intros</span> <span class="id">H1</span> <span class="id">H2</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">replace</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> <span class="kwd">with</span> (1 + (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1))%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+<span class="tactic">clear</span> -<span class="id">Hew</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_lt">Z_mod_lt</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_gt_0">bpow_gt_0</a></span>.<br/>
+<span class="tactic">simpl</span>. <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb_lt">Z.ltb_lt</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>. <span class="id">zify</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="binary_float_of_bits">binary_float_of_bits</a></span> <span class="id">x</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#FF2B">FF2B</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.prec">prec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span> <span class="id">_</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits_aux_correct">binary_float_of_bits_aux_correct</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="binary_float_of_bits_of_binary_float">binary_float_of_bits_of_binary_float</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits">binary_float_of_bits</a></span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>) = <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5932')">Proof.</div>
+<div class="proofscript" id="proof5932">
+<span class="tactic">intros</span> <span class="id">x</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B2FF_inj">B2FF_inj</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits">binary_float_of_bits</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B2FF_FF2B">B2FF_FF2B</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits_aux">binary_float_of_bits_aux</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits_of_binary_float_correct">split_bits_of_binary_float_correct</a></span>.<br/>
+<span class="tactic">destruct</span> <span class="id">x</span> <span class="kwd">as</span> [<span class="id">sx</span>|<span class="id">sx</span>|<span class="id">sx</span> [<span class="id">plx</span> <span class="id">Hplx</span>]|<span class="id">sx</span> <span class="id">mx</span> <span class="id">ex</span> <span class="id">Bx</span>].<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_false">Zeq_bool_false</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_true">Zeq_bool_true</a></span>.<br/>
+<span class="tactic">cut</span> (1 &lt; 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span>. <span class="tactic">clear</span> ; <span class="tactic">omega</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_1">Zpower_gt_1</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>).<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_false">Zeq_bool_false</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_true">Zeq_bool_true</a></span>; <span class="tactic">auto</span>.<br/>
+<span class="tactic">cut</span> (1 &lt; 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span>. <span class="tactic">clear</span> ; <span class="tactic">omega</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_1">Zpower_gt_1</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span>).<br/>
+<span class="comment">(*&nbsp;*)</span><br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits_of_binary_float">split_bits_of_binary_float</a></span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_spec">Zle_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">Hm</span>.<br/>
+<span class="comment">(*&nbsp;.&nbsp;*)</span><br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_false">Zeq_bool_false</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_false">Zeq_bool_false</a></span>.<br/>
+<span class="id">now</span> <span class="id">ring_simplify</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span> - 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> + 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> (<span class="id">ex</span> - <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> + 1 + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> - 1)%<span class="id">Z</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb_prop">andb_prop</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Bx</span>) <span class="kwd">as</span> (<span class="id">_</span>, <span class="id">H1</span>).<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool_imp_le">Zle_bool_imp_le</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">H1</span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>.<br/>
+<span class="tactic">replace</span> (2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>)%<span class="id">Z</span> <span class="kwd">with</span> (2 * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emax">emax</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">clear</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">replace</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> <span class="kwd">with</span> (1 + (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span> - 1))%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+<span class="tactic">clear</span> -<span class="id">Hew</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb_prop">andb_prop</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Bx</span>) <span class="kwd">as</span> (<span class="id">H1</span>, <span class="id">_</span>).<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool_eq">Zeq_bool_eq</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">H1</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpos_digits2_pos">Zpos_digits2_pos</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLT.html#FLT_exp">FLT_exp</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits">Zdigits</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span>)).<br/>
+<span class="tactic">clear</span>.<br/>
+<span class="tactic">intros</span> ; <span class="id">zify</span> ; <span class="tactic">omega</span>.<br/>
+<span class="comment">(*&nbsp;.&nbsp;*)</span><br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_true">Zeq_bool_true</a></span>. 2: <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">apply</span> <span class="tactic">f_equal</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#andb_prop">andb_prop</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Bx</span>) <span class="kwd">as</span> (<span class="id">H1</span>, <span class="id">_</span>).<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool_eq">Zeq_bool_eq</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">H1</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zpos_digits2_pos">Zpos_digits2_pos</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_FLT.html#FLT_exp">FLT_exp</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#emin">emin</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#prec">prec</a></span>.<br/>
+<span class="tactic">apply</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_sub_0">Z.lt_sub_0</a></span> <span class="kwd">in</span> <span class="id">Hm</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits_le_Zpower">Zdigits_le_Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> <span class="id">_</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span>) <span class="id">Hm</span>).<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_digits.html#Zdigits">Zdigits</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix2">radix2</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">mx</span>)).<br/>
+<span class="tactic">clear</span>.<br/>
+<span class="tactic">intros</span> ; <span class="id">zify</span> ; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="bits_of_binary_float_of_bits">bits_of_binary_float_of_bits</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span> &lt; 2^(<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>+<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.ew">ew</a></span>+1))%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits">binary_float_of_bits</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>) = <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5933')">Proof.</div>
+<div class="proofscript" id="proof5933">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">Hx</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits">binary_float_of_bits</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span>.<br/>
+<span class="tactic">set</span> (<span class="id">Cx</span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits_aux_correct">binary_float_of_bits_aux_correct</a></span> <span class="id">x</span>).<br/>
+<span class="id">clearbody</span> <span class="id">Cx</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#match_FF2B">match_FF2B</a></span>.<br/>
+<span class="id">revert</span> <span class="id">Cx</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#join_split_bits">join_split_bits</a></span> <span class="id">x</span> <span class="id">Hx</span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits_aux">binary_float_of_bits_aux</a></span>.<br/>
+<span class="id">case_eq</span> (<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#split_bits">split_bits</a></span> <span class="id">x</span>).<br/>
+<span class="tactic">intros</span> (<span class="id">sx</span>, <span class="id">mx</span>) <span class="id">ex</span> <span class="id">Sx</span>.<br/>
+<span class="tactic">assert</span> (<span class="id">Bm</span>: (0 &lt;= <span class="id">mx</span> &lt; 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>).<br/>
+<span class="tactic">inversion_clear</span> <span class="id">Sx</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_lt">Z_mod_lt</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_spec">Zeq_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">He1</span>.<br/>
+<span class="comment">(*&nbsp;subnormal&nbsp;*)</span><br/>
+<span class="id">case_eq</span> <span class="id">mx</span>.<br/>
+<span class="tactic">intros</span> <span class="id">Hm</span> <span class="id">Jx</span> <span class="id">_</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">He1</span> <span class="kwd">in</span> <span class="id">Jx</span>.<br/>
+<span class="tactic">intros</span> <span class="id">px</span> <span class="id">Hm</span> <span class="id">Jx</span> <span class="id">_</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_false">Zle_bool_false</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id">He1</span>.<br/>
+<span class="tactic">apply</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.lt_sub_0">Z.lt_sub_0</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id">Hm</span>.<br/>
+<span class="tactic">intros</span> <span class="id">px</span> <span class="id">Hm</span> <span class="id">_</span> <span class="id">_</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False_ind">False_ind</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_not_lt">Zle_not_lt</a></span> <span class="kwd">with</span> (1 := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> <span class="id">Bm</span>).<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">Hm</span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_spec">Zeq_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">He2</span>.<br/>
+<span class="comment">(*&nbsp;infinity/nan&nbsp;*)</span><br/>
+<span class="id">case_eq</span> <span class="id">mx</span>; <span class="tactic">intros</span> <span class="id">Hm</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">He2</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">He2</span>.<br/>
+<span class="tactic">intros</span>. <span class="id">zify</span>; <span class="tactic">omega</span>.<br/>
+<span class="comment">(*&nbsp;normal&nbsp;*)</span><br/>
+<span class="id">case_eq</span> (<span class="id">mx</span> + 2 ^ <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">intros</span> <span class="id">Hm</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False_ind">False_ind</a></span>.<br/>
+<span class="tactic">clear</span> -<span class="id">Bm</span> <span class="id">Hm</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">intros</span> <span class="id">p</span> <span class="id">Hm</span> <span class="id">Jx</span> <span class="id">Cx</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">Hm</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_true">Zle_bool_true</a></span>.<br/>
+<span class="id">now</span> <span class="id">ring_simplify</span> (<span class="id">mx</span> + 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span> - 2^<span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.mw">mw</a></span>)%<span class="id">Z</span> (<span class="id">ex</span> + <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> - 1 - <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits.emin">emin</a></span> + 1)%<span class="id">Z</span>.<br/>
+<span class="id">now</span> <span class="id">ring_simplify</span>.<br/>
+<span class="tactic">intros</span> <span class="id">p</span> <span class="id">Hm</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False_ind">False_ind</a></span>.<br/>
+<span class="tactic">clear</span> -<span class="id">Bm</span> <span class="id">Hm</span> ; <span class="id">zify</span> ; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#Binary_Bits">Binary_Bits</a></span>.<br/>
+<br/>
+<div class="doc">Specialization for IEEE single precision operations </div>
+<span class="kwd">Section</span> <span class="id"><a name="B32_Bits">B32_Bits</a></span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> {<span class="id">prec</span> <span class="id">emax</span>} <span class="id">_</span> <span class="id">_</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="binary32">binary32</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#binary_float">binary_float</a></span> 24 128.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="B32_Bits.Hprec">Hprec</a></span> : (0 &lt; 24)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="B32_Bits.Hprec_emax">Hprec_emax</a></span> : (24 &lt; 128)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="default_nan_pl32">default_nan_pl32</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#nan_pl">nan_pl</a></span> 24 :=<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#exist">exist</a></span> <span class="id">_</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xO">xO</a></span> 22 <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="unop_nan_pl32">unop_nan_pl32</a></span> (<span class="id">f</span> : <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary32">binary32</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#nan_pl">nan_pl</a></span> 24 :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#f">f</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> <span class="id">s</span> <span class="id">pl</span> =&gt; (<span class="id">s</span>, <span class="id">pl</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#default_nan_pl32">default_nan_pl32</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="binop_nan_pl32">binop_nan_pl32</a></span> (<span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary32">binary32</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#nan_pl">nan_pl</a></span> 24 :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#f1">f1</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#f2">f2</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> <span class="id">s1</span> <span class="id">pl1</span>, <span class="id">_</span> =&gt; (<span class="id">s1</span>, <span class="id">pl1</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> <span class="id">s2</span> <span class="id">pl2</span> =&gt; (<span class="id">s2</span>, <span class="id">pl2</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#default_nan_pl32">default_nan_pl32</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b32_opp">b32_opp</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bopp">Bopp</a></span> 24 128 <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#pair">pair</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b32_plus">b32_plus</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bplus">Bplus</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binop_nan_pl32">binop_nan_pl32</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b32_minus">b32_minus</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bminus">Bminus</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binop_nan_pl32">binop_nan_pl32</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b32_mult">b32_mult</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bmult">Bmult</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binop_nan_pl32">binop_nan_pl32</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b32_div">b32_div</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bdiv">Bdiv</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binop_nan_pl32">binop_nan_pl32</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b32_sqrt">b32_sqrt</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bsqrt">Bsqrt</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#unop_nan_pl32">unop_nan_pl32</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b32_of_bits">b32_of_bits</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary32">binary32</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits">binary_float_of_bits</a></span> 23 8 (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id">_</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id">_</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id">_</span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="bits_of_b32">bits_of_b32</a></span> : <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary32">binary32</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span> 23 8.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B32_Bits">B32_Bits</a></span>.<br/>
+<br/>
+<div class="doc">Specialization for IEEE double precision operations </div>
+<span class="kwd">Section</span> <span class="id"><a name="B64_Bits">B64_Bits</a></span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> {<span class="id">prec</span> <span class="id">emax</span>} <span class="id">_</span> <span class="id">_</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="binary64">binary64</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#binary_float">binary_float</a></span> 53 1024.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="B64_Bits.Hprec">Hprec</a></span> : (0 &lt; 53)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="B64_Bits.Hprec_emax">Hprec_emax</a></span> : (53 &lt; 1024)%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="default_nan_pl64">default_nan_pl64</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#nan_pl">nan_pl</a></span> 53 :=<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#exist">exist</a></span> <span class="id">_</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xO">xO</a></span> 51 <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="unop_nan_pl64">unop_nan_pl64</a></span> (<span class="id">f</span> : <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary64">binary64</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#nan_pl">nan_pl</a></span> 53 :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#f">f</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> <span class="id">s</span> <span class="id">pl</span> =&gt; (<span class="id">s</span>, <span class="id">pl</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#default_nan_pl64">default_nan_pl64</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="binop_nan_pl64">binop_nan_pl64</a></span> (<span class="id">pl1</span> <span class="id">pl2</span> : <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary64">binary64</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> * <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#nan_pl">nan_pl</a></span> 53 :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#pl1">pl1</a></span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#pl2">pl2</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> <span class="id">s1</span> <span class="id">pl1</span>, <span class="id">_</span> =&gt; (<span class="id">s1</span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#pl1">pl1</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#B754_nan">B754_nan</a></span> <span class="id">s2</span> <span class="id">pl2</span> =&gt; (<span class="id">s2</span>, <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#pl2">pl2</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#default_nan_pl64">default_nan_pl64</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b64_opp">b64_opp</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bopp">Bopp</a></span> 53 1024 <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#pair">pair</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b64_plus">b64_plus</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bplus">Bplus</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binop_nan_pl64">binop_nan_pl64</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b64_minus">b64_minus</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bminus">Bminus</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binop_nan_pl64">binop_nan_pl64</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b64_mult">b64_mult</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bmult">Bmult</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binop_nan_pl64">binop_nan_pl64</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b64_div">b64_div</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bdiv">Bdiv</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binop_nan_pl64">binop_nan_pl64</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b64_sqrt">b64_sqrt</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE.html#Bsqrt">Bsqrt</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec">Hprec</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits.Hprec_emax">Hprec_emax</a></span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#unop_nan_pl64">unop_nan_pl64</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="b64_of_bits">b64_of_bits</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary64">binary64</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary_float_of_bits">binary_float_of_bits</a></span> 52 11 (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id">_</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id">_</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id">_</span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="bits_of_b64">bits_of_b64</a></span> : <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#binary64">binary64</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> := <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#bits_of_binary_float">bits_of_binary_float</a></span> 52 11.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Appli.Fappli_IEEE_bits.html#B64_Bits">B64_Bits</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

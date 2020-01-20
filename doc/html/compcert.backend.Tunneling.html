@@ -1,0 +1,110 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Tunneling</title>
+<meta name="description" content="Documentation of Coq module Tunneling" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Tunneling</h1>
+<div class="coq">
+<br/>
+<div class="doc">Branch tunneling (optimization of branches to branches). </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span> <span class="id"><a href="compcert.lib.UnionFind.html">UnionFind</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.LTL.html">LTL</a></span>.<br/>
+<br/>
+<div class="doc">Branch tunneling shortens sequences of branches (with no intervening
+  computations) by rewriting the branch and conditional branch instructions
+  so that they jump directly to the end of the branch sequence.
+  For example:
+<pre>
+     L1: nop L2;                          L1: nop L3;
+     L2; nop L3;               becomes    L2: nop L3;
+     L3: instr;                           L3: instr;
+     L4: if (cond) goto L1;               L4: if (cond) goto L3;</pre>
+  This optimization can be applied to several of our intermediate
+  languages.  We choose to perform it on the <span class="bracket"><span class="id">LTL</span></span> language,
+  after register allocation but before code linearization.
+  Register allocation can delete instructions (such as dead
+  computations or useless moves), therefore there are more
+  opportunities for tunneling after allocation than before.
+  Symmetrically, prior tunneling helps linearization to produce
+  better code, e.g. by revealing that some <span class="bracket"><span class="id">nop</span></span> instructions are
+  dead code (as the "nop L3" in the example above).
+</div>
+<br/>
+<div class="doc">The naive implementation of branch tunneling would replace
+  any branch to a node <span class="bracket"><span class="id">pc</span></span> by a branch to the node
+  <span class="bracket"><span class="id">branch_target</span> <span class="id">f</span> <span class="id">pc</span></span>, defined as follows:
+<pre>
+  branch_target f pc = branch_target f pc'  if f(pc) = nop pc'
+                     = pc                   otherwise</pre>
+  However, this definition can fail to terminate if
+  the program can contain loops consisting only of branches, as in
+<pre>
+     L1: nop L1;</pre>
+  or
+&lt;&lt;   L1: nop L2;
+     L2: nop L1;
+&gt;&gt;
+  Coq warns us of this fact by not accepting the definition
+  of <span class="bracket"><span class="id">branch_target</span></span> above.
+  To handle this problem, we proceed in two passes.  The first pass
+  populates a union-find data structure, adding equalities <span class="bracket"><span class="id">pc</span> = <span class="id">pc</span>'</span>
+  for every instruction <span class="bracket"><span class="id">pc</span>: <span class="id">nop</span> <span class="id">pc</span>'</span> in the function. </div>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="U">U</a></span> := <span class="id"><a href="compcert.lib.UnionFind.html#UF">UnionFind.UF</a></span>(<span class="id"><a href="compcert.lib.Maps.html#PTree">PTree</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="record_goto">record_goto</a></span> (<span class="id">uf</span>: <span class="id"><a href="compcert.backend.Tunneling.html#t">U.t</a></span>) (<span class="id">pc</span>: <span class="id"><a href="compcert.backend.LTL.html#node">node</a></span>) (<span class="id">b</span>: <span class="id"><a href="compcert.backend.LTL.html#bblock">bblock</a></span>) : <span class="id"><a href="compcert.backend.Tunneling.html#t">U.t</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Tunneling.html#b">b</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lbranch">Lbranch</a></span> <span class="id">s</span> :: <span class="id">_</span> =&gt; <span class="id"><a href="compcert.backend.Tunneling.html#union">U.union</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#pc">pc</a></span> <span class="id">s</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="record_gotos">record_gotos</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) : <span class="id"><a href="compcert.backend.Tunneling.html#t">U.t</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Maps.html#PTree.fold">PTree.fold</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#record_goto">record_goto</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.LTL.html#fn_code">fn_code</a></span>) <span class="id"><a href="compcert.backend.Tunneling.html#empty">U.empty</a></span>.<br/>
+<br/>
+<div class="doc">The second pass rewrites all LTL instructions, replacing every
+  successor <span class="bracket"><span class="id">s</span></span> of every instruction by the canonical representative
+  of its equivalence class in the union-find data structure. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="tunnel_instr">tunnel_instr</a></span> (<span class="id">uf</span>: <span class="id"><a href="compcert.backend.Tunneling.html#t">U.t</a></span>) (<span class="id">i</span>: <span class="id"><a href="compcert.backend.LTL.html#instruction">instruction</a></span>) : <span class="id"><a href="compcert.backend.LTL.html#instruction">instruction</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Tunneling.html#i">i</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lbranch">Lbranch</a></span> <span class="id">s</span> =&gt; <span class="id"><a href="compcert.backend.LTL.html#Lbranch">Lbranch</a></span> (<span class="id"><a href="compcert.backend.Tunneling.html#repr">U.repr</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lcond">Lcond</a></span> <span class="id">cond</span> <span class="id">args</span> <span class="id">s1</span> <span class="id">s2</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">s1</span>' := <span class="id"><a href="compcert.backend.Tunneling.html#repr">U.repr</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span> <span class="id">s1</span> <span class="kwd">in</span> <span class="kwd">let</span> <span class="id">s2</span>' := <span class="id"><a href="compcert.backend.Tunneling.html#repr">U.repr</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span> <span class="id">s2</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.lib.Coqlib.html#peq">peq</a></span> <span class="id">s1</span>' <span class="id">s2</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="compcert.backend.LTL.html#Lbranch">Lbranch</a></span> <span class="id">s1</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="compcert.backend.LTL.html#Lcond">Lcond</a></span> <span class="id">cond</span> <span class="id">args</span> <span class="id">s1</span>' <span class="id">s2</span>'<br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Ljumptable">Ljumptable</a></span> <span class="id">arg</span> <span class="id">tbl</span> =&gt; <span class="id"><a href="compcert.backend.LTL.html#Ljumptable">Ljumptable</a></span> <span class="id">arg</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> (<span class="id"><a href="compcert.backend.Tunneling.html#repr">U.repr</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span>) <span class="id">tbl</span>)<br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.backend.Tunneling.html#i">i</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="tunnel_block">tunnel_block</a></span> (<span class="id">uf</span>: <span class="id"><a href="compcert.backend.Tunneling.html#t">U.t</a></span>) (<span class="id">b</span>: <span class="id"><a href="compcert.backend.LTL.html#bblock">bblock</a></span>) : <span class="id"><a href="compcert.backend.LTL.html#bblock">bblock</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> (<span class="id"><a href="compcert.backend.Tunneling.html#tunnel_instr">tunnel_instr</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span>) <span class="id"><a href="compcert.backend.Tunneling.html#b">b</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="tunnel_function">tunnel_function</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) : <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">uf</span> := <span class="id"><a href="compcert.backend.Tunneling.html#record_gotos">record_gotos</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#f">f</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.LTL.html#mkfunction">mkfunction</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.LTL.html#fn_sig">fn_sig</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#f">f</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.LTL.html#fn_stacksize">fn_stacksize</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#f">f</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.lib.Maps.html#PTree.map1">PTree.map1</a></span> (<span class="id"><a href="compcert.backend.Tunneling.html#tunnel_block">tunnel_block</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span>) (<span class="id"><a href="compcert.backend.LTL.html#fn_code">fn_code</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#f">f</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.Tunneling.html#repr">U.repr</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#uf">uf</a></span> (<span class="id"><a href="compcert.backend.LTL.html#fn_entrypoint">fn_entrypoint</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#f">f</a></span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="tunnel_fundef">tunnel_fundef</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#fundef">LTL.fundef</a></span>) : <span class="id"><a href="compcert.backend.LTL.html#fundef">LTL.fundef</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.AST.html#transf_fundef">transf_fundef</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#tunnel_function">tunnel_function</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#f">f</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="tunnel_program">tunnel_program</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.backend.LTL.html#program">LTL.program</a></span>) : <span class="id"><a href="compcert.backend.LTL.html#program">LTL.program</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.AST.html#transform_program">transform_program</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#tunnel_fundef">tunnel_fundef</a></span> <span class="id"><a href="compcert.backend.Tunneling.html#p">p</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

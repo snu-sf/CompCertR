@@ -1,0 +1,558 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Validator_complete</title>
+<meta name="description" content="Documentation of Coq module Validator_complete" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Validator_complete</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="id">Automaton</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Alphabet</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">Make</span>(<span class="kwd">Import</span> <span class="id">A</span>:<span class="id">Automaton.T</span>).<br/>
+<br/>
+<div class="doc">We instantiate some sets/map. *</div>
+<span class="kwd">Module</span> <span class="id">TerminalComparableM</span> &lt;: <span class="id">ComparableM</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">t</span> := <span class="id">terminal</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Instance</span> <span class="id">tComparable</span> : <span class="id">Comparable</span> <span class="id">t</span> := <span class="id">_</span>.<br/>
+<span class="kwd">End</span> <span class="id">TerminalComparableM</span>.<br/>
+<span class="kwd">Module</span> <span class="id">TerminalOrderedType</span> := <span class="id">OrderedType_from_ComparableM</span> <span class="id">TerminalComparableM</span>.<br/>
+<span class="kwd">Module</span> <span class="id">StateProdPosComparableM</span> &lt;: <span class="id">ComparableM</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id">t</span> := (<span class="id">state</span>*<span class="id">production</span>*<span class="id">nat</span>)%<span class="id">type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Instance</span> <span class="id">tComparable</span> : <span class="id">Comparable</span> <span class="id">t</span> := <span class="id">_</span>.<br/>
+<span class="kwd">End</span> <span class="id">StateProdPosComparableM</span>.<br/>
+<span class="kwd">Module</span> <span class="id">StateProdPosOrderedType</span> :=<br/>
+&nbsp;&nbsp;<span class="id">OrderedType_from_ComparableM</span> <span class="id">StateProdPosComparableM</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">TerminalSet</span> := <span class="id">FSetAVL.Make</span> <span class="id">TerminalOrderedType</span>.<br/>
+<span class="kwd">Module</span> <span class="id">StateProdPosMap</span> := <span class="id">FMapAVL.Make</span> <span class="id">StateProdPosOrderedType</span>.<br/>
+<br/>
+<div class="doc">Nullable predicate for symbols and list of symbols. *</div>
+<span class="kwd">Definition</span> <span class="id">nullable_symb</span> (<span class="id">symbol</span>:<span class="id">symbol</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">symbol</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span> =&gt; <span class="id">nullable_nterm</span> <span class="id">nt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">nullable_word</span> (<span class="id">word</span>:<span class="id">list</span> <span class="id">symbol</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> <span class="id">nullable_symb</span> <span class="id">word</span>.<br/>
+<br/>
+<div class="doc">First predicate for non terminal, symbols and list of symbols, given as FSets. *</div>
+<span class="kwd">Definition</span> <span class="id">first_nterm_set</span> (<span class="id">nterm</span>:<span class="id">nonterminal</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">fold_left</span> (<span class="kwd">fun</span> <span class="id">acc</span> <span class="id">t</span> =&gt; <span class="id">TerminalSet.add</span> <span class="id">t</span> <span class="id">acc</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">first_nterm</span> <span class="id">nterm</span>) <span class="id">TerminalSet.empty</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">first_symb_set</span> (<span class="id">symbol</span>:<span class="id">symbol</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">symbol</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span> =&gt; <span class="id">first_nterm_set</span> <span class="id">nt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">T</span> <span class="id">t</span> =&gt; <span class="id">TerminalSet.singleton</span> <span class="id">t</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">first_word_set</span> (<span class="id">word</span>:<span class="id">list</span> <span class="id">symbol</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">word</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt; <span class="id">TerminalSet.empty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">t</span>::<span class="id">q</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">nullable_symb</span> <span class="id">t</span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.union</span> (<span class="id">first_symb_set</span> <span class="id">t</span>) (<span class="id">first_word_set</span> <span class="id">q</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">first_symb_set</span> <span class="id">t</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">Small helper for finding the part of an item that is after the dot. *</div>
+<span class="kwd">Definition</span> <span class="id">future_of_prod</span> <span class="id">prod</span> <span class="id">dot_pos</span> : <span class="id">list</span> <span class="id">symbol</span> :=<br/>
+&nbsp;&nbsp;(<span class="id">fix</span> <span class="id">loop</span> <span class="id">n</span> <span class="id">lst</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">n</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">O</span> =&gt; <span class="id">lst</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">S</span> <span class="id">x</span> =&gt; <span class="kwd">match</span> <span class="id">loop</span> <span class="id">x</span> <span class="id">lst</span> <span class="kwd">with</span> [] =&gt; [] | <span class="id">_</span>::<span class="id">q</span> =&gt; <span class="id">q</span> <span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;<span class="id">dot_pos</span> (<span class="id">rev</span>' (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>)).<br/>
+<br/>
+<div class="doc">We build a fast map to store all the items of all the states. *</div>
+<span class="kwd">Definition</span> <span class="id">items_map</span> (<span class="id">_</span>:<span class="id">unit</span>): <span class="id">StateProdPosMap.t</span> <span class="id">TerminalSet.t</span> :=<br/>
+&nbsp;&nbsp;<span class="id">fold_left</span> (<span class="kwd">fun</span> <span class="id">acc</span> <span class="id">state</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fold_left</span> (<span class="kwd">fun</span> <span class="id">acc</span> <span class="id">item</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">key</span> := (<span class="id">state</span>, <span class="id">prod_item</span> <span class="id">item</span>, <span class="id">dot_pos_item</span> <span class="id">item</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">data</span> := <span class="id">fold_left</span> (<span class="kwd">fun</span> <span class="id">acc</span> <span class="id">t</span> =&gt; <span class="id">TerminalSet.add</span> <span class="id">t</span> <span class="id">acc</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">lookaheads_item</span> <span class="id">item</span>) <span class="id">TerminalSet.empty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">old</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">StateProdPosMap.find</span> <span class="id">key</span> <span class="id">acc</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">x</span> =&gt; <span class="id">x</span> | <span class="id">None</span> =&gt; <span class="id">TerminalSet.empty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">StateProdPosMap.add</span> <span class="id">key</span> (<span class="id">TerminalSet.union</span> <span class="id">data</span> <span class="id">old</span>) <span class="id">acc</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;) (<span class="id">items_of_state</span> <span class="id">state</span>) <span class="id">acc</span><br/>
+&nbsp;&nbsp;) <span class="id">all_list</span> (<span class="id">StateProdPosMap.empty</span> <span class="id">TerminalSet.t</span>).<br/>
+<br/>
+<div class="doc">Accessor. *</div>
+<span class="kwd">Definition</span> <span class="id">find_items_map</span> <span class="id">items_map</span> <span class="id">state</span> <span class="id">prod</span> <span class="id">dot_pos</span> : <span class="id">TerminalSet.t</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">StateProdPosMap.find</span> (<span class="id">state</span>, <span class="id">prod</span>, <span class="id">dot_pos</span>) <span class="id">items_map</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">TerminalSet.empty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">x</span> =&gt; <span class="id">x</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">state_has_future</span> <span class="id">state</span> <span class="id">prod</span> (<span class="id">fut</span>:<span class="id">list</span> <span class="id">symbol</span>) (<span class="id">lookahead</span>:<span class="id">terminal</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">dot_pos</span>:<span class="id">nat</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fut</span> = <span class="id">future_of_prod</span> <span class="id">prod</span> <span class="id">dot_pos</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.In</span> <span class="id">lookahead</span> (<span class="id">find_items_map</span> (<span class="id">items_map</span> ()) <span class="id">state</span> <span class="id">prod</span> <span class="id">dot_pos</span>).<br/>
+<br/>
+<div class="doc">Iterator over items. *</div>
+<span class="kwd">Definition</span> <span class="id">forallb_items</span> <span class="id">items_map</span> (<span class="id">P</span>:<span class="id">state</span> -&gt; <span class="id">production</span> -&gt; <span class="id">nat</span> -&gt; <span class="id">TerminalSet.t</span> -&gt; <span class="id">bool</span>): <span class="id">bool</span>:=<br/>
+&nbsp;&nbsp;<span class="id">StateProdPosMap.fold</span> (<span class="kwd">fun</span> <span class="id">key</span> <span class="tactic">set</span> <span class="id">acc</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">key</span> <span class="kwd">with</span> (<span class="id">st</span>, <span class="id">p</span>, <span class="id">pos</span>) =&gt; (<span class="id">acc</span> &amp;&amp; <span class="id">P</span> <span class="id">st</span> <span class="id">p</span> <span class="id">pos</span> <span class="tactic">set</span>)%<span class="id">bool</span> <span class="kwd">end</span><br/>
+&nbsp;&nbsp;) <span class="id">items_map</span> <span class="id">true</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">forallb_items_spec</span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>, <span class="id">forallb_items</span> (<span class="id">items_map</span> ()) <span class="id">p</span> = <span class="id">true</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span>, <span class="id">state_has_future</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">P</span>:<span class="id">state</span> -&gt; <span class="id">production</span> -&gt; <span class="id">list</span> <span class="id">symbol</span> -&gt; <span class="id">terminal</span> -&gt; <span class="kwd">Prop</span>,<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">pos</span> <span class="tactic">set</span> <span class="id">lookahead</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.In</span> <span class="id">lookahead</span> <span class="tactic">set</span> -&gt; <span class="id">p</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">pos</span> <span class="tactic">set</span> = <span class="id">true</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">st</span> <span class="id">prod</span> (<span class="id">future_of_prod</span> <span class="id">prod</span> <span class="id">pos</span>) <span class="id">lookahead</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">P</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5982')">Proof.</div>
+<div class="proofscript" id="proof5982">
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">forallb_items</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">StateProdPosMap.fold_1</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H0</span>; <span class="tactic">destruct</span> <span class="id">H0</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H1</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">x</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H2</span>).<br/>
+<span class="tactic">destruct</span> <span class="id">H0</span>.<br/>
+<span class="tactic">apply</span> <span class="id">H1</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">find_items_map</span> <span class="kwd">in</span> *.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (@<span class="id">StateProdPosMap.find_2</span> <span class="id">_</span> (<span class="id">items_map</span> ()) (<span class="id">st</span>, <span class="id">prod</span>, <span class="id">x</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">StateProdPosMap.find</span> (<span class="id">st</span>, <span class="id">prod</span>, <span class="id">x</span>) (<span class="id">items_map</span> ())); [ |<span class="tactic">destruct</span> (<span class="id">TerminalSet.empty_1</span> <span class="id">H2</span>)].<br/>
+<span class="id">specialize</span> (<span class="id">H0</span> <span class="id">_</span> (<span class="id">eq_refl</span> <span class="id">_</span>)).<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">StateProdPosMap.elements_1</span> <span class="id">H0</span>).<br/>
+<span class="id">revert</span> <span class="id">H</span>.<br/>
+<span class="tactic">generalize</span> <span class="id">true</span> <span class="tactic">at</span> 1.<br/>
+<span class="tactic">induction</span> <span class="id">H3</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">y</span>.<br/>
+<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H3</span>; <span class="tactic">destruct</span> <span class="id">H3</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">compare_eq</span> (<span class="id">st</span>, <span class="id">prod</span>, <span class="id">x</span>) <span class="id">k</span> <span class="id">H</span>).<br/>
+<span class="tactic">destruct</span> <span class="id">H3</span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id">p</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">x</span> <span class="id">t</span>).<br/>
+<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Bool.andb_true_iff</span> <span class="kwd">in</span> <span class="id">H3</span>.<br/>
+<span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">a</span>; <span class="tactic">destruct</span> <span class="id">k</span>; <span class="tactic">destruct</span> <span class="id">p0</span>.<br/>
+<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H3</span>.<br/>
+<span class="tactic">replace</span> (<span class="id">b0</span> &amp;&amp; <span class="id">b</span> &amp;&amp; <span class="id">p</span> <span class="id">s</span> <span class="id">p0</span> <span class="id">n</span> <span class="id">t0</span>)%<span class="id">bool</span> <span class="kwd">with</span> (<span class="id">b0</span> &amp;&amp; <span class="id">p</span> <span class="id">s</span> <span class="id">p0</span> <span class="id">n</span> <span class="id">t0</span> &amp;&amp; <span class="id">b</span>)%<span class="id">bool</span> <span class="kwd">in</span> <span class="id">H3</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">IHl</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H3</span>).<br/>
+<span class="tactic">destruct</span> <span class="id">b</span>, <span class="id">b0</span>, (<span class="id">p</span> <span class="id">s</span> <span class="id">p0</span> <span class="id">n</span> <span class="id">t0</span>); <span class="tactic">reflexivity</span>.<br/>
+<span class="tactic">intro</span>.<br/>
+<span class="tactic">apply</span> <span class="id">IHInA</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Validation for completeness *</h1>
+<br/>
+<div class="doc">The nullable predicate is a fixpoint : it is correct. *</div>
+<span class="kwd">Definition</span> <span class="id">nullable_stable</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>:<span class="id">production</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">nullable_word</span> (<span class="id">rev</span> (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)) = <span class="id">true</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">nullable_nterm</span> (<span class="id">prod_lhs</span> <span class="id">p</span>) = <span class="id">true</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_nullable_stable</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">p</span>:<span class="id">production</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">implb</span> (<span class="id">nullable_word</span> (<span class="id">rev</span>' (<span class="id">prod_rhs_rev</span> <span class="id">p</span>))) (<span class="id">nullable_nterm</span> (<span class="id">prod_lhs</span> <span class="id">p</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_nullable_stable_correct</span> :<br/>
+&nbsp;&nbsp;<span class="id">is_nullable_stable</span> () = <span class="id">true</span> -&gt; <span class="id">nullable_stable</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5983')">Proof.</div>
+<div class="proofscript" id="proof5983">
+<span class="tactic">unfold</span> <span class="id">is_nullable_stable</span>, <span class="id">nullable_stable</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">p</span> (<span class="id">all_list_forall</span> <span class="id">p</span>)).<br/>
+<span class="tactic">unfold</span> <span class="id">rev</span>' <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">rewrite</span> &lt;- <span class="id">rev_alt</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">The first predicate is a fixpoint : it is correct. *</div>
+<span class="kwd">Definition</span> <span class="id">first_stable</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">p</span>:<span class="id">production</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.Subset</span> (<span class="id">first_word_set</span> (<span class="id">rev</span> (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">first_nterm_set</span> (<span class="id">prod_lhs</span> <span class="id">p</span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_first_stable</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">p</span>:<span class="id">production</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.subset</span> (<span class="id">first_word_set</span> (<span class="id">rev</span>' (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">first_nterm_set</span> (<span class="id">prod_lhs</span> <span class="id">p</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_first_stable_correct</span> :<br/>
+&nbsp;&nbsp;<span class="id">is_first_stable</span> () = <span class="id">true</span> -&gt; <span class="id">first_stable</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5984')">Proof.</div>
+<div class="proofscript" id="proof5984">
+<span class="tactic">unfold</span> <span class="id">is_first_stable</span>, <span class="id">first_stable</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">p</span> (<span class="id">all_list_forall</span> <span class="id">p</span>)).<br/>
+<span class="tactic">unfold</span> <span class="id">rev</span>' <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">rewrite</span> &lt;- <span class="id">rev_alt</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id">TerminalSet.subset_2</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">The initial state has all the S=&gt;.u items, where S is the start non-terminal *</div>
+<span class="kwd">Definition</span> <span class="id">start_future</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">init</span>:<span class="id">initstate</span>) (<span class="id">t</span>:<span class="id">terminal</span>) (<span class="id">p</span>:<span class="id">production</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prod_lhs</span> <span class="id">p</span> = <span class="id">start_nt</span> <span class="id">init</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">init</span> <span class="id">p</span> (<span class="id">rev</span> (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)) <span class="id">t</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_start_future</span> <span class="id">items_map</span> :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">init</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">prod</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">compare_eqb</span> (<span class="id">prod_lhs</span> <span class="id">prod</span>) (<span class="id">start_nt</span> <span class="id">init</span>) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">lookaheads</span> := <span class="id">find_items_map</span> <span class="id">items_map</span> <span class="id">init</span> <span class="id">prod</span> 0 <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">t</span> =&gt; <span class="id">TerminalSet.mem</span> <span class="id">t</span> <span class="id">lookaheads</span>) <span class="id">all_list</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">true</span>) <span class="id">all_list</span>) <span class="id">all_list</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_start_future_correct</span> :<br/>
+&nbsp;&nbsp;<span class="id">is_start_future</span> (<span class="id">items_map</span> ()) = <span class="id">true</span> -&gt; <span class="id">start_future</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5985')">Proof.</div>
+<div class="proofscript" id="proof5985">
+<span class="tactic">unfold</span> <span class="id">is_start_future</span>, <span class="id">start_future</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">init</span> (<span class="id">all_list_forall</span> <span class="id">_</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">p</span> (<span class="id">all_list_forall</span> <span class="id">_</span>)).<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">compare_eqb_iff</span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H0</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">t</span> (<span class="id">all_list_forall</span> <span class="id">_</span>)).<br/>
+<span class="id">exists</span> 0.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">apply</span> <span class="id">rev_alt</span>.<br/>
+<span class="tactic">apply</span> <span class="id">TerminalSet.mem_2</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If a state contains an item of the form A-&gt;_.av<span class="bracket">[<span class="id">b</span>]</span>, where a is a
+    terminal, then reading an a does a <span class="bracket"><span class="id">Shift_act</span></span>, to a state containing
+    an item of the form A-&gt;_.v<span class="bracket">[<span class="id">b</span>]</span>. *</div>
+<span class="kwd">Definition</span> <span class="id">terminal_shift</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">s1</span>:<span class="id">state</span>) <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">s1</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fut</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">T</span> <span class="id">t</span>::<span class="id">q</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awp</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">awp</span> <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Shift_act</span> <span class="id">s2</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">s2</span> <span class="id">prod</span> <span class="id">q</span> <span class="id">lookahead</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">False</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">False</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_terminal_shift</span> <span class="id">items_map</span> :=<br/>
+&nbsp;&nbsp;<span class="id">forallb_items</span> <span class="id">items_map</span> (<span class="kwd">fun</span> <span class="id">s1</span> <span class="id">prod</span> <span class="id">pos</span> <span class="id">lset</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">future_of_prod</span> <span class="id">prod</span> <span class="id">pos</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">T</span> <span class="id">t</span>::<span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awp</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">awp</span> <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Shift_act</span> <span class="id">s2</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.subset</span> <span class="id">lset</span> (<span class="id">find_items_map</span> <span class="id">items_map</span> <span class="id">s2</span> <span class="id">prod</span> (<span class="id">S</span> <span class="id">pos</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_terminal_shift_correct</span> :<br/>
+&nbsp;&nbsp;<span class="id">is_terminal_shift</span> (<span class="id">items_map</span> ()) = <span class="id">true</span> -&gt; <span class="id">terminal_shift</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5986')">Proof.</div>
+<div class="proofscript" id="proof5986">
+<span class="tactic">unfold</span> <span class="id">is_terminal_shift</span>, <span class="id">terminal_shift</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">forallb_items_spec</span> <span class="id">_</span> <span class="id">H</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H0</span> (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> <span class="id">fut</span> <span class="id">look</span> =&gt; <span class="id">_</span>)).<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">future_of_prod</span> <span class="id">prod0</span> <span class="id">pos</span>) <span class="kwd">as</span> [|[]] <span class="id">eqn</span>:?; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">action_table</span> <span class="id">st</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">l0</span> <span class="id">t</span>); <span class="tactic">intuition</span>.<br/>
+<span class="id">exists</span> (<span class="id">S</span> <span class="id">pos</span>).<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">future_of_prod</span> <span class="kwd">in</span> *.<br/>
+<span class="tactic">rewrite</span> <span class="id">Heql</span>; <span class="tactic">reflexivity</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">TerminalSet.subset_2</span> <span class="id">H2</span>); <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If a state contains an item of the form A-&gt;_.<span class="bracket">[<span class="id">a</span>]</span>, then either we do a
+    <span class="bracket"><span class="id">Default_reduce_act</span></span> of the corresponding production, either a is a
+    terminal (ie. there is a lookahead terminal), and reading a does a
+    <span class="bracket"><span class="id">Reduce_act</span></span> of the corresponding production. *</div>
+<span class="kwd">Definition</span> <span class="id">end_reduce</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">s</span>:<span class="id">state</span>) <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">s</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fut</span> = [] -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Default_reduce_act</span> <span class="id">p</span> =&gt; <span class="id">p</span> = <span class="id">prod</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awt</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">awt</span> <span class="id">lookahead</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Reduce_act</span> <span class="id">p</span> =&gt; <span class="id">p</span> = <span class="id">prod</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">False</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_end_reduce</span> <span class="id">items_map</span> :=<br/>
+&nbsp;&nbsp;<span class="id">forallb_items</span> <span class="id">items_map</span> (<span class="kwd">fun</span> <span class="id">s</span> <span class="id">prod</span> <span class="id">pos</span> <span class="id">lset</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">future_of_prod</span> <span class="id">prod</span> <span class="id">pos</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Default_reduce_act</span> <span class="id">p</span> =&gt; <span class="id">compare_eqb</span> <span class="id">p</span> <span class="id">prod</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awt</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.fold</span> (<span class="kwd">fun</span> <span class="id">lookahead</span> <span class="id">acc</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">awt</span> <span class="id">lookahead</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Reduce_act</span> <span class="id">p</span> =&gt; (<span class="id">acc</span> &amp;&amp; <span class="id">compare_eqb</span> <span class="id">p</span> <span class="id">prod</span>)%<span class="id">bool</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>) <span class="id">lset</span> <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_end_reduce_correct</span> :<br/>
+&nbsp;&nbsp;<span class="id">is_end_reduce</span> (<span class="id">items_map</span> ()) = <span class="id">true</span> -&gt; <span class="id">end_reduce</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5987')">Proof.</div>
+<div class="proofscript" id="proof5987">
+<span class="tactic">unfold</span> <span class="id">is_end_reduce</span>, <span class="id">end_reduce</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="id">revert</span> <span class="id">H1</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">forallb_items_spec</span> <span class="id">_</span> <span class="id">H</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H0</span> (<span class="kwd">fun</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">look</span> =&gt; <span class="id">_</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">st</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Default_reduce_act</span> <span class="id">p</span> =&gt; <span class="id">p</span> = <span class="id">prod</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H3</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">action_table</span> <span class="id">st</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">compare_eqb_iff</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">TerminalSet.fold_1</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
+<span class="id">revert</span> <span class="id">H2</span>.<br/>
+<span class="tactic">generalize</span> <span class="id">true</span> <span class="tactic">at</span> 1.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">TerminalSet.elements_1</span> <span class="id">H1</span>).<br/>
+<span class="tactic">induction</span> <span class="id">H2</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">compare_eq</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H2</span>).<br/>
+<span class="tactic">destruct</span> <span class="id">H4</span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">assert</span> (<span class="id">fold_left</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> (<span class="id">a</span> : <span class="id">bool</span>) (<span class="id">e</span> : <span class="id">TerminalSet.elt</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">l</span> <span class="id">e</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Shift_act</span> <span class="id">_</span> <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Reduce_act</span> <span class="id">p</span> =&gt; (<span class="id">a</span> &amp;&amp; <span class="id">compare_eqb</span> <span class="id">p</span> <span class="id">prod0</span>)%<span class="id">bool</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Fail_act</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>) <span class="id">l0</span> <span class="id">false</span> = <span class="id">true</span> -&gt; <span class="id">False</span>).<br/>
+<span class="tactic">induction</span> <span class="id">l0</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">IHl0</span>.<br/>
+<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H4</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">l</span> <span class="id">a</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">l</span> <span class="id">lookahead0</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">compare_eqb_iff</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">compare_eqb</span> <span class="id">p</span> <span class="id">prod0</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">b</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+<span class="tactic">eapply</span> <span class="id">IHInA</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If a state contains an item of the form A-&gt;_.Bv<span class="bracket">[<span class="id">b</span>]</span>, where B is a
+    non terminal, then the goto table says we have to go to a state containing
+    an item of the form A-&gt;_.v<span class="bracket">[<span class="id">b</span>]</span>. *</div>
+<span class="kwd">Definition</span> <span class="id">non_terminal_goto</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">s1</span>:<span class="id">state</span>) <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">s1</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fut</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span>::<span class="id">q</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">s1</span> <span class="id">nt</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> (<span class="id">exist</span> <span class="id">_</span> <span class="id">s2</span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">s2</span> <span class="id">prod</span> <span class="id">q</span> <span class="id">lookahead</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">s1</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fut</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span>'::<span class="id">_</span> =&gt; <span class="id">nt</span> &lt;&gt; <span class="id">nt</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_non_terminal_goto</span> <span class="id">items_map</span> :=<br/>
+&nbsp;&nbsp;<span class="id">forallb_items</span> <span class="id">items_map</span> (<span class="kwd">fun</span> <span class="id">s1</span> <span class="id">prod</span> <span class="id">pos</span> <span class="id">lset</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">future_of_prod</span> <span class="id">prod</span> <span class="id">pos</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span>::<span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">s1</span> <span class="id">nt</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> (<span class="id">exist</span> <span class="id">_</span> <span class="id">s2</span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.subset</span> <span class="id">lset</span> (<span class="id">find_items_map</span> <span class="id">items_map</span> <span class="id">s2</span> <span class="id">prod</span> (<span class="id">S</span> <span class="id">pos</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">forallb_items</span> <span class="id">items_map</span> (<span class="kwd">fun</span> <span class="id">s1</span>' <span class="id">prod</span>' <span class="id">pos</span>' <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">implb</span> (<span class="id">compare_eqb</span> <span class="id">s1</span> <span class="id">s1</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">future_of_prod</span> <span class="id">prod</span>' <span class="id">pos</span>' <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span>' :: <span class="id">_</span> =&gt; <span class="id">negb</span> (<span class="id">compare_eqb</span> <span class="id">nt</span> <span class="id">nt</span>')<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)%<span class="id">bool</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_non_terminal_goto_correct</span> :<br/>
+&nbsp;&nbsp;<span class="id">is_non_terminal_goto</span> (<span class="id">items_map</span> ()) = <span class="id">true</span> -&gt; <span class="id">non_terminal_goto</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5988')">Proof.</div>
+<div class="proofscript" id="proof5988">
+<span class="tactic">unfold</span> <span class="id">is_non_terminal_goto</span>, <span class="id">non_terminal_goto</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">forallb_items_spec</span> <span class="id">_</span> <span class="id">H</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H0</span> (<span class="kwd">fun</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">look</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fut</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span> :: <span class="id">q</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">st</span> <span class="id">nt</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">_</span> =&gt; <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">f</span> <span class="id">l</span>, <span class="id">state_has_future</span> <span class="id">st</span> <span class="id">p</span> <span class="id">f</span> <span class="id">l</span> -&gt; (<span class="id">_</span>:<span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">future_of_prod</span> <span class="id">prod0</span> <span class="id">pos</span>) <span class="kwd">as</span> [|[]] <span class="id">eqn</span>:?; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">goto_table</span> <span class="id">st</span> <span class="id">n</span>) <span class="kwd">as</span> [[]|].<br/>
+<span class="id">exists</span> (<span class="id">S</span> <span class="id">pos</span>).<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">future_of_prod</span> <span class="kwd">in</span> *.<br/>
+<span class="tactic">rewrite</span> <span class="id">Heql</span>; <span class="tactic">reflexivity</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">TerminalSet.subset_2</span> <span class="id">H2</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="id">remember</span> <span class="id">st</span> <span class="kwd">in</span> <span class="id">H2</span>; <span class="id">revert</span> <span class="id">Heqs</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">forallb_items_spec</span> <span class="id">_</span> <span class="id">H2</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H3</span> (<span class="kwd">fun</span> <span class="id">st</span>' <span class="id">prod</span> <span class="id">fut</span> <span class="id">look</span> =&gt; <span class="id">s</span> = <span class="id">st</span>' -&gt; <span class="kwd">match</span> <span class="id">fut</span> <span class="kwd">return</span> <span class="kwd">Prop</span> <span class="kwd">with</span> [] =&gt; <span class="id">_</span> | <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span>)); <span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">compare_eqb_iff</span> <span class="kwd">in</span> <span class="id">H6</span>; <span class="tactic">rewrite</span> <span class="id">H6</span> <span class="kwd">in</span> <span class="id">H5</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">future_of_prod</span> <span class="id">prod1</span> <span class="id">pos0</span>) <span class="kwd">as</span> [|[]]; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">compare_eqb_iff</span> <span class="kwd">in</span> <span class="id">H7</span>; <span class="tactic">rewrite</span> <span class="id">H7</span> <span class="kwd">in</span> <span class="id">H5</span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id">start_goto</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">init</span>:<span class="id">initstate</span>), <span class="id">goto_table</span> <span class="id">init</span> (<span class="id">start_nt</span> <span class="id">init</span>) = <span class="id">None</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_start_goto</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> (<span class="id">init</span>:<span class="id">initstate</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">init</span> (<span class="id">start_nt</span> <span class="id">init</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>) <span class="id">all_list</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_start_goto_correct</span>:<br/>
+&nbsp;&nbsp;<span class="id">is_start_goto</span> () = <span class="id">true</span> -&gt; <span class="id">start_goto</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5989')">Proof.</div>
+<div class="proofscript" id="proof5989">
+<span class="tactic">unfold</span> <span class="id">is_start_goto</span>, <span class="id">start_goto</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">init</span> (<span class="id">all_list_forall</span> <span class="id">_</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">goto_table</span> <span class="id">init</span> (<span class="id">start_nt</span> <span class="id">init</span>)); <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Closure property of item sets : if a state contains an item of the form
+    A-&gt;_.Bv<span class="bracket">[<span class="id">b</span>]</span>, then for each production B-&gt;u and each terminal a of
+    first(vb), the state contains an item of the form B-&gt;_.u<span class="bracket">[<span class="id">a</span>]</span> *</div>
+<span class="kwd">Definition</span> <span class="id">non_terminal_closed</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">s1</span>:<span class="id">state</span>) <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">s1</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">lookahead</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fut</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span>::<span class="id">q</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">p</span>:<span class="id">production</span>) (<span class="id">lookahead2</span>:<span class="id">terminal</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prod_lhs</span> <span class="id">p</span> = <span class="id">nt</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.In</span> <span class="id">lookahead2</span> (<span class="id">first_word_set</span> <span class="id">q</span>) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">lookahead2</span> = <span class="id">lookahead</span> /\ <span class="id">nullable_word</span> <span class="id">q</span> = <span class="id">true</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_has_future</span> <span class="id">s1</span> <span class="id">p</span> (<span class="id">rev</span> (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)) <span class="id">lookahead2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_non_terminal_closed</span> <span class="id">items_map</span> :=<br/>
+&nbsp;&nbsp;<span class="id">forallb_items</span> <span class="id">items_map</span> (<span class="kwd">fun</span> <span class="id">s1</span> <span class="id">prod</span> <span class="id">pos</span> <span class="id">lset</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">future_of_prod</span> <span class="id">prod</span> <span class="id">pos</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span>::<span class="id">q</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">p</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">compare_eqb</span> (<span class="id">prod_lhs</span> <span class="id">p</span>) <span class="id">nt</span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">lookaheads</span> := <span class="id">find_items_map</span> <span class="id">items_map</span> <span class="id">s1</span> <span class="id">p</span> 0 <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">implb</span> (<span class="id">nullable_word</span> <span class="id">q</span>) (<span class="id">TerminalSet.subset</span> <span class="id">lset</span> <span class="id">lookaheads</span>)) &amp;&amp;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">TerminalSet.subset</span> (<span class="id">first_word_set</span> <span class="id">q</span>) <span class="id">lookaheads</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)%<span class="id">bool</span> <span class="id">all_list</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>).<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_non_terminal_closed_correct</span>:<br/>
+&nbsp;&nbsp;<span class="id">is_non_terminal_closed</span> (<span class="id">items_map</span> ()) = <span class="id">true</span> -&gt; <span class="id">non_terminal_closed</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5990')">Proof.</div>
+<div class="proofscript" id="proof5990">
+<span class="tactic">unfold</span> <span class="id">is_non_terminal_closed</span>, <span class="id">non_terminal_closed</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">forallb_items_spec</span> <span class="id">_</span> <span class="id">H</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H0</span> (<span class="kwd">fun</span> <span class="id">st</span> <span class="id">prod</span> <span class="id">fut</span> <span class="id">look</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">fut</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">NT</span> <span class="id">nt</span> :: <span class="id">q</span> =&gt; <span class="kwd">forall</span> <span class="id">p</span> <span class="id">l</span>, <span class="id">_</span> -&gt; <span class="id">_</span> -&gt; <span class="id">state_has_future</span> <span class="id">st</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)).<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">future_of_prod</span> <span class="id">prod0</span> <span class="id">pos</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">s</span>; <span class="tactic">eauto</span>; <span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H2</span> <span class="id">p</span> (<span class="id">all_list_forall</span> <span class="id">p</span>)).<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">compare_eqb_iff</span> <span class="kwd">in</span> <span class="id">H3</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H3</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Bool.andb_true_iff</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H2</span>.<br/>
+<span class="id">exists</span> 0.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">apply</span> <span class="id">rev_alt</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H4</span> <span class="kwd">as</span> [|[]]; <span class="tactic">subst</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">TerminalSet.subset_2</span> <span class="id">H5</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H6</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
+<span class="tactic">apply</span> (<span class="id">TerminalSet.subset_2</span> <span class="id">H2</span>); <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">The automaton is complete *</div>
+<span class="kwd">Definition</span> <span class="id">complete</span> :=<br/>
+&nbsp;&nbsp;<span class="id">nullable_stable</span> /\ <span class="id">first_stable</span> /\ <span class="id">start_future</span> /\ <span class="id">terminal_shift</span><br/>
+&nbsp;&nbsp;/\ <span class="id">end_reduce</span> /\ <span class="id">non_terminal_goto</span> /\ <span class="id">start_goto</span> /\ <span class="id">non_terminal_closed</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_complete</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">items_map</span> := <span class="id">items_map</span> () <span class="kwd">in</span><br/>
+&nbsp;&nbsp;(<span class="id">is_nullable_stable</span> () &amp;&amp; <span class="id">is_first_stable</span> () &amp;&amp; <span class="id">is_start_future</span> <span class="id">items_map</span> &amp;&amp;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_terminal_shift</span> <span class="id">items_map</span> &amp;&amp; <span class="id">is_end_reduce</span> <span class="id">items_map</span> &amp;&amp; <span class="id">is_start_goto</span> () &amp;&amp;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_non_terminal_goto</span> <span class="id">items_map</span> &amp;&amp; <span class="id">is_non_terminal_closed</span> <span class="id">items_map</span>)%<span class="id">bool</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_complete_correct</span>:<br/>
+&nbsp;&nbsp;<span class="id">is_complete</span> () = <span class="id">true</span> -&gt; <span class="id">complete</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5991')">Proof.</div>
+<div class="proofscript" id="proof5991">
+<span class="tactic">unfold</span> <span class="id">is_complete</span>, <span class="id">complete</span>.<br/>
+<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">Bool.andb_true_iff</span>.<br/>
+<span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_nullable_stable_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_first_stable_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_start_future_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_terminal_shift_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_end_reduce_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_non_terminal_goto_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_start_goto_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_non_terminal_closed_correct</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Make</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

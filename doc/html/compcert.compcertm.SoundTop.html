@@ -1,0 +1,74 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SoundTop</title>
+<meta name="description" content="Documentation of Coq module SoundTop" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SoundTop</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html">RelationClasses</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSets.html">FSets</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Ordered.html">Ordered</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Sound.html">Sound</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html">SemiLattice</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FinFun.html">FinFun</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Top">Top</a></span>: <span class="id"><a href="compcert.compcertm.Sound.html#Sound.class">Sound.class</a></span> := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Sound.html#Sound.t">t</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Sound.html#Sound.lepriv">lepriv</a></span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top2">top2</a></span>;<br/>
+&nbsp;&nbsp;<span class="kwd">wf</span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top1">top1</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Sound.html#Sound.val">val</a></span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top2">top2</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Sound.html#Sound.mem">mem</a></span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top2">top2</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Sound.html#Sound.mle">mle</a></span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top3">top3</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Sound.html#Sound.skenv">skenv</a></span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top3">top3</a></span>;<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7302')">Next Obligation.</div>
+<div class="proofscript" id="proof7302">
+ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof7303')">Next Obligation.</div>
+<div class="proofscript" id="proof7303">
+ <span class="id">esplits</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Preservation.html">Preservation</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="sound_state">sound_state</a></span> {<span class="id">STATE</span>: <span class="kwd">Type</span>}: <span class="id"><a href="compcert.compcertm.Sound.html#Sound.t">Sound.t</a></span> -&gt; <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SoundTop.html#STATE">STATE</a></span> -&gt; <span class="kwd">Prop</span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top3">top3</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="sound_state_local_preservation">sound_state_local_preservation</a></span>: <span class="kwd">forall</span> <span class="id">ms</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PRSV</span>: <span class="id"><a href="compcert.compcertm.Preservation.html#local_preservation">local_preservation</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#ms">ms</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#sound_state">sound_state</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7304')">Proof.</div>
+<div class="proofscript" id="proof7304">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">des_ifs</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall_forall">Forall_forall</a></span>. <span class="id">ii</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">des_ifs</span>. }<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

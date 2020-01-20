@@ -1,0 +1,55 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module DemoTarget</title>
+<meta name="description" content="Documentation of Coq module DemoTarget" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module DemoTarget</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.x86.Asm.html">Asm</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AsmC.html">AsmC</a></span> <span class="id"><a href="compcert.compcertm.Mod.html">Mod</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.DemoHeader.html">DemoHeader</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="lb0">lb0</a></span>: <span class="id"><a href="compcert.x86.Asm.html#label">label</a></span> := 1%<span class="id">positive</span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="code">code</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.x86.Asm.html#instruction">instruction</a></span> :=<br/>
+&nbsp;&nbsp;[<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Ptestq_rr">Ptestq_rr</a></span> <span class="id"><a href="compcert.x86.Asm.html#RDI">RDI</a></span> <span class="id"><a href="compcert.x86.Asm.html#RDI">RDI</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pjcc">Pjcc</a></span> <span class="id"><a href="compcert.x86.Asm.html#Cond_s">Cond_s</a></span> <span class="id"><a href="compcert.compcertm.DemoTarget.html#lb0">lb0</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pxorpd_f">Pxorpd_f</a></span> <span class="id"><a href="compcert.x86.Asm.html#XMM0">XMM0</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pcvtsl2sd_fr">Pcvtsl2sd_fr</a></span> <span class="id"><a href="compcert.x86.Asm.html#XMM0">XMM0</a></span> <span class="id"><a href="compcert.x86.Asm.html#RDI">RDI</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pret">Pret</a></span> ;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Plabel">Plabel</a></span> <span class="id"><a href="compcert.compcertm.DemoTarget.html#lb0">lb0</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pmov_rr">Pmov_rr</a></span> <span class="id"><a href="compcert.x86.Asm.html#RAX">RAX</a></span> <span class="id"><a href="compcert.x86.Asm.html#RDI">RDI</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pshrq_ri">Pshrq_ri</a></span> <span class="id"><a href="compcert.x86.Asm.html#RAX">RAX</a></span> <span class="id"><a href="compcert.lib.Integers.html#Int.one">Integers.Int.one</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pandq_ri">Pandq_ri</a></span> <span class="id"><a href="compcert.x86.Asm.html#RDI">RDI</a></span> <span class="id"><a href="compcert.lib.Integers.html#Int64.one">Integers.Int64.one</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Porq_rr">Porq_rr</a></span> <span class="id"><a href="compcert.x86.Asm.html#RAX">RAX</a></span> <span class="id"><a href="compcert.x86.Asm.html#RDI">RDI</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pxorpd_f">Pxorpd_f</a></span> <span class="id"><a href="compcert.x86.Asm.html#XMM0">XMM0</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pcvtsl2sd_fr">Pcvtsl2sd_fr</a></span> <span class="id"><a href="compcert.x86.Asm.html#XMM0">XMM0</a></span> <span class="id"><a href="compcert.x86.Asm.html#RAX">RAX</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Paddd_ff">Paddd_ff</a></span> <span class="id"><a href="compcert.x86.Asm.html#XMM0">XMM0</a></span> <span class="id"><a href="compcert.x86.Asm.html#XMM0">XMM0</a></span> ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#Pret">Pret</a></span><br/>
+&nbsp;&nbsp;].<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="func">func</a></span>: <span class="id"><a href="compcert.x86.Asm.html#function">function</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.x86.Asm.html#mkfunction">mkfunction</a></span> (<span class="id"><a href="compcert.common.AST.html#mksignature">mksignature</a></span> [<span class="id"><a href="compcert.common.AST.html#Tlong">Tlong</a></span>] (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.common.AST.html#Tfloat">Tfloat</a></span>) <span class="id"><a href="compcert.common.AST.html#cc_default">cc_default</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>) <span class="id"><a href="compcert.compcertm.DemoTarget.html#code">code</a></span><br/>
+.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="prog">prog</a></span>: <span class="id"><a href="compcert.x86.Asm.html#program">program</a></span> := <span class="id"><a href="compcert.common.AST.html#mkprogram">mkprogram</a></span> [(<span class="id"><a href="compcert.compcertm.DemoHeader.html#func_id">func_id</a></span>, (<span class="id"><a href="compcert.common.AST.html#Gfun">Gfun</a></span> (<span class="id"><a href="compcert.common.AST.html#Internal">Internal</a></span> <span class="id"><a href="compcert.compcertm.DemoTarget.html#func">func</a></span>)))] [<span class="id"><a href="compcert.compcertm.DemoHeader.html#func_id">func_id</a></span> ; <span class="id"><a href="compcert.compcertm.DemoHeader.html#main_id">main_id</a></span>] <span class="id"><a href="compcert.compcertm.DemoHeader.html#main_id">main_id</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="md">md</a></span>: <span class="id"><a href="compcert.compcertm.Mod.html#Mod.t">Mod.t</a></span> := <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.DemoTarget.html#prog">prog</a></span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.DemoTarget.html#md">md</a></span> <span class="id"><a href="compcert.compcertm.DemoTarget.html#prog">prog</a></span> <span class="id"><a href="compcert.compcertm.DemoTarget.html#func">func</a></span> <span class="id"><a href="compcert.compcertm.DemoTarget.html#code">code</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

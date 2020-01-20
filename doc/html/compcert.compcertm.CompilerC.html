@@ -1,0 +1,787 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CompilerC</title>
+<meta name="description" content="Documentation of Coq module CompilerC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CompilerC</h1>
+<div class="coq">
+<div class="doc">Libraries. </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span> <span class="id"><a href="compcert.common.Errors.html">Errors</a></span> <span class="id"><a href="compcert.compcertm.ErrorsC.html">ErrorsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span> <span class="id"><a href="compcert.common.Linking.html">Linking</a></span> <span class="id"><a href="compcert.common.Smallstep.html">Smallstep</a></span>.<br/>
+<div class="doc">Languages (syntax and semantics). </div>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="compcert.compcertm.CsemC.html">CsemC</a></span> <span class="id"><a href="compcert.cfrontend.Cstrategy.html">Cstrategy</a></span> <span class="id"><a href="compcert.cfrontend.Cexec.html">Cexec</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.Clight.html">Clight</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.Csharpminor.html">Csharpminor</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.CminorC.html">CminorC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.CminorSel.html">CminorSel</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.RTLC.html">RTLC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.LTL.html">LTL</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Linear.html">Linear</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Mach.html">Mach</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.AsmC.html">AsmC</a></span>.<br/>
+<div class="doc">Translation passes. </div>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.Initializers.html">Initializers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.SimplExpr.html">SimplExpr</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.SimplLocals.html">SimplLocals</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.Cshmgen.html">Cshmgen</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.Cminorgen.html">Cminorgen</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Selection.html">Selection</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.RTLgen.html">RTLgen</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Tailcall.html">Tailcall</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Inlining.html">Inlining</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Renumber.html">Renumber</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Constprop.html">Constprop</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.CSE.html">CSE</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Deadcode.html">Deadcode</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.demo.Unreadglob.html">Unreadglob</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Unusedglob.html">Unusedglob</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Allocation.html">Allocation</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Tunneling.html">Tunneling</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Linearize.html">Linearize</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.CleanupLabels.html">CleanupLabels</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Debugvar.html">Debugvar</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Stacking.html">Stacking</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.x86.Asmgen.html">Asmgen</a></span>.<br/>
+<div class="doc">Proofs of semantic preservation. </div>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.SimplExprproof.html">SimplExprproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.SimplLocalsproof.html">SimplLocalsproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.Cshmgenproof.html">Cshmgenproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.cfrontend.Cminorgenproof.html">Cminorgenproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Selectionproof.html">Selectionproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.RTLgenproof.html">RTLgenproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Tailcallproof.html">Tailcallproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Inliningproof.html">Inliningproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Renumberproof.html">Renumberproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Constpropproof.html">Constpropproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.CSEproof.html">CSEproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Deadcodeproof.html">Deadcodeproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Unusedglobproof.html">Unusedglobproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Allocproof.html">Allocproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Tunnelingproof.html">Tunnelingproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Linearizeproof.html">Linearizeproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.CleanupLabelsproof.html">CleanupLabelsproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Debugvarproof.html">Debugvarproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.backend.Stackingproof.html">Stackingproof</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.x86.Asmgenproof.html">Asmgenproof</a></span>.<br/>
+<div class="doc">Command-line flags. </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.driver.Compopts.html">Compopts</a></span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.BehaviorsC.html">BehaviorsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.driver.Compiler.html">Compiler</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Simulation.html">Simulation</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Sem.html">Sem</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html">SimProg</a></span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span> <span class="id"><a href="compcert.compcertm.Mod.html">Mod</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span> <span class="id"><a href="compcert.compcertm.SimMod.html">SimMod</a></span> <span class="id"><a href="compcert.compcertm.SimModSem.html">SimModSem</a></span> <span class="id"><a href="compcert.compcertm.SimSymb.html">SimSymb</a></span> <span class="id"><a href="compcert.compcertm.SimMem.html">SimMem</a></span> <span class="id"><a href="compcert.compcertm.Sound.html">Sound</a></span> <span class="id"><a href="compcert.compcertm.SimSymb.html">SimSymb</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SemProps.html">SemProps</a></span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html">AdequacyLocal</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.common.SimMemInj.html">SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html">SoundTop</a></span> <span class="id"><a href="compcert.compcertm.SimSymbDrop.html">SimSymbDrop</a></span> <span class="id"><a href="compcert.compcertm.SimSymbDropInv.html">SimSymbDropInv</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.IdSim.html">IdSim</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.RUSC.html">RUSC</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="CompCert_relations_list">CompCert_relations_list</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.compcertm.RUSC.html#program_relation.t">program_relation.t</a></span> :=<br/>
+&nbsp;&nbsp;[ (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#mkPR">mkPR</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#mkPR">mkPR</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#mkPR">mkPR</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.UnreachC.html#Unreach">UnreachC.Unreach</a></span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#mkPR">mkPR</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimMemInj">SimMemInjC.SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SimSymbDrop.html#SimSymbDrop">SimSymbDrop.SimSymbDrop</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#mkPR">mkPR</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimMemInj">SimMemInjC.SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimSymbId">SimMemInjC.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>) ;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#mkPR">mkPR</a></span> <span class="id"><a href="compcert.compcertm.SimSymbDropInv.html#SimMemInvTop">SimSymbDropInv.SimMemInvTop</a></span> <span class="id"><a href="compcert.compcertm.SimSymbDropInv.html#SimSymbDropInv">SimSymbDropInv.SimSymbDropInv</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>)<br/>
+&nbsp;&nbsp;].<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="CompCert_relations">CompCert_relations</a></span> := (<span class="kwd">fun</span> <span class="id">r</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#r">r</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations_list">CompCert_relations_list</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="asm_self_related">asm_self_related</a></span> (<span class="id">asm</span>: <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.RUSC.html#self_related">self_related</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> [<span class="id"><a href="compcert.compcertm.CompilerC.html#asm">asm</a></span>.(<span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6964')">Proof.</div>
+<div class="proofscript" id="proof6964">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">RELIN</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single_program">relate_single_program</a></span>; <span class="tactic">intros</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#asm_id">IdSim.asm_id</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#asm_ext_top">IdSim.asm_ext_top</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#asm_ext_unreach">IdSim.asm_ext_unreach</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#asm_inj_drop">IdSim.asm_inj_drop</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#asm_inj_id">IdSim.asm_inj_id</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#asm_inj_inv_drop">IdSim.asm_inj_inv_drop</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="asms_self_related">asms_self_related</a></span> (<span class="id">asms</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.RUSC.html#self_related">self_related</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#asms">asms</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6965')">Proof.</div>
+<div class="proofscript" id="proof6965">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">asms</span>; <span class="id">ss</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHasms</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id"><a href="compcert.compcertm.RUSC.html#program_relation.horizontal">program_relation.horizontal</a></span> <span class="id">_</span> [<span class="id">a</span>.(<span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span>)] <span class="id">_</span> [<span class="id">a</span>.(<span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span>)]); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#asm_self_related">asm_self_related</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="clight_self_related">clight_self_related</a></span> (<span class="id">cl</span>: <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.RUSC.html#self_related">self_related</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> [<span class="id"><a href="compcert.compcertm.CompilerC.html#cl">cl</a></span>.(<span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6966')">Proof.</div>
+<div class="proofscript" id="proof6966">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">r</span> <span class="id">RELIN</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> <span class="kwd">in</span> *. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single_program">relate_single_program</a></span>; <span class="tactic">intros</span> <span class="id">WF</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#clight_id">IdSim.clight_id</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#clight_ext_top">IdSim.clight_ext_top</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#clight_ext_unreach">IdSim.clight_ext_unreach</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#clight_inj_drop">IdSim.clight_inj_drop</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#clight_inj_id">IdSim.clight_inj_id</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSim.html#clight_inj_inv_drop">IdSim.clight_inj_inv_drop</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="clights_self_related">clights_self_related</a></span> (<span class="id">cls</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.RUSC.html#self_related">self_related</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#cls">cls</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6967')">Proof.</div>
+<div class="proofscript" id="proof6967">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">cls</span>; <span class="id">ss</span>; <span class="id">ii</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHcls</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id"><a href="compcert.compcertm.RUSC.html#program_relation.horizontal">program_relation.horizontal</a></span> <span class="id">_</span> [<span class="id">a</span>.(<span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span>)] <span class="id">_</span> [<span class="id">a</span>.(<span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span>)]); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#clight_self_related">clight_self_related</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Cstrategy">Cstrategy</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html">CstrategyproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Cstrategy_correct">Cstrategy_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.CsemC.html#module">CsemC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.CstrategyC.html#module">CstrategyC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic.trans">Mod.Atomic.trans</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6968')">Proof.</div>
+<div class="proofscript" id="proof6968">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">clarify</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#sim_mod">CstrategyproofC.sim_mod</a></span>; <span class="tactic">eauto</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Cstrategy">Cstrategy</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="SimplExpr">SimplExpr</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.SimplExprproofC.html">SimplExprproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="SimplExpr_correct">SimplExpr_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.cfrontend.SimplExpr.html#transl_program">SimplExpr.transl_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.CstrategyC.html#module">CstrategyC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>).(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic.trans">Mod.Atomic.trans</a></span>) (<span class="id"><a href="compcert.compcertm.ClightC.html#module1">ClightC.module1</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6969')">Proof.</div>
+<div class="proofscript" id="proof6969">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.SimplExprproofC.html#sim_mod">SimplExprproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.cfrontend.SimplExprproof.html#transf_program_match">SimplExprproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#SimplExpr">SimplExpr</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="SimplLocals">SimplLocals</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.SimplLocalsproofC.html">SimplLocalsproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="SimplLocals_correct">SimplLocals_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.cfrontend.SimplLocals.html#transf_program">SimplLocals.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimMemInj">SimMemInjC.SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimSymbId">SimMemInjC.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.ClightC.html#module1">ClightC.module1</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6970')">Proof.</div>
+<div class="proofscript" id="proof6970">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.SimplLocalsproofC.html#sim_mod">SimplLocalsproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.cfrontend.SimplLocalsproof.html#match_transf_program">SimplLocalsproof.match_transf_program</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#SimplLocals">SimplLocals</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Cshmgen">Cshmgen</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.CshmgenproofC.html">CshmgenproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Cshmgen_correct">Cshmgen_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.cfrontend.Cshmgen.html#transl_program">Cshmgen.transl_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.CsharpminorC.html#module">CsharpminorC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6971')">Proof.</div>
+<div class="proofscript" id="proof6971">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.CshmgenproofC.html#sim_mod">CshmgenproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.cfrontend.Cshmgenproof.html#transf_program_match">Cshmgenproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Cshmgen">Cshmgen</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Cminorgen">Cminorgen</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.CminorgenproofC.html">CminorgenproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Cminorgen_correct">Cminorgen_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.cfrontend.Cminorgen.html#transl_program">Cminorgen.transl_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimMemInj">SimMemInjC.SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimSymbId">SimMemInjC.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.CsharpminorC.html#module">CsharpminorC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.CminorC.html#module">CminorC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6972')">Proof.</div>
+<div class="proofscript" id="proof6972">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.CminorgenproofC.html#sim_mod">CminorgenproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.cfrontend.Cminorgenproof.html#transf_program_match">Cminorgenproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Cminorgen">Cminorgen</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Selection">Selection</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.SelectionproofC.html">SelectionproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Selection_correct">Selection_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.Selection.html#sel_program">Selection.sel_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.CminorC.html#module">CminorC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.CminorSelC.html#module">CminorSelC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6973')">Proof.</div>
+<div class="proofscript" id="proof6973">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.SelectionproofC.html#sim_mod">SelectionproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Selectionproof.html#transf_program_match">Selectionproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Selection">Selection</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="RTLgen">RTLgen</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.RTLgenproofC.html">RTLgenproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="RTLgen_correct">RTLgen_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.RTLgen.html#transl_program">RTLgen.transl_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.CminorSelC.html#module">CminorSelC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6974')">Proof.</div>
+<div class="proofscript" id="proof6974">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.RTLgenproofC.html#sim_mod">RTLgenproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.RTLgenproof.html#transf_program_match">RTLgenproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#RTLgen">RTLgen</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Renumber0">Renumber0</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.RenumberproofC.html">RenumberproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Renumber0_correct">Renumber0_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.Renumber.html#transf_program">Renumber.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6975')">Proof.</div>
+<div class="proofscript" id="proof6975">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.RenumberproofC.html#sim_mod">RenumberproofC.sim_mod</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Renumberproof.html#transf_program_match">Renumberproof.transf_program_match</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">TRANSF</span> <span class="kwd">in</span> *. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Renumber0">Renumber0</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Tailcall">Tailcall</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.TailcallproofC.html">TailcallproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Tailcall_correct">Tailcall_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#optim_tailcalls">optim_tailcalls</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#transf_program">Tailcall.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc">rtc</a></span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6976')">Proof.</div>
+<div class="proofscript" id="proof6976">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc_once">rtc_once</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.TailcallproofC.html#sim_mod">TailcallproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Tailcallproof.html#transf_program_match">Tailcallproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Tailcall">Tailcall</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Inlining">Inlining</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.InliningproofC.html">InliningproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Inlining_correct">Inlining_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.Inlining.html#transf_program">Inlining.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimMemInj">SimMemInjC.SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimSymbId">SimMemInjC.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6977')">Proof.</div>
+<div class="proofscript" id="proof6977">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.InliningproofC.html#sim_mod">InliningproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Inliningproof.html#transf_program_match">Inliningproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Inlining">Inlining</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Constprop">Constprop</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ConstpropproofC.html">ConstpropproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Constprop_correct">Constprop_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#optim_constprop">optim_constprop</a></span> <span class="id"><a href="compcert.backend.Constprop.html#transf_program">Constprop.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc">rtc</a></span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.UnreachC.html#Unreach">UnreachC.Unreach</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6978')">Proof.</div>
+<div class="proofscript" id="proof6978">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc_once">rtc_once</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.ConstpropproofC.html#sim_mod">ConstpropproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Constpropproof.html#transf_program_match">Constpropproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Constprop">Constprop</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Renumber1">Renumber1</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.RenumberproofC.html">RenumberproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Renumber1_correct">Renumber1_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#optim_constprop">optim_constprop</a></span> <span class="id"><a href="compcert.backend.Renumber.html#transf_program">Renumber.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc">rtc</a></span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>)<br/>
+&nbsp;&nbsp;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6979')">Proof.</div>
+<div class="proofscript" id="proof6979">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc_once">rtc_once</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.RenumberproofC.html#sim_mod">RenumberproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Renumberproof.html#transf_program_match">Renumberproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Renumber1">Renumber1</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="CSE">CSE</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.CSEproofC.html">CSEproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="CSE_correct">CSE_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.driver.Compiler.html#partial_if">partial_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#optim_CSE">optim_CSE</a></span> <span class="id"><a href="compcert.backend.CSE.html#transf_program">CSE.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc">rtc</a></span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.UnreachC.html#Unreach">UnreachC.Unreach</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6980')">Proof.</div>
+<div class="proofscript" id="proof6980">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#partial_if">partial_if</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc_once">rtc_once</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.CSEproofC.html#sim_mod">CSEproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.CSEproof.html#transf_program_match">CSEproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CSE">CSE</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Deadcode">Deadcode</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.DeadcodeproofC.html">DeadcodeproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Deadcode_correct">Deadcode_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.driver.Compiler.html#partial_if">partial_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#optim_redundancy">optim_redundancy</a></span> <span class="id"><a href="compcert.backend.Deadcode.html#transf_program">Deadcode.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc">rtc</a></span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.UnreachC.html#Unreach">UnreachC.Unreach</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6981')">Proof.</div>
+<div class="proofscript" id="proof6981">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#partial_if">partial_if</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc_once">rtc_once</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.DeadcodeproofC.html#sim_mod">DeadcodeproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Deadcodeproof.html#transf_program_match">Deadcodeproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Deadcode">Deadcode</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Unreadglob">Unreadglob</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.UnreadglobproofC.html">UnreadglobproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Unreadglob_correct">Unreadglob_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.demo.Unreadglob.html#transform_program">Unreadglob.transform_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimSymbDropInv.html#SimMemInvTop">SimSymbDropInv.SimMemInvTop</a></span> <span class="id"><a href="compcert.compcertm.SimSymbDropInv.html#SimSymbDropInv">SimSymbDropInv.SimSymbDropInv</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6982')">Proof.</div>
+<div class="proofscript" id="proof6982">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.UnreadglobproofC.html#sim_mod">UnreadglobproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.demo.Unreadglobproof.html#transf_program_match">Unreadglobproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Unreadglob">Unreadglob</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Unusedglob">Unusedglob</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.UnusedglobproofC.html">UnusedglobproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Unusedglob_correct">Unusedglob_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.Unusedglob.html#transform_program">Unusedglob.transform_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimMemInj">SimMemInjC.SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SimSymbDrop.html#SimSymbDrop">SimSymbDrop.SimSymbDrop</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module">RTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.RTLC.html#module2">RTLC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6983')">Proof.</div>
+<div class="proofscript" id="proof6983">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.UnusedglobproofC.html#sim_mod">UnusedglobproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Unusedglobproof.html#transf_program_match">Unusedglobproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Unusedglob">Unusedglob</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Allocation">Allocation</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AllocproofC.html">AllocproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Allocation_correct">Allocation_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.Allocation.html#transf_program">Allocation.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.RTLC.html#module2">RTLC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.LTLC.html#module">LTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6984')">Proof.</div>
+<div class="proofscript" id="proof6984">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.AllocproofC.html#sim_mod">AllocproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Allocproof.html#transf_program_match">Allocproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Allocation">Allocation</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Tunneling">Tunneling</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.TunnelingproofC.html">TunnelingproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Tunneling_correct">Tunneling_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.Tunneling.html#tunnel_program">Tunneling.tunnel_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.LTLC.html#module">LTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.LTLC.html#module">LTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6985')">Proof.</div>
+<div class="proofscript" id="proof6985">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.TunnelingproofC.html#sim_mod">TunnelingproofC.sim_mod</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Tunnelingproof.html#transf_program_match">Tunnelingproof.transf_program_match</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">TRANSF</span> <span class="kwd">in</span> *. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Tunneling">Tunneling</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Linearize">Linearize</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.LinearizeproofC.html">LinearizeproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Linearize_correct">Linearize_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.Linearize.html#transf_program">Linearize.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.LTLC.html#module">LTLC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.LinearC.html#module">LinearC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6986')">Proof.</div>
+<div class="proofscript" id="proof6986">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.LinearizeproofC.html#sim_mod">LinearizeproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Linearizeproof.html#transf_program_match">Linearizeproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Linearize">Linearize</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="CleanupLabels">CleanupLabels</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CleanupLabelsproofC.html">CleanupLabelsproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="CleanupLabels_correct">CleanupLabels_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.CleanupLabels.html#transf_program">CleanupLabels.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.LinearC.html#module">LinearC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.LinearC.html#module">LinearC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6987')">Proof.</div>
+<div class="proofscript" id="proof6987">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.CleanupLabelsproofC.html#sim_mod">CleanupLabelsproofC.sim_mod</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.CleanupLabelsproof.html#transf_program_match">CleanupLabelsproof.transf_program_match</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">rewrite</span> <span class="id">TRANSF</span> <span class="kwd">in</span> *. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CleanupLabels">CleanupLabels</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Debugvar">Debugvar</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.DebugvarproofC.html">DebugvarproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Debugvar_correct">Debugvar_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.driver.Compiler.html#partial_if">partial_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#debug">debug</a></span> <span class="id"><a href="compcert.backend.Debugvar.html#transf_program">Debugvar.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc">rtc</a></span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.LinearC.html#module">LinearC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.LinearC.html#module">LinearC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6988')">Proof.</div>
+<div class="proofscript" id="proof6988">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#partial_if">partial_if</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">try</span> <span class="id">refl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#rtc_once">rtc_once</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.DebugvarproofC.html#sim_mod">DebugvarproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Debugvarproof.html#transf_program_match">Debugvarproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Debugvar">Debugvar</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Stacking">Stacking</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.StackingproofC.html">StackingproofC</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="return_address_offset_deterministic">return_address_offset_deterministic</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">c</span> <span class="id">ofs</span> <span class="id">ofs</span>',<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Asmgenproof0.html#return_address_offset">Asmgenproof0.return_address_offset</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#f">f</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#c">c</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#ofs">ofs</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Asmgenproof0.html#return_address_offset">Asmgenproof0.return_address_offset</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#f">f</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#c">c</a></span> <span class="id">ofs</span>' -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CompilerC.html#ofs">ofs</a></span> = <span class="id">ofs</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6989')">Proof.</div>
+<div class="proofscript" id="proof6989">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">TF</span> <span class="kwd">in</span> <span class="id">TF0</span>. <span class="id">inv</span> <span class="id">TF0</span>. <span class="tactic">rewrite</span> <span class="id">TC</span> <span class="kwd">in</span> <span class="id">TC0</span>. <span class="id">inv</span> <span class="id">TC0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Asmgenproof0.html#code_tail_unique">Asmgenproof0.code_tail_unique</a></span> <span class="kwd">in</span> <span class="id">TL</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span>(<span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eq">Integers.Ptrofs.eq</a></span> <span class="id">ofs</span> <span class="id">ofs</span>' = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eq">Integers.Ptrofs.eq</a></span>. <span class="tactic">rewrite</span> <span class="id">TL</span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Coqlib.html#zeq_true">zeq_true</a></span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eq_spec">Integers.Ptrofs.eq_spec</a></span>. <span class="tactic">rewrite</span> <span class="id">H</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Stacking_correct">Stacking_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.backend.Stacking.html#transf_program">Stacking.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">COMPILESUCCED</span>: <span class="id">exists</span> <span class="id">final_tgt</span>, <span class="id"><a href="compcert.x86.Asmgenproof.html#match_prog">Asmgenproof.match_prog</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#final_tgt">final_tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimMemInj">SimMemInjC.SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimSymbId">SimMemInjC.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.LinearC.html#module">LinearC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>) (<span class="id"><a href="compcert.compcertm.MachC.html#module">MachC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span> <span class="id"><a href="compcert.backend.Asmgenproof0.html#return_address_offset">Asmgenproof0.return_address_offset</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6990')">Proof.</div>
+<div class="proofscript" id="proof6990">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.StackingproofC.html#sim_mod">StackingproofC.sim_mod</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.x86.Asmgenproof.html#return_address_exists">Asmgenproof.return_address_exists</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">determ_tac</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#return_address_offset_deterministic">return_address_offset_deterministic</a></span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.Stackingproof.html#transf_program_match">Stackingproof.transf_program_match</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Stacking">Stacking</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Asmgen">Asmgen</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AsmgenproofC.html">AsmgenproofC</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Asmgen_correct">Asmgen_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">src</span> <span class="id">tgt</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.x86.Asmgen.html#transf_program">Asmgen.transf_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemExt.html#SimMemExt">SimMemExt.SimMemExt</a></span> <span class="id"><a href="compcert.compcertm.SimMemExt.html#SimSymbExtends">SimMemExt.SimSymbExtends</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.MachC.html#module">MachC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> <span class="id"><a href="compcert.backend.Asmgenproof0.html#return_address_offset">Asmgenproof0.return_address_offset</a></span>) (<span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6991')">Proof.</div>
+<div class="proofscript" id="proof6991">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single">relate_single</a></span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.AsmgenproofC.html#sim_mod">AsmgenproofC.sim_mod</a></span>; <span class="id">i</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.x86.Asmgenproof.html#transf_program_match">Asmgenproof.transf_program_match</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Asmgen">Asmgen</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<div class="doc">Copied from Compiler.v, but without "SimplLocals.transf_program" *</div>
+<div class="doc">SimplLocals translate Clight1 into Clight2 and our source program is Clight2. *</div>
+<div class="doc">We chose Clight2 because VST uses Clight2. *</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_clight_program">transf_clight_program</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>) : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#p">p</a></span><br/>
+&nbsp;&nbsp;&nbsp;@@ <span class="id"><a href="compcert.driver.Compiler.html#print">print</a></span> <span class="id"><a href="compcert.driver.Compiler.html#print_Clight">print_Clight</a></span><br/>
+&nbsp;&nbsp;@@@ <span class="id"><a href="compcert.driver.Compiler.html#time">time</a></span> "<span class="id">C</span>#<span class="id">minor</span> <span class="id">generation</span>" <span class="id"><a href="compcert.cfrontend.Cshmgen.html#transl_program">Cshmgen.transl_program</a></span><br/>
+&nbsp;&nbsp;@@@ <span class="id"><a href="compcert.driver.Compiler.html#time">time</a></span> "<span class="id">Cminor</span> <span class="id">generation</span>" <span class="id"><a href="compcert.cfrontend.Cminorgen.html#transl_program">Cminorgen.transl_program</a></span><br/>
+&nbsp;&nbsp;@@@ <span class="id"><a href="compcert.driver.Compiler.html#transf_cminor_program">transf_cminor_program</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="compiler_single_rusc">compiler_single_rusc</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">src</span>: <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgt</span>: <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TRANSF</span>: <span class="id"><a href="compcert.compcertm.CompilerC.html#transf_clight_program">transf_clight_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.RUSC.html#rusc">rusc</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> [<span class="id"><a href="compcert.compcertm.CompilerC.html#src">src</a></span>.(<span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span>)] [<span class="id"><a href="compcert.compcertm.CompilerC.html#tgt">tgt</a></span>.(<span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span>)].<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6992')">Proof.</div>
+<div class="proofscript" id="proof6992">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#transf_clight_program">transf_clight_program</a></span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#transf_cminor_program">transf_cminor_program</a></span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#transf_rtl_program">transf_rtl_program</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#time">time</a></span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#print">print</a></span> <span class="kwd">in</span> *. <span class="id">cbn</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#apply_total">apply_total</a></span>, <span class="id"><a href="compcert.driver.Compiler.html#apply_partial">apply_partial</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs_safe</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#optim_tailcalls">optim_tailcalls</a></span> <span class="id"><a href="compcert.backend.Tailcall.html#transf_program">Tailcall.transf_program</a></span> <span class="id">p0</span>) <span class="kwd">as</span> <span class="id">ptail</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id"><a href="compcert.backend.Renumber.html#transf_program">Renumber.transf_program</a></span> <span class="id">p10</span>) <span class="kwd">as</span> <span class="id">prenum0</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#optim_constprop">optim_constprop</a></span> <span class="id"><a href="compcert.backend.Constprop.html#transf_program">Constprop.transf_program</a></span> <span class="id">prenum0</span>) <span class="kwd">as</span> <span class="id">pconst</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id"><a href="compcert.driver.Compiler.html#total_if">total_if</a></span> <span class="id"><a href="compcert.driver.Compopts.html#optim_constprop">optim_constprop</a></span> <span class="id"><a href="compcert.backend.Renumber.html#transf_program">Renumber.transf_program</a></span> <span class="id">pconst</span>) <span class="kwd">as</span> <span class="id">prenum1</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id"><a href="compcert.backend.Tunneling.html#tunnel_program">Tunneling.tunnel_program</a></span> <span class="id">p5</span>) <span class="kwd">as</span> <span class="id">ptunnel</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">set</span> (<span class="id"><a href="compcert.backend.CleanupLabels.html#transf_program">CleanupLabels.transf_program</a></span> <span class="id">p4</span>) <span class="kwd">as</span> <span class="id">pclean</span> <span class="kwd">in</span> *.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Ltac</span> <span class="id">next</span> <span class="id">PASS_CORRECT</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etrans</span>; [<span class="tactic">try</span> (<span class="id">hexploit</span> <span class="id">PASS_CORRECT</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[..|<span class="tactic">intros</span> <span class="id">REL</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single_rtc_rusc">relate_single_rtc_rusc</a></span>) <span class="kwd">in</span> <span class="id">REL</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span> 10; <span class="tactic">fail</span>]);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">hexploit</span> <span class="id">PASS_CORRECT</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[..|<span class="tactic">intros</span> <span class="id">REL</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> (@<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_single_rusc">relate_single_rusc</a></span>) <span class="kwd">in</span> <span class="id">REL</span>; <span class="tactic">eauto</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span>; <span class="id">ss</span>; <span class="tactic">eauto</span> 10])|].<br/>
+<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Cshmgen_correct">Cshmgen_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Cminorgen_correct">Cminorgen_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Selection_correct">Selection_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#RTLgen_correct">RTLgen_correct</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Tailcall_correct">Tailcall_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Inlining_correct">Inlining_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Renumber0_correct">Renumber0_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Constprop_correct">Constprop_correct</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Renumber1_correct">Renumber1_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CSE_correct">CSE_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Deadcode_correct">Deadcode_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Unreadglob_correct">Unreadglob_correct</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Unusedglob_correct">Unusedglob_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Allocation_correct">Allocation_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Tunneling_correct">Tunneling_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Linearize_correct">Linearize_correct</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CleanupLabels_correct">CleanupLabels_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Debugvar_correct">Debugvar_correct</a></span>. <span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Stacking_correct">Stacking_correct</a></span>.<br/>
+&nbsp;&nbsp;{ <span class="id">eexists</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.x86.Asmgenproof.html#transf_program_match">transf_program_match</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">next</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Asmgen_correct">Asmgen_correct</a></span>. <span class="id">refl</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="compiler_rusc">compiler_rusc</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgts</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#transf_clight_program">transf_clight_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs">srcs</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts">tgts</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.RUSC.html#rusc">rusc</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs">srcs</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts">tgts</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6993')">Proof.</div>
+<div class="proofscript" id="proof6993">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Errors.html#mmap_inversion">mmap_inversion</a></span> <span class="kwd">in</span> <span class="id">TR</span>. <span class="id">revert</span> <span class="id">tgts</span> <span class="id">TR</span>. <span class="tactic">induction</span> <span class="id">srcs</span>; <span class="id">ss</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">TR</span>; <span class="tactic">try</span> <span class="id">refl</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">replace</span> (<span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id">a</span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id">srcs</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;([<span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id">a</span>] ++ <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id">srcs</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> (<span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id">b1</span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id">bl</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;([<span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id">b1</span>] ++ <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id">bl</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#rusc_horizontal">rusc_horizontal</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#compiler_single_rusc">compiler_single_rusc</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#clight_self_related">clight_self_related</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#clights_self_related">clights_self_related</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#asm_self_related">asm_self_related</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#asms_self_related">asms_self_related</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="compiler_correct">compiler_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgts</span> <span class="id">hands</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#transf_clight_program">transf_clight_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs">srcs</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts">tgts</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ctx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF</span>: <span class="id"><a href="compcert.compcertm.RUSC.html#self_related">self_related</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.BehaviorsC.html#improves">improves</a></span> (<span class="id"><a href="compcert.compcertm.Sem.html#sem">sem</a></span> ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs">srcs</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#hands">hands</a></span>) ++ <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.Sem.html#sem">sem</a></span> ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts">tgts</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#hands">hands</a></span>) ++ <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6994')">Proof.</div>
+<div class="proofscript" id="proof6994">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#rusc_adequacy_right_ctx">rusc_adequacy_right_ctx</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#compiler_rusc">compiler_rusc</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#self_related_horizontal">self_related_horizontal</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#asms_self_related">asms_self_related</a></span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<div class="doc">Additionally, we support C as a source language too. *</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="clightgen_rusc">clightgen_rusc</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgts</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">irs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR0</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> (<span class="id"><a href="compcert.cfrontend.SimplExpr.html#transl_program">SimplExpr.transl_program</a></span>) <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs">srcs</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#irs">irs</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR1</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> (<span class="id"><a href="compcert.cfrontend.SimplLocals.html#transf_program">SimplLocals.transf_program</a></span>) <span class="id"><a href="compcert.compcertm.CompilerC.html#irs">irs</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts">tgts</a></span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.RUSC.html#rusc">rusc</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.CsemC.html#module">CsemC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs">srcs</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts">tgts</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6995')">Proof.</div>
+<div class="proofscript" id="proof6995">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Errors.html#mmap_inversion">mmap_inversion</a></span> <span class="kwd">in</span> <span class="id">TR0</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Errors.html#mmap_inversion">mmap_inversion</a></span> <span class="kwd">in</span> <span class="id">TR1</span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#forall2_eq">forall2_eq</a></span> <span class="kwd">in</span> *.<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">transitivity</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> (<span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic.trans">Mod.Atomic.trans</a></span> &lt;*&gt; <span class="id"><a href="compcert.compcertm.CstrategyC.html#module">CstrategyC.module</a></span>) <span class="id">srcs</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#rusc_incl">rusc_incl</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_each_program">relate_each_program</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#Forall2_apply_Forall2">Forall2_apply_Forall2</a></span> <span class="kwd">with</span> (<span class="id">P</span>:=<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span>); <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">clear</span>. <span class="tactic">induction</span> <span class="id">srcs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#Cstrategy_correct">Cstrategy_correct</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span>. <span class="id">ss</span>. <span class="tactic">auto</span>. }<br/>
+<br/>
+&nbsp;&nbsp;<span class="tactic">transitivity</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module1">ClightC.module1</a></span> <span class="id">irs</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#rusc_incl">rusc_incl</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_each_program">relate_each_program</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId.SimMemId</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimSymbId">SimMemId.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#Forall2_apply_Forall2">Forall2_apply_Forall2</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#SimplExpr_correct">SimplExpr_correct</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span>. <span class="id">ss</span>. <span class="tactic">auto</span>. }<br/>
+<br/>
+&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#rusc_incl">rusc_incl</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> (<span class="id"><a href="compcert.compcertm.AdequacyLocal.html#relate_each_program">relate_each_program</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimMemInj">SimMemInjC.SimMemInj</a></span> <span class="id"><a href="compcert.compcertm.SimMemInjC.html#SimSymbId">SimMemInjC.SimSymbId</a></span> <span class="id"><a href="compcert.compcertm.SoundTop.html#Top">SoundTop.Top</a></span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#Forall2_apply_Forall2">Forall2_apply_Forall2</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#SimplLocals_correct">SimplLocals_correct</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span>. <span class="id">ss</span>. <span class="tactic">auto</span> 10. }<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="clightgen_correct">clightgen_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">cls</span> <span class="id">tgts</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">hands</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">irs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR0</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> (<span class="id"><a href="compcert.cfrontend.SimplExpr.html#transl_program">SimplExpr.transl_program</a></span>) <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs">srcs</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#irs">irs</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR1</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> (<span class="id"><a href="compcert.cfrontend.SimplLocals.html#transf_program">SimplLocals.transf_program</a></span>) <span class="id"><a href="compcert.compcertm.CompilerC.html#irs">irs</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts">tgts</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ctx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF</span>: <span class="id"><a href="compcert.compcertm.RUSC.html#self_related">self_related</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.BehaviorsC.html#improves">improves</a></span> (<span class="id"><a href="compcert.compcertm.Sem.html#sem">sem</a></span> ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.CsemC.html#module">CsemC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs">srcs</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#cls">cls</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#hands">hands</a></span>) ++ <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.Sem.html#sem">sem</a></span> ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts">tgts</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#cls">cls</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#hands">hands</a></span>) ++ <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6996')">Proof.</div>
+<div class="proofscript" id="proof6996">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#rusc_adequacy_right_ctx">rusc_adequacy_right_ctx</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#clightgen_rusc">clightgen_rusc</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#self_related_horizontal">self_related_horizontal</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#clights_self_related">clights_self_related</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.RUSC.html#self_related_horizontal">self_related_horizontal</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#asms_self_related">asms_self_related</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="compiler_correct_full">compiler_correct_full</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs0</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs1</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Clight.html#program">Clight.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">tgts0</span> <span class="id">tgts1</span> <span class="id">hands</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR0</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> <span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs0">srcs0</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts0">tgts0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR1</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#transf_clight_program">transf_clight_program</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs1">srcs1</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts1">tgts1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ctx</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SELF</span>: <span class="id"><a href="compcert.compcertm.RUSC.html#self_related">self_related</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#CompCert_relations">CompCert_relations</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>)<br/>
+&nbsp;&nbsp;:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.BehaviorsC.html#improves">improves</a></span> (<span class="id"><a href="compcert.compcertm.Sem.html#sem">sem</a></span> ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.CsemC.html#module">CsemC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs0">srcs0</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#module2">ClightC.module2</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#srcs1">srcs1</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#hands">hands</a></span>) ++ <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.Sem.html#sem">sem</a></span> ((<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts0">tgts0</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#tgts1">tgts1</a></span>) ++ (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.compcertm.AsmC.html#module">AsmC.module</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#hands">hands</a></span>) ++ <span class="id"><a href="compcert.compcertm.CompilerC.html#ctx">ctx</a></span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6997')">Proof.</div>
+<div class="proofscript" id="proof6997">
+&nbsp;&nbsp;<span class="tactic">replace</span> <span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">p</span> =&gt; <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.compcertm.CompilerC.html#p">p</a></span> @@@ <span class="id"><a href="compcert.cfrontend.SimplExpr.html#transl_program">SimplExpr.transl_program</a></span> @@@ <span class="id"><a href="compcert.cfrontend.SimplLocals.html#transf_program">SimplLocals.transf_program</a></span> @@@ <span class="id"><a href="compcert.compcertm.CompilerC.html#transf_clight_program">transf_clight_program</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">in</span> <span class="id">TR0</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span>, <span class="id"><a href="compcert.compcertm.CompilerC.html#transf_clight_program">transf_clight_program</a></span>, <span class="id"><a href="compcert.driver.Compiler.html#transf_clight_program">Compiler.transf_clight_program</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#func_ext1">func_ext1</a></span>. <span class="id">i</span>. <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.driver.Compiler.html#apply_partial">apply_partial</a></span>, <span class="id"><a href="compcert.driver.Compiler.html#time">time</a></span>, <span class="id"><a href="compcert.driver.Compiler.html#print">print</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des_ifs_safe</span>. <span class="id">des_ifs</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ErrorsC.html#mmap_partial">mmap_partial</a></span> <span class="kwd">in</span> <span class="id">TR0</span>; <span class="tactic">eauto</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ErrorsC.html#mmap_partial">mmap_partial</a></span> <span class="kwd">in</span> <span class="id">MMAP0</span>; <span class="tactic">eauto</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#clightgen_correct">clightgen_correct</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">T</span>.<br/>
+&nbsp;&nbsp;<span class="id">etrans</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#app_assoc">app_assoc</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#app_assoc">app_assoc</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">rpapply</span> (@<span class="id"><a href="compcert.compcertm.CompilerC.html#compiler_correct">compiler_correct</a></span> (<span class="id">lb</span> ++ <span class="id">srcs1</span>) (<span class="id">tgts0</span> ++ <span class="id">tgts1</span>) <span class="id">hands</span>) ; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id"><a href="compcert.compcertm.ErrorsC.html#mmap_app">mmap_app</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Errors.html#bind">bind</a></span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map_app">map_app</a></span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#app_assoc">app_assoc</a></span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map_app">map_app</a></span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#app_assoc">app_assoc</a></span>. <span class="id">ss</span>. }<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

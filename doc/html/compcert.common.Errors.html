@@ -1,0 +1,200 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Errors</title>
+<meta name="description" content="Documentation of Coq module Errors" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Errors</h1>
+<div class="coq">
+<br/>
+<div class="doc">Error reporting and the error monad. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<br/>
+<span class="id">Close</span> <span class="kwd">Scope</span> <span class="id">string_scope</span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<h1> Representation of error messages. </h1>
+<br/>
+<div class="doc">Compile-time errors produce an error message, represented in Coq
+  as a list of either substrings or positive numbers encoding
+  a source-level identifier (see module AST). </div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="errcode">errcode</a></span>: <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="MSG">MSG</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">string</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#errcode">errcode</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="CTX">CTX</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#errcode">errcode</a></span>    <br/>
+&nbsp;&nbsp;| <span class="id"><a name="POS">POS</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#errcode">errcode</a></span>.   <br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="errmsg">errmsg</a></span>: <span class="kwd">Type</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Errors.html#errcode">errcode</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="msg">msg</a></span> (<span class="id">s</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html#string">string</a></span>) : <span class="id"><a href="compcert.common.Errors.html#errmsg">errmsg</a></span> := <span class="id"><a href="compcert.common.Errors.html#MSG">MSG</a></span> <span class="id"><a href="compcert.common.Errors.html#s">s</a></span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>.<br/>
+<br/>
+<h1> The error monad </h1>
+<br/>
+<div class="doc">Compilation functions that can fail have return type <span class="bracket"><span class="id">res</span> <span class="id">A</span></span>.
+  The return value is either <span class="bracket"><span class="id">OK</span> <span class="id">res</span></span> to indicate success,
+  or <span class="bracket"><span class="id">Error</span> <span class="id">msg</span></span> to indicate failure. </div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="res">res</a></span> (<span class="id">A</span>: <span class="kwd">Type</span>) : <span class="kwd">Type</span> :=<br/>
+| <span class="id"><a name="OK">OK</a></span>: <span class="id"><a href="compcert.common.Errors.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#A">A</a></span><br/>
+| <span class="id"><a name="Error">Error</a></span>: <span class="id"><a href="compcert.common.Errors.html#errmsg">errmsg</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#A">A</a></span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span> [<span class="id">A</span>].<br/>
+<br/>
+<div class="doc">To automate the propagation of errors, we use a monadic style
+  with the following <span class="bracket"><span class="id">bind</span></span> operation. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="bind">bind</a></span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#A">A</a></span>) (<span class="id">g</span>: <span class="id"><a href="compcert.common.Errors.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#B">B</a></span>) : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#B">B</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">x</span> =&gt; <span class="id"><a href="compcert.common.Errors.html#g">g</a></span> <span class="id">x</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span> <span class="id">msg</span> =&gt; <span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span> <span class="id">msg</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="bind2">bind2</a></span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> (<span class="id"><a href="compcert.common.Errors.html#A">A</a></span> * <span class="id"><a href="compcert.common.Errors.html#B">B</a></span>)) (<span class="id">g</span>: <span class="id"><a href="compcert.common.Errors.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#B">B</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#C">C</a></span>) : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#C">C</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> (<span class="id">x</span>, <span class="id">y</span>) =&gt; <span class="id"><a href="compcert.common.Errors.html#g">g</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span> <span class="id">msg</span> =&gt; <span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span> <span class="id">msg</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">The <span class="bracket"><span class="tactic">do</span></span> notation, inspired by Haskell's, keeps the code readable. </div>
+<br/>
+<span class="kwd">Notation</span> "'<span class="tactic">do</span>' <span class="id">X</span> &lt;- <span class="id">A</span> ; <span class="id">B</span>" := (<span class="id"><a href="compcert.common.Errors.html#bind">bind</a></span> <span class="id">A</span> (<span class="kwd">fun</span> <span class="id">X</span> =&gt; <span class="id">B</span>))<br/>
+&nbsp;(<span class="tactic">at</span> <span class="id">level</span> 200, <span class="id">X</span> <span class="id">ident</span>, <span class="id">A</span> <span class="tactic">at</span> <span class="id">level</span> 100, <span class="id">B</span> <span class="tactic">at</span> <span class="id">level</span> 200)<br/>
+&nbsp;: <span class="id">error_monad_scope</span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "'<span class="tactic">do</span>' ( <span class="id">X</span> , <span class="id">Y</span> ) &lt;- <span class="id">A</span> ; <span class="id">B</span>" := (<span class="id"><a href="compcert.common.Errors.html#bind2">bind2</a></span> <span class="id">A</span> (<span class="kwd">fun</span> <span class="id">X</span> <span class="id">Y</span> =&gt; <span class="id">B</span>))<br/>
+&nbsp;(<span class="tactic">at</span> <span class="id">level</span> 200, <span class="id">X</span> <span class="id">ident</span>, <span class="id">Y</span> <span class="id">ident</span>, <span class="id">A</span> <span class="tactic">at</span> <span class="id">level</span> 100, <span class="id">B</span> <span class="tactic">at</span> <span class="id">level</span> 200)<br/>
+&nbsp;: <span class="id">error_monad_scope</span>.<br/>
+<br/>
+<span class="kwd">Remark</span> <span class="id"><a name="bind_inversion">bind_inversion</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#A">A</a></span>) (<span class="id">g</span>: <span class="id"><a href="compcert.common.Errors.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#B">B</a></span>) (<span class="id">y</span>: <span class="id"><a href="compcert.common.Errors.html#B">B</a></span>),<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Errors.html#bind">bind</a></span> <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> <span class="id"><a href="compcert.common.Errors.html#g">g</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.common.Errors.html#y">y</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>, <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.common.Errors.html#x">x</a></span> /\ <span class="id"><a href="compcert.common.Errors.html#g">g</a></span> <span class="id"><a href="compcert.common.Errors.html#x">x</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.common.Errors.html#y">y</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1204')">Proof.</div>
+<div class="proofscript" id="proof1204">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">y</span>. <span class="tactic">destruct</span> <span class="id">f</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">a</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Remark</span> <span class="id"><a name="bind2_inversion">bind2_inversion</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> (<span class="id"><a href="compcert.common.Errors.html#A">A</a></span>*<span class="id"><a href="compcert.common.Errors.html#B">B</a></span>)) (<span class="id">g</span>: <span class="id"><a href="compcert.common.Errors.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#B">B</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#C">C</a></span>) (<span class="id">z</span>: <span class="id"><a href="compcert.common.Errors.html#C">C</a></span>),<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Errors.html#bind2">bind2</a></span> <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> <span class="id"><a href="compcert.common.Errors.html#g">g</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.common.Errors.html#z">z</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>, <span class="id">exists</span> <span class="id">y</span>, <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> (<span class="id"><a href="compcert.common.Errors.html#x">x</a></span>, <span class="id"><a href="compcert.common.Errors.html#y">y</a></span>) /\ <span class="id"><a href="compcert.common.Errors.html#g">g</a></span> <span class="id"><a href="compcert.common.Errors.html#x">x</a></span> <span class="id"><a href="compcert.common.Errors.html#y">y</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.common.Errors.html#z">z</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1205')">Proof.</div>
+<div class="proofscript" id="proof1205">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">until</span> <span class="id">z</span>. <span class="tactic">destruct</span> <span class="id">f</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">p</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="id">exists</span> <span class="id">a</span>; <span class="id">exists</span> <span class="id">b</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Assertions </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="assertion_failed">assertion_failed</a></span> {<span class="id">A</span>: <span class="kwd">Type</span>} : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#A">A</a></span> := <span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span>(<span class="id"><a href="compcert.common.Errors.html#msg">msg</a></span> "<span class="id">Assertion</span> <span class="id">failed</span>").<br/>
+<br/>
+<span class="kwd">Notation</span> "'<span class="id">assertion</span>' <span class="id">A</span> ; <span class="id">B</span>" := (<span class="kwd">if</span> <span class="id">A</span> <span class="kwd">then</span> <span class="id">B</span> <span class="kwd">else</span> <span class="id"><a href="compcert.common.Errors.html#assertion_failed">assertion_failed</a></span>)<br/>
+&nbsp;&nbsp;(<span class="tactic">at</span> <span class="id">level</span> 200, <span class="id">A</span> <span class="tactic">at</span> <span class="id">level</span> 100, <span class="id">B</span> <span class="tactic">at</span> <span class="id">level</span> 200)<br/>
+&nbsp;&nbsp;: <span class="id">error_monad_scope</span>.<br/>
+<br/>
+<div class="doc">This is the familiar monadic map iterator. </div>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">error_monad_scope</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="mmap">mmap</a></span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id"><a href="compcert.common.Errors.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#B">B</a></span>) (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Errors.html#A">A</a></span>) {<span class="kwd">struct</span> <span class="id">l</span>} : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Errors.html#B">B</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Errors.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span><br/>
+&nbsp;&nbsp;| <span class="id">hd</span> :: <span class="id">tl</span> =&gt; <span class="tactic">do</span> <span class="id">hd</span>' &lt;- <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> <span class="id">hd</span>; <span class="tactic">do</span> <span class="id">tl</span>' &lt;- <span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> <span class="id">tl</span>; <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> (<span class="id">hd</span>' :: <span class="id">tl</span>')<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Remark</span> <span class="id"><a name="mmap_inversion">mmap_inversion</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id"><a href="compcert.common.Errors.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.common.Errors.html#B">B</a></span>) (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Errors.html#A">A</a></span>) (<span class="id">l</span>': <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Errors.html#B">B</a></span>),<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> <span class="id"><a href="compcert.common.Errors.html#l">l</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">l</span>' -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Coqlib.html#list_forall2">list_forall2</a></span> (<span class="kwd">fun</span> <span class="id">x</span> <span class="id">y</span> =&gt; <span class="id"><a href="compcert.common.Errors.html#f">f</a></span> <span class="id"><a href="compcert.common.Errors.html#x">x</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.common.Errors.html#y">y</a></span>) <span class="id"><a href="compcert.common.Errors.html#l">l</a></span> <span class="id">l</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1206')">Proof.</div>
+<div class="proofscript" id="proof1206">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">l</span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">inversion_clear</span> <span class="id">H</span>. <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Errors.html#bind_inversion">bind_inversion</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span>) <span class="kwd">as</span> [<span class="id">hd</span>' [<span class="id">P</span> <span class="id">Q</span>]].<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Errors.html#bind_inversion">bind_inversion</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Q</span>) <span class="kwd">as</span> [<span class="id">tl</span>' [<span class="id">R</span> <span class="id">S</span>]].<br/>
+&nbsp;&nbsp;<span class="tactic">inversion_clear</span> <span class="id">S</span>.<br/>
+&nbsp;&nbsp;<span class="id">constructor</span>. <span class="tactic">auto</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Reasoning over monadic computations </h1>
+<br/>
+<div class="doc">The <span class="bracket"><span class="id">monadInv</span> <span class="id">H</span></span> tactic below simplifies hypotheses of the form
+<pre>
+        H: (do x &lt;- a; b) = OK res</pre>
+    By definition of the bind operation, both computations <span class="bracket"><span class="id">a</span></span> and
+    <span class="bracket"><span class="id">b</span></span> must succeed for their composition to succeed.  The tactic
+    therefore generates the following hypotheses:
+         x: ...
+        H1: a = OK x
+        H2: b x = OK res
+</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">monadInv1</span> <span class="id">H</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">type</span> <span class="id">of</span> <span class="id">H</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| (<span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">clear</span> <span class="id">H</span>; <span class="tactic">try</span> <span class="tactic">subst</span><br/>
+&nbsp;&nbsp;| (<span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">discriminate</span><br/>
+&nbsp;&nbsp;| (<span class="id"><a href="compcert.common.Errors.html#bind">bind</a></span> ?<span class="id">F</span> ?<span class="id">G</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> ?<span class="id">X</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">x</span> := <span class="tactic">fresh</span> "<span class="id">x</span>" <span class="kwd">in</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">EQ1</span> := <span class="tactic">fresh</span> "<span class="id">EQ</span>" <span class="kwd">in</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">EQ2</span> := <span class="tactic">fresh</span> "<span class="id">EQ</span>" <span class="kwd">in</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Errors.html#bind_inversion">bind_inversion</a></span> <span class="id">F</span> <span class="id">G</span> <span class="id">H</span>) <span class="kwd">as</span> [<span class="id">x</span> [<span class="id">EQ1</span> <span class="id">EQ2</span>]];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">monadInv1</span> <span class="id">EQ2</span>))))<br/>
+&nbsp;&nbsp;| (<span class="id"><a href="compcert.common.Errors.html#bind2">bind2</a></span> ?<span class="id">F</span> ?<span class="id">G</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> ?<span class="id">X</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">x1</span> := <span class="tactic">fresh</span> "<span class="id">x</span>" <span class="kwd">in</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">x2</span> := <span class="tactic">fresh</span> "<span class="id">x</span>" <span class="kwd">in</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">EQ1</span> := <span class="tactic">fresh</span> "<span class="id">EQ</span>" <span class="kwd">in</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">EQ2</span> := <span class="tactic">fresh</span> "<span class="id">EQ</span>" <span class="kwd">in</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Errors.html#bind2_inversion">bind2_inversion</a></span> <span class="id">F</span> <span class="id">G</span> <span class="id">H</span>) <span class="kwd">as</span> [<span class="id">x1</span> [<span class="id">x2</span> [<span class="id">EQ1</span> <span class="id">EQ2</span>]]];<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">H</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="id">monadInv1</span> <span class="id">EQ2</span>)))))<br/>
+&nbsp;&nbsp;| (<span class="kwd">match</span> ?<span class="id">X</span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#left">left</a></span> <span class="id">_</span> =&gt; <span class="id">_</span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#right">right</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="compcert.common.Errors.html#assertion_failed">assertion_failed</a></span> <span class="kwd">end</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span>; [<span class="tactic">try</span> (<span class="id">monadInv1</span> <span class="id">H</span>) | <span class="tactic">discriminate</span>]<br/>
+&nbsp;&nbsp;| (<span class="kwd">match</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> ?<span class="id">X</span>) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> =&gt; <span class="id">_</span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> =&gt; <span class="id"><a href="compcert.common.Errors.html#assertion_failed">assertion_failed</a></span> <span class="kwd">end</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span> <span class="kwd">as</span> [] <span class="id">eqn</span>:?; [<span class="tactic">discriminate</span> | <span class="tactic">try</span> (<span class="id">monadInv1</span> <span class="id">H</span>)]<br/>
+&nbsp;&nbsp;| (<span class="kwd">match</span> ?<span class="id">X</span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> =&gt; <span class="id">_</span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> =&gt; <span class="id"><a href="compcert.common.Errors.html#assertion_failed">assertion_failed</a></span> <span class="kwd">end</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">X</span> <span class="kwd">as</span> [] <span class="id">eqn</span>:?; [<span class="tactic">try</span> (<span class="id">monadInv1</span> <span class="id">H</span>) | <span class="tactic">discriminate</span>]<br/>
+&nbsp;&nbsp;| (<span class="id"><a href="compcert.common.Errors.html#mmap">mmap</a></span> ?<span class="id">F</span> ?<span class="id">L</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> ?<span class="id">M</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id"><a href="compcert.common.Errors.html#mmap_inversion">mmap_inversion</a></span> <span class="id">F</span> <span class="id">L</span> <span class="id">H</span>); <span class="tactic">intro</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">monadInv</span> <span class="id">H</span> :=<br/>
+&nbsp;&nbsp;<span class="id">monadInv1</span> <span class="id">H</span> ||<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">type</span> <span class="id">of</span> <span class="id">H</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| (?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="tactic">progress</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>) || <span class="tactic">unfold</span> <span class="id">F</span> <span class="kwd">in</span> <span class="id">H</span>); <span class="id">monadInv1</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;| (?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="tactic">progress</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>) || <span class="tactic">unfold</span> <span class="id">F</span> <span class="kwd">in</span> <span class="id">H</span>); <span class="id">monadInv1</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;| (?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="tactic">progress</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>) || <span class="tactic">unfold</span> <span class="id">F</span> <span class="kwd">in</span> <span class="id">H</span>); <span class="id">monadInv1</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;| (?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="tactic">progress</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>) || <span class="tactic">unfold</span> <span class="id">F</span> <span class="kwd">in</span> <span class="id">H</span>); <span class="id">monadInv1</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;| (?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="tactic">progress</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>) || <span class="tactic">unfold</span> <span class="id">F</span> <span class="kwd">in</span> <span class="id">H</span>); <span class="id">monadInv1</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;| (?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="tactic">progress</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>) || <span class="tactic">unfold</span> <span class="id">F</span> <span class="kwd">in</span> <span class="id">H</span>); <span class="id">monadInv1</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;| (?<span class="id">F</span> <span class="id">_</span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="tactic">progress</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>) || <span class="tactic">unfold</span> <span class="id">F</span> <span class="kwd">in</span> <span class="id">H</span>); <span class="id">monadInv1</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;| (?<span class="id">F</span> <span class="id">_</span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="tactic">progress</span> <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>) || <span class="tactic">unfold</span> <span class="id">F</span> <span class="kwd">in</span> <span class="id">H</span>); <span class="id">monadInv1</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

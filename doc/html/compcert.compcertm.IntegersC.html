@@ -1,0 +1,64 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module IntegersC</title>
+<meta name="description" content="Documentation of Coq module IntegersC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module IntegersC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Eqdep_dec.html">Eqdep_dec</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html">Zquot</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html">Zwf</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.x86_64.Archi.html">Archi</a></span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Ptrofs_add_repr">Ptrofs_add_repr</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: (<span class="id"><a href="compcert.lib.Integers.html#Ptrofs.add">Ptrofs.add</a></span> (<span class="id"><a href="compcert.lib.Integers.html#Ptrofs.repr">Ptrofs.repr</a></span> <span class="id"><a href="compcert.compcertm.IntegersC.html#x">x</a></span>) (<span class="id"><a href="compcert.lib.Integers.html#Ptrofs.repr">Ptrofs.repr</a></span> <span class="id"><a href="compcert.compcertm.IntegersC.html#y">y</a></span>)) = <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.repr">Ptrofs.repr</a></span> (<span class="id"><a href="compcert.compcertm.IntegersC.html#x">x</a></span> + <span class="id"><a href="compcert.compcertm.IntegersC.html#y">y</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7346')">Proof.</div>
+<div class="proofscript" id="proof7346">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eqm_repr_eq">Ptrofs.eqm_repr_eq</a></span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eqm_sym">Ptrofs.eqm_sym</a></span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eqm_trans">Ptrofs.eqm_trans</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eqm_sym">Ptrofs.eqm_sym</a></span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eqm_unsigned_repr">Ptrofs.eqm_unsigned_repr</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eqm_add">Ptrofs.eqm_add</a></span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.eqm_unsigned_repr">Ptrofs.eqm_unsigned_repr</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="max_unsigned_zero">max_unsigned_zero</a></span>: 0 &lt;= <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.max_unsigned">Ptrofs.max_unsigned</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7347')">Proof.</div>
+<div class="proofscript" id="proof7347">
+&nbsp;&nbsp;<span class="id">etransitivity</span>; <span class="tactic">try</span> <span class="id">unshelve</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.unsigned_range_2">Ptrofs.unsigned_range_2</a></span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="mul_le_div">mul_le_div</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a</span> <span class="id">b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: 4 * <span class="id"><a href="compcert.compcertm.IntegersC.html#a">a</a></span> &lt;= <span class="id"><a href="compcert.compcertm.IntegersC.html#b">b</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.IntegersC.html#a">a</a></span> &lt;= <span class="id"><a href="compcert.compcertm.IntegersC.html#b">b</a></span> / 4&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7348')">Proof.</div>
+<div class="proofscript" id="proof7348">
+&nbsp;&nbsp;<span class="tactic">red</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span>(4 * <span class="id">a</span> / 4 = <span class="id">a</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mul_comm">Z.mul_comm</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.div_mul">Z.div_mul</a></span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">H</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_div_le">Z_div_le</a></span>; <span class="tactic">eauto</span>. <span class="id">xomega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Z2Nat_range">Z2Nat_range</a></span> <span class="id">n</span>:<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.of_nat">Z.of_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.to_nat">Z.to_nat</a></span> <span class="id"><a href="compcert.compcertm.IntegersC.html#n">n</a></span>) = <span class="kwd">if</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zle">zle</a></span> 0 <span class="id"><a href="compcert.compcertm.IntegersC.html#n">n</a></span>) <span class="kwd">then</span> <span class="id"><a href="compcert.compcertm.IntegersC.html#n">n</a></span> <span class="kwd">else</span> 0.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7349')">Proof.</div>
+<div class="proofscript" id="proof7349">
+ <span class="tactic">destruct</span> <span class="id">n</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">nia</span>. Qed.</div>
+<br/>
+<span class="kwd">Hint</span> <span class="id">Rewrite</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.unsigned_zero">Ptrofs.unsigned_zero</a></span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.add_zero">Ptrofs.add_zero</a></span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.add_zero_l">Ptrofs.add_zero_l</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Integers.html#Ptrofs.repr_unsigned">Ptrofs.repr_unsigned</a></span> <span class="id"><a href="compcert.compcertm.IntegersC.html#Ptrofs_add_repr">Ptrofs_add_repr</a></span> : <span class="id">psimpl</span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">psimpl</span> := <span class="tactic">repeat</span> (<span class="id">autorewrite</span> <span class="kwd">with</span> <span class="id">psimpl</span> <span class="kwd">in</span> *;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.unsigned_repr">Ptrofs.unsigned_repr</a></span> <span class="kwd">in</span> *; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>; [])).<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

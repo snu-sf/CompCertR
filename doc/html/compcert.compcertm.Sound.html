@@ -1,0 +1,164 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Sound</title>
+<meta name="description" content="Documentation of Coq module Sound" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Sound</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MemoryC.html">MemoryC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html">RelationClasses</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSets.html">FSets</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Ordered.html">Ordered</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.System.html">System</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Sound">Sound</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Class</span> <span class="id"><a name="Sound.class">class</a></span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.t">t</a></span>: <span class="kwd">Type</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.mle">mle</a></span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.common.Memory.html#mem">Memory.mem</a></span> -&gt; <span class="id"><a href="compcert.common.Memory.html#mem">Memory.mem</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.mle_PreOrder">mle_PreOrder</a></span> <span class="id">su0</span> :&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> (<span class="id"><a href="compcert.compcertm.Sound.html#mle">mle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.hle">hle</a></span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.hle_PreOrder">hle_PreOrder</a></span> :&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#hle">hle</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.lepriv">lepriv</a></span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.lepriv_PreOrder">lepriv_PreOrder</a></span> :&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#lepriv">lepriv</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">wf</span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.hle_lepriv">hle_lepriv</a></span>: <span class="kwd">forall</span> <span class="id">su0</span> <span class="id">su1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HLE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#hle">hle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#lepriv">lepriv</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.hle_mle">hle_mle</a></span>: <span class="kwd">forall</span> <span class="id">m0</span> <span class="id">m1</span> <span class="id">su0</span> <span class="id">su1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#mle">mle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m1">m1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HLE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#hle">hle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MLE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#mle">mle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m1">m1</a></span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.val">val</a></span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.common.Values.html#val">Values.val</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vals</span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">Values.val</a></span> -&gt; <span class="kwd">Prop</span> := <span class="kwd">fun</span> <span class="id">su</span> <span class="id">vs</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#val">val</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#vs">vs</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.mem">mem</a></span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">regset</span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.x86.Asm.html#regset">Asm.regset</a></span> -&gt; <span class="kwd">Prop</span> := <span class="kwd">fun</span> <span class="id">su</span> <span class="id">rs</span> =&gt; <span class="kwd">forall</span> <span class="id">pr</span>, <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#val">val</a></span>) (<span class="id"><a href="compcert.compcertm.Sound.html#rs">rs</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#pr">pr</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">args</span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.ModSem.html#Args.t">Args.t</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">su</span> <span class="id">args</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.Sound.html#args">args</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Cstyle">Args.Cstyle</a></span> <span class="id">fptr</span> <span class="id">vs</span> <span class="id">m</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">VAL</span>: <span class="id"><a href="compcert.compcertm.Sound.html#val">val</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">fptr</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">VALS</span>: <span class="id"><a href="compcert.compcertm.Sound.html#vals">vals</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">vs</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEM</span>: <span class="id"><a href="compcert.compcertm.Sound.html#mem">mem</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">m</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Args.Asmstyle">Args.Asmstyle</a></span> <span class="id">rs</span> <span class="id">m</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">REGSET</span>: <span class="id"><a href="compcert.compcertm.Sound.html#regset">regset</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">rs</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEM</span>: <span class="id"><a href="compcert.compcertm.Sound.html#mem">mem</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">m</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">retv</span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.t">Retv.t</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">su</span> <span class="id">retv</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.Sound.html#retv">retv</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Cstyle">Retv.Cstyle</a></span> <span class="id">v</span> <span class="id">m</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">VAL</span>: <span class="id"><a href="compcert.compcertm.Sound.html#val">val</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">v</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEM</span>: <span class="id"><a href="compcert.compcertm.Sound.html#mem">mem</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">m</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.Asmstyle">Retv.Asmstyle</a></span> <span class="id">rs</span> <span class="id">m</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">REGSET</span>: <span class="id"><a href="compcert.compcertm.Sound.html#regset">regset</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">rs</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">MEM</span>: <span class="id"><a href="compcert.compcertm.Sound.html#mem">mem</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span> <span class="id">m</span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">WF</span>: <span class="kwd">wf</span> <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.hle_val">hle_val</a></span>: <span class="kwd">forall</span> <span class="id">su0</span> <span class="id">su1</span> <span class="id">v</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL</span>: <span class="id"><a href="compcert.compcertm.Sound.html#val">val</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#v">v</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HLE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#hle">hle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">VAL</span>: <span class="id"><a href="compcert.compcertm.Sound.html#val">val</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#v">v</a></span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.skenv">skenv</a></span>: <span class="id"><a href="compcert.compcertm.Sound.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.common.Memory.html#mem">Memory.mem</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.t">SkEnv.t</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.init_spec">init_spec</a></span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sk_link</span> <span class="id">skenv_link</span> <span class="id">m_init</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MEM</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#Sk.load_mem">Sk.load_mem</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#sk_link">sk_link</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m_init">m_init</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#Sk.load_skenv">Sk.load_skenv</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#sk_link">sk_link</a></span> = <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">su_init</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SUARGS</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su_init">su_init</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#args">args</a></span>) (<span class="id"><a href="compcert.compcertm.ModSem.html#Args.mk">Args.mk</a></span> (<span class="id"><a href="compcert.common.Globalenvs.html#Genv.symbol_address">Genv.symbol_address</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span> (<span class="id"><a href="compcert.common.AST.html#prog_main">prog_main</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#sk_link">sk_link</a></span>) <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.zero">Ptrofs.zero</a></span>) [] <span class="id"><a href="compcert.compcertm.Sound.html#m_init">m_init</a></span>)&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SUSKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su_init">su_init</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m_init">m_init</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span>&gt;&gt;);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.skenv_lepriv">skenv_lepriv</a></span>: <span class="kwd">forall</span> <span class="id">m0</span> <span class="id">su0</span> <span class="id">su1</span> <span class="id">ske</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#ske">ske</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#lepriv">lepriv</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#ske">ske</a></span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.skenv_mle">skenv_mle</a></span>: <span class="kwd">forall</span> <span class="id">m0</span> <span class="id">m1</span> <span class="id">su0</span> <span class="id">ske</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#ske">ske</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#mle">mle</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m1">m1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m1">m1</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#ske">ske</a></span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.skenv_project">skenv_project</a></span>: <span class="kwd">forall</span> <span class="id">su</span> <span class="id">m0</span> <span class="id">skenv_link</span> <span class="id">sk</span> <span class="id">skenv0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.wf">SkEnv.wf</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WFM</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.wf_mem">SkEnv.wf_mem</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#sk">sk</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.project_spec">SkEnv.project_spec</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#sk">sk</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv0">skenv0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCL</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.includes">SkEnv.includes</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#sk">sk</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv0">skenv0</a></span>&gt;&gt;;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.system_skenv">system_skenv</a></span>: <span class="kwd">forall</span> <span class="id">su</span> <span class="id">m0</span> <span class="id">skenv_link</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span> &lt;-&gt; <span class="id"><a href="compcert.compcertm.Sound.html#su">su</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#skenv_link">skenv_link</a></span>.(<span class="id"><a href="compcert.compcertm.System.html#skenv">System.skenv</a></span>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Sound.system_axiom">system_axiom</a></span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ef</span> <span class="id">skenv0</span> <span class="id">su0</span> <span class="id">args0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tr</span> <span class="id">v_ret</span> <span class="id">m_ret</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CSTYLE</span>: <span class="id"><a href="compcert.compcertm.ModSem.html#Args.is_cstyle">Args.is_cstyle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#args0">args0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#args">args</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#args0">args0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#skenv">skenv</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#args0">args0</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#Args.m">Args.m</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#skenv0">skenv0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: (<span class="id"><a href="compcert.common.Events.html#external_call">external_call</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#ef">ef</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#skenv0">skenv0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#args0">args0</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#Args.vs">Args.vs</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#args0">args0</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#Args.m">Args.m</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#tr">tr</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#v_ret">v_ret</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m_ret">m_ret</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">su1</span>, &lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#hle">hle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>&gt;&gt; /\ &lt;&lt;<span class="id">RETV</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#retv">retv</a></span>) (<span class="id"><a href="compcert.compcertm.ModSem.html#Retv.mk">Retv.mk</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#v_ret">v_ret</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#m_ret">m_ret</a></span>)&gt;&gt; /\ &lt;&lt;<span class="id">MLE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#mle">mle</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#args0">args0</a></span>.(<span class="id"><a href="compcert.compcertm.ModSem.html#Args.m">Args.m</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m_ret">m_ret</a></span>&gt;&gt;;<br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Section</span> <span class="id"><a name="Sound.SOUND">SOUND</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">SU</span>: <span class="id"><a href="compcert.compcertm.Sound.html#Sound.class">class</a></span>}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Sound.skenv_hle">skenv_hle</a></span>: <span class="kwd">forall</span> <span class="id">m0</span> <span class="id">su0</span> <span class="id">su1</span> <span class="id">ske</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="id"><a href="compcert.compcertm.Sound.html#Sound.wf">Sound.wf</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#Sound.skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#ske">ske</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#Sound.hle">hle</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">SKE</span>: <span class="id"><a href="compcert.compcertm.Sound.html#su1">su1</a></span>.(<span class="id"><a href="compcert.compcertm.Sound.html#Sound.skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Sound.html#m0">m0</a></span> <span class="id"><a href="compcert.compcertm.Sound.html#ske">ske</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7074')">Proof.</div>
+<div class="proofscript" id="proof7074">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.Sound.html#Sound.skenv_lepriv">skenv_lepriv</a></span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.Sound.html#Sound.hle_lepriv">hle_lepriv</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.Sound.html#Sound.SOUND">SOUND</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.Sound.html#Sound">Sound</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

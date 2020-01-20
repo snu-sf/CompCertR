@@ -1,0 +1,72 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CopC</title>
+<meta name="description" content="Documentation of Coq module CopC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CopC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Floats.html">Floats</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.cfrontend.Ctypes.html">Ctypes</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.x86_64.Archi.html">Archi</a></span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.cfrontend.Cop.html">Cop</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.x86.Conventions1.html">Conventions1</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="typecheck">typecheck</a></span> (<span class="id">vs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) (<span class="id">tys</span>: <span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist">typelist</a></span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="typecheck_intro">typecheck_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall2">Forall2</a></span> (<span class="id"><a href="compcert.cfrontend.Cop.html#val_casted">val_casted</a></span>) <span class="id"><a href="compcert.compcertm.CopC.html#vs">vs</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist_to_listtype">typelist_to_listtype</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#tys">tys</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="kwd">fun</span> <span class="id">ty</span> =&gt; <span class="id"><a href="compcert.compcertm.CopC.html#ty">ty</a></span> &lt;&gt; <span class="id"><a href="compcert.cfrontend.Ctypes.html#Tvoid">Tvoid</a></span>) (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist_to_listtype">typelist_to_listtype</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#tys">tys</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">SZ</span>: 4 * <span class="id"><a href="compcert.x86.Conventions1.html#size_arguments_64">Conventions1.size_arguments_64</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typlist_of_typelist">typlist_of_typelist</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#tys">tys</a></span>) 0 0 0 &lt;= <span class="id"><a href="compcert.lib.Integers.html#Ptrofs.max_unsigned">Ptrofs.max_unsigned</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="val_casted_has_type">val_casted_has_type</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id"><a href="compcert.cfrontend.Cop.html#val_casted">val_casted</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#ty">ty</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id"><a href="compcert.compcertm.CopC.html#ty">ty</a></span> &lt;&gt; <span class="id"><a href="compcert.cfrontend.Ctypes.html#Tvoid">Tvoid</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Values.html#Val.has_type">Val.has_type</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#ty">ty</a></span>.(<span class="id"><a href="compcert.cfrontend.Ctypes.html#typ_of_type">typ_of_type</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6046')">Proof.</div>
+<div class="proofscript" id="proof6046">
+ <span class="id">inv</span> <span class="id">WT</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="val_casted_has_type_list">val_casted_has_type_list</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vs</span> <span class="id">tys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WT</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall2">Forall2</a></span> <span class="id"><a href="compcert.cfrontend.Cop.html#val_casted">val_casted</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#vs">vs</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist_to_listtype">typelist_to_listtype</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#tys">tys</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">NVOID</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="kwd">fun</span> <span class="id">ty</span> =&gt; <span class="id"><a href="compcert.compcertm.CopC.html#ty">ty</a></span> &lt;&gt; <span class="id"><a href="compcert.cfrontend.Ctypes.html#Tvoid">Tvoid</a></span>) (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist_to_listtype">typelist_to_listtype</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#tys">tys</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Values.html#Val.has_type_list">Val.has_type_list</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#vs">vs</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typlist_of_typelist">typlist_of_typelist</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#tys">tys</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6047')">Proof.</div>
+<div class="proofscript" id="proof6047">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">vs</span>; <span class="tactic">destruct</span> <span class="id">tys</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">inv</span> <span class="id">WT</span>; <span class="id">inv</span> <span class="id">NVOID</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CopC.html#val_casted_has_type">val_casted_has_type</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typlist_of_typelist_eq">typlist_of_typelist_eq</a></span>: <span class="kwd">forall</span> <span class="id">itys</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cfrontend.Ctypes.html#typlist_of_typelist">typlist_of_typelist</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#type_of_params">type_of_params</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#itys">itys</a></span>) = (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.cfrontend.Ctypes.html#typ_of_type">typ_of_type</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#itys">itys</a></span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6048')">Proof.</div>
+<div class="proofscript" id="proof6048">
+ <span class="id">i</span>. <span class="id">ginduction</span> <span class="id">itys</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="id">ss</span>. <span class="tactic">f_equal</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typelist_to_listtype_length">typelist_to_listtype_length</a></span>: <span class="kwd">forall</span> <span class="id">itys</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist_to_listtype">typelist_to_listtype</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#type_of_params">type_of_params</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#itys">itys</a></span>)) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="compcert.cfrontend.Ctypes.html#typ_of_type">typ_of_type</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">map</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.compcertm.CopC.html#itys">itys</a></span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6049')">Proof.</div>
+<div class="proofscript" id="proof6049">
+ <span class="id">i</span>. <span class="id">ginduction</span> <span class="id">itys</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="id">ss</span>. <span class="id">xomega</span>. Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

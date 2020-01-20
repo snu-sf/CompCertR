@@ -1,0 +1,128 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module IdSimClightExtra</title>
+<meta name="description" content="Documentation of Coq module IdSimClightExtra" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module IdSimClightExtra</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Program</span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Sem.html">Sem</a></span> <span class="id"><a href="compcert.compcertm.SimProg.html">SimProg</a></span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span> <span class="id"><a href="compcert.compcertm.Mod.html">Mod</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span> <span class="id"><a href="compcert.compcertm.SimMod.html">SimMod</a></span> <span class="id"><a href="compcert.compcertm.SimModSem.html">SimModSem</a></span> <span class="id"><a href="compcert.compcertm.SimSymb.html">SimSymb</a></span> <span class="id"><a href="compcert.compcertm.SimMem.html">SimMem</a></span> <span class="id"><a href="compcert.compcertm.Sound.html">Sound</a></span> <span class="id"><a href="compcert.compcertm.SimSymb.html">SimSymb</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.cfrontend.Cop.html">Cop</a></span> <span class="id"><a href="compcert.cfrontend.Ctypes.html">Ctypes</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html">ClightC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AsmC.html">AsmC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.SimMemInjInvC.html">SimMemInjInvC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ValuesC.html">ValuesC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.LinkingC.html">LinkingC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MapsC.html">MapsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AxiomsC.html">AxiomsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Ord.html">Ord</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MemoryC.html">MemoryC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SmallstepC.html">SmallstepC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Preservation.html">Preservation</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.LocationsC.html">LocationsC</a></span> <span class="id"><a href="compcert.backend.Conventions.html">Conventions</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Conventions1C.html">Conventions1C</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AsmregsC.html">AsmregsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MatchSimModSem.html">MatchSimModSem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.StoreArguments.html">StoreArguments</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AsmStepInj.html">AsmStepInj</a></span> <span class="id"><a href="compcert.compcertm.IntegersC.html">IntegersC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.PropExtensionality.html">Coq.Logic.PropExtensionality</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.AsmExtra.html">AsmExtra</a></span> <span class="id"><a href="compcert.compcertm.IdSimExtra.html">IdSimExtra</a></span> <span class="id"><a href="compcert.compcertm.IdSimAsmExtra.html">IdSimAsmExtra</a></span> <span class="id"><a href="compcert.compcertm.IdSimInvExtra.html">IdSimInvExtra</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MatchSimModSem.html">MatchSimModSem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Conventions1C.html">Conventions1C</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ClightStepInj.html">ClightStepInj</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.IdSimExtra.html">IdSimExtra</a></span> <span class="id"><a href="compcert.compcertm.IdSimInvExtra.html">IdSimInvExtra</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.mktac.html">mktac</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mul">Z.mul</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add">Z.add</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.sub">Z.sub</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.div">Z.div</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="val_casted_inject">val_casted_inject</a></span> <span class="id">val0</span> <span class="id">val1</span> <span class="id">j</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VAL</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject">Val.inject</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#val0">val0</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#val1">val1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">CAST</span>: <span class="id"><a href="compcert.cfrontend.Cop.html#val_casted">val_casted</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#val0">val0</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#ty">ty</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cfrontend.Cop.html#val_casted">val_casted</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#val1">val1</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#ty">ty</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6334')">Proof.</div>
+<div class="proofscript" id="proof6334">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">CAST</span>; <span class="id">inv</span> <span class="id">VAL</span>; <span class="id">clarify</span>; <span class="tactic">try</span> <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CtypingC.html">CtypingC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CopC.html">CopC</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typecheck_inject">typecheck_inject</a></span> <span class="id">vals0</span> <span class="id">vals1</span> <span class="id">j</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject_list">Val.inject_list</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#vals0">vals0</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#vals1">vals1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id"><a href="compcert.compcertm.CopC.html#typecheck">typecheck</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#vals0">vals0</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#ty">ty</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CopC.html#typecheck">typecheck</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#vals1">vals1</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#ty">ty</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6335')">Proof.</div>
+<div class="proofscript" id="proof6335">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TYP</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">clear</span> - <span class="id">VALS</span> <span class="id">TYP0</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">vals1</span> <span class="id">VALS</span> <span class="id">TYP0</span>. <span class="tactic">generalize</span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#typelist_to_listtype">typelist_to_listtype</a></span> <span class="id">ty</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">clear</span> <span class="id">ty</span>. <span class="tactic">induction</span> <span class="id">vals0</span>; <span class="id">ss</span>; <span class="id">i</span>; <span class="id">inv</span> <span class="id">VALS</span>; <span class="id">inv</span> <span class="id">TYP0</span>; <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#val_casted_inject">val_casted_inject</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHvals0</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="wt_retval_inject">wt_retval_inject</a></span> <span class="id">j</span> <span class="id">v_src</span> <span class="id">v_tgt</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject">Val.inject</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#v_src">v_src</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#v_tgt">v_tgt</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_retval">wt_retval</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#v_tgt">v_tgt</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#ty">ty</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_retval">wt_retval</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#v_src">v_src</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#ty">ty</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6336')">Proof.</div>
+<div class="proofscript" id="proof6336">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TYP</span>; <span class="id">inv</span> <span class="id">WTV</span>; <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">clarify</span>; <span class="tactic">try</span> <span class="tactic">by</span> <span class="tactic">repeat</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">NVOID</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typify_c_inject">typify_c_inject</a></span> <span class="id">j</span> <span class="id">retv_src</span> <span class="id">retv_tgt</span> <span class="id">tres</span> <span class="id">tv_src</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#retv_src">retv_src</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#tres">tres</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#tv_src">tv_src</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject">Val.inject</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#retv_src">retv_src</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#retv_tgt">retv_tgt</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tv_tgt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">TYP</span>: <span class="id"><a href="compcert.compcertm.CtypingC.html#typify_c">typify_c</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#retv_tgt">retv_tgt</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#tres">tres</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#tv_tgt">tv_tgt</a></span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INJ</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject">Val.inject</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#tv_src">tv_src</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#tv_tgt">tv_tgt</a></span>&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6337')">Proof.</div>
+<div class="proofscript" id="proof6337">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">TYP</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Prop.html#classic">classic</a></span> (<span class="id"><a href="compcert.cfrontend.Ctyping.html#wt_retval">wt_retval</a></span> <span class="id">retv_tgt</span> <span class="id">tres</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">exists</span> <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">econs</span> 2. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">assert</span> (<span class="id">tv_src</span> = <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span>); <span class="id">clarify</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INJ</span>; <span class="id">inv</span> <span class="id">WT</span>; <span class="id">inv</span> <span class="id">WTV</span>; <span class="id">clarify</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exfalso</span>; <span class="tactic">eapply</span> <span class="id">H</span>; <span class="id">econs</span>; <span class="id">clarify</span>; <span class="tactic">try</span> (<span class="id">econs</span>; <span class="tactic">eauto</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">NVOID</span>; <span class="tactic">eauto</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="id">exists</span> <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span> 2. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#wt_retval_inject">wt_retval_inject</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="vals_casted_inject">vals_casted_inject</a></span> <span class="id">j</span> <span class="id">vals_src</span> <span class="id">vals_tgt</span> <span class="id">tys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALS</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject_list">Val.inject_list</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#vals_src">vals_src</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#vals_tgt">vals_tgt</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall2">Forall2</a></span> <span class="id"><a href="compcert.cfrontend.Cop.html#val_casted">val_casted</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#vals_src">vals_src</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#tys">tys</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall2">Forall2</a></span> <span class="id"><a href="compcert.cfrontend.Cop.html#val_casted">val_casted</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#vals_tgt">vals_tgt</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#tys">tys</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6338')">Proof.</div>
+<div class="proofscript" id="proof6338">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">vals_src</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">VALS</span>. <span class="id">inv</span> <span class="id">TYP</span>. <span class="id">econs</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">VALS</span>. <span class="id">inv</span> <span class="id">TYP</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#val_casted_inject">val_casted_inject</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="cgenv">cgenv</a></span> <span class="id">skenv_link</span> <span class="id">clight</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cfrontend.Clight.html#Build_genv">Build_genv</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.revive">SkEnv.revive</a></span> (<span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.project">SkEnv.project</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#skenv_link">skenv_link</a></span> (<span class="id"><a href="compcert.compcertm.CtypesC.html#CSk.of_program">CtypesC.CSk.of_program</a></span> <span class="id"><a href="compcert.compcertm.ClightC.html#signature_of_function">signature_of_function</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#clight">clight</a></span>)) <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#clight">clight</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.cfrontend.Ctypes.html#prog_comp_env">prog_comp_env</a></span> <span class="id"><a href="compcert.compcertm.IdSimClightExtra.html#clight">clight</a></span>).<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

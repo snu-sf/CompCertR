@@ -1,0 +1,78 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Conventions1C</title>
+<meta name="description" content="Documentation of Coq module Conventions1C" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Conventions1C</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html">Decidableplus</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ASTC.html">ASTC</a></span> <span class="id"><a href="compcert.x86.Machregs.html">Machregs</a></span> <span class="id"><a href="compcert.backend.Locations.html">Locations</a></span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.x86.Conventions1.html">Conventions1</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="loc_arguments_length_aux">loc_arguments_length_aux</a></span>: <span class="kwd">forall</span> <span class="id">tys</span> <span class="id">ir</span> <span class="id">fr</span> <span class="id">ofs</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LEN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments_64">loc_arguments_64</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#tys">tys</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#ir">ir</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#fr">fr</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#ofs">ofs</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#tys">tys</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7238')">Proof.</div>
+<div class="proofscript" id="proof7238">
+ <span class="id">i</span>. <span class="id">ginduction</span> <span class="id">tys</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>; <span class="id">s</span>; <span class="tactic">rewrite</span> <span class="id">IHtys</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="loc_arguments_length">loc_arguments_length</a></span>: <span class="kwd">forall</span> <span class="id">sg</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LEN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#sg">sg</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> (<span class="id"><a href="compcert.common.AST.html#sig_args">sig_args</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#sg">sg</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7239')">Proof.</div>
+<div class="proofscript" id="proof7239">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sg</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span>. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#loc_arguments_length_aux">loc_arguments_length_aux</a></span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.add">Z.add</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mul">Z.mul</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.sub">Z.sub</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.div">Z.div</a></span>.<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="compcert.lib.Coqlib.html#list_nth_z">list_nth_z</a></span>.<br/>
+<br/>
+<span class="kwd">Let</span> <span class="id"><a name="size_arguments_loc_arguments_aux">size_arguments_loc_arguments_aux</a></span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">tys</span> <span class="id">ofs</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id"><a href="compcert.compcertm.Conventions1C.html#z">z</a></span> &lt;= <span class="id"><a href="compcert.compcertm.Conventions1C.html#ofs">ofs</a></span> &lt; <span class="id"><a href="compcert.x86.Conventions1.html#size_arguments_64">size_arguments_64</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#tys">tys</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#y">y</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#z">z</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">base</span> <span class="id">ty</span>, (&lt;&lt;<span class="id">IN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> (<span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id"><a href="compcert.backend.Locations.html#Outgoing">Outgoing</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#base">base</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#ty">ty</a></span>) (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments_64">loc_arguments_64</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#tys">tys</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#y">y</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#z">z</a></span>))&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">RANGE</span>: <span class="id"><a href="compcert.compcertm.Conventions1C.html#base">base</a></span> &lt;= <span class="id"><a href="compcert.compcertm.Conventions1C.html#ofs">ofs</a></span> &lt; <span class="id"><a href="compcert.compcertm.Conventions1C.html#base">base</a></span> + (<span class="id"><a href="compcert.common.Memdata.html#size_chunk">Memdata.size_chunk</a></span> (<span class="id"><a href="compcert.common.AST.html#chunk_of_type">chunk_of_type</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#ty">ty</a></span>))&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7240')">Proof.</div>
+<div class="proofscript" id="proof7240">
+&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">tys</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">try</span> <span class="id">xomega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">IHtys</span>; <span class="tactic">eauto</span>; []; <span class="id">i</span>; <span class="id">des</span>; []); <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">esplits</span>; <span class="tactic">eauto</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>; <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Prop.html#classic">classic</a></span> (<span class="id">z</span> + 2 &lt;= <span class="id">ofs</span>)); <span class="tactic">try</span> (<span class="id">exploit</span> <span class="id">IHtys</span>; <span class="tactic">eauto</span>; []; <span class="id">i</span>; <span class="id">des</span>; []); <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">esplits</span>; <span class="tactic">eauto</span>); <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>; <span class="id">lia</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="size_arguments_loc_arguments">size_arguments_loc_arguments</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sg</span> <span class="id">ofs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: 0 &lt;= <span class="id"><a href="compcert.compcertm.Conventions1C.html#ofs">ofs</a></span> &lt; <span class="id"><a href="compcert.x86.Conventions1.html#size_arguments">size_arguments</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#sg">sg</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">base</span> <span class="id">ty</span>, (&lt;&lt;<span class="id">IN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> (<span class="id"><a href="compcert.backend.Locations.html#S">S</a></span> <span class="id"><a href="compcert.backend.Locations.html#Outgoing">Outgoing</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#base">base</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#ty">ty</a></span>) (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#sg">sg</a></span>))&gt;&gt;)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/\ (&lt;&lt;<span class="id">RANGE</span>: <span class="id"><a href="compcert.compcertm.Conventions1C.html#base">base</a></span> &lt;= <span class="id"><a href="compcert.compcertm.Conventions1C.html#ofs">ofs</a></span> &lt; <span class="id"><a href="compcert.compcertm.Conventions1C.html#base">base</a></span> + (<span class="id"><a href="compcert.common.Memdata.html#size_chunk">Memdata.size_chunk</a></span> (<span class="id"><a href="compcert.common.AST.html#chunk_of_type">chunk_of_type</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#ty">ty</a></span>))&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7241')">Proof.</div>
+<div class="proofscript" id="proof7241">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sg</span>; <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.x86.Conventions1.html#size_arguments">size_arguments</a></span>, <span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="kwd">in</span> *. <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#size_arguments_loc_arguments_aux">size_arguments_loc_arguments_aux</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="loc_args_callee_save_disjoint">loc_args_callee_save_disjoint</a></span> <span class="id">sg</span> <span class="id">mr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EXT</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> (<span class="id"><a href="compcert.backend.Locations.html#R">R</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#mr">mr</a></span>) (<span class="id"><a href="compcert.common.AST.html#regs_of_rpairs">regs_of_rpairs</a></span> (<span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments">loc_arguments</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#sg">sg</a></span>))):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;~ <span class="id"><a href="compcert.x86.Conventions1.html#is_callee_save">Conventions1.is_callee_save</a></span> <span class="id"><a href="compcert.compcertm.Conventions1C.html#mr">mr</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7242')">Proof.</div>
+<div class="proofscript" id="proof7242">
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.common.AST.html#in_regs_of_rpairs_inv">in_regs_of_rpairs_inv</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.x86.Conventions1.html#loc_arguments_acceptable">loc_arguments_acceptable</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.common.AST.html#forall_rpair">forall_rpair</a></span>, <span class="id"><a href="compcert.x86.Conventions1.html#loc_argument_acceptable">loc_argument_acceptable</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">des</span>; <span class="id">clarify</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

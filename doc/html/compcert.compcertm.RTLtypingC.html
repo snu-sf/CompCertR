@@ -1,0 +1,75 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module RTLtypingC</title>
+<meta name="description" content="Documentation of Coq module RTLtypingC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module RTLtypingC</h1>
+<div class="coq">
+<br/>
+<div class="doc">Typing rules and a type inference algorithm for RTL. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Errors.html">Errors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Unityping.html">Unityping</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.x86.Op.html">Op</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.Registers.html">Registers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ValuesC.html">ValuesC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.IntegersC.html">IntegersC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MemoryC.html">MemoryC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.RTLC.html">RTLC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ConventionsC.html">ConventionsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.backend.RTLtyping.html">RTLtyping</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span> <span class="id"><a href="compcert.compcertm.Preservation.html">Preservation</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SoundTop.html">SoundTop</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.RTLC.html">RTLC</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="LPRSV">LPRSV</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="LPRSV.prog">prog</a></span>: <span class="id"><a href="compcert.backend.RTL.html#program">program</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="LPRSV.wt_prog">wt_prog</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">fd</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> (<span class="id"><a href="compcert.compcertm.RTLtypingC.html#i">i</a></span>, <span class="id"><a href="compcert.common.AST.html#Gfun">Gfun</a></span> <span class="id"><a href="compcert.compcertm.RTLtypingC.html#fd">fd</a></span>) <span class="id"><a href="compcert.compcertm.RTLtypingC.html#LPRSV.prog">prog</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defs">prog_defs</a></span>) -&gt; <span class="id"><a href="compcert.backend.RTLtyping.html#wt_fundef">wt_fundef</a></span> <span class="id"><a href="compcert.compcertm.RTLtypingC.html#fd">fd</a></span>.<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id"><a name="wt_state_local_preservation">wt_state_local_preservation</a></span>: <span class="kwd">forall</span> <span class="id">skenv_link</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Preservation.html#local_preservation">local_preservation</a></span> (<span class="id"><a href="compcert.compcertm.RTLC.html#modsem2">modsem2</a></span> <span class="id"><a href="compcert.compcertm.RTLtypingC.html#skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.RTLtypingC.html#LPRSV.prog">prog</a></span>) (<span class="kwd">fun</span> <span class="id">_</span> <span class="id">_</span> <span class="id">st</span> =&gt; <span class="id"><a href="compcert.backend.RTLtyping.html#wt_state">wt_state</a></span> <span class="id"><a href="compcert.compcertm.RTLtypingC.html#st">st</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6466')">Proof.</div>
+<div class="proofscript" id="proof6466">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ii</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="comment">(*&nbsp;init&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INIT</span>. <span class="id">econs</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">inv</span> <span class="id">TYP</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify_has_type_list">typify_has_type_list</a></span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="comment">(*&nbsp;step&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.backend.RTLtyping.html#subject_reduction">subject_reduction</a></span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Globalenvs.html#Genv.find_funct">Genv.find_funct</a></span>, <span class="id"><a href="compcert.common.Globalenvs.html#Genv.find_funct_ptr">Genv.find_funct_ptr</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.revive">Skeleton.SkEnv.revive</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.GlobalenvsC.html#Genv_map_defs_def">Genv_map_defs_def</a></span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="id">des</span>. <span class="id">u</span> <span class="kwd">in</span> <span class="id">MAP</span>. <span class="id">des_ifs_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.AST.html#in_prog_defmap">in_prog_defmap</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">rr</span>. <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">des_ifs</span>. <span class="id">esplits</span>; <span class="id">ss</span>. <span class="id">rr</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall_forall">Forall_forall</a></span>. <span class="id">ii</span>; <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">inv</span> <span class="id">AFTER</span>. <span class="id">inv</span> <span class="id">SUST</span>. <span class="id">econs</span>; <span class="id">et</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify_has_type">typify_has_type</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.RTLtypingC.html#LPRSV">LPRSV</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

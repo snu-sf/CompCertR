@@ -1,0 +1,118 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SimMemLift</title>
+<meta name="description" content="Documentation of Coq module SimMemLift" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SimMemLift</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html">RelationClasses</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSets.html">FSets</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Ordered.html">Ordered</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.compcertm.SimMem.html">SimMem</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="SimMemLift">SimMemLift</a></span>.<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Class</span> <span class="id"><a name="SimMemLift.class">class</a></span> (<span class="id">SM</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.class">SimMem.class</a></span>) :=<br/>
+&nbsp;&nbsp;{ <span class="id"><a name="SimMemLift.lepriv_Trans">lepriv_Trans</a></span> :&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#Transitive">Transitive</a></span> <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.lepriv">SimMem.lepriv</a></span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.lift">lift</a></span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">SimMem.t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">SimMem.t</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.unlift">unlift</a></span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">SimMem.t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">SimMem.t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">SimMem.t</a></span>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.lift_wf">lift_wf</a></span>: <span class="kwd">forall</span> <span class="id">mrel</span>, <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel">mrel</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#lift">lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel">mrel</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.lift_src">lift_src</a></span>: <span class="kwd">forall</span> <span class="id">mrel</span>, (<span class="id"><a href="compcert.compcertm.SimMemLift.html#lift">lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel">mrel</a></span>).(<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.src">SimMem.src</a></span>) = <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel">mrel</a></span>.(<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.src">SimMem.src</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.lift_tgt">lift_tgt</a></span>: <span class="kwd">forall</span> <span class="id">mrel</span>, (<span class="id"><a href="compcert.compcertm.SimMemLift.html#lift">lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel">mrel</a></span>).(<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.tgt">SimMem.tgt</a></span>) = <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel">mrel</a></span>.(<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.tgt">SimMem.tgt</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.unlift_src">unlift_src</a></span>: <span class="kwd">forall</span> <span class="id">mrel0</span> <span class="id">mrel1</span>, (<span class="id"><a href="compcert.compcertm.SimMemLift.html#unlift">unlift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span>).(<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.src">SimMem.src</a></span>) = <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span>.(<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.src">SimMem.src</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.unlift_tgt">unlift_tgt</a></span>: <span class="kwd">forall</span> <span class="id">mrel0</span> <span class="id">mrel1</span>, (<span class="id"><a href="compcert.compcertm.SimMemLift.html#unlift">unlift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span>).(<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.tgt">SimMem.tgt</a></span>) = <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span>.(<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.tgt">SimMem.tgt</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.lift_spec">lift_spec</a></span>: <span class="kwd">forall</span> <span class="id">mrel0</span> <span class="id">mrel1</span>, <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.le">SimMem.le</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#lift">lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span>) <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.le">SimMem.le</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#unlift">unlift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.unlift_wf">unlift_wf</a></span>: <span class="kwd">forall</span> <span class="id">mrel0</span> <span class="id">mrel1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.le">SimMem.le</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#lift">lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span>) <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#unlift">unlift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel0">mrel0</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel1">mrel1</a></span>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.lift_sim_val">lift_sim_val</a></span>: <span class="kwd">forall</span> <span class="id">mrel</span>, <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_val">SimMem.sim_val</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel">mrel</a></span> &lt;2= <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_val">SimMem.sim_val</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#lift">lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#mrel">mrel</a></span>);<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.lift_priv">lift_priv</a></span>: <span class="kwd">forall</span> <span class="id">sm0</span> (<span class="id">MWF</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm0">sm0</a></span>), <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.lepriv">SimMem.lepriv</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm0">sm0</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#lift">lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm0">sm0</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="SimMemLift.unlift_priv">unlift_priv</a></span>: <span class="kwd">forall</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm_at</span> <span class="id">sm_arg</span> <span class="id">sm_ret</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_at">sm_at</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLIFT</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.lepriv">SimMem.lepriv</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_at">sm_at</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_arg">sm_arg</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.le">SimMem.le</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_arg">sm_arg</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_ret">sm_ret</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_ret">sm_ret</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.lepriv">SimMem.lepriv</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_ret">sm_ret</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#unlift">unlift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_at">sm_at</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_ret">sm_ret</a></span>);<br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Section</span> <span class="id"><a name="SimMemLift.PROPS">PROPS</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">SM</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.class">SimMem.class</a></span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> {<span class="id">SML</span>: <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.class">SimMemLift.class</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.PROPS.SM">SM</a></span>}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="SimMemLift.lift_sim_regset">lift_sim_regset</a></span>: <span class="kwd">forall</span> <span class="id">sm0</span>, <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_regset">SimMem.sim_regset</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm0">sm0</a></span> &lt;2= <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_regset">SimMem.sim_regset</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift">SimMemLift.lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm0">sm0</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6664')">Proof.</div>
+<div class="proofscript" id="proof6664">
+ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_sim_val">SimMemLift.lift_sim_val</a></span>; <span class="id">et</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="SimMemLift.le_lift_lepriv">le_lift_lepriv</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sm0</span> <span class="id">sm1</span> <span class="id">sm_lift</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF0</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm0">sm0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF1</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm1">sm1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLE</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.le">SimMem.le</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm0">sm0</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm1">sm1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MLIFT</span>: <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift">SimMemLift.lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm1">sm1</a></span> = <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_lift">sm_lift</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MLE</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.lepriv">SimMem.lepriv</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm0">sm0</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_lift">sm_lift</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6665')">Proof.</div>
+<div class="proofscript" id="proof6665">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">subst</span>. <span class="id">hexploit</span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_priv">SimMemLift.lift_priv</a></span> <span class="id">sm1</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">T</span>. <span class="id">r</span>. <span class="id">etrans</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="SimMemLift.lift_args">lift_args</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">args_src</span> <span class="id">args_tgt</span> <span class="id">sm_arg0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ARGS</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_args">SimMem.sim_args</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#args_src">args_src</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#args_tgt">args_tgt</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_arg0">sm_arg0</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ARGS</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_args">SimMem.sim_args</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#args_src">args_src</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#args_tgt">args_tgt</a></span> (<span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift">SimMemLift.lift</a></span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#sm_arg0">sm_arg0</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6666')">Proof.</div>
+<div class="proofscript" id="proof6666">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">ARGS</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_sim_val">SimMemLift.lift_sim_val</a></span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">erewrite</span> &lt;- <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_val_list_spec">SimMem.sim_val_list_spec</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#Forall2_impl">Forall2_impl</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_sim_val">SimMemLift.lift_sim_val</a></span>; <span class="id">et</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_src">SimMemLift.lift_src</a></span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_tgt">SimMemLift.lift_tgt</a></span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span> 2; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_sim_regset">lift_sim_regset</a></span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_src">SimMemLift.lift_src</a></span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">rewrite</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift_tgt">SimMemLift.lift_tgt</a></span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.PROPS">PROPS</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift">SimMemLift</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

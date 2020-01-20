@@ -1,0 +1,75 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Wfsimpl</title>
+<meta name="description" content="Documentation of Coq module Wfsimpl" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Wfsimpl</h1>
+<div class="coq">
+<br/>
+<div class="doc">Defining recursive functions by Noetherian induction.  This is a simplified
+  interface to the <span class="bracket"><span class="id">Wf</span></span> module of Coq's standard library, where the functions
+  to be defined have non-dependent types, and function extensionality is assumed. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Axioms.html">Axioms</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html">Init.Wf</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Wf_nat.html">Wf_nat</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="FIX">FIX</a></span>.<br/>
+<br/>
+<span class="kwd">Variables</span> <span class="id"><a name="FIX.A">A</a></span> <span class="id"><a name="FIX.B">B</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FIX.R">R</a></span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.A">A</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="FIX.Rwf">Rwf</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.R">R</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FIX.F">F</a></span>: <span class="kwd">forall</span> (<span class="id">x</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.A">A</a></span>), (<span class="kwd">forall</span> (<span class="id">y</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.A">A</a></span>), <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.R">R</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#y">y</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#x">x</a></span> -&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.B">B</a></span>) -&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.B">B</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="kwd">Fix</span> (<span class="id">x</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.A">A</a></span>) : <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.B">B</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#Fix">Wf.Fix</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.Rwf">Rwf</a></span> (<span class="kwd">fun</span> (<span class="id">x</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.A">A</a></span>) =&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.B">B</a></span>) <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.F">F</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#x">x</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="unroll_Fix">unroll_Fix</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, <span class="kwd">Fix</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#x">x</a></span> = <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.F">F</a></span> (<span class="kwd">fun</span> (<span class="id">y</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.A">A</a></span>) (<span class="id">P</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.R">R</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#y">y</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#x">x</a></span>) =&gt; <span class="kwd">Fix</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#y">y</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1108')">Proof.</div>
+<div class="proofscript" id="proof1108">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="kwd">Fix</span>; <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#Fix_eq">Wf.Fix_eq</a></span> <span class="kwd">with</span> (<span class="id">P</span> := <span class="kwd">fun</span> (<span class="id">x</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.A">A</a></span>) =&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX.B">B</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">assert</span> (<span class="id">f</span> = <span class="id">g</span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Axioms.html#functional_extensionality_dep">functional_extensionality_dep</a></span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Axioms.html#functional_extensionality">functional_extensionality</a></span>; <span class="tactic">intros</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">g</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#FIX">FIX</a></span>.<br/>
+<br/>
+<div class="doc">Same, with a nonnegative measure instead of a well-founded ordering </div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="FIXM">FIXM</a></span>.<br/>
+<br/>
+<span class="kwd">Variables</span> <span class="id"><a name="FIXM.A">A</a></span> <span class="id"><a name="FIXM.B">B</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="kwd">measure</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.A">A</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FIXM.F">F</a></span>: <span class="kwd">forall</span> (<span class="id">x</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.A">A</a></span>), (<span class="kwd">forall</span> (<span class="id">y</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.A">A</a></span>), <span class="kwd">measure</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#y">y</a></span> &lt; <span class="kwd">measure</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#x">x</a></span> -&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.B">B</a></span>) -&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.B">B</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Fixm">Fixm</a></span> (<span class="id">x</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.A">A</a></span>) : <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.B">B</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#Fix">Wf.Fix</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Wf_nat.html#well_founded_ltof">well_founded_ltof</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.A">A</a></span> <span class="kwd">measure</span>) (<span class="kwd">fun</span> (<span class="id">x</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.A">A</a></span>) =&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.B">B</a></span>) <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.F">F</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#x">x</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="unroll_Fixm">unroll_Fixm</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Wfsimpl.html#Fixm">Fixm</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#x">x</a></span> = <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.F">F</a></span> (<span class="kwd">fun</span> (<span class="id">y</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.A">A</a></span>) (<span class="id">P</span>: <span class="kwd">measure</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#y">y</a></span> &lt; <span class="kwd">measure</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#x">x</a></span>) =&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#Fixm">Fixm</a></span> <span class="id"><a href="compcert.lib.Wfsimpl.html#y">y</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1109')">Proof.</div>
+<div class="proofscript" id="proof1109">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#Fixm">Fixm</a></span>; <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#Fix_eq">Wf.Fix_eq</a></span> <span class="kwd">with</span> (<span class="id">P</span> := <span class="kwd">fun</span> (<span class="id">x</span>: <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.A">A</a></span>) =&gt; <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM.B">B</a></span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">assert</span> (<span class="id">f</span> = <span class="id">g</span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Axioms.html#functional_extensionality_dep">functional_extensionality_dep</a></span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Axioms.html#functional_extensionality">functional_extensionality</a></span>; <span class="tactic">intros</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">g</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#FIXM">FIXM</a></span>.<br/>
+<br/>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

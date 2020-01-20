@@ -1,0 +1,347 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Iteration</title>
+<meta name="description" content="Documentation of Coq module Iteration" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Iteration</h1>
+<div class="coq">
+<br/>
+<div class="doc">Bounded and unbounded iterators </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Axioms.html">Axioms</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Wfsimpl.html">Wfsimpl</a></span>.<br/>
+<br/>
+<div class="doc">This modules defines several Coq encodings of a general "while" loop.
+  The loop is presented in functional style as the iteration
+  of a <span class="bracket"><span class="id">step</span></span> function of type <span class="bracket"><span class="id">A</span> -&gt; <span class="id">B</span> + <span class="id">A</span></span>:
+<pre>
+        let rec iterate step a =
+          match step a with
+          | inl b -&gt; b
+          | inr a' -&gt; iterate step a'</pre>
+  This iteration cannot be defined directly in Coq using <span class="bracket"><span class="kwd">Fixpoint</span></span>,
+  because Coq is a logic of total functions, and therefore we must
+  guarantee termination of the loop.
+</div>
+<br/>
+<h1> Terminating iteration </h1>
+<br/>
+<div class="doc">We first implement the case where termination is guaranteed because
+  the current state <span class="bracket"><span class="id">a</span></span> decreases at each iteration. </div>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="WfIter">WfIter</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="WfIter.ITERATION">ITERATION</a></span>.<br/>
+<br/>
+<span class="kwd">Variables</span> <span class="id"><a name="WfIter.ITERATION.A">A</a></span> <span class="id"><a name="WfIter.ITERATION.B">B</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WfIter.ITERATION.step">step</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.B">B</a></span> + <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WfIter.ITERATION.ord">ord</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="WfIter.ITERATION.ord_wf">ord_wf</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.ord">ord</a></span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="WfIter.ITERATION.step_decr">step_decr</a></span>: <span class="kwd">forall</span> <span class="id">a</span> <span class="id">a</span>', <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.step">step</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">_</span> <span class="id">a</span>' -&gt; <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.ord">ord</a></span> <span class="id">a</span>' <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="WfIter.step_info">step_info</a></span> (<span class="id">a</span>: <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span>) : {<span class="id">b</span> | <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.step">step</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">_</span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>} + {<span class="id">a</span>' | <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.step">step</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">_</span> <span class="id">a</span>' &amp; <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.ord">ord</a></span> <span class="id">a</span>' <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof370')">Proof.</div>
+<div class="proofscript" id="proof370">
+&nbsp;&nbsp;<span class="id">caseEq</span> (<span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.step">step</a></span> <span class="id">a</span>); <span class="tactic">intros</span>. <span class="id">left</span>; <span class="id">exists</span> <span class="id">b</span>; <span class="tactic">auto</span>. <span class="id">right</span>; <span class="id">exists</span> <span class="id">a0</span>; <span class="tactic">auto</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="WfIter.iterate_F">iterate_F</a></span> (<span class="id">a</span>: <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span>) (<span class="id">rec</span>: <span class="kwd">forall</span> <span class="id">a</span>', <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.ord">ord</a></span> <span class="id">a</span>' <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.B">B</a></span>) : <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.B">B</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.step_info">step_info</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#exist">exist</a></span> <span class="id">b</span> <span class="id">P</span>) =&gt; <span class="id">b</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#exist2">exist2</a></span> <span class="id">a</span>' <span class="id">P</span> <span class="id">Q</span>) =&gt; <span class="id"><a href="compcert.lib.Iteration.html#rec">rec</a></span> <span class="id">a</span>' <span class="id">Q</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="WfIter.iterate">iterate</a></span> (<span class="id">a</span>: <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span>) : <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.B">B</a></span> := <span class="kwd">Fix</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.ord_wf">ord_wf</a></span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.iterate_F">iterate_F</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>.<br/>
+<br/>
+<div class="doc">We now prove an invariance property <span class="bracket"><span class="id">iterate_prop</span></span>, similar to the Hoare
+  logic rule for "while" loops. </div>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WfIter.ITERATION.P">P</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="WfIter.ITERATION.Q">Q</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.B">B</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="WfIter.ITERATION.step_prop">step_prop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> : <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.A">A</a></span>, <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.step">step</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">b</span> =&gt; <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.Q">Q</a></span> <span class="id">b</span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">a</span>' =&gt; <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.P">P</a></span> <span class="id">a</span>' <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="WfIter.iterate_prop">iterate_prop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span>, <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.Q">Q</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#WfIter.iterate">iterate</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof371')">Proof.</div>
+<div class="proofscript" id="proof371">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">a0</span>. <span class="tactic">pattern</span> <span class="id">a0</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded_ind">well_founded_ind</a></span> <span class="kwd">with</span> (<span class="id">R</span> := <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.ord">ord</a></span>). <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.iterate">iterate</a></span>; <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#unroll_Fix">unroll_Fix</a></span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.iterate_F">iterate_F</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Iteration.html#WfIter.step_info">step_info</a></span> <span class="id">x</span>) <span class="kwd">as</span> [[<span class="id">b</span> <span class="id">U</span>] | [<span class="id">a</span>' <span class="id">U</span> <span class="id">V</span>]].<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.step_prop">step_prop</a></span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">U</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span>. <span class="tactic">auto</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION.step_prop">step_prop</a></span>; <span class="tactic">eauto</span>. <span class="tactic">rewrite</span> <span class="id">U</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter.ITERATION">ITERATION</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Iteration.html#WfIter">WfIter</a></span>.<br/>
+<br/>
+<h1> Bounded iteration </h1>
+<br/>
+<div class="doc">The presentation of iteration shown above is predicated on the existence
+  of a well-founded ordering that decreases at each step of the iteration.
+  In several parts of the CompCert development, it is very painful to define
+  such a well-founded ordering and to prove decrease, even though we know our
+  iterations always terminate.
+  In the presentation below, we choose instead to bound the number of iterations
+  by an arbitrary constant.  <span class="bracket"><span class="id">iterate</span></span> then becomes a function that can fail,
+  of type <span class="bracket"><span class="id">A</span> -&gt; <span class="id">option</span> <span class="id">B</span></span>.  The <span class="bracket"><span class="id">None</span></span> result denotes failure to reach
+  a result in the number of iterations prescribed, or, in other terms,
+  failure to find a solution to the dataflow problem.  The compiler
+  passes that exploit dataflow analysis (the <span class="bracket"><span class="id">Constprop</span></span>, <span class="bracket"><span class="id">CSE</span></span> and
+  <span class="bracket"><span class="id">Allocation</span></span> passes) will, in this case, either fail (<span class="bracket"><span class="id">Allocation</span></span>)
+  or turn off the optimization pass (<span class="bracket"><span class="id">Constprop</span></span> and <span class="bracket"><span class="id">CSE</span></span>).
+  Since we know (informally) that our computations terminate, we can
+  take a very large constant as the maximal number of iterations.
+  Failure will therefore never happen in practice, but of
+  course our proofs also cover the failure case and show that
+  nothing bad happens in this hypothetical case either.  </div>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="PrimIter">PrimIter</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="PrimIter.ITERATION">ITERATION</a></span>.<br/>
+<br/>
+<span class="kwd">Variables</span> <span class="id"><a name="PrimIter.ITERATION.A">A</a></span> <span class="id"><a name="PrimIter.ITERATION.B">B</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="PrimIter.ITERATION.step">step</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.B">B</a></span> + <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.A">A</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="PrimIter.num_iterations">num_iterations</a></span> := 1000000000000%<span class="id">positive</span>.<br/>
+<br/>
+<div class="doc">The simple definition of bounded iteration is:
+<pre>
+Fixpoint iterate (niter: nat) (a: A) {struct niter} : option B :=
+  match niter with
+  | O =&gt; None
+  | S niter' =&gt;
+      match step a with
+      | inl b =&gt; b
+      | inr a' =&gt; iterate niter' a'
+      end
+  end.</pre>
+  This function is structural recursive over the parameter <span class="bracket"><span class="id">niter</span></span>
+  (number of iterations), represented here as a Peano integer (type <span class="bracket"><span class="id">nat</span></span>).
+  However, we want to use very large values of <span class="bracket"><span class="id">niter</span></span>.  As Peano integers,
+  these values would be much too large to fit in memory.  Therefore,
+  we must express iteration counts as a binary integer (type <span class="bracket"><span class="id">positive</span></span>).
+  However, Peano induction over type <span class="bracket"><span class="id">positive</span></span> is not structural recursion,
+  so we cannot define <span class="bracket"><span class="id">iterate</span></span> as a Coq fixpoint and must use
+  Noetherian recursion instead. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="PrimIter.iter_step">iter_step</a></span> (<span class="id">x</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">next</span>: <span class="kwd">forall</span> <span class="id">y</span>, <span class="id"><a href="compcert.lib.Coqlib.html#Plt">Plt</a></span> <span class="id"><a href="compcert.lib.Iteration.html#y">y</a></span> <span class="id"><a href="compcert.lib.Iteration.html#x">x</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.B">B</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">s</span>: <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.A">A</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.B">B</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Coqlib.html#peq">peq</a></span> <span class="id"><a href="compcert.lib.Iteration.html#x">x</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#left">left</a></span> <span class="id">EQ</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#right">right</a></span> <span class="id">NOTEQ</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.step">step</a></span> <span class="id"><a href="compcert.lib.Iteration.html#s">s</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">res</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">s</span>'  =&gt; <span class="id"><a href="compcert.lib.Iteration.html#next">next</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.pred">Pos.pred</a></span> <span class="id"><a href="compcert.lib.Iteration.html#x">x</a></span>) (<span class="id"><a href="compcert.lib.Coqlib.html#Ppred_Plt">Ppred_Plt</a></span> <span class="id"><a href="compcert.lib.Iteration.html#x">x</a></span> <span class="id">NOTEQ</span>) <span class="id">s</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="PrimIter.iter">iter</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.B">B</a></span> := <span class="kwd">Fix</span> <span class="id"><a href="compcert.lib.Coqlib.html#Plt_wf">Plt_wf</a></span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.iter_step">iter_step</a></span>.<br/>
+<br/>
+<div class="doc">The <span class="bracket"><span class="id">iterate</span></span> function is defined as <span class="bracket"><span class="id">iter</span></span> up to
+    <span class="bracket"><span class="id">num_iterations</span></span> through the loop. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="PrimIter.iterate">iterate</a></span> := <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.num_iterations">num_iterations</a></span>.<br/>
+<br/>
+<div class="doc">We now prove the invariance property <span class="bracket"><span class="id">iterate_prop</span></span>. </div>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="PrimIter.ITERATION.P">P</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.A">A</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="PrimIter.ITERATION.Q">Q</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.B">B</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="PrimIter.ITERATION.step_prop">step_prop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> : <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.A">A</a></span>, <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.step">step</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">b</span> =&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.Q">Q</a></span> <span class="id">b</span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">a</span>' =&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.P">P</a></span> <span class="id">a</span>' <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="PrimIter.iter_prop">iter_prop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.Q">Q</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof372')">Proof.</div>
+<div class="proofscript" id="proof372">
+&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded_ind">well_founded_ind</a></span> <span class="id"><a href="compcert.lib.Coqlib.html#Plt_wf">Plt_wf</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">p</span> =&gt; <span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#p">p</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.Q">Q</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.iter">iter</a></span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Wfsimpl.html#unroll_Fix">unroll_Fix</a></span> <span class="kwd">in</span> <span class="id">H1</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.iter_step">iter_step</a></span> <span class="kwd">in</span> <span class="id">H1</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#peq">peq</a></span> <span class="id">x</span> 1). <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.step_prop">step_prop</a></span> <span class="id">a</span> <span class="id">H0</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.step">step</a></span> <span class="id">a</span>) <span class="kwd">as</span> [<span class="id">b</span>'|<span class="id">a</span>'] <span class="id">eqn</span>:?.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">H1</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">H</span> <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.pred">Pos.pred</a></span> <span class="id">x</span>) <span class="id">a</span>'. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#Ppred_Plt">Ppred_Plt</a></span>; <span class="tactic">auto</span>. <span class="tactic">auto</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="PrimIter.iterate_prop">iterate_prop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.iterate">iterate</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION.Q">Q</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof373')">Proof.</div>
+<div class="proofscript" id="proof373">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.iter_prop">iter_prop</a></span> <span class="kwd">with</span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.num_iterations">num_iterations</a></span> <span class="id">a</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter.ITERATION">ITERATION</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Iteration.html#PrimIter">PrimIter</a></span>.<br/>
+<br/>
+<h1> General iteration </h1>
+<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical.html">Classical</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.ClassicalDescription.html">ClassicalDescription</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Max.html">Max</a></span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="GenIter">GenIter</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="GenIter.ITERATION">ITERATION</a></span>.<br/>
+<br/>
+<span class="kwd">Variables</span> <span class="id"><a name="GenIter.ITERATION.A">A</a></span> <span class="id"><a name="GenIter.ITERATION.B">B</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="GenIter.ITERATION.step">step</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span> + <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="GenIter.B_le">B_le</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span>) : <span class="kwd">Prop</span> := <span class="id"><a href="compcert.lib.Iteration.html#x">x</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> \/ <span class="id"><a href="compcert.lib.Iteration.html#y">y</a></span> = <span class="id"><a href="compcert.lib.Iteration.html#x">x</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="GenIter.F_le">F_le</a></span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span>) : <span class="kwd">Prop</span> := <span class="kwd">forall</span> <span class="id">a</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.B_le">B_le</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#x">x</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>) (<span class="id"><a href="compcert.lib.Iteration.html#y">y</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="GenIter.F_iter">F_iter</a></span> (<span class="id">next</span>: <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span>) (<span class="id">a</span>: <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.step">step</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">b</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">b</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">a</span>' =&gt; <span class="id"><a href="compcert.lib.Iteration.html#next">next</a></span> <span class="id">a</span>'<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.F_iter_monot">F_iter_monot</a></span>:<br/>
+&nbsp;<span class="kwd">forall</span> <span class="id">f</span> <span class="id">g</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_le">F_le</a></span> <span class="id"><a href="compcert.lib.Iteration.html#f">f</a></span> <span class="id"><a href="compcert.lib.Iteration.html#g">g</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_le">F_le</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_iter">F_iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#f">f</a></span>) (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_iter">F_iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#g">g</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof374')">Proof.</div>
+<div class="proofscript" id="proof374">
+&nbsp;&nbsp;<span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_iter">F_iter</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.step">step</a></span> <span class="id">a</span>) <span class="kwd">as</span> [<span class="id">b</span> | <span class="id">a</span>']. <span class="tactic">red</span>; <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="GenIter.iter">iter</a></span> (<span class="id">n</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) : <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span> =&gt; (<span class="kwd">fun</span> <span class="id">a</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">m</span> =&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_iter">F_iter</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#iter">iter</a></span> <span class="id">m</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.iter_monot">iter_monot</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">q</span>, (<span class="id"><a href="compcert.lib.Iteration.html#p">p</a></span> &lt;= <span class="id"><a href="compcert.lib.Iteration.html#q">q</a></span>)%<span class="id">nat</span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_le">F_le</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#p">p</a></span>) (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#q">q</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof375')">Proof.</div>
+<div class="proofscript" id="proof375">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">p</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">red</span>; <span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">q</span>. <span class="tactic">elimtype</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_iter_monot">F_iter_monot</a></span>. <span class="tactic">apply</span> <span class="id">IHp</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.iter_either">iter_either</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span>,<br/>
+&nbsp;&nbsp;(<span class="id">exists</span> <span class="id">n</span>, <span class="id">exists</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>) \/<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">n</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof376')">Proof.</div>
+<div class="proofscript" id="proof376">
+&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">a</span>. <span class="tactic">elim</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Prop.html#classic">classic</a></span> (<span class="kwd">forall</span> <span class="id">n</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> <span class="id">a</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>)); <span class="tactic">intro</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>; <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="id">left</span>. <span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Pred_Type.html#not_all_ex_not">not_all_ex_not</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span> (<span class="kwd">fun</span> <span class="id">n</span> =&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> <span class="id">a</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span>) <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">n</span> <span class="id">D</span>]. <span class="id">exists</span> <span class="id">n</span>. <span class="tactic">generalize</span> <span class="id">D</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id">n</span> <span class="id">a</span>); <span class="tactic">intros</span>. <span class="id">exists</span> <span class="id">b</span>; <span class="tactic">auto</span>. <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="GenIter.converges_to">converges_to</a></span> (<span class="id">a</span>: <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span>) (<span class="id">b</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">n</span>, <span class="kwd">forall</span> <span class="id">m</span>, (<span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> &lt;= <span class="id"><a href="compcert.lib.Iteration.html#m">m</a></span>)%<span class="id">nat</span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#m">m</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.converges_to_Some">converges_to_Some</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">n</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof377')">Proof.</div>
+<div class="proofscript" id="proof377">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">exists</span> <span class="id">n</span>. <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.B_le">B_le</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id">n</span> <span class="id">a</span>) (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id">m</span> <span class="id">a</span>)). <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter_monot">iter_monot</a></span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">elim</span> <span class="id">H1</span>; <span class="tactic">intro</span>; <span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.converges_to_exists">converges_to_exists</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span>, <span class="id">exists</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof378')">Proof.</div>
+<div class="proofscript" id="proof378">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">elim</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter_either">iter_either</a></span> <span class="id">a</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">n</span> [<span class="id">b</span> <span class="id">EQ</span>]]. <span class="id">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">b</span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to_Some">converges_to_Some</a></span> <span class="kwd">with</span> <span class="id">n</span>. <span class="tactic">assumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intro</span>. <span class="id">exists</span> (@<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span>). <span class="id">exists</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span>. <span class="tactic">intros</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.converges_to_unique">converges_to_unique</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> -&gt; <span class="kwd">forall</span> <span class="id">b</span>', <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="id">b</span>' -&gt; <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> = <span class="id">b</span>'.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof379')">Proof.</div>
+<div class="proofscript" id="proof379">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span> [<span class="id">n</span> <span class="id">C</span>] <span class="id">b</span>' [<span class="id">n</span>' <span class="id">C</span>'].<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- (<span class="id">C</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Max.html#max">max</a></span> <span class="id">n</span> <span class="id">n</span>')). <span class="tactic">rewrite</span> &lt;- (<span class="id">C</span>' (<span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Max.html#max">max</a></span> <span class="id">n</span> <span class="id">n</span>')). <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Max.html#le_max_r">le_max_r</a></span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Max.html#le_max_l">le_max_l</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.converges_to_exists_uniquely">converges_to_exists_uniquely</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span>, <span class="id">exists</span>! <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> .<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof380')">Proof.</div>
+<div class="proofscript" id="proof380">
+&nbsp;&nbsp;<span class="tactic">intro</span>. <span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to_exists">converges_to_exists</a></span> <span class="id">a</span>) <span class="kwd">as</span> [<span class="id">b</span> <span class="id">CT</span>].<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">b</span>. <span class="tactic">split</span>. <span class="tactic">assumption</span>. <span class="tactic">exact</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to_unique">converges_to_unique</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">CT</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="GenIter.iterate">iterate</a></span> (<span class="id">a</span>: <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#proj1_sig">proj1_sig</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Description.html#constructive_definite_description">constructive_definite_description</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>) (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to_exists_uniquely">converges_to_exists_uniquely</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>)).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.converges_to_iterate">converges_to_iterate</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iterate">iterate</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof381')">Proof.</div>
+<div class="proofscript" id="proof381">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iterate">iterate</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Description.html#constructive_definite_description">constructive_definite_description</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id">a</span>) (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to_exists_uniquely">converges_to_exists_uniquely</a></span> <span class="id">a</span>)) <span class="kwd">as</span> [<span class="id">b</span>' <span class="id">P</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to_unique">converges_to_unique</a></span> <span class="kwd">with</span> <span class="id">a</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.iterate_converges_to">iterate_converges_to</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.iterate">iterate</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof382')">Proof.</div>
+<div class="proofscript" id="proof382">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iterate">iterate</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Description.html#constructive_definite_description">constructive_definite_description</a></span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to">converges_to</a></span> <span class="id">a</span>) (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.converges_to_exists_uniquely">converges_to_exists_uniquely</a></span> <span class="id">a</span>)) <span class="kwd">as</span> [<span class="id">b</span>' <span class="id">P</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Invariance property. </div>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="GenIter.ITERATION.P">P</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="GenIter.ITERATION.Q">Q</a></span>: <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.B">B</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="GenIter.ITERATION.step_prop">step_prop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> : <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.A">A</a></span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.step">step</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id">b</span> =&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.Q">Q</a></span> <span class="id">b</span> | <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id">a</span>' =&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.P">P</a></span> <span class="id">a</span>' <span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.iter_prop">iter_prop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter">iter</a></span> <span class="id"><a href="compcert.lib.Iteration.html#n">n</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.Q">Q</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof383')">Proof.</div>
+<div class="proofscript" id="proof383">
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">intros</span> <span class="id">until</span> <span class="id">b</span>; <span class="tactic">intro</span> <span class="id">H</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.F_iter">F_iter</a></span>. <span class="tactic">generalize</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.step_prop">step_prop</a></span> <span class="id">a</span> <span class="id">H</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.step">step</a></span> <span class="id">a</span>); <span class="tactic">intros</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHn</span> <span class="kwd">with</span> <span class="id">a0</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="GenIter.iterate_prop">iterate_prop</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>, <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iterate">iterate</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.P">P</a></span> <span class="id"><a href="compcert.lib.Iteration.html#a">a</a></span> -&gt; <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION.Q">Q</a></span> <span class="id"><a href="compcert.lib.Iteration.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof384')">Proof.</div>
+<div class="proofscript" id="proof384">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Iteration.html#GenIter.iterate_converges_to">iterate_converges_to</a></span> <span class="id">a</span>) <span class="kwd">as</span> [<span class="id">n</span> <span class="id">IT</span>].<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H</span> <span class="kwd">in</span> <span class="id">IT</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.iter_prop">iter_prop</a></span> <span class="kwd">with</span> <span class="id">n</span> <span class="id">a</span>. <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id">IT</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter.ITERATION">ITERATION</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Iteration.html#GenIter">GenIter</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

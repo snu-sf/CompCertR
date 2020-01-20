@@ -1,0 +1,234 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Interpreter</title>
+<meta name="description" content="Documentation of Coq module Interpreter" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Interpreter</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Streams</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Automaton</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Alphabet</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">Make</span>(<span class="kwd">Import</span> <span class="id">A</span>:<span class="id">Automaton.T</span>).<br/>
+<br/>
+<div class="doc">The error monad *</div>
+<span class="kwd">Inductive</span> <span class="id">result</span> (<span class="id">A</span>:<span class="kwd">Type</span>) :=<br/>
+&nbsp;&nbsp;| <span class="id">Err</span>: <span class="id">result</span> <span class="id">A</span><br/>
+&nbsp;&nbsp;| <span class="id">OK</span>: <span class="id">A</span> -&gt; <span class="id">result</span> <span class="id">A</span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id">Err</span> [<span class="id">A</span>].<br/>
+<span class="id">Arguments</span> <span class="id">OK</span> [<span class="id">A</span>].<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">bind</span> {<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>} (<span class="id">f</span>: <span class="id">result</span> <span class="id">A</span>) (<span class="id">g</span>: <span class="id">A</span> -&gt; <span class="id">result</span> <span class="id">B</span>): <span class="id">result</span> <span class="id">B</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">f</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> <span class="id">x</span> =&gt; <span class="id">g</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Err</span> =&gt; <span class="id">Err</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">bind2</span> {<span class="id">A</span> <span class="id">B</span> <span class="id">C</span>: <span class="kwd">Type</span>} (<span class="id">f</span>: <span class="id">result</span> (<span class="id">A</span> * <span class="id">B</span>)) (<span class="id">g</span>: <span class="id">A</span> -&gt; <span class="id">B</span> -&gt; <span class="id">result</span> <span class="id">C</span>):<br/>
+&nbsp;&nbsp;<span class="id">result</span> <span class="id">C</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">f</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">x</span>, <span class="id">y</span>) =&gt; <span class="id">g</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Err</span> =&gt; <span class="id">Err</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Notation</span> "'<span class="tactic">do</span>' <span class="id">X</span> &lt;- <span class="id">A</span> ; <span class="id">B</span>" := (<span class="id">bind</span> <span class="id">A</span> (<span class="kwd">fun</span> <span class="id">X</span> =&gt; <span class="id">B</span>))<br/>
+&nbsp;&nbsp;(<span class="tactic">at</span> <span class="id">level</span> 200, <span class="id">X</span> <span class="id">ident</span>, <span class="id">A</span> <span class="tactic">at</span> <span class="id">level</span> 100, <span class="id">B</span> <span class="tactic">at</span> <span class="id">level</span> 200).<br/>
+<br/>
+<span class="kwd">Notation</span> "'<span class="tactic">do</span>' ( <span class="id">X</span> , <span class="id">Y</span> ) &lt;- <span class="id">A</span> ; <span class="id">B</span>" := (<span class="id">bind2</span> <span class="id">A</span> (<span class="kwd">fun</span> <span class="id">X</span> <span class="id">Y</span> =&gt; <span class="id">B</span>))<br/>
+&nbsp;&nbsp;(<span class="tactic">at</span> <span class="id">level</span> 200, <span class="id">X</span> <span class="id">ident</span>, <span class="id">Y</span> <span class="id">ident</span>, <span class="id">A</span> <span class="tactic">at</span> <span class="id">level</span> 100, <span class="id">B</span> <span class="tactic">at</span> <span class="id">level</span> 200).<br/>
+<br/>
+<div class="doc">Some operations on streams *</div>
+<br/>
+<div class="doc">Concatenation of a list and a stream *</div>
+<span class="kwd">Fixpoint</span> <span class="id">app_str</span> {<span class="id">A</span>:<span class="kwd">Type</span>} (<span class="id">l</span>:<span class="id">list</span> <span class="id">A</span>) (<span class="id">s</span>:<span class="id">Stream</span> <span class="id">A</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">l</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">nil</span> =&gt; <span class="id">s</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">cons</span> <span class="id">t</span> <span class="id">q</span> =&gt; <span class="id">Cons</span> <span class="id">t</span> (<span class="id">app_str</span> <span class="id">q</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Infix</span> "++" := <span class="id">app_str</span> (<span class="id">right</span> <span class="id">associativity</span>, <span class="tactic">at</span> <span class="id">level</span> 60).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">app_str_app_assoc</span> {<span class="id">A</span>:<span class="kwd">Type</span>} (<span class="id">l1</span> <span class="id">l2</span>:<span class="id">list</span> <span class="id">A</span>) (<span class="id">s</span>:<span class="id">Stream</span> <span class="id">A</span>) :<br/>
+&nbsp;&nbsp;<span class="id">l1</span> ++ (<span class="id">l2</span> ++ <span class="id">s</span>) = (<span class="id">l1</span> ++ <span class="id">l2</span>) ++ <span class="id">s</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5980')">Proof.</div>
+<div class="proofscript" id="proof5980">
+<span class="tactic">induction</span> <span class="id">l1</span>.<br/>
+<span class="tactic">reflexivity</span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">IHl1</span>.<br/>
+<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">The type of a non initial state: the type of semantic values associated
+   with the last symbol of this state. </div>
+<span class="kwd">Definition</span> <span class="id">noninitstate_type</span> <span class="id">state</span> :=<br/>
+&nbsp;&nbsp;<span class="id">symbol_semantic_type</span> (<span class="id">last_symb_of_non_init_state</span> <span class="id">state</span>).<br/>
+<br/>
+<div class="doc">The stack of the automaton : it can be either nil or contains a non
+    initial state, a semantic value for the symbol associted with this state,
+    and a nested stack. *</div>
+<span class="kwd">Definition</span> <span class="id">stack</span> := <span class="id">list</span> (<span class="id">sigT</span> <span class="id">noninitstate_type</span>). <br/>
+<br/>
+<span class="kwd">Section</span> <span class="id">Init</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">init</span> : <span class="id">initstate</span>.<br/>
+<br/>
+<div class="doc">The top state of a stack *</div>
+<span class="kwd">Definition</span> <span class="id">state_of_stack</span> (<span class="id">stack</span>:<span class="id">stack</span>): <span class="id">state</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">stack</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt; <span class="id">init</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">existT</span> <span class="id">_</span> <span class="id">s</span> <span class="id">_</span>::<span class="id">_</span> =&gt; <span class="id">s</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">pop</span></span> pops some symbols from the stack. It returns the popped semantic
+    values using <span class="bracket"><span class="id">sem_popped</span></span> as an accumulator and discards the popped
+    states.*</div>
+<span class="kwd">Fixpoint</span> <span class="id">pop</span> (<span class="id">symbols_to_pop</span>:<span class="id">list</span> <span class="id">symbol</span>) (<span class="id">stack_cur</span>:<span class="id">stack</span>):<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> {<span class="id">A</span>:<span class="kwd">Type</span>} (<span class="id">action</span>:<span class="id">arrows_right</span> <span class="id">A</span> (<span class="id">map</span> <span class="id">symbol_semantic_type</span> <span class="id">symbols_to_pop</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">result</span> (<span class="id">stack</span> * <span class="id">A</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">symbols_to_pop</span> <span class="kwd">return</span> <span class="kwd">forall</span> {<span class="id">A</span>:<span class="kwd">Type</span>} (<span class="id">action</span>:<span class="id">arrows_right</span> <span class="id">A</span> (<span class="id">map</span> <span class="id">_</span> <span class="id">symbols_to_pop</span>)), <span class="id">result</span> (<span class="id">stack</span> * <span class="id">A</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt; <span class="kwd">fun</span> <span class="id">A</span> <span class="id">action</span> =&gt; <span class="id">OK</span> (<span class="id">stack_cur</span>, <span class="id">action</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">t</span>::<span class="id">q</span> =&gt; <span class="kwd">fun</span> <span class="id">A</span> <span class="id">action</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">stack_cur</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">existT</span> <span class="id">_</span> <span class="id">state_cur</span> <span class="id">sem</span>::<span class="id">stack_rec</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">compare_eqdec</span> (<span class="id">last_symb_of_non_init_state</span> <span class="id">state_cur</span>) <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">left</span> <span class="id">e</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sem_conv</span> := <span class="id">eq_rect</span> <span class="id">_</span> <span class="id">symbol_semantic_type</span> <span class="id">sem</span> <span class="id">_</span> <span class="id">e</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pop</span> <span class="id">q</span> <span class="id">stack_rec</span> (<span class="id">action</span> <span class="id">sem_conv</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">right</span> <span class="id">_</span> =&gt; <span class="id">Err</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt; <span class="id">Err</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">step_result</span></span> represents the result of one step of the automaton : it can
+    fail, accept or progress. <span class="bracket"><span class="id">Fail_sr</span></span> means that the input is incorrect.
+    <span class="bracket"><span class="id">Accept_sr</span></span> means that this is the last step of the automaton, and it
+    returns the semantic value of the input word. <span class="bracket"><span class="id">Progress_sr</span></span> means that
+    some progress has been made, but new steps are needed in order to accept
+    a word.
+    For <span class="bracket"><span class="id">Accept_sr</span></span> and <span class="bracket"><span class="id">Progress_sr</span></span>, the result contains the new input buffer.
+    <span class="bracket"><span class="id">Fail_sr</span></span> means that the input word is rejected by the automaton. It is
+    different to <span class="bracket"><span class="id">Err</span></span> (from the error monad), which mean that the automaton is
+    bogus and has perfomed a forbidden action. *</div>
+<span class="kwd">Inductive</span> <span class="id">step_result</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">Fail_sr</span>: <span class="id">step_result</span><br/>
+&nbsp;&nbsp;| <span class="id">Accept_sr</span>: <span class="id">symbol_semantic_type</span> (<span class="id">NT</span> (<span class="id">start_nt</span> <span class="id">init</span>)) -&gt; <span class="id">Stream</span> <span class="id">token</span> -&gt; <span class="id">step_result</span><br/>
+&nbsp;&nbsp;| <span class="id">Progress_sr</span>: <span class="id">stack</span> -&gt; <span class="id">Stream</span> <span class="id">token</span> -&gt; <span class="id">step_result</span>.<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id">prod_action</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">arrows_right</span> (<span class="id">symbol_semantic_type</span> (<span class="id">NT</span> (<span class="id">prod_lhs</span> <span class="id">p</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">map</span> <span class="id">symbol_semantic_type</span> (<span class="id">prod_rhs_rev</span> <span class="id">p</span>)):=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">fun</span> <span class="id">p</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eq_rect</span> <span class="id">_</span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span>) (<span class="id">prod_action</span> <span class="id">p</span>) <span class="id">_</span> <span class="id">_</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5981')">Next Obligation.</div>
+<div class="proofscript" id="proof5981">
+<span class="tactic">unfold</span> <span class="id">arrows_left</span>, <span class="id">arrows_right</span>; <span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">fold_left_rev_right</span>, &lt;- <span class="id">map_rev</span>, <span class="id">rev_involutive</span>.<br/>
+<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">reduce_step</span></span> does a reduce action :
+   - pops some elements from the stack
+   - execute the action of the production
+   - follows the goto for the produced non terminal symbol *</div>
+<span class="kwd">Definition</span> <span class="id">reduce_step</span> <span class="id">stack_cur</span> <span class="id">production</span> <span class="id">buffer</span>: <span class="id">result</span> <span class="id">step_result</span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">do</span> (<span class="id">stack_new</span>, <span class="id">sem</span>) &lt;-<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pop</span> (<span class="id">prod_rhs_rev</span> <span class="id">production</span>) <span class="id">stack_cur</span> (<span class="id">prod_action</span>' <span class="id">production</span>);<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> (<span class="id">state_of_stack</span> <span class="id">stack_new</span>) (<span class="id">prod_lhs</span> <span class="id">production</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> (<span class="id">exist</span> <span class="id">_</span> <span class="id">state_new</span> <span class="id">e</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sem</span> := <span class="id">eq_rect</span> <span class="id">_</span> <span class="id">_</span> <span class="id">sem</span> <span class="id">_</span> <span class="id">e</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">OK</span> (<span class="id">Progress_sr</span> (<span class="id">existT</span> <span class="id">noninitstate_type</span> <span class="id">state_new</span> <span class="id">sem</span>::<span class="id">stack_new</span>) <span class="id">buffer</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">stack_new</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">compare_eqdec</span> (<span class="id">prod_lhs</span> <span class="id">production</span>) (<span class="id">start_nt</span> <span class="id">init</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">left</span> <span class="id">e</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sem</span> := <span class="id">eq_rect</span> <span class="id">_</span> (<span class="kwd">fun</span> <span class="id">nt</span> =&gt; <span class="id">symbol_semantic_type</span> (<span class="id">NT</span> <span class="id">nt</span>)) <span class="id">sem</span> <span class="id">_</span> <span class="id">e</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">OK</span> (<span class="id">Accept_sr</span> <span class="id">sem</span> <span class="id">buffer</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">right</span> <span class="id">_</span> =&gt; <span class="id">Err</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>::<span class="id">_</span> =&gt; <span class="id">Err</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">One step of parsing. *</div>
+<span class="kwd">Definition</span> <span class="id">step</span> <span class="id">stack_cur</span> <span class="id">buffer</span>: <span class="id">result</span> <span class="id">step_result</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> (<span class="id">state_of_stack</span> <span class="id">stack_cur</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Default_reduce_act</span> <span class="id">production</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">reduce_step</span> <span class="id">stack_cur</span> <span class="id">production</span> <span class="id">buffer</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awt</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">Streams.hd</span> <span class="id">buffer</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">existT</span> <span class="id">_</span> <span class="id">term</span> <span class="id">sem</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">awt</span> <span class="id">term</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Shift_act</span> <span class="id">state_new</span> <span class="id">e</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">sem_conv</span> := <span class="id">eq_rect</span> <span class="id">_</span> <span class="id">symbol_semantic_type</span> <span class="id">sem</span> <span class="id">_</span> <span class="id">e</span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">OK</span> (<span class="id">Progress_sr</span> (<span class="id">existT</span> <span class="id">noninitstate_type</span> <span class="id">state_new</span> <span class="id">sem_conv</span>::<span class="id">stack_cur</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">Streams.tl</span> <span class="id">buffer</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Reduce_act</span> <span class="id">production</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">reduce_step</span> <span class="id">stack_cur</span> <span class="id">production</span> <span class="id">buffer</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Fail_action</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">OK</span> <span class="id">Fail_sr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">The parsing use a <span class="bracket"><span class="id">nat</span></span> parameter <span class="bracket"><span class="id">n_steps</span></span>, so that we do not have to prove
+    terminaison, which is difficult. So the result of a parsing is either
+    a failure (the automaton has rejected the input word), either a timeout
+    (the automaton has spent all the given <span class="bracket"><span class="id">n_steps</span></span>), either a parsed semantic
+    value with a rest of the input buffer.
+*</div>
+<span class="kwd">Inductive</span> <span class="id">parse_result</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">Fail_pr</span>: <span class="id">parse_result</span><br/>
+&nbsp;&nbsp;| <span class="id">Timeout_pr</span>: <span class="id">parse_result</span><br/>
+&nbsp;&nbsp;| <span class="id">Parsed_pr</span>: <span class="id">symbol_semantic_type</span> (<span class="id">NT</span> (<span class="id">start_nt</span> <span class="id">init</span>)) -&gt; <span class="id">Stream</span> <span class="id">token</span> -&gt; <span class="id">parse_result</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">parse_fix</span> <span class="id">stack_cur</span> <span class="id">buffer</span> <span class="id">n_steps</span>: <span class="id">result</span> <span class="id">parse_result</span>:=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">n_steps</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">O</span> =&gt; <span class="id">OK</span> <span class="id">Timeout_pr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">S</span> <span class="id">it</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> <span class="id">r</span> &lt;- <span class="id">step</span> <span class="id">stack_cur</span> <span class="id">buffer</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">r</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Fail_sr</span> =&gt; <span class="id">OK</span> <span class="id">Fail_pr</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Accept_sr</span> <span class="id">t</span> <span class="id">buffer_new</span> =&gt; <span class="id">OK</span> (<span class="id">Parsed_pr</span> <span class="id">t</span> <span class="id">buffer_new</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Progress_sr</span> <span class="id">s</span> <span class="id">buffer_new</span> =&gt; <span class="id">parse_fix</span> <span class="id">s</span> <span class="id">buffer_new</span> <span class="id">it</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">parse</span> <span class="id">buffer</span> <span class="id">n_steps</span>: <span class="id">result</span> <span class="id">parse_result</span> :=<br/>
+&nbsp;&nbsp;<span class="id">parse_fix</span> [] <span class="id">buffer</span> <span class="id">n_steps</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">Init</span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id">Fail_sr</span> [<span class="id">init</span>].<br/>
+<span class="id">Arguments</span> <span class="id">Accept_sr</span> [<span class="id">init</span>] <span class="id">_</span> <span class="id">_</span>.<br/>
+<span class="id">Arguments</span> <span class="id">Progress_sr</span> [<span class="id">init</span>] <span class="id">_</span> <span class="id">_</span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id">Fail_pr</span> [<span class="id">init</span>].<br/>
+<span class="id">Arguments</span> <span class="id">Timeout_pr</span> [<span class="id">init</span>].<br/>
+<span class="id">Arguments</span> <span class="id">Parsed_pr</span> [<span class="id">init</span>] <span class="id">_</span> <span class="id">_</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">Make</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="kwd">Type</span> <span class="id">T</span>(<span class="id">A</span>:<span class="id">Automaton.T</span>).<br/>
+&nbsp;&nbsp;<span class="kwd">Include</span> (<span class="id">Make</span> <span class="id">A</span>).<br/>
+<span class="kwd">End</span> <span class="id">T</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

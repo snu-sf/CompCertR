@@ -1,0 +1,1053 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Fcore_Zaux</title>
+<meta name="description" content="Documentation of Coq module Fcore_Zaux" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Fcore_Zaux</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith.html">ZArith</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html">Zquot</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Zmissing">Zmissing</a></span>.<br/>
+<br/>
+<div class="doc">About Z </div>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zopp_le_cancel">Zopp_le_cancel</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;(-<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> &lt;= -<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zle">Zle</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5145')">Proof.</div>
+<div class="proofscript" id="proof5145">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span> <span class="id">Hxy</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zplus_le_reg_r">Zplus_le_reg_r</a></span> <span class="kwd">with</span> (-<span class="id">x</span> - <span class="id">y</span>)%<span class="id">Z</span>.<br/>
+<span class="id">now</span> <span class="id">ring_simplify</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zgt_not_eq">Zgt_not_eq</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)%<span class="id">Z</span> -&gt; (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt;&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5146')">Proof.</div>
+<div class="proofscript" id="proof5146">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span> <span class="id">H</span> <span class="id">Hn</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_irrefl">Zlt_irrefl</a></span> <span class="kwd">with</span> <span class="id">x</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">Hn</span> <span class="tactic">at</span> 1.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zmissing">Zmissing</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Proof_Irrelevance">Proof_Irrelevance</a></span>.<br/>
+<br/>
+<span class="kwd">Scheme</span> <span class="id"><a name="eq_dep_elim">eq_dep_elim</a></span> := <span class="kwd">Induction</span> <span class="kwd">for</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="kwd">Sort</span> <span class="kwd">Type</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="eqbool_dep">eqbool_dep</a></span> <span class="id">P</span> (<span class="id">h1</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#P">P</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>) <span class="id">b</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="kwd">return</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#P">P</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> -&gt; <span class="kwd">Prop</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> =&gt; <span class="kwd">fun</span> (<span class="id">h2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#P">P</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>) =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#h1">h1</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#h2">h2</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> =&gt; <span class="kwd">fun</span> (<span class="id">h2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#P">P</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>) =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="eqbool_irrelevance">eqbool_irrelevance</a></span> : <span class="kwd">forall</span> (<span class="id">b</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) (<span class="id">h1</span> <span class="id">h2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>), <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#h1">h1</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#h2">h2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5147')">Proof.</div>
+<div class="proofscript" id="proof5147">
+<span class="tactic">assert</span> (<span class="kwd">forall</span> (<span class="id">h</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#h">h</a></span>).<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#eq_dep_elim">eq_dep_elim</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#eqbool_dep">eqbool_dep</a></span> <span class="id">_</span> <span class="id">_</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id">_</span>)).<br/>
+<span class="tactic">intros</span> <span class="id">b</span>.<br/>
+<span class="tactic">case</span> <span class="id">b</span>.<br/>
+<span class="tactic">intros</span> <span class="id">h1</span> <span class="id">h2</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- (<span class="id">H</span> <span class="id">h1</span>).<br/>
+<span class="tactic">intros</span> <span class="id">h</span>.<br/>
+<span class="tactic">discriminate</span> <span class="id">h</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Proof_Irrelevance">Proof_Irrelevance</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Even_Odd">Even_Odd</a></span>.<br/>
+<br/>
+<div class="doc">Zeven, used for rounding to nearest, ties to even </div>
+<span class="kwd">Definition</span> <span class="id"><a name="Zeven">Zeven</a></span> (<span class="id">n</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xO">xO</a></span> <span class="id">_</span>) =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xO">xO</a></span> <span class="id">_</span>) =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeven_mult">Zeven_mult</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#orb">orb</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>) (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5148')">Proof.</div>
+<div class="proofscript" id="proof5148">
+<span class="id">now</span> <span class="tactic">intros</span> [|[<span class="id">xp</span>|<span class="id">xp</span>|]|[<span class="id">xp</span>|<span class="id">xp</span>|]] [|[<span class="id">yp</span>|<span class="id">yp</span>|]|[<span class="id">yp</span>|<span class="id">yp</span>|]].<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeven_opp">Zeven_opp</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> (- <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>) = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5149')">Proof.</div>
+<div class="proofscript" id="proof5149">
+<span class="id">now</span> <span class="tactic">intros</span> [|[<span class="id">n</span>|<span class="id">n</span>|]|[<span class="id">n</span>|<span class="id">n</span>|]].<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeven_ex">Zeven_ex</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, <span class="id">exists</span> <span class="id">p</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> = (2 * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span> + <span class="kwd">if</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="kwd">then</span> 0 <span class="kwd">else</span> 1)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5150')">Proof.</div>
+<div class="proofscript" id="proof5150">
+<span class="tactic">intros</span> [|[<span class="id">n</span>|<span class="id">n</span>|]|[<span class="id">n</span>|<span class="id">n</span>|]].<br/>
+<span class="id">now</span> <span class="id">exists</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>.<br/>
+<span class="id">now</span> <span class="id">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">n</span>).<br/>
+<span class="id">now</span> <span class="id">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">n</span>).<br/>
+<span class="id">now</span> <span class="id">exists</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>.<br/>
+<span class="id">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">n</span> - 1)%<span class="id">Z</span>.<br/>
+<span class="id">change</span> (2 * <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">n</span> - 1 = 2 * (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">n</span> - 1) + 1)%<span class="id">Z</span>.<br/>
+<span class="tactic">ring</span>.<br/>
+<span class="id">now</span> <span class="id">exists</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">n</span>).<br/>
+<span class="id">now</span> <span class="id">exists</span> (-1)%<span class="id">Z</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeven_2xp1">Zeven_2xp1</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> (2 * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> + 1) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5151')">Proof.</div>
+<div class="proofscript" id="proof5151">
+<span class="tactic">intros</span> <span class="id">n</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_ex">Zeven_ex</a></span> (2 * <span class="id">n</span> + 1)) <span class="kwd">as</span> (<span class="id">p</span>, <span class="id">Hp</span>).<br/>
+<span class="id">revert</span> <span class="id">Hp</span>.<br/>
+<span class="tactic">case</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> (2 * <span class="id">n</span> + 1)) ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False_ind">False_ind</a></span>.<br/>
+<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeven_plus">Zeven_plus</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#eqb">Bool.eqb</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>) (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5152')">Proof.</div>
+<div class="proofscript" id="proof5152">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_ex">Zeven_ex</a></span> <span class="id">x</span>) <span class="kwd">as</span> (<span class="id">px</span>, <span class="id">Hx</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id">Hx</span> <span class="tactic">at</span> 1.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_ex">Zeven_ex</a></span> <span class="id">y</span>) <span class="kwd">as</span> (<span class="id">py</span>, <span class="id">Hy</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id">Hy</span> <span class="tactic">at</span> 1.<br/>
+<span class="tactic">replace</span> (2 * <span class="id">px</span> + (<span class="kwd">if</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id">x</span> <span class="kwd">then</span> 0 <span class="kwd">else</span> 1) + (2 * <span class="id">py</span> + (<span class="kwd">if</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id">y</span> <span class="kwd">then</span> 0 <span class="kwd">else</span> 1)))%<span class="id">Z</span><br/>
+&nbsp;&nbsp;<span class="kwd">with</span> (2 * (<span class="id">px</span> + <span class="id">py</span>) + ((<span class="kwd">if</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id">x</span> <span class="kwd">then</span> 0 <span class="kwd">else</span> 1) + (<span class="kwd">if</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id">y</span> <span class="kwd">then</span> 0 <span class="kwd">else</span> 1)))%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">case</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id">x</span>) ; <span class="tactic">case</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id">y</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_0_r">Zplus_0_r</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_mult">Zeven_mult</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_2xp1">Zeven_2xp1</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_2xp1">Zeven_2xp1</a></span>.<br/>
+<span class="tactic">replace</span> (2 * (<span class="id">px</span> + <span class="id">py</span>) + (1 + 1))%<span class="id">Z</span> <span class="kwd">with</span> (2 * (<span class="id">px</span> + <span class="id">py</span> + 1))%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_mult">Zeven_mult</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Even_Odd">Even_Odd</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Zpower">Zpower</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_plus">Zpower_plus</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">k1</span> <span class="id">k2</span>, (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#k1">k1</a></span>)%<span class="id">Z</span> -&gt; (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#k2">k2</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#k1">k1</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#k2">k2</a></span>) = (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#k1">k1</a></span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#k2">k2</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5153')">Proof.</div>
+<div class="proofscript" id="proof5153">
+<span class="tactic">intros</span> <span class="id">n</span> <span class="id">k1</span> <span class="id">k2</span> <span class="id">H1</span> <span class="id">H2</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span> ; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_ge">Zle_ge</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_Zpower_nat">Zpower_Zpower_nat</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">e</span>, (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_nat">Zpower_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs_nat">Zabs_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5154')">Proof.</div>
+<div class="proofscript" id="proof5154">
+<span class="tactic">intros</span> <span class="id">b</span> [|<span class="id">e</span>|<span class="id">e</span>] <span class="id">He</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_pos_nat">Zpower_pos_nat</a></span>.<br/>
+<span class="tactic">elim</span> <span class="id">He</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_nat_S">Zpower_nat_S</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">e</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_nat">Zpower_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>) = (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_nat">Zpower_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5155')">Proof.</div>
+<div class="proofscript" id="proof5155">
+<span class="tactic">intros</span> <span class="id">b</span> <span class="id">e</span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_nat_is_exp">Zpower_nat_is_exp</a></span> 1 <span class="id">e</span>).<br/>
+<span class="tactic">apply</span> (<span class="tactic">f_equal</span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> * <span class="id">_</span>)%<span class="id">Z</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_r">Zmult_1_r</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_pos_gt_0">Zpower_pos_gt_0</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">p</span>, (0 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower_pos">Zpower_pos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5156')">Proof.</div>
+<div class="proofscript" id="proof5156">
+<span class="tactic">intros</span> <span class="id">b</span> <span class="id">p</span> <span class="id">Hb</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_pos_nat">Zpower_pos_nat</a></span>.<br/>
+<span class="tactic">induction</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#nat_of_P">nat_of_P</a></span> <span class="id">p</span>).<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_nat_S">Zpower_nat_S</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_lt_0_compat">Zmult_lt_0_compat</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeven_Zpower">Zeven_Zpower</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">e</span>, (0 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>) = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5157')">Proof.</div>
+<div class="proofscript" id="proof5157">
+<span class="tactic">intros</span> <span class="id">b</span> <span class="id">e</span> <span class="id">He</span>.<br/>
+<span class="id">case_eq</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id">b</span>) ; <span class="tactic">intros</span> <span class="id">Hb</span>.<br/>
+<span class="comment">(*&nbsp;b&nbsp;even&nbsp;*)</span><br/>
+<span class="tactic">replace</span> <span class="id">e</span> <span class="kwd">with</span> (<span class="id">e</span> - 1 + 1)%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_exp">Zpower_exp</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_mult">Zeven_mult</a></span>.<br/>
+<span class="tactic">replace</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> (<span class="id">b</span> ^ 1)) <span class="kwd">with</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#orb_true_r">Bool.orb_true_r</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pow">Zpower</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pow_pos">Zpower_pos</a></span>. <span class="tactic">simpl</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_r">Zmult_1_r</a></span>.<br/>
+<span class="tactic">omega</span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+<span class="comment">(*&nbsp;b&nbsp;odd&nbsp;*)</span><br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_Zpower_nat">Zpower_Zpower_nat</a></span>.<br/>
+<span class="tactic">induction</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs_nat">Zabs_nat</a></span> <span class="id">e</span>).<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_nat">Zpower_nat</a></span>. <span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_mult">Zeven_mult</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">Hb</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeven_Zpower_odd">Zeven_Zpower_odd</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">e</span>, (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven">Zeven</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5158')">Proof.</div>
+<div class="proofscript" id="proof5158">
+<span class="tactic">intros</span> <span class="id">b</span> <span class="id">e</span> <span class="id">He</span> <span class="id">Hb</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith_dec.html#Z_le_lt_eq_dec">Z_le_lt_eq_dec</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">He</span>) <span class="kwd">as</span> [<span class="id">He</span>'|<span class="id">He</span>'].<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">Hb</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeven_Zpower">Zeven_Zpower</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id">He</span>'.<br/>
+Qed.</div>
+<br/>
+<div class="doc">The radix must be greater than 1 </div>
+<span class="kwd">Record</span> <span class="id"><a name="radix">radix</a></span> := { <span class="id"><a name="radix_val">radix_val</a></span> :&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> ; <span class="id"><a name="radix_prop">radix_prop</a></span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> 2 <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix_val">radix_val</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> }.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="radix_val_inj">radix_val_inj</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">r1</span> <span class="id">r2</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix_val">radix_val</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r1">r1</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix_val">radix_val</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r2">r2</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r1">r1</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r2">r2</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5159')">Proof.</div>
+<div class="proofscript" id="proof5159">
+<span class="tactic">intros</span> (<span class="id">r1</span>, <span class="id">H1</span>) (<span class="id">r2</span>, <span class="id">H2</span>) <span class="id">H</span>.<br/>
+<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">revert</span> <span class="id">H1</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+<span class="tactic">intros</span> <span class="id">H1</span>.<br/>
+<span class="tactic">apply</span> <span class="tactic">f_equal</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#eqbool_irrelevance">eqbool_irrelevance</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="radix2">radix2</a></span> := <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Build_radix">Build_radix</a></span> 2 (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span> <span class="id">_</span>).<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="Zpower.r">r</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix">radix</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="radix_gt_0">radix_gt_0</a></span> : (0 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5160')">Proof.</div>
+<div class="proofscript" id="proof5160">
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_trans">Zlt_le_trans</a></span> <span class="kwd">with</span> 2%<span class="id">Z</span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool_imp_le">Zle_bool_imp_le</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="radix_gt_1">radix_gt_1</a></span> : (1 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5161')">Proof.</div>
+<div class="proofscript" id="proof5161">
+<span class="tactic">destruct</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="kwd">as</span> (<span class="id">v</span>, <span class="id">Hr</span>). <span class="tactic">simpl</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_trans">Zlt_le_trans</a></span> <span class="kwd">with</span> 2%<span class="id">Z</span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool_imp_le">Zle_bool_imp_le</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_gt_1">Zpower_gt_1</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>,<br/>
+&nbsp;&nbsp;(0 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(1 &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5162')">Proof.</div>
+<div class="proofscript" id="proof5162">
+<span class="tactic">intros</span> [|<span class="id">p</span>|<span class="id">p</span>] <span class="id">Hp</span> ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_pos_nat">Zpower_pos_nat</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.Pnat.html#lt_O_nat_of_P">lt_O_nat_of_P</a></span> <span class="id">p</span>).<br/>
+<span class="tactic">induction</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#nat_of_P">nat_of_P</a></span> <span class="id">p</span>).<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">intros</span> <span class="id">_</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_nat_S">Zpower_nat_S</a></span>.<br/>
+<span class="tactic">assert</span> (0 &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_nat">Zpower_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id">n</span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">clear</span>.<br/>
+<span class="tactic">induction</span> <span class="id">n</span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_nat_S">Zpower_nat_S</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_lt_0_compat">Zmult_lt_0_compat</a></span> <span class="kwd">with</span> (2 := <span class="id">IHn</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix_gt_0">radix_gt_0</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_lt_trans">Zle_lt_trans</a></span> <span class="kwd">with</span> (1 * <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpower.html#Zpower_nat">Zpower_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id">n</span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_l">Zmult_1_l</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_succ">Zlt_le_succ</a></span> 0).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_lt_compat_r">Zmult_lt_compat_r</a></span> <span class="kwd">with</span> (1 := <span class="id">H</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix_gt_1">radix_gt_1</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_gt_0">Zpower_gt_0</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span>,<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5163')">Proof.</div>
+<div class="proofscript" id="proof5163">
+<span class="tactic">intros</span> <span class="id">p</span> <span class="id">Hp</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_Zpower_nat">Zpower_Zpower_nat</a></span> <span class="kwd">with</span> (1 := <span class="id">Hp</span>).<br/>
+<span class="tactic">induction</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs_nat">Zabs_nat</a></span> <span class="id">p</span>).<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_nat_S">Zpower_nat_S</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_lt_0_compat">Zmult_lt_0_compat</a></span> <span class="kwd">with</span> (2 := <span class="id">IHn</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix_gt_0">radix_gt_0</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_ge_0">Zpower_ge_0</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span>,<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5164')">Proof.</div>
+<div class="proofscript" id="proof5164">
+<span class="tactic">intros</span> [|<span class="id">e</span>|<span class="id">e</span>] ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_le">Zpower_le</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e1</span> <span class="id">e2</span>, (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e1">e1</a></span> &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e2">e2</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e1">e1</a></span> &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e2">e2</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5165')">Proof.</div>
+<div class="proofscript" id="proof5165">
+<span class="tactic">intros</span> <span class="id">e1</span> <span class="id">e2</span> <span class="id">He</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_or_lt">Zle_or_lt</a></span> 0 <span class="id">e1</span>)%<span class="id">Z</span> <span class="kwd">as</span> [<span class="id">H1</span>|<span class="id">H1</span>].<br/>
+<span class="tactic">replace</span> <span class="id">e2</span> <span class="kwd">with</span> (<span class="id">e2</span> - <span class="id">e1</span> + <span class="id">e1</span>)%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_plus">Zpower_plus</a></span> <span class="kwd">with</span> (2 := <span class="id">H1</span>).<br/>
+<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_l">Zmult_1_l</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> ^ <span class="id">e1</span>)) <span class="tactic">at</span> 1.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_le_compat_r">Zmult_le_compat_r</a></span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_succ">Zlt_le_succ</a></span> 0).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_minus_le_0">Zle_minus_le_0</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_ge_0">Zpower_ge_0</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_minus_le_0">Zle_minus_le_0</a></span>.<br/>
+<span class="tactic">clear</span> <span class="id">He</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">e1</span> <span class="kwd">as</span> [|<span class="id">e1</span>|<span class="id">e1</span>] ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_ge_0">Zpower_ge_0</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_lt">Zpower_lt</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e1</span> <span class="id">e2</span>, (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e2">e2</a></span>)%<span class="id">Z</span> -&gt; (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e1">e1</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e2">e2</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e1">e1</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e2">e2</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5166')">Proof.</div>
+<div class="proofscript" id="proof5166">
+<span class="tactic">intros</span> <span class="id">e1</span> <span class="id">e2</span> <span class="id">He2</span> <span class="id">He</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_or_lt">Zle_or_lt</a></span> 0 <span class="id">e1</span>)%<span class="id">Z</span> <span class="kwd">as</span> [<span class="id">H1</span>|<span class="id">H1</span>].<br/>
+<span class="tactic">replace</span> <span class="id">e2</span> <span class="kwd">with</span> (<span class="id">e2</span> - <span class="id">e1</span> + <span class="id">e1</span>)%<span class="id">Z</span> <span class="tactic">by</span> <span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_plus">Zpower_plus</a></span> <span class="kwd">with</span> (2 := <span class="id">H1</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_comm">Zmult_comm</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_r">Zmult_1_r</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> ^ <span class="id">e1</span>)) <span class="tactic">at</span> 1.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_lt_compat2">Zmult_lt_compat2</a></span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_refl">Zle_refl</a></span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_1">Zpower_gt_1</a></span>.<br/>
+<span class="tactic">clear</span> -<span class="id">He</span> ; <span class="tactic">omega</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_minus_le_0">Zle_minus_le_0</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="id">revert</span> <span class="id">H1</span>.<br/>
+<span class="tactic">clear</span> -<span class="id">He2</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">e1</span> ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="tactic">intros</span> <span class="id">_</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_gt_0">Zpower_gt_0</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zpower_lt_Zpower">Zpower_lt_Zpower</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e1</span> <span class="id">e2</span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e1">e1</a></span> - 1) &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower.r">r</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e2">e2</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e1">e1</a></span> &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e2">e2</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5167')">Proof.</div>
+<div class="proofscript" id="proof5167">
+<span class="tactic">intros</span> <span class="id">e1</span> <span class="id">e2</span> <span class="id">He</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Znot_gt_le">Znot_gt_le</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_not_le">Zlt_not_le</a></span> <span class="kwd">with</span> (1 := <span class="id">He</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower_le">Zpower_le</a></span>.<br/>
+<span class="tactic">clear</span> -<span class="id">H</span> ; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpower">Zpower</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Div_Mod">Div_Mod</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zmod_mod_mult">Zmod_mod_mult</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>, (0 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>)%<span class="id">Z</span> -&gt; (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod">Zmod</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod">Zmod</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod">Zmod</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5168')">Proof.</div>
+<div class="proofscript" id="proof5168">
+<span class="tactic">intros</span> <span class="id">n</span> <span class="id">a</span> [|<span class="id">b</span>|<span class="id">b</span>] <span class="id">Ha</span> <span class="id">Hb</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> 2!<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_0_r">Zmod_0_r</a></span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_eq">Zmod_eq</a></span> <span class="id">n</span> (<span class="id">a</span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_assoc">Zmult_assoc</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.sub">Zminus</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp_mult_distr_l">Zopp_mult_distr_l</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_plus">Z_mod_plus</a></span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_gt_0_compat">Zmult_gt_0_compat</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="id">now</span> <span class="tactic">elim</span> <span class="id">Hb</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="ZOmod_eq">ZOmod_eq</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> - <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5169')">Proof.</div>
+<div class="proofscript" id="proof5169">
+<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id">Z.quot_rem</span>' <span class="id">a</span> <span class="id">b</span>) <span class="tactic">at</span> 2.<br/>
+<span class="tactic">ring</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="ZOmod_mod_mult">ZOmod_mod_mult</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5170')">Proof.</div>
+<div class="proofscript" id="proof5170">
+<span class="tactic">intros</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>.<br/>
+<span class="tactic">assert</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id">n</span> (<span class="id">a</span> * <span class="id">b</span>) = <span class="id">n</span> + - (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id">n</span> (<span class="id">a</span> * <span class="id">b</span>) * <span class="id">a</span>) * <span class="id">b</span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp_mult_distr_l">Zopp_mult_distr_l</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_assoc">Zmult_assoc</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#ZOmod_eq">ZOmod_eq</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Z_rem_plus">Z_rem_plus</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zrem_sgn2">Zrem_sgn2</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zdiv_mod_mult">Zdiv_mod_mult</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>, (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>)%<span class="id">Z</span> -&gt; (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv">Zdiv</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod">Zmod</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod">Zmod</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv">Zdiv</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5171')">Proof.</div>
+<div class="proofscript" id="proof5171">
+<span class="tactic">intros</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span> <span class="id">Ha</span> <span class="id">Hb</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_lt_or_eq">Zle_lt_or_eq</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Ha</span>) <span class="kwd">as</span> [<span class="id">Ha</span>'|<span class="id">Ha</span>'].<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_lt_or_eq">Zle_lt_or_eq</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">Hb</span>) <span class="kwd">as</span> [<span class="id">Hb</span>'|<span class="id">Hb</span>'].<br/>
+<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_eq">Zmod_eq</a></span> <span class="id">n</span> (<span class="id">a</span> * <span class="id">b</span>)).<br/>
+<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_comm">Zmult_comm</a></span> <span class="id">a</span> <span class="id">b</span>) <span class="tactic">at</span> 2.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_assoc">Zmult_assoc</a></span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.sub">Zminus</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp_mult_distr_l">Zopp_mult_distr_l</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_div_plus">Z_div_plus</a></span> <span class="tactic">by</span> <span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_Zdiv">Zdiv_Zdiv</a></span> <span class="tactic">by</span> <span class="id">easy</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#sym_eq">sym_eq</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_eq">Zmod_eq</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_gt_0_compat">Zmult_gt_0_compat</a></span> ; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">Hb</span>'.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_0_r">Zmult_0_r</a></span>, 2!<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_0_r">Zmod_0_r</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_0_l">Zdiv_0_l</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">Ha</span>'.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> 2!<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_0_r">Zdiv_0_r</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_0_l">Zmod_0_l</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="ZOdiv_mod_mult">ZOdiv_mod_mult</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5172')">Proof.</div>
+<div class="proofscript" id="proof5172">
+<span class="tactic">intros</span> <span class="id">n</span> <span class="id">a</span> <span class="id">b</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith_dec.html#Z_eq_dec">Z_eq_dec</a></span> <span class="id">a</span> 0) <span class="kwd">as</span> [<span class="id">Za</span>|<span class="id">Za</span>].<br/>
+<span class="tactic">rewrite</span> <span class="id">Za</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> 2!<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zquot_0_r">Zquot_0_r</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zrem_0_l">Zrem_0_l</a></span>.<br/>
+<span class="tactic">assert</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id">n</span> (<span class="id">a</span> * <span class="id">b</span>) = <span class="id">n</span> + - (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id">n</span> <span class="id">a</span>) <span class="id">b</span> * <span class="id">b</span>) * <span class="id">a</span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#ZOmod_eq">ZOmod_eq</a></span> <span class="id">n</span> (<span class="id">a</span> * <span class="id">b</span>)) <span class="tactic">at</span> 1.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zquot_Zquot">Zquot_Zquot</a></span>.<br/>
+<span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Z_quot_plus">Z_quot_plus</a></span> <span class="kwd">with</span> (2 := <span class="id">Za</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#sym_eq">sym_eq</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#ZOmod_eq">ZOmod_eq</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zrem_sgn2">Zrem_sgn2</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="ZOdiv_small_abs">ZOdiv_small_abs</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5173')">Proof.</div>
+<div class="proofscript" id="proof5173">
+<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span> <span class="id">Ha</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_or_lt">Zle_or_lt</a></span> 0 <span class="id">a</span>) <span class="kwd">as</span> [<span class="id">H</span>|<span class="id">H</span>].<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zquot_small">Zquot_small</a></span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">exact</span> <span class="id">H</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zabs.html#Zabs_eq">Zabs_eq</a></span> <span class="kwd">in</span> <span class="id">Ha</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp_inj">Zopp_inj</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zquot_opp_l">Zquot_opp_l</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp_0">Zopp_0</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zquot_small">Zquot_small</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zabs.html#Zabs_non_eq">Zabs_non_eq</a></span> <span class="id">a</span>).<br/>
+<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="ZOmod_small_abs">ZOmod_small_abs</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5174')">Proof.</div>
+<div class="proofscript" id="proof5174">
+<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span> <span class="id">Ha</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_or_lt">Zle_or_lt</a></span> 0 <span class="id">a</span>) <span class="kwd">as</span> [<span class="id">H</span>|<span class="id">H</span>].<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zrem_small">Zrem_small</a></span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">exact</span> <span class="id">H</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zabs.html#Zabs_eq">Zabs_eq</a></span> <span class="kwd">in</span> <span class="id">Ha</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp_inj">Zopp_inj</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zrem_opp_l">Zrem_opp_l</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zrem_small">Zrem_small</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zabs.html#Zabs_non_eq">Zabs_non_eq</a></span> <span class="id">a</span>).<br/>
+<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="ZOdiv_plus">ZOdiv_plus</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span> <span class="id">c</span>, (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#c">c</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#c">c</a></span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#c">c</a></span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#c">c</a></span> + <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#c">c</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#c">c</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5175')">Proof.</div>
+<div class="proofscript" id="proof5175">
+<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span> <span class="id">c</span> <span class="id">Hab</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith_dec.html#Z_eq_dec">Z_eq_dec</a></span> <span class="id">c</span> 0) <span class="kwd">as</span> [<span class="id">Zc</span>|<span class="id">Zc</span>].<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">Zc</span>, 4!<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zquot_0_r">Zquot_0_r</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_reg_r">Zmult_reg_r</a></span> <span class="kwd">with</span> (1 := <span class="id">Zc</span>).<br/>
+<span class="tactic">rewrite</span> 2!<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_plus_distr_l">Zmult_plus_distr_l</a></span>.<br/>
+<span class="tactic">assert</span> (<span class="kwd">forall</span> <span class="id">d</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#d">d</a></span> <span class="id">c</span> * <span class="id">c</span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#d">d</a></span> - <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem">Z.rem</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#d">d</a></span> <span class="id">c</span>)%<span class="id">Z</span>.<br/>
+<span class="tactic">intros</span> <span class="id">d</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#ZOmod_eq">ZOmod_eq</a></span>.<br/>
+<span class="tactic">ring</span>.<br/>
+<span class="tactic">rewrite</span> 4!<span class="id">H</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zplus_rem">Zplus_rem</a></span> <span class="kwd">with</span> (1 := <span class="id">Hab</span>).<br/>
+<span class="tactic">ring</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Div_Mod">Div_Mod</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Same_sign">Same_sign</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zsame_sign_trans">Zsame_sign_trans</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span> <span class="id">u</span> <span class="id">w</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> &lt;&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span>)%<span class="id">Z</span> -&gt; (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#w">w</a></span>)%<span class="id">Z</span> -&gt; (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#w">w</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5176')">Proof.</div>
+<div class="proofscript" id="proof5176">
+<span class="tactic">intros</span> [|<span class="id">v</span>|<span class="id">v</span>] [|<span class="id">u</span>|<span class="id">u</span>] [|<span class="id">w</span>|<span class="id">w</span>] <span class="id">Zv</span> <span class="id">Huv</span> <span class="id">Hvw</span> ; <span class="tactic">try</span> <span class="id">easy</span> ; <span class="id">now</span> <span class="tactic">elim</span> <span class="id">Zv</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zsame_sign_trans_weak">Zsame_sign_trans_weak</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span> <span class="id">u</span> <span class="id">w</span>, (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#w">w</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>) -&gt;<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span>)%<span class="id">Z</span> -&gt; (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#w">w</a></span>)%<span class="id">Z</span> -&gt; (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#w">w</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5177')">Proof.</div>
+<div class="proofscript" id="proof5177">
+<span class="tactic">intros</span> [|<span class="id">v</span>|<span class="id">v</span>] [|<span class="id">u</span>|<span class="id">u</span>] [|<span class="id">w</span>|<span class="id">w</span>] <span class="id">Zv</span> <span class="id">Huv</span> <span class="id">Hvw</span> ; <span class="tactic">try</span> <span class="id">easy</span> ; <span class="id">now</span> <span class="tactic">discriminate</span> <span class="id">Zv</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zsame_sign_imp">Zsame_sign_imp</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">u</span> <span class="id">v</span>,<br/>
+&nbsp;&nbsp;(0 &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> -&gt; 0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt; -<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> -&gt; 0 &lt;= -<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5178')">Proof.</div>
+<div class="proofscript" id="proof5178">
+<span class="tactic">intros</span> [|<span class="id">u</span>|<span class="id">u</span>] <span class="id">v</span> <span class="id">Hp</span> <span class="id">Hn</span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_le_0_compat">Zmult_le_0_compat</a></span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id">Hp</span>.<br/>
+<span class="tactic">replace</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">u</span> * <span class="id">v</span>)%<span class="id">Z</span> <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">u</span> * (-<span class="id">v</span>))%<span class="id">Z</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zmult_le_0_compat">Zmult_le_0_compat</a></span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id">Hn</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp_mult_distr_r">Zopp_mult_distr_r</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp_mult_distr_l">Zopp_mult_distr_l</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zsame_sign_odiv">Zsame_sign_odiv</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">u</span> <span class="id">v</span>, (0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span>)%<span class="id">Z</span> -&gt;<br/>
+&nbsp;&nbsp;(0 &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.quot">Z.quot</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#u">u</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span>)%<span class="id">Z</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5179')">Proof.</div>
+<div class="proofscript" id="proof5179">
+<span class="tactic">intros</span> <span class="id">u</span> <span class="id">v</span> <span class="id">Hv</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zsame_sign_imp">Zsame_sign_imp</a></span> ; <span class="tactic">intros</span> <span class="id">Hu</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Z_quot_pos">Z_quot_pos</a></span> <span class="kwd">with</span> (2 := <span class="id">Hv</span>).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Zquot_opp_l">Zquot_opp_l</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zquot.html#Z_quot_pos">Z_quot_pos</a></span> <span class="kwd">with</span> (2 := <span class="id">Hv</span>).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Same_sign">Same_sign</a></span>.<br/>
+<br/>
+<div class="doc">Boolean comparisons </div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Zeq_bool">Zeq_bool</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="Zeq_bool_prop">Zeq_bool_prop</a></span> (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zeq_bool_true_">Zeq_bool_true_</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_prop">Zeq_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zeq_bool_false_">Zeq_bool_false_</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt;&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_prop">Zeq_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeq_bool_spec">Zeq_bool_spec</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool_prop">Zeq_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool">Zeq_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5180')">Proof.</div>
+<div class="proofscript" id="proof5180">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_is_eq_bool">Zeq_is_eq_bool</a></span> <span class="id">x</span> <span class="id">y</span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool">Zeq_bool</a></span> <span class="id">x</span> <span class="id">y</span>) ; <span class="tactic">intros</span> (<span class="id">H1</span>, <span class="id">H2</span>) ; <span class="id">constructor</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id">H2</span>.<br/>
+<span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H1</span> <span class="id">H</span>).<br/>
+<span class="tactic">discriminate</span> <span class="id">H1</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeq_bool_true">Zeq_bool_true</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool">Zeq_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5181')">Proof.</div>
+<div class="proofscript" id="proof5181">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">apply</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_is_eq_bool">Zeq_is_eq_bool</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zeq_bool_false">Zeq_bool_false</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt;&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool">Zeq_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5182')">Proof.</div>
+<div class="proofscript" id="proof5182">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj2">proj2</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_is_eq_bool">Zeq_is_eq_bool</a></span> <span class="id">x</span> <span class="id">y</span>)).<br/>
+<span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zeq_bool">Zeq_bool</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">He</span> <span class="id">Hn</span>.<br/>
+<span class="tactic">elim</span> <span class="id">Hn</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id">He</span>.<br/>
+<span class="id">now</span> <span class="tactic">intros</span> <span class="id">_</span> <span class="id">_</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zeq_bool">Zeq_bool</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Zle_bool">Zle_bool</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="Zle_bool_prop">Zle_bool_prop</a></span> (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zle_bool_true_">Zle_bool_true_</a></span> : (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_prop">Zle_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zle_bool_false_">Zle_bool_false_</a></span> : (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_prop">Zle_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zle_bool_spec">Zle_bool_spec</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_prop">Zle_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5183')">Proof.</div>
+<div class="proofscript" id="proof5183">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_is_le_bool">Zle_is_le_bool</a></span> <span class="id">x</span> <span class="id">y</span>).<br/>
+<span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> ; <span class="tactic">intros</span> (<span class="id">H1</span>, <span class="id">H2</span>) ; <span class="id">constructor</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id">H2</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_or_lt">Zle_or_lt</a></span> <span class="id">x</span> <span class="id">y</span>) <span class="kwd">as</span> [<span class="id">H</span>|<span class="id">H</span>].<br/>
+<span class="id">now</span> <span class="id">specialize</span> (<span class="id">H1</span> <span class="id">H</span>).<br/>
+<span class="tactic">exact</span> <span class="id">H</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zle_bool_true">Zle_bool_true</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5184')">Proof.</div>
+<div class="proofscript" id="proof5184">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_is_le_bool">Zle_is_le_bool</a></span> <span class="id">x</span> <span class="id">y</span>)).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zle_bool_false">Zle_bool_false</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5185')">Proof.</div>
+<div class="proofscript" id="proof5185">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span> <span class="id">Hxy</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_cases">Zle_cases</a></span> <span class="id">x</span> <span class="id">y</span>).<br/>
+<span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> ; <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="tactic">elim</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_irrefl">Zlt_irrefl</a></span> <span class="id">x</span>).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_lt_trans">Zle_lt_trans</a></span> <span class="kwd">with</span> <span class="id">y</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool">Zle_bool</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Zlt_bool">Zlt_bool</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="Zlt_bool_prop">Zlt_bool_prop</a></span> (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zlt_bool_true_">Zlt_bool_true_</a></span> : (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_prop">Zlt_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zlt_bool_false_">Zlt_bool_false_</a></span> : (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_prop">Zlt_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zlt_bool_spec">Zlt_bool_spec</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_prop">Zlt_bool_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5186')">Proof.</div>
+<div class="proofscript" id="proof5186">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_is_lt_bool">Zlt_is_lt_bool</a></span> <span class="id">x</span> <span class="id">y</span>).<br/>
+<span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> ; <span class="tactic">intros</span> (<span class="id">H1</span>, <span class="id">H2</span>) ; <span class="id">constructor</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id">H2</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zle_or_lt">Zle_or_lt</a></span> <span class="id">y</span> <span class="id">x</span>) <span class="kwd">as</span> [<span class="id">H</span>|<span class="id">H</span>].<br/>
+<span class="tactic">exact</span> <span class="id">H</span>.<br/>
+<span class="id">now</span> <span class="id">specialize</span> (<span class="id">H1</span> <span class="id">H</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zlt_bool_true">Zlt_bool_true</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5187')">Proof.</div>
+<div class="proofscript" id="proof5187">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_is_lt_bool">Zlt_is_lt_bool</a></span> <span class="id">x</span> <span class="id">y</span>)).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zlt_bool_false">Zlt_bool_false</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> &lt;= <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5188')">Proof.</div>
+<div class="proofscript" id="proof5188">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span> <span class="id">Hxy</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_cases">Zlt_cases</a></span> <span class="id">x</span> <span class="id">y</span>).<br/>
+<span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> ; <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="tactic">elim</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_irrefl">Zlt_irrefl</a></span> <span class="id">x</span>).<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_trans">Zlt_le_trans</a></span> <span class="kwd">with</span> <span class="id">y</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="negb_Zle_bool">negb_Zle_bool</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5189')">Proof.</div>
+<div class="proofscript" id="proof5189">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_spec">Zle_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_false">Zlt_bool_false</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_true">Zlt_bool_true</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="negb_Zlt_bool">negb_Zlt_bool</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5190')">Proof.</div>
+<div class="proofscript" id="proof5190">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_spec">Zlt_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_false">Zle_bool_false</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zle_bool_true">Zle_bool_true</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool">Zlt_bool</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Zcompare">Zcompare</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="Zcompare_prop">Zcompare_prop</a></span> (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#comparison">comparison</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zcompare_Lt_">Zcompare_Lt_</a></span> : (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zcompare_prop">Zcompare_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Lt">Lt</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zcompare_Eq_">Zcompare_Eq_</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zcompare_prop">Zcompare_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Eq">Eq</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="Zcompare_Gt_">Zcompare_Gt_</a></span> : (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zcompare_prop">Zcompare_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Gt">Gt</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zcompare_spec">Zcompare_spec</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zcompare_prop">Zcompare_prop</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zcompare">Zcompare</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5191')">Proof.</div>
+<div class="proofscript" id="proof5191">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.ZArith_dec.html#Z_dec">Z_dec</a></span> <span class="id">x</span> <span class="id">y</span>) <span class="kwd">as</span> [[<span class="id">H</span>|<span class="id">H</span>]|<span class="id">H</span>].<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zcompare.html#Zlt_compare">Zlt_compare</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zcompare">Zcompare</a></span> <span class="id">x</span> <span class="id">y</span>) ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="id">now</span> <span class="id">constructor</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zcompare.html#Zgt_compare">Zgt_compare</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zcompare">Zcompare</a></span> <span class="id">x</span> <span class="id">y</span>) ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zgt_lt">Zgt_lt</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj2">proj2</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zcompare.html#Zcompare_Eq_iff_eq">Zcompare_Eq_iff_eq</a></span> <span class="id">_</span> <span class="id">_</span>) <span class="id">H</span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zcompare">Zcompare</a></span> <span class="id">x</span> <span class="id">y</span>) ; <span class="tactic">try</span> <span class="id">easy</span>.<br/>
+<span class="id">now</span> <span class="id">constructor</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zcompare_Lt">Zcompare_Lt</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zcompare">Zcompare</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Lt">Lt</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5192')">Proof.</div>
+<div class="proofscript" id="proof5192">
+<span class="id">easy</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zcompare_Eq">Zcompare_Eq</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zcompare">Zcompare</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Eq">Eq</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5193')">Proof.</div>
+<div class="proofscript" id="proof5193">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">apply</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zcompare.html#Zcompare_Eq_iff_eq">Zcompare_Eq_iff_eq</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zcompare_Gt">Zcompare_Gt</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> &lt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)%<span class="id">Z</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zcompare">Zcompare</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Gt">Gt</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5194')">Proof.</div>
+<div class="proofscript" id="proof5194">
+<span class="tactic">intros</span> <span class="id">x</span> <span class="id">y</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_gt">Zlt_gt</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zcompare">Zcompare</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="cond_Zopp">cond_Zopp</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="cond_Zopp">cond_Zopp</a></span> (<span class="id">b</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) <span class="id">m</span> := <span class="kwd">if</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zopp">Zopp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#m">m</a></span> <span class="kwd">else</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#m">m</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="abs_cond_Zopp">abs_cond_Zopp</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">b</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#cond_Zopp">cond_Zopp</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#m">m</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#m">m</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5195')">Proof.</div>
+<div class="proofscript" id="proof5195">
+<span class="tactic">intros</span> [|] <span class="id">m</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zabs.html#Zabs_Zopp">Zabs_Zopp</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="cond_Zopp_Zlt_bool">cond_Zopp_Zlt_bool</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#cond_Zopp">cond_Zopp</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zlt_bool">Zlt_bool</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#m">m</a></span> 0) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#m">m</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#m">m</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5196')">Proof.</div>
+<div class="proofscript" id="proof5196">
+<span class="tactic">intros</span> <span class="id">m</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#sym_eq">sym_eq</a></span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zlt_bool_spec">Zlt_bool_spec</a></span> ; <span class="tactic">intros</span> <span class="id">Hm</span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zabs.html#Zabs_non_eq">Zabs_non_eq</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zorder.html#Zlt_le_weak">Zlt_le_weak</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zabs.html#Zabs_eq">Zabs_eq</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#cond_Zopp">cond_Zopp</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="fast_pow_pos">fast_pow_pos</a></span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="Zfast_pow_pos">Zfast_pow_pos</a></span> (<span class="id">v</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) (<span class="id">e</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span> =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xO">xO</a></span> <span class="id">e</span>' =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.square">Z.square</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zfast_pow_pos">Zfast_pow_pos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> <span class="id">e</span>')<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xI">xI</a></span> <span class="id">e</span>' =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult">Zmult</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.square">Z.square</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zfast_pow_pos">Zfast_pow_pos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> <span class="id">e</span>'))<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zfast_pow_pos_correct">Zfast_pow_pos_correct</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">v</span> <span class="id">e</span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zfast_pow_pos">Zfast_pow_pos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower_pos">Zpower_pos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#v">v</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#e">e</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5197')">Proof.</div>
+<div class="proofscript" id="proof5197">
+<span class="tactic">intros</span> <span class="id">v</span> <span class="id">e</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_r">Zmult_1_r</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zfast_pow_pos">Zfast_pow_pos</a></span> <span class="id">v</span> <span class="id">e</span>)).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pow_pos">Z.pow_pos</a></span>.<br/>
+<span class="tactic">generalize</span> 1%<span class="id">Z</span>.<br/>
+<span class="id">revert</span> <span class="id">v</span>.<br/>
+<span class="tactic">induction</span> <span class="id">e</span> ; <span class="tactic">intros</span> <span class="id">v</span> <span class="id">f</span> ; <span class="tactic">simpl</span>.<br/>
+- <span class="tactic">rewrite</span> &lt;- 2!<span class="id">IHe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.square_spec">Z.square_spec</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">ring</span>.<br/>
+- <span class="tactic">rewrite</span> &lt;- 2!<span class="id">IHe</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.square_spec">Z.square_spec</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_sym">eq_sym</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_assoc">Zmult_assoc</a></span>.<br/>
+- <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_refl">eq_refl</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#fast_pow_pos">fast_pow_pos</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="faster_div">faster_div</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Zdiv_eucl_unique">Zdiv_eucl_unique</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv">Zdiv</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod">Zmod</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5198')">Proof.</div>
+<div class="proofscript" id="proof5198">
+<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.div">Zdiv</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.modulo">Zmod</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> (<span class="id">a</span> <span class="id">b</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span>) {<span class="kwd">struct</span> <span class="id">b</span>} :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xO">xO</a></span> <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xO">xO</a></span> <span class="id">a</span>' =&gt; <span class="kwd">let</span> (<span class="id">q</span>, <span class="id">r</span>) := <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> <span class="id">a</span>' <span class="id">b</span>' <span class="kwd">in</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span>, 2 * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span>)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xI">xI</a></span> <span class="id">a</span>' =&gt; <span class="kwd">let</span> (<span class="id">q</span>, <span class="id">r</span>) := <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> <span class="id">a</span>' <span class="id">b</span>' <span class="kwd">in</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span>, 2 * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span> + 1)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span> =&gt; (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span> =&gt; (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xI">xI</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Zpos_div_eucl_aux1_correct">Zpos_div_eucl_aux1_correct</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5199')">Proof.</div>
+<div class="proofscript" id="proof5199">
+<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span>.<br/>
+<span class="id">revert</span> <span class="id">a</span>.<br/>
+<span class="tactic">induction</span> <span class="id">b</span> ; <span class="tactic">intros</span> <span class="id">a</span>.<br/>
+- <span class="id">easy</span>.<br/>
+- <span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id">a</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>~0)) <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>~0)).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zdiv_eucl_unique">Zdiv_eucl_unique</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>~0) <span class="kwd">with</span> (2 * <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.rem_mul_r">Z.rem_mul_r</a></span> <span class="tactic">by</span> <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_Zdiv">Zdiv_Zdiv</a></span> <span class="tactic">by</span> <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span> <span class="kwd">as</span> [<span class="id">a</span>|<span class="id">a</span>|].<br/>
+&nbsp;&nbsp;+ <span class="id">change</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> <span class="id">a</span>~1 <span class="id">b</span>~0) <span class="kwd">with</span> (<span class="kwd">let</span> (<span class="id">q</span>, <span class="id">r</span>) := <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> <span class="id">a</span> <span class="id">b</span> <span class="kwd">in</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span>, 2 * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span> + 1)%<span class="id">Z</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">IHb</span>. <span class="tactic">clear</span> <span class="id">IHb</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id">a</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)) <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zdiv_eucl_unique">Zdiv_eucl_unique</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>~1) <span class="kwd">with</span> (1 + 2 * <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>)%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_comm">Zmult_comm</a></span> 2 (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_div_plus_full">Z_div_plus_full</a></span> <span class="tactic">by</span> <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_plus_full">Z_mod_plus_full</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zplus_comm">Zplus_comm</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="id">change</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> <span class="id">a</span>~0 <span class="id">b</span>~0) <span class="kwd">with</span> (<span class="kwd">let</span> (<span class="id">q</span>, <span class="id">r</span>) := <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> <span class="id">a</span> <span class="id">b</span> <span class="kwd">in</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span>, 2 * <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span>)%<span class="id">Z</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">IHb</span>. <span class="tactic">clear</span> <span class="id">IHb</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id">a</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)) <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zdiv_eucl_unique">Zdiv_eucl_unique</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>~0) <span class="kwd">with</span> (2 * <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>)%<span class="id">Z</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_comm">Zmult_comm</a></span> 2 (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_div_mult_full">Z_div_mult_full</a></span> <span class="tactic">by</span> <span class="id">easy</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_mult">Z_mod_mult</a></span>.<br/>
+&nbsp;&nbsp;+ <span class="id">easy</span>.<br/>
+- <span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id">a</span> 1) <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>) 1).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zdiv_eucl_unique">Zdiv_eucl_unique</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_1_r">Zdiv_1_r</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_1_r">Zmod_1_r</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Zpos_div_eucl_aux">Zpos_div_eucl_aux</a></span> (<span class="id">a</span> <span class="id">b</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.compare">Pos.compare</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Lt">Lt</a></span> =&gt; (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Eq">Eq</a></span> =&gt; (1%<span class="id">Z</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Gt">Gt</a></span> =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1">Zpos_div_eucl_aux1</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Zpos_div_eucl_aux_correct">Zpos_div_eucl_aux_correct</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux">Zpos_div_eucl_aux</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5200')">Proof.</div>
+<div class="proofscript" id="proof5200">
+<span class="tactic">intros</span> <span class="id">a</span> <span class="id">b</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux">Zpos_div_eucl_aux</a></span>.<br/>
+<span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id">a</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)) <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zdiv_eucl_unique">Zdiv_eucl_unique</a></span>.<br/>
+<span class="tactic">case</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.compare_spec">Pos.compare_spec</a></span> ; <span class="tactic">intros</span> <span class="id">H</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">H</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_div_same">Z_div_same</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Z_mod_same">Z_mod_same</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_small">Zdiv_small</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zmod_small">Zmod_small</a></span> <span class="tactic">by</span> (<span class="tactic">split</span> ; <span class="id">easy</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux1_correct">Zpos_div_eucl_aux1_correct</a></span>.<br/>
+<span class="id">change</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.pos_div_eucl">Z.pos_div_eucl</a></span> <span class="id">a</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)) <span class="kwd">with</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>)).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zdiv_eucl_unique">Zdiv_eucl_unique</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Zfast_div_eucl">Zfast_div_eucl</a></span> (<span class="id">a</span> <span class="id">b</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> =&gt; (0, 0)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">a</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> =&gt; (0, 0)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>' =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux">Zpos_div_eucl_aux</a></span> <span class="id">a</span>' <span class="id">b</span>'<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> (<span class="id">q</span>, <span class="id">r</span>) := <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux">Zpos_div_eucl_aux</a></span> <span class="id">a</span>' <span class="id">b</span>' <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> =&gt; (-<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span>, 0)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">_</span> =&gt; (-(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span> + 1), (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span>))%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">_</span> =&gt; (-(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span> + 1), (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span>))%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">a</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> =&gt; (0, 0)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> (<span class="id">q</span>, <span class="id">r</span>) := <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux">Zpos_div_eucl_aux</a></span> <span class="id">a</span>' <span class="id">b</span>' <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z0">Z0</a></span> =&gt; (-<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span>, 0)%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zpos">Zpos</a></span> <span class="id">_</span> =&gt; (-(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span> + 1), (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> - <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span>))%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">_</span> =&gt; (-(<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span> + 1), (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> - <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span>))%<span class="id">Z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Zneg">Zneg</a></span> <span class="id">b</span>' =&gt; <span class="kwd">let</span> (<span class="id">q</span>, <span class="id">r</span>) := <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux">Zpos_div_eucl_aux</a></span> <span class="id">a</span>' <span class="id">b</span>' <span class="kwd">in</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span>, (-<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#r">r</a></span>)%<span class="id">Z</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Zfast_div_eucl_correct">Zfast_div_eucl_correct</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">a</span> <span class="id">b</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zfast_div_eucl">Zfast_div_eucl</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_eucl">Zdiv_eucl</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#a">a</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#b">b</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5201')">Proof.</div>
+<div class="proofscript" id="proof5201">
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zfast_div_eucl">Zfast_div_eucl</a></span>.<br/>
+<span class="tactic">intros</span> [|<span class="id">a</span>|<span class="id">a</span>] [|<span class="id">b</span>|<span class="id">b</span>] ; <span class="tactic">try</span> <span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Zpos_div_eucl_aux_correct">Zpos_div_eucl_aux_correct</a></span> ; <span class="id">easy</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#faster_div">faster_div</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Iter">Iter</a></span>.<br/>
+<br/>
+<span class="kwd">Context</span> {<span class="id">A</span> : <span class="kwd">Type</span>}.<br/>
+<span class="kwd">Variable</span> (<span class="id"><a name="Iter.f">f</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span> -&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span>).<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="iter_nat">iter_nat</a></span> (<span class="id">n</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) (<span class="id">x</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span>) {<span class="kwd">struct</span> <span class="id">n</span>} : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id">n</span>' =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> <span class="id">n</span>' (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.f">f</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#O">O</a></span> =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="iter_nat_plus">iter_nat_plus</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">p</span> <span class="id">q</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) (<span class="id">x</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span>),<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#q">q</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5202')">Proof.</div>
+<div class="proofscript" id="proof5202">
+<span class="tactic">induction</span> <span class="id">q</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Plus.html#plus_0_r">plus_0_r</a></span>.<br/>
+<span class="tactic">intros</span> <span class="id">x</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Peano.html#plus_n_Sm">plus_n_Sm</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id">IHq</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="iter_nat_S">iter_nat_S</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">p</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) (<span class="id">x</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span>),<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#S">S</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.f">f</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5203')">Proof.</div>
+<div class="proofscript" id="proof5203">
+<span class="tactic">induction</span> <span class="id">p</span>.<br/>
+<span class="id">easy</span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">intros</span> <span class="id">x</span>.<br/>
+<span class="tactic">apply</span> <span class="id">IHp</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="iter_pos">iter_pos</a></span> (<span class="id">n</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span>) (<span class="id">x</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span>) {<span class="kwd">struct</span> <span class="id">n</span>} : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#n">n</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xI">xI</a></span> <span class="id">n</span>' =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_pos">iter_pos</a></span> <span class="id">n</span>' (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_pos">iter_pos</a></span> <span class="id">n</span>' (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.f">f</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>))<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xO">xO</a></span> <span class="id">n</span>' =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_pos">iter_pos</a></span> <span class="id">n</span>' (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_pos">iter_pos</a></span> <span class="id">n</span>' <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#xH">xH</a></span> =&gt; <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.f">f</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="iter_pos_nat">iter_pos_nat</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">p</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span>) (<span class="id">x</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.A">A</a></span>),<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_pos">iter_pos</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span> = <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat">iter_nat</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.to_nat">Pos.to_nat</a></span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#p">p</a></span>) <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5204')">Proof.</div>
+<div class="proofscript" id="proof5204">
+<span class="tactic">induction</span> <span class="id">p</span> ; <span class="tactic">intros</span> <span class="id">x</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.Pnat.html#Pos2Nat.inj_xI">Pos2Nat.inj_xI</a></span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Plus.html#plus_0_r">plus_0_r</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat_plus">iter_nat_plus</a></span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id">IHp</span> (<span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter.f">f</a></span> <span class="id">x</span>)).<br/>
+<span class="tactic">apply</span> <span class="id">IHp</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.Pnat.html#Pos2Nat.inj_xO">Pos2Nat.inj_xO</a></span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Plus.html#plus_0_r">plus_0_r</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#iter_nat_plus">iter_nat_plus</a></span>.<br/>
+<span class="tactic">rewrite</span> (<span class="id">IHp</span> <span class="id">x</span>).<br/>
+<span class="tactic">apply</span> <span class="id">IHp</span>.<br/>
+<span class="id">easy</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#Iter">Iter</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

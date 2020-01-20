@@ -1,0 +1,323 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Complements</title>
+<meta name="description" content="Documentation of Coq module Complements" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Complements</h1>
+<div class="coq">
+<br/>
+<div class="doc">Corollaries of the main semantic preservation theorem. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical.html">Classical</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="compcert.common.Errors.html">Errors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span> <span class="id"><a href="compcert.common.Linking.html">Linking</a></span> <span class="id"><a href="compcert.common.Events.html">Events</a></span> <span class="id"><a href="compcert.common.Smallstep.html">Smallstep</a></span> <span class="id"><a href="compcert.common.Behaviors.html">Behaviors</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.cfrontend.Csyntax.html">Csyntax</a></span> <span class="id"><a href="compcert.cfrontend.Csem.html">Csem</a></span> <span class="id"><a href="compcert.cfrontend.Cstrategy.html">Cstrategy</a></span> <span class="id"><a href="compcert.x86.Asm.html">Asm</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.driver.Compiler.html">Compiler</a></span>.<br/>
+<br/>
+<h1> Preservation of whole-program behaviors </h1>
+<br/>
+<div class="doc">From the simulation diagrams proved in file <span class="bracket"><span class="id">Compiler</span></span>. it follows that
+  whole-program observable behaviors are preserved in the following sense.
+  First, every behavior of the generated assembly code is matched by
+  a behavior of the source C code.  The behavior <span class="bracket"><span class="id">beh</span></span> of the assembly
+  code is either identical to the behavior <span class="bracket"><span class="id">beh</span>'</span> of the source C code
+  or ``improves upon'' <span class="bracket"><span class="id">beh</span>'</span>  by replacing a ``going wrong'' behavior
+  with a more defined behavior. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_preservation">transf_c_program_preservation</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">beh</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">beh</span>', <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id">beh</span>' /\ <span class="id"><a href="compcert.common.Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id">beh</span>' <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4971')">Proof.</div>
+<div class="proofscript" id="proof4971">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Behaviors.html#backward_simulation_behavior_improves">backward_simulation_behavior_improves</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.driver.Compiler.html#transf_c_program_correct">transf_c_program_correct</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">As a corollary, if the source C code cannot go wrong, i.e. is free of
+  undefined behaviors, the behavior of the generated assembly code is
+  one of the possible behaviors of the source C code. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_is_refinement">transf_c_program_is_refinement</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#not_wrong">not_wrong</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4972')">Proof.</div>
+<div class="proofscript" id="proof4972">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Behaviors.html#backward_simulation_same_safe_behavior">backward_simulation_same_safe_behavior</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.driver.Compiler.html#transf_c_program_correct">transf_c_program_correct</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If we consider the C evaluation strategy implemented by the compiler,
+  we get stronger preservation results. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_cstrategy_program_preservation">transf_cstrategy_program_preservation</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Cstrategy.html#semantics">Cstrategy.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">beh</span>', <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) <span class="id">beh</span>' /\ <span class="id"><a href="compcert.common.Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> <span class="id">beh</span>')<br/>
+/\(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">beh</span>', <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Cstrategy.html#semantics">Cstrategy.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id">beh</span>' /\ <span class="id"><a href="compcert.common.Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id">beh</span>' <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>)<br/>
+/\(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#not_wrong">not_wrong</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Cstrategy.html#semantics">Cstrategy.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>)<br/>
+/\(<span class="kwd">forall</span> <span class="id">beh</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>', <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Cstrategy.html#semantics">Cstrategy.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id">beh</span>' -&gt; <span class="id"><a href="compcert.common.Behaviors.html#not_wrong">not_wrong</a></span> <span class="id">beh</span>') -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Cstrategy.html#semantics">Cstrategy.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4973')">Proof.</div>
+<div class="proofscript" id="proof4973">
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">WBT</span>: <span class="kwd">forall</span> <span class="id">p</span>, <span class="id"><a href="compcert.common.Smallstep.html#well_behaved_traces">well_behaved_traces</a></span> (<span class="id"><a href="compcert.cfrontend.Cstrategy.html#semantics">Cstrategy.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Smallstep.html#ssr_well_behaved">ssr_well_behaved</a></span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.cfrontend.Cstrategy.html#semantics_strongly_receptive">Cstrategy.semantics_strongly_receptive</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">MATCH</span>: <span class="id"><a href="compcert.driver.Compiler.html#match_prog">match_prog</a></span> <span class="id">p</span> <span class="id">tp</span>) <span class="tactic">by</span> (<span class="tactic">apply</span> <span class="id"><a href="compcert.driver.Compiler.html#transf_c_program_match">transf_c_program_match</a></span>; <span class="tactic">auto</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">intuition</span> <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Behaviors.html#forward_simulation_behavior_improves">forward_simulation_behavior_improves</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> (<span class="id"><a href="compcert.driver.Compiler.html#cstrategy_semantic_preservation">cstrategy_semantic_preservation</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">MATCH</span>)).<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.common.Behaviors.html#backward_simulation_behavior_improves">backward_simulation_behavior_improves</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj2">proj2</a></span> (<span class="id"><a href="compcert.driver.Compiler.html#cstrategy_semantic_preservation">cstrategy_semantic_preservation</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">MATCH</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">beh1</span> [<span class="id">A</span> <span class="id">B</span>]]. <span class="id">exists</span> <span class="id">beh1</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Behaviors.html#atomic_behaviors">atomic_behaviors</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Behaviors.html#forward_simulation_same_safe_behavior">forward_simulation_same_safe_behavior</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj1">proj1</a></span> (<span class="id"><a href="compcert.driver.Compiler.html#cstrategy_semantic_preservation">cstrategy_semantic_preservation</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">MATCH</span>)).<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.common.Behaviors.html#backward_simulation_same_safe_behavior">backward_simulation_same_safe_behavior</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#proj2">proj2</a></span> (<span class="id"><a href="compcert.driver.Compiler.html#cstrategy_semantic_preservation">cstrategy_semantic_preservation</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">MATCH</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.common.Behaviors.html#atomic_behaviors">atomic_behaviors</a></span> <span class="kwd">in</span> <span class="id">H2</span>; <span class="tactic">eauto</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.common.Behaviors.html#atomic_behaviors">atomic_behaviors</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">We can also use the alternate big-step semantics for <span class="bracket"><span class="id">Cstrategy</span></span>
+  to establish behaviors of the generated assembly code. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="bigstep_cstrategy_preservation">bigstep_cstrategy_preservation</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">t</span> <span class="id">r</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cfrontend.Cstrategy.html#bigstep_program_terminates">Cstrategy.bigstep_program_terminates</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span> <span class="id"><a href="compcert.driver.Complements.html#r">r</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) (<span class="id"><a href="compcert.common.Behaviors.html#Terminates">Terminates</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span> <span class="id"><a href="compcert.driver.Complements.html#r">r</a></span>))<br/>
+/\(<span class="kwd">forall</span> <span class="id">T</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.cfrontend.Cstrategy.html#bigstep_program_diverges">Cstrategy.bigstep_program_diverges</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> <span class="id"><a href="compcert.driver.Complements.html#T">T</a></span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) (<span class="id"><a href="compcert.common.Behaviors.html#Reacts">Reacts</a></span> <span class="id"><a href="compcert.driver.Complements.html#T">T</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;\/ <span class="id">exists</span> <span class="id">t</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span>) (<span class="id"><a href="compcert.common.Behaviors.html#Diverges">Diverges</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span>) /\ <span class="id"><a href="compcert.common.Events.html#traceinf_prefix">traceinf_prefix</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span> <span class="id"><a href="compcert.driver.Complements.html#T">T</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4974')">Proof.</div>
+<div class="proofscript" id="proof4974">
+&nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.driver.Complements.html#transf_cstrategy_program_preservation">transf_cstrategy_program_preservation</a></span> <span class="kwd">with</span> <span class="id">p</span>; <span class="tactic">auto</span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.common.Behaviors.html#behavior_bigstep_terminates">behavior_bigstep_terminates</a></span> <span class="kwd">with</span> (<span class="id"><a href="compcert.cfrontend.Cstrategy.html#bigstep_semantics">Cstrategy.bigstep_semantics</a></span> <span class="id">p</span>); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.cfrontend.Cstrategy.html#bigstep_semantics_sound">Cstrategy.bigstep_semantics_sound</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> (<span class="id"><a href="compcert.common.Behaviors.html#behavior_bigstep_diverges">behavior_bigstep_diverges</a></span> (<span class="id"><a href="compcert.cfrontend.Cstrategy.html#bigstep_semantics_sound">Cstrategy.bigstep_semantics_sound</a></span> <span class="id">p</span>)). <span class="id">eassumption</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">A</span> | [<span class="id">t</span> [<span class="id">A</span> <span class="id">B</span>]]].<br/>
+&nbsp;&nbsp;<span class="id">left</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.driver.Complements.html#transf_cstrategy_program_preservation">transf_cstrategy_program_preservation</a></span> <span class="kwd">with</span> <span class="id">p</span>; <span class="tactic">auto</span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>; <span class="id">exists</span> <span class="id">t</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.driver.Complements.html#transf_cstrategy_program_preservation">transf_cstrategy_program_preservation</a></span> <span class="kwd">with</span> <span class="id">p</span>; <span class="tactic">auto</span>. <span class="tactic">red</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Satisfaction of specifications </h1>
+<br/>
+<div class="doc">The second additional results shows that if all executions
+  of the source C program satisfies a given specification,
+  then all executions of the produced Asm program satisfy
+  this specification as well.  </div>
+<br/>
+<div class="doc">The specifications we consider here are sets of observable
+  behaviors, representing the good behaviors a program is expected
+  to have.  A specification can be as simple as
+  ``the program does not go wrong'' or as precise as
+  ``the program prints a prime number then terminates with code 0''.
+  As usual in Coq, sets of behaviors are represented as predicates
+  <span class="bracket"><span class="id">program_behavior</span> -&gt; <span class="kwd">Prop</span></span>. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="specification">specification</a></span> := <span class="id"><a href="compcert.common.Behaviors.html#program_behavior">program_behavior</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<br/>
+<div class="doc">A program satisfies a specification if all its observable behaviors
+  are in the specification. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="c_program_satisfies_spec">c_program_satisfies_spec</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>) (<span class="id">spec</span>: <span class="id"><a href="compcert.driver.Complements.html#specification">specification</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh</span>,  <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="asm_program_satisfies_spec">asm_program_satisfies_spec</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>) (<span class="id">spec</span>: <span class="id"><a href="compcert.driver.Complements.html#specification">specification</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh</span>,  <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>.<br/>
+&nbsp;&nbsp;<br/>
+<div class="doc">It is not always the case that if the source program satisfies a
+  specification, then the generated assembly code satisfies it as
+  well.  For example, if the specification is ``the program goes wrong
+  on an undefined behavior'', a C source that goes wrong satisfies
+  this specification but can be compiled into Asm code that does not
+  go wrong and therefore does not satisfy the specification.
+  For this reason, we restrict ourselves to safety-enforcing specifications:
+  specifications that exclude ``going wrong'' behaviors and are satisfied
+  only by programs that execute safely. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="safety_enforcing_specification">safety_enforcing_specification</a></span> (<span class="id">spec</span>: <span class="id"><a href="compcert.driver.Complements.html#specification">specification</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#not_wrong">not_wrong</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>.<br/>
+<br/>
+<div class="doc">As the main result of this section, we show that CompCert
+  compilation preserves safety-enforcing specifications: 
+  any such specification that is satisfied by the source C program is
+  always satisfied by the generated assembly code. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_preserves_spec">transf_c_program_preserves_spec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">spec</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#safety_enforcing_specification">safety_enforcing_specification</a></span> <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#c_program_satisfies_spec">c_program_satisfies_spec</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#asm_program_satisfies_spec">asm_program_satisfies_spec</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span> <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4975')">Proof.</div>
+<div class="proofscript" id="proof4975">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">spec</span> <span class="id">TRANSF</span> <span class="id">SES</span> <span class="id">CSAT</span>; <span class="tactic">red</span>; <span class="tactic">intros</span> <span class="id">beh</span> <span class="id">AEXEC</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.driver.Complements.html#transf_c_program_preservation">transf_c_program_preservation</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> (<span class="id">beh</span>' &amp; <span class="id">CEXEC</span> &amp; <span class="id">IMPR</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">CSAT</span> <span class="kwd">in</span> <span class="id">CEXEC</span>. <span class="tactic">destruct</span> <span class="id">IMPR</span> <span class="kwd">as</span> [<span class="id">EQ</span> | [<span class="id">t</span> [<span class="id">A</span> <span class="id">B</span>]]].<br/>
+- <span class="tactic">congruence</span>.<br/>
+- <span class="tactic">subst</span> <span class="id">beh</span>'. <span class="tactic">apply</span> <span class="id">SES</span> <span class="kwd">in</span> <span class="id">CEXEC</span>. <span class="id">contradiction</span>. <br/>
+Qed.</div>
+<br/>
+<div class="doc">Safety-enforcing specifications are not the only good properties
+  of source programs that are preserved by compilation.  Another example
+  of a property that is preserved is the ``initial trace'' property:
+  all executions of the program start by producing an expected trace
+  of I/O actions, representing the good behavior expected from the program.
+  After that, the program may terminate, or continue running, or go wrong
+  on an undefined behavior.  What matters is that the program produced
+  the expected trace at the beginning of its execution.  This is a typical
+  liveness property, and it is preserved by compilation. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="c_program_has_initial_trace">c_program_has_initial_trace</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>) (<span class="id">t</span>: <span class="id"><a href="compcert.common.Events.html#trace">trace</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#behavior_prefix">behavior_prefix</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="asm_program_has_initial_trace">asm_program_has_initial_trace</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>) (<span class="id">t</span>: <span class="id"><a href="compcert.common.Events.html#trace">trace</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#behavior_prefix">behavior_prefix</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="transf_c_program_preserves_initial_trace">transf_c_program_preserves_initial_trace</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">t</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#c_program_has_initial_trace">c_program_has_initial_trace</a></span> <span class="id"><a href="compcert.driver.Complements.html#p">p</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#asm_program_has_initial_trace">asm_program_has_initial_trace</a></span> <span class="id"><a href="compcert.driver.Complements.html#tp">tp</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4976')">Proof.</div>
+<div class="proofscript" id="proof4976">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">p</span> <span class="id">tp</span> <span class="id">t</span> <span class="id">TRANSF</span> <span class="id">CTRACE</span>; <span class="tactic">red</span>; <span class="tactic">intros</span> <span class="id">beh</span> <span class="id">AEXEC</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.driver.Complements.html#transf_c_program_preservation">transf_c_program_preservation</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> (<span class="id">beh</span>' &amp; <span class="id">CEXEC</span> &amp; <span class="id">IMPR</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">CTRACE</span> <span class="kwd">in</span> <span class="id">CEXEC</span>. <span class="tactic">destruct</span> <span class="id">IMPR</span> <span class="kwd">as</span> [<span class="id">EQ</span> | [<span class="id">t</span>' [<span class="id">A</span> <span class="id">B</span>]]].<br/>
+- <span class="tactic">congruence</span>.<br/>
+- <span class="tactic">destruct</span> <span class="id">CEXEC</span> <span class="kwd">as</span> (<span class="id">beh1</span>' &amp; <span class="id">EQ</span>').<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">B</span> <span class="kwd">as</span> (<span class="id">beh1</span> &amp; <span class="id">EQ</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">beh</span>'. <span class="tactic">destruct</span> <span class="id">beh1</span>'; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">A</span>; <span class="id">inv</span> <span class="id">A</span>. <br/>
+&nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="compcert.common.Behaviors.html#behavior_app">behavior_app</a></span> <span class="id">t0</span> <span class="id">beh1</span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Behaviors.html#behavior_app_assoc">behavior_app_assoc</a></span>.<br/>
+Qed.</div>
+<br/>
+<h1> Extension to separate compilation </h1>
+<br/>
+<div class="doc">The results above were given in terms of whole-program compilation.
+    They also extend to separate compilation followed by linking. </div>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="SEPARATE_COMPILATION">SEPARATE_COMPILATION</a></span>.<br/>
+<br/>
+<div class="doc">The source: a list of C compilation units </div>
+<span class="kwd">Variable</span> <span class="id"><a name="SEPARATE_COMPILATION.c_units">c_units</a></span>: <span class="id"><a href="compcert.lib.Coqlib.html#nlist">nlist</a></span> <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>.<br/>
+<br/>
+<div class="doc">The compiled code: a list of Asm compilation units, obtained by separate compilation </div>
+<span class="kwd">Variable</span> <span class="id"><a name="SEPARATE_COMPILATION.asm_units">asm_units</a></span>: <span class="id"><a href="compcert.lib.Coqlib.html#nlist">nlist</a></span> <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="SEPARATE_COMPILATION.separate_compilation_succeeds">separate_compilation_succeeds</a></span>: <br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Coqlib.html#nlist_forall2">nlist_forall2</a></span> (<span class="kwd">fun</span> <span class="id">cu</span> <span class="id">tcu</span> =&gt; <span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#cu">cu</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.driver.Complements.html#tcu">tcu</a></span>) <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.c_units">c_units</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_units">asm_units</a></span>.<br/>
+<br/>
+<div class="doc">We assume that the source C compilation units can be linked together
+    to obtain a monolithic C program <span class="bracket"><span class="id">c_program</span></span>. </div>
+<span class="kwd">Variable</span> <span class="id"><a name="SEPARATE_COMPILATION.c_program">c_program</a></span>: <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>.<br/>
+<span class="kwd">Hypothesis</span> <span class="id"><a name="SEPARATE_COMPILATION.source_linking">source_linking</a></span>: <span class="id"><a href="compcert.common.Linking.html#link_list">link_list</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.c_units">c_units</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.c_program">c_program</a></span>.<br/>
+<br/>
+<div class="doc">Then, linking the Asm units obtained by separate compilation succeeds. </div>
+<span class="kwd">Lemma</span> <span class="id"><a name="compiled_linking_succeeds">compiled_linking_succeeds</a></span>:<br/>
+&nbsp;&nbsp;{ <span class="id">asm_program</span> | <span class="id"><a href="compcert.common.Linking.html#link_list">link_list</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_units">asm_units</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.driver.Complements.html#asm_program">asm_program</a></span> }.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4977')">Proof.</div>
+<div class="proofscript" id="proof4977">
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.common.Linking.html#link_list">link_list</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_units">asm_units</a></span>) <span class="id">eqn</span>:<span class="id">E</span>. <br/>
+- <span class="id">exists</span> <span class="id">p</span>; <span class="tactic">auto</span>.<br/>
+- <span class="id">exfalso</span>. <br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.driver.Compiler.html#separate_transf_c_program_correct">separate_transf_c_program_correct</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> (<span class="id">a</span> &amp; <span class="id">P</span> &amp; <span class="id">Q</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Let asm_program be the result of linking the Asm units. </div>
+<span class="kwd">Let</span> <span class="id"><a name="SEPARATE_COMPILATION.asm_program">asm_program</a></span>: <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#proj1_sig">proj1_sig</a></span> <span class="id"><a href="compcert.driver.Complements.html#compiled_linking_succeeds">compiled_linking_succeeds</a></span>.<br/>
+<span class="kwd">Let</span> <span class="id"><a name="SEPARATE_COMPILATION.compiled_linking">compiled_linking</a></span>: <span class="id"><a href="compcert.common.Linking.html#link_list">link_list</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_units">asm_units</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_program">asm_program</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#proj2_sig">proj2_sig</a></span> <span class="id"><a href="compcert.driver.Complements.html#compiled_linking_succeeds">compiled_linking_succeeds</a></span>.<br/>
+<br/>
+<div class="doc">Then, <span class="bracket"><span class="id">asm_program</span></span> preserves the semantics and the specifications of
+  <span class="bracket"><span class="id">c_program</span></span>, in the following sense.
+  First, every behavior of <span class="bracket"><span class="id">asm_program</span></span> improves upon one of the possible
+  behaviors of <span class="bracket"><span class="id">c_program</span></span>. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="separate_transf_c_program_preservation">separate_transf_c_program_preservation</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">beh</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_program">asm_program</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">beh</span>', <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.c_program">c_program</a></span>) <span class="id">beh</span>' /\ <span class="id"><a href="compcert.common.Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id">beh</span>' <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4978')">Proof.</div>
+<div class="proofscript" id="proof4978">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.driver.Compiler.html#separate_transf_c_program_correct">separate_transf_c_program_correct</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> (<span class="id">a</span> &amp; <span class="id">P</span> &amp; <span class="id">Q</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">a</span> = <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_program">asm_program</a></span>) <span class="tactic">by</span> <span class="tactic">congruence</span>. <span class="tactic">subst</span> <span class="id">a</span>. <br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Behaviors.html#backward_simulation_behavior_improves">backward_simulation_behavior_improves</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">As a corollary, if <span class="bracket"><span class="id">c_program</span></span> is free of undefined behaviors, 
+  the behavior of <span class="bracket"><span class="id">asm_program</span></span> is one of the possible behaviors of <span class="bracket"><span class="id">c_program</span></span>. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="separate_transf_c_program_is_refinement">separate_transf_c_program_is_refinement</a></span>:<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.c_program">c_program</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#not_wrong">not_wrong</a></span> <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">beh</span>, <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_program">asm_program</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span> -&gt; <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.c_program">c_program</a></span>) <span class="id"><a href="compcert.driver.Complements.html#beh">beh</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4979')">Proof.</div>
+<div class="proofscript" id="proof4979">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.driver.Complements.html#separate_transf_c_program_preservation">separate_transf_c_program_preservation</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> (<span class="id">beh</span>' &amp; <span class="id">P</span> &amp; <span class="id">Q</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="compcert.common.Behaviors.html#not_wrong">not_wrong</a></span> <span class="id">beh</span>') <span class="tactic">by</span> <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">Q</span>.<br/>
+- <span class="tactic">auto</span>.<br/>
+- <span class="tactic">destruct</span> <span class="id">H2</span> <span class="kwd">as</span> (<span class="id">t</span> &amp; <span class="id">U</span> &amp; <span class="id">V</span>). <span class="tactic">subst</span> <span class="id">beh</span>'. <span class="tactic">elim</span> <span class="id">H1</span>. <br/>
+Qed.</div>
+<br/>
+<div class="doc">We now show that if all executions of <span class="bracket"><span class="id">c_program</span></span> satisfy a specification,
+  then all executions of <span class="bracket"><span class="id">asm_program</span></span> also satisfy the specification, provided
+  the specification is of the safety-enforcing kind. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="separate_transf_c_program_preserves_spec">separate_transf_c_program_preserves_spec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">spec</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#safety_enforcing_specification">safety_enforcing_specification</a></span> <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#c_program_satisfies_spec">c_program_satisfies_spec</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.c_program">c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#asm_program_satisfies_spec">asm_program_satisfies_spec</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_program">asm_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#spec">spec</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4980')">Proof.</div>
+<div class="proofscript" id="proof4980">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">spec</span> <span class="id">SES</span> <span class="id">CSAT</span>; <span class="tactic">red</span>; <span class="tactic">intros</span> <span class="id">beh</span> <span class="id">AEXEC</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.driver.Complements.html#separate_transf_c_program_preservation">separate_transf_c_program_preservation</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> (<span class="id">beh</span>' &amp; <span class="id">CEXEC</span> &amp; <span class="id">IMPR</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">CSAT</span> <span class="kwd">in</span> <span class="id">CEXEC</span>. <span class="tactic">destruct</span> <span class="id">IMPR</span> <span class="kwd">as</span> [<span class="id">EQ</span> | [<span class="id">t</span> [<span class="id">A</span> <span class="id">B</span>]]].<br/>
+- <span class="tactic">congruence</span>.<br/>
+- <span class="tactic">subst</span> <span class="id">beh</span>'. <span class="tactic">apply</span> <span class="id">SES</span> <span class="kwd">in</span> <span class="id">CEXEC</span>. <span class="id">contradiction</span>. <br/>
+Qed.</div>
+<br/>
+<div class="doc">As another corollary of <span class="bracket"><span class="id">separate_transf_c_program_preservation</span></span>,
+  if all executions of <span class="bracket"><span class="id">c_program</span></span> have a trace <span class="bracket"><span class="id">t</span></span> as initial trace,
+  so do all executions of <span class="bracket"><span class="id">asm_program</span></span>. </div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="separate_transf_c_program_preserves_initial_trace">separate_transf_c_program_preserves_initial_trace</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#c_program_has_initial_trace">c_program_has_initial_trace</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.c_program">c_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.driver.Complements.html#asm_program_has_initial_trace">asm_program_has_initial_trace</a></span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION.asm_program">asm_program</a></span> <span class="id"><a href="compcert.driver.Complements.html#t">t</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof4981')">Proof.</div>
+<div class="proofscript" id="proof4981">
+&nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">t</span> <span class="id">CTRACE</span>; <span class="tactic">red</span>; <span class="tactic">intros</span> <span class="id">beh</span> <span class="id">AEXEC</span>.<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.driver.Complements.html#separate_transf_c_program_preservation">separate_transf_c_program_preservation</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intros</span> (<span class="id">beh</span>' &amp; <span class="id">CEXEC</span> &amp; <span class="id">IMPR</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">CTRACE</span> <span class="kwd">in</span> <span class="id">CEXEC</span>. <span class="tactic">destruct</span> <span class="id">IMPR</span> <span class="kwd">as</span> [<span class="id">EQ</span> | [<span class="id">t</span>' [<span class="id">A</span> <span class="id">B</span>]]].<br/>
+- <span class="tactic">congruence</span>.<br/>
+- <span class="tactic">destruct</span> <span class="id">CEXEC</span> <span class="kwd">as</span> (<span class="id">beh1</span>' &amp; <span class="id">EQ</span>').<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">B</span> <span class="kwd">as</span> (<span class="id">beh1</span> &amp; <span class="id">EQ</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">beh</span>'. <span class="tactic">destruct</span> <span class="id">beh1</span>'; <span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">A</span>; <span class="id">inv</span> <span class="id">A</span>. <br/>
+&nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="compcert.common.Behaviors.html#behavior_app">behavior_app</a></span> <span class="id">t0</span> <span class="id">beh1</span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Behaviors.html#behavior_app_assoc">behavior_app_assoc</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.driver.Complements.html#SEPARATE_COMPILATION">SEPARATE_COMPILATION</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

@@ -1,0 +1,197 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module ValuesC</title>
+<meta name="description" content="Documentation of Coq module ValuesC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module ValuesC</h1>
+<div class="coq">
+<br/>
+<div class="doc">This module defines the type of values that is used in the dynamic
+  semantics of all our intermediate languages. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Floats.html">Floats</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.x86.Conventions1.html">Conventions1</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="inject_incr_PreOrder">inject_incr_PreOrder</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.common.Values.html#inject_incr">inject_incr</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6506')">Next Obligation.</div>
+<div class="proofscript" id="proof6506">
+ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Values.html#inject_incr_trans">inject_incr_trans</a></span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="TYPIFY">TYPIFY</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Val_has_type_dec">Val_has_type_dec</a></span>: <span class="kwd">forall</span> <span class="id">v</span> <span class="id">ty</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id"><a href="compcert.common.Values.html#Val.has_type">Val.has_type</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>} + {~ <span class="id"><a href="compcert.common.Values.html#Val.has_type">Val.has_type</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6507')">Proof.</div>
+<div class="proofscript" id="proof6507">
+ <span class="tactic">destruct</span> <span class="id">v</span>, <span class="id">ty</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="typify">typify</a></span> (<span class="id">v</span>: <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) (<span class="id">ty</span>: <span class="id"><a href="compcert.common.AST.html#typ">typ</a></span>): <span class="id"><a href="compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#Val_has_type_dec">Val_has_type_dec</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span> <span class="kwd">then</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#v">v</a></span> <span class="kwd">else</span> <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span>.<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="typify_has_type">typify_has_type</a></span>: <span class="kwd">forall</span> <span class="id">v</span> <span class="id">ty</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TYP</span>: <span class="id"><a href="compcert.common.Values.html#Val.has_type">Val.has_type</a></span> (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>) <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6508')">Proof.</div>
+<div class="proofscript" id="proof6508">
+ <span class="id">i</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span>. <span class="id">des_ifs</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="typify_list">typify_list</a></span> (<span class="id">vs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) (<span class="id">tys</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.AST.html#typ">typ</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.CoqlibC.html#zip">zip</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="typify_list_length">typify_list_length</a></span>: <span class="kwd">forall</span> <span class="id">vs</span> <span class="id">tys</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.min">Nat.min</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6509')">Proof.</div>
+<div class="proofscript" id="proof6509">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">ginduction</span> <span class="id">vs</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">tys</span>; <span class="id">ss</span>. <span class="tactic">rewrite</span> <span class="id">IHvs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#TYPIFY">TYPIFY</a></span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="lessdef_typify">lessdef_typify</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">x</span> <span class="id">y</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LD</span>: <span class="id"><a href="compcert.common.Values.html#Val.lessdef">Val.lessdef</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#y">y</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LD</span>: <span class="id"><a href="compcert.common.Values.html#Val.lessdef">Val.lessdef</a></span> (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>) (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#y">y</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6510')">Proof.</div>
+<div class="proofscript" id="proof6510">
+ <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">LD</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="inject_typify">inject_typify</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">x</span> <span class="id">y</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject">Val.inject</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#y">y</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">INJ</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject">Val.inject</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#j">j</a></span> (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>) (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#y">y</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6511')">Proof.</div>
+<div class="proofscript" id="proof6511">
+ <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span>. <span class="id">des_ifs</span>. <span class="id">inv</span> <span class="id">INJ</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="lessdef_list_typify_list">lessdef_list_typify_list</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">xs</span> <span class="id">ys</span> <span class="id">tys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LD</span>: <span class="id"><a href="compcert.common.Values.html#Val.lessdef_list">Val.lessdef_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ys">ys</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LD</span>: <span class="id"><a href="compcert.common.Values.html#Val.lessdef_list">Val.lessdef_list</a></span> (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>) (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ys">ys</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6512')">Proof.</div>
+<div class="proofscript" id="proof6512">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">LD</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span>. <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#lessdef_typify">lessdef_typify</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHLD</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="lessdef_list_length">lessdef_list_length</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">xs</span> <span class="id">ys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LD</span>: <span class="id"><a href="compcert.common.Values.html#Val.lessdef_list">Val.lessdef_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ys">ys</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LEN</span>: <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span>) = <span class="id"><a href="compcert.compcertm.ValuesC.html#ys">ys</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6513')">Proof.</div>
+<div class="proofscript" id="proof6513">
+ <span class="id">ginduction</span> <span class="id">LD</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des</span>. <span class="tactic">red</span>. <span class="id">xomega</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="inject_list_typify_list">inject_list_typify_list</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inj</span> <span class="id">xs</span> <span class="id">ys</span> <span class="id">tys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LD</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject_list">Val.inject_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#inj">inj</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ys">ys</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LD</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject_list">Val.inject_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#inj">inj</a></span> (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>) (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ys">ys</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6514')">Proof.</div>
+<div class="proofscript" id="proof6514">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">LD</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span>. <span class="id">ss</span>. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#inject_typify">inject_typify</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHLD</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="inject_list_length">inject_list_length</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">j</span> <span class="id">xs</span> <span class="id">ys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INJ</span>: <span class="id"><a href="compcert.common.Values.html#Val.inject_list">Val.inject_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#j">j</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ys">ys</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LEN</span>: <span class="id"><a href="compcert.compcertm.ValuesC.html#xs">xs</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span>) = <span class="id"><a href="compcert.compcertm.ValuesC.html#ys">ys</a></span>.(<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6515')">Proof.</div>
+<div class="proofscript" id="proof6515">
+ <span class="id">ginduction</span> <span class="id">INJ</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des</span>. <span class="tactic">red</span>. <span class="id">xomega</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="typify_has_type_list">typify_has_type_list</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vs</span> <span class="id">tys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TYS</span>: <span class="id"><a href="compcert.common.Values.html#Val.has_type_list">Val.has_type_list</a></span> (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>) <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6516')">Proof.</div>
+<div class="proofscript" id="proof6516">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">vs</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">tys</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify_has_type">typify_has_type</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHvs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="has_type_typify">has_type_typify</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">v</span> <span class="id">ty</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TY</span>: <span class="id"><a href="compcert.common.Values.html#Val.has_type">Val.has_type</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TY</span>: (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#v">v</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#ty">ty</a></span>) = <span class="id"><a href="compcert.compcertm.ValuesC.html#v">v</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6517')">Proof.</div>
+<div class="proofscript" id="proof6517">
+ <span class="id">rr</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify">typify</a></span>. <span class="id">des_ifs</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="has_type_list_typify">has_type_list_typify</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vs</span> <span class="id">tys</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYS</span>: <span class="id"><a href="compcert.common.Values.html#Val.has_type_list">Val.has_type_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">TYS</span>: (<span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#tys">tys</a></span>) = <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6518')">Proof.</div>
+<div class="proofscript" id="proof6518">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">vs</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">tys</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span>. <span class="id">ss</span>. <span class="id">r</span>. <span class="tactic">f_equal</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.ValuesC.html#has_type_typify">has_type_typify</a></span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id">IHvs</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="typecheck">typecheck</a></span> (<span class="id">vs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span>) (<span class="id">sg</span>: <span class="id"><a href="compcert.common.AST.html#signature">signature</a></span>) (<span class="id">tvs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.common.Values.html#val">val</a></span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="typecheck_intro">typecheck_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#length">length</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#sg">sg</a></span>.(<span class="id"><a href="compcert.common.AST.html#sig_args">sig_args</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYP</span>: <span class="id"><a href="compcert.compcertm.ValuesC.html#typify_list">typify_list</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vs">vs</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#sg">sg</a></span>.(<span class="id"><a href="compcert.common.AST.html#sig_args">sig_args</a></span>) = <span class="id"><a href="compcert.compcertm.ValuesC.html#tvs">tvs</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Val_hiword_spec">Val_hiword_spec</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vhi</span> <span class="id">vlo</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFINED</span>: (<span class="id"><a href="compcert.common.Values.html#Val.longofwords">Val.longofwords</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vhi">vhi</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vlo">vlo</a></span>) &lt;&gt; <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: (<span class="id"><a href="compcert.common.Values.html#Val.hiword">Val.hiword</a></span> (<span class="id"><a href="compcert.common.Values.html#Val.longofwords">Val.longofwords</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vhi">vhi</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vlo">vlo</a></span>)) = <span class="id"><a href="compcert.compcertm.ValuesC.html#vhi">vhi</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6519')">Proof.</div>
+<div class="proofscript" id="proof6519">
+&nbsp;&nbsp;<span class="id">u</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Values.html#Val.longofwords">Val.longofwords</a></span>, <span class="id"><a href="compcert.common.Values.html#Val.hiword">Val.hiword</a></span>. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Integers.html#Int64.hi_ofwords">Int64.hi_ofwords</a></span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="Val_loword_spec">Val_loword_spec</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">vhi</span> <span class="id">vlo</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">DEFINED</span>: (<span class="id"><a href="compcert.common.Values.html#Val.longofwords">Val.longofwords</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vhi">vhi</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vlo">vlo</a></span>) &lt;&gt; <span class="id"><a href="compcert.common.Values.html#Vundef">Vundef</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: (<span class="id"><a href="compcert.common.Values.html#Val.loword">Val.loword</a></span> (<span class="id"><a href="compcert.common.Values.html#Val.longofwords">Val.longofwords</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vhi">vhi</a></span> <span class="id"><a href="compcert.compcertm.ValuesC.html#vlo">vlo</a></span>)) = <span class="id"><a href="compcert.compcertm.ValuesC.html#vlo">vlo</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6520')">Proof.</div>
+<div class="proofscript" id="proof6520">
+&nbsp;&nbsp;<span class="id">u</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Values.html#Val.longofwords">Val.longofwords</a></span>, <span class="id"><a href="compcert.common.Values.html#Val.loword">Val.loword</a></span>. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Integers.html#Int64.lo_ofwords">Int64.lo_ofwords</a></span>. <span class="id">ss</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

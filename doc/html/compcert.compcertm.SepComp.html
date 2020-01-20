@@ -1,0 +1,74 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SepComp</title>
+<meta name="description" content="Documentation of Coq module SepComp" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SepComp</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.UpperBound_A.html">UpperBound_A</a></span> <span class="id"><a href="compcert.compcertm.UpperBound_B.html">UpperBound_B</a></span> <span class="id"><a href="compcert.compcertm.LowerBound.html">LowerBound</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CompilerC.html">CompilerC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.BehaviorsC.html">BehaviorsC</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html">LinkingC</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html">EventsC</a></span> <span class="id"><a href="compcert.compcertm.MapsC.html">MapsC</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html">ASTC</a></span> <span class="id"><a href="compcert.compcertm.CtypesC.html">CtypesC</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="back_propagate_ub_behav">back_propagate_ub_behav</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">beh0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INITUB</span>: <span class="id"><a href="compcert.common.Behaviors.html#behavior_improves">behavior_improves</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#beh0">beh0</a></span> (<span class="id"><a href="compcert.common.Behaviors.html#Goes_wrong">Goes_wrong</a></span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">INITUB</span>: <span class="id"><a href="compcert.compcertm.SepComp.html#beh0">beh0</a></span> = <span class="id"><a href="compcert.common.Behaviors.html#Goes_wrong">Goes_wrong</a></span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7298')">Proof.</div>
+<div class="proofscript" id="proof7298">
+&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">INITUB</span>. <span class="id">des</span>; <span class="id">clarify</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">INITUB0</span>. <span class="id">des</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Behaviors.html#behavior_app">behavior_app</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="tactic">destruct</span> <span class="id">t</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="back_propagate_ub_program">back_propagate_ub_program</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sem0</span> <span class="id">sem1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IMPR</span>: <span class="id"><a href="compcert.compcertm.BehaviorsC.html#improves">improves</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#sem0">sem0</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#sem1">sem1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INITUB</span>: <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#sem1">sem1</a></span> (<span class="id"><a href="compcert.common.Behaviors.html#Goes_wrong">Goes_wrong</a></span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">INITUB</span>: <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#sem0">sem0</a></span> (<span class="id"><a href="compcert.common.Behaviors.html#Goes_wrong">Goes_wrong</a></span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7299')">Proof.</div>
+<div class="proofscript" id="proof7299">
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IMPR</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.SepComp.html#back_propagate_ub_behav">back_propagate_ub_behav</a></span>; <span class="id">et</span>. <span class="id">i</span> ;<span class="id">des</span>. <span class="id">clarify</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="separate_compilation_correct">separate_compilation_correct</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">srcs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">Csyntax.program</a></span>) (<span class="id">tgts</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.x86.Asm.html#program">Asm.program</a></span>) <span class="id">builtins</span> <span class="id">src_link</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYPECHECKS</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="kwd">fun</span> <span class="id">src</span> =&gt; <span class="id"><a href="compcert.compcertm.CsemC.html#typechecked">CsemC.typechecked</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#builtins">builtins</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#src">src</a></span>) <span class="id"><a href="compcert.compcertm.SepComp.html#srcs">srcs</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TYPECHECKLINK</span>: <span class="id"><a href="compcert.compcertm.CsemC.html#typechecked">CsemC.typechecked</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#builtins">builtins</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#src_link">src_link</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#srcs">srcs</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#src_link">src_link</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MAIN</span>: <span class="id">exists</span> <span class="id">main_f</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INTERNAL</span>: <span class="id"><a href="compcert.compcertm.SepComp.html#src_link">src_link</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_defmap">prog_defmap</a></span>) ! (<span class="id"><a href="compcert.compcertm.SepComp.html#src_link">src_link</a></span>.(<span class="id"><a href="compcert.common.AST.html#prog_main">prog_main</a></span>)) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.common.AST.html#Gfun">Gfun</a></span> (<span class="id"><a href="compcert.cfrontend.Ctypes.html#Internal">Ctypes.Internal</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#main_f">main_f</a></span>))&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">SIG</span>: <span class="id"><a href="compcert.cfrontend.Csyntax.html#type_of_function">type_of_function</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#main_f">main_f</a></span> = <span class="id"><a href="compcert.cfrontend.Ctypes.html#Tfunction">Tfunction</a></span> <span class="id"><a href="compcert.cfrontend.Ctypes.html#Tnil">Ctypes.Tnil</a></span> <span class="id"><a href="compcert.cfrontend.Ctypes.html#type_int32s">type_int32s</a></span> <span class="id"><a href="compcert.common.AST.html#cc_default">cc_default</a></span>&gt;&gt;))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TR</span>: <span class="id"><a href="compcert.common.Errors.html#mmap">Errors.mmap</a></span> <span class="id"><a href="compcert.driver.Compiler.html#transf_c_program">transf_c_program</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#srcs">srcs</a></span> = <span class="id"><a href="compcert.common.Errors.html#OK">Errors.OK</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#tgts">tgts</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">INITUB</span>: <span class="id"><a href="compcert.common.Behaviors.html#program_behaves">program_behaves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#src_link">src_link</a></span>) (<span class="id"><a href="compcert.common.Behaviors.html#Goes_wrong">Goes_wrong</a></span> <span class="id"><a href="compcert.common.Events.html#E0">E0</a></span>)&gt;&gt;) \/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">tgt_link</span>, &lt;&lt;<span class="id">LINK</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#tgts">tgts</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#tgt_link">tgt_link</a></span>&gt;&gt; /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">IMPROVES</span>: <span class="id"><a href="compcert.compcertm.BehaviorsC.html#improves">improves</a></span> (<span class="id"><a href="compcert.cfrontend.Csem.html#semantics">Csem.semantics</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#src_link">src_link</a></span>) (<span class="id"><a href="compcert.x86.Asm.html#semantics">Asm.semantics</a></span> <span class="id"><a href="compcert.compcertm.SepComp.html#tgt_link">tgt_link</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7300')">Proof.</div>
+<div class="proofscript" id="proof7300">
+&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.UpperBound_B.html#upperbound_b_correct">upperbound_b_correct</a></span>; <span class="tactic">eauto</span>. { <span class="id">des</span>. <span class="id">esplits</span>; <span class="id">et</span>. } <span class="tactic">intro</span> <span class="id">A</span>.<br/>
+&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.UpperBound_A.html#upperbound_a_correct">upperbound_a_correct</a></span>; <span class="tactic">eauto</span>. <span class="id">instantiate</span> (1:= []). <span class="id">ss</span>. <span class="tactic">intro</span> <span class="id">B</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.CompilerC.html#compiler_correct_full">compiler_correct_full</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">do</span> 2 <span class="id">instantiate</span> (1:= []). <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;<span class="id">instantiate</span> (1:= []). <span class="id">ss</span>. <span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#app_nil_r">app_nil_r</a></span>. <span class="tactic">intro</span> <span class="id">C</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">hexploit</span> (<span class="id"><a href="compcert.compcertm.LowerBound.html#lower_bound_correct">lower_bound_correct</a></span> <span class="id">tgts</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">D</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">left</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.SepComp.html#back_propagate_ub_program">back_propagate_ub_program</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">C</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">CUB</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.SepComp.html#back_propagate_ub_program">back_propagate_ub_program</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">CUB</span>; <span class="id">et</span>. <span class="tactic">intro</span> <span class="id">BUB</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.SepComp.html#back_propagate_ub_program">back_propagate_ub_program</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">BUB</span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;<span class="id">right</span>. <span class="id">esplits</span>; <span class="id">et</span>. <span class="id">etrans</span>; <span class="id">et</span>. <span class="id">etrans</span>; <span class="id">et</span>. <span class="id">etrans</span>; <span class="id">et</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Mod</title>
+<meta name="description" content="Documentation of Coq module Mod" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Mod</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Smallstep.html">Smallstep</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ASTC.html">ASTC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Mod">Mod</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Record</span> <span class="id"><a name="Mod.t">t</a></span>: <span class="kwd">Type</span> := <span class="id"><a name="Mod.mk">mk</a></span> {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Mod.datatype">datatype</a></span>: <span class="kwd">Type</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Mod.get_sk">get_sk</a></span>: <span class="id"><a href="compcert.compcertm.Mod.html#datatype">datatype</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Skeleton.html#Sk.t">Sk.t</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Mod.get_modsem">get_modsem</a></span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.t">SkEnv.t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Mod.html#datatype">datatype</a></span> -&gt; <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Mod.data">data</a></span>: <span class="id"><a href="compcert.compcertm.Mod.html#datatype">datatype</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Mod.get_modsem_skenv_spec">get_modsem_skenv_spec</a></span>: <span class="kwd">forall</span> <span class="id">skenv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PROJECTED</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.project">SkEnv.project</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#skenv">skenv</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#data">data</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#get_sk">get_sk</a></span>) = <span class="id"><a href="compcert.compcertm.Mod.html#data">data</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#get_modsem">get_modsem</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#skenv">skenv</a></span>).(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.skenv">ModSem.skenv</a></span>)&gt;&gt;;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="Mod.get_modsem_skenv_link_spec">get_modsem_skenv_link_spec</a></span>: <span class="kwd">forall</span> <span class="id">skenv_link</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EQ</span>: <span class="id"><a href="compcert.compcertm.Mod.html#data">data</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#get_modsem">get_modsem</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#skenv_link">skenv_link</a></span>).(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.skenv_link">ModSem.skenv_link</a></span>) = <span class="id"><a href="compcert.compcertm.Mod.html#skenv_link">skenv_link</a></span>&gt;&gt;<br/>
+&nbsp;&nbsp;}.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="Mod.get_modsem_projected_sk">get_modsem_projected_sk</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">md</span>: <span class="id"><a href="compcert.compcertm.Mod.html#Mod.t">t</a></span>) <span class="id">skenv</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INCL</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.includes">SkEnv.includes</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#skenv">skenv</a></span> (<span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_sk">get_sk</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span> (<span class="id"><a href="compcert.compcertm.Mod.html#Mod.data">data</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>))):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PROJECTED</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.project_spec">SkEnv.project_spec</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#skenv">skenv</a></span> ((<span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_sk">get_sk</a></span>) <span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.data">data</a></span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((<span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_modsem">get_modsem</a></span>) <span class="id"><a href="compcert.compcertm.Mod.html#skenv">skenv</a></span>) <span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.data">data</a></span>)).(<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.skenv">ModSem.skenv</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7284')">Proof.</div>
+<div class="proofscript" id="proof7284">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> &lt;- <span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_modsem_skenv_spec">get_modsem_skenv_spec</a></span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.project_impl_spec">SkEnv.project_impl_spec</a></span>; <span class="id">et</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Mod.sk">sk</a></span> (<span class="id">md</span>: <span class="id"><a href="compcert.compcertm.Mod.html#Mod.t">t</a></span>): <span class="id"><a href="compcert.compcertm.Skeleton.html#Sk.t">Sk.t</a></span> := <span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_sk">get_sk</a></span>) <span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.data">data</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="Mod.modsem">modsem</a></span> (<span class="id">md</span>: <span class="id"><a href="compcert.compcertm.Mod.html#Mod.t">t</a></span>) (<span class="id">skenv</span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.t">SkEnv.t</a></span>): <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.t">ModSem.t</a></span> := <span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_modsem">get_modsem</a></span>) <span class="id"><a href="compcert.compcertm.Mod.html#skenv">skenv</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#md">md</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.data">data</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Module</span> <span class="id"><a name="Mod.Atomic">Atomic</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Section</span> <span class="id"><a name="Mod.Atomic.Atomic">Atomic</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="Mod.Atomic.Atomic.m">m</a></span>: <span class="id"><a href="compcert.compcertm.Mod.html#Mod.t">t</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="Mod.Atomic.trans">trans</a></span>: <span class="id"><a href="compcert.compcertm.Mod.html#Mod.t">t</a></span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Mod.html#Mod.mk">mk</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic.Atomic.m">m</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_sk">get_sk</a></span>) (<span class="kwd">fun</span> <span class="id">ske</span> <span class="id">dat</span> =&gt; <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.Atomic.trans">ModSem.Atomic.trans</a></span> (<span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic.Atomic.m">m</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_modsem">get_modsem</a></span>) <span class="id"><a href="compcert.compcertm.Mod.html#ske">ske</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#dat">dat</a></span>)) <span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic.Atomic.m">m</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.data">data</a></span>) <span class="id">_</span> <span class="id">_</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7285')">Next Obligation.</div>
+<div class="proofscript" id="proof7285">
+ <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_modsem_skenv_spec">get_modsem_skenv_spec</a></span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof7286')">Next Obligation.</div>
+<div class="proofscript" id="proof7286">
+ <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.Mod.html#Mod.get_modsem_skenv_link_spec">get_modsem_skenv_link_spec</a></span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic.Atomic">Atomic</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic">Atomic</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.Mod.html#Mod">Mod</a></span>.<br/>
+<br/>
+<span class="kwd">Coercion</span> <span class="id">Mod.sk</span>: <span class="id">Mod.t</span> &gt;-&gt; <span class="id">Sk.t</span>.<br/>
+<span class="kwd">Coercion</span> <span class="id">Mod.modsem</span>: <span class="id">Mod.t</span> &gt;-&gt; <span class="id">Funclass</span>.<br/>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.Mod.html#sk">Mod.sk</a></span> <span class="id"><a href="compcert.compcertm.Mod.html#modsem">Mod.modsem</a></span>.<br/>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

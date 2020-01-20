@@ -1,0 +1,126 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SimMemId</title>
+<meta name="description" content="Documentation of Coq module SimMemId" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SimMemId</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html">RelationClasses</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSets.html">FSets</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Ordered.html">Ordered</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.IntegersC.html">IntegersC</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html">LinkingC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SimSymb.html">SimSymb</a></span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span> <span class="id"><a href="compcert.compcertm.Mod.html">Mod</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.SimSymbId.html">SimSymbId</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SimMemLift.html">SimMemLift</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id">t</span>' := <span class="id"><a name="mk">mk</a></span> {<br/>
+&nbsp;&nbsp;<span class="id"><a name="src">src</a></span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="tgt">tgt</a></span>: <span class="id"><a href="compcert.common.Memory.html#mem">mem</a></span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="SimMemId">SimMemId</a></span> : <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.class">SimMem.class</a></span> :=<br/>
+{ <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">t</a></span> := <span class="id">t</span>';<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.src">src</a></span> := <span class="id"><a href="compcert.compcertm.SimMemId.html#src">src</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.tgt">tgt</a></span> := <span class="id"><a href="compcert.compcertm.SimMemId.html#tgt">tgt</a></span>;<br/>
+&nbsp;&nbsp;<span class="kwd">wf</span> := <span class="kwd">fun</span> (<span class="id">rel</span>: <span class="id">t</span>') =&gt; <span class="id"><a href="compcert.compcertm.SimMemId.html#rel">rel</a></span>.(<span class="id"><a href="compcert.compcertm.SimMemId.html#src">src</a></span>) = <span class="id"><a href="compcert.compcertm.SimMemId.html#rel">rel</a></span>.(<span class="id"><a href="compcert.compcertm.SimMemId.html#tgt">tgt</a></span>);<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.le">le</a></span> := <span class="kwd">fun</span> (<span class="id">mrel0</span> <span class="id">mrel1</span>: <span class="id">t</span>') =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#True">True</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.lepriv">lepriv</a></span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top2">top2</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_val">sim_val</a></span> := <span class="kwd">fun</span> (<span class="id">_</span>: <span class="id">t</span>') =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.sim_val_list">sim_val_list</a></span> := <span class="kwd">fun</span> (<span class="id">_</span>: <span class="id">t</span>') =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span>;<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6363')">Next Obligation.</div>
+<div class="proofscript" id="proof6363">
+&nbsp;&nbsp;<span class="tactic">do</span> 2 (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Axioms.html#functional_extensionality">Axioms.functional_extensionality</a></span>; <span class="id">i</span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html#prop_ext1">prop_ext1</a></span>. <span class="tactic">split</span>; <span class="id">i</span>; <span class="id">ss</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ginduction</span> <span class="id">x</span>; <span class="id">ii</span>; <span class="id">inv</span> <span class="id">H</span>; <span class="id">ss</span>. <span class="id">erewrite</span> <span class="id">IHx</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ginduction</span> <span class="id">x1</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="SimMemIdLift">SimMemIdLift</a></span>: <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.class">SimMemLift.class</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId</a></span> :=<br/>
+{ <span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.lift">lift</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#id">id</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimMemLift.html#SimMemLift.unlift">unlift</a></span> := <span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#id">id</a></span>;<br/>
+}.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Global</span> <span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="SimSymbId">SimSymbId</a></span>: <span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.class">SimSymb.class</a></span> <span class="id"><a href="compcert.compcertm.SimMemId.html#SimMemId">SimMemId</a></span> := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.t">t</a></span> := <span class="id">SimSymbId.t</span>';<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.src">src</a></span> := <span class="id"><a href="compcert.compcertm.SimSymbId.html#src">SimSymbId.src</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.tgt">tgt</a></span> := <span class="id"><a href="compcert.compcertm.SimSymbId.html#tgt">SimSymbId.tgt</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.le">le</a></span> := <span class="id"><a href="compcert.compcertm.SimSymbId.html#le">SimSymbId.le</a></span>;<br/>
+&nbsp;&nbsp;<span class="kwd">wf</span> := <span class="id"><a href="compcert.compcertm.SimSymbId.html#wf">SimSymbId.wf</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.SimSymb.html#SimSymb.sim_skenv">sim_skenv</a></span> (<span class="id">_</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">SimMem.t</a></span>) (<span class="id">_</span>: <span class="id">SimSymbId.t</span>') := <span class="id"><a href="compcert.compcertm.SimSymbId.html#sim_skenv">SimSymbId.sim_skenv</a></span>;<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6364')">Next Obligation.</div>
+<div class="proofscript" id="proof6364">
+ <span class="id">rr</span> <span class="kwd">in</span> <span class="id">SIMSK</span>. <span class="id">r</span>. <span class="tactic">congruence</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6365')">Next Obligation.</div>
+<div class="proofscript" id="proof6365">
+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimSymbId.html#wf_link">SimSymbId.wf_link</a></span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6366')">Next Obligation.</div>
+<div class="proofscript" id="proof6366">
+ <span class="id">rr</span> <span class="kwd">in</span> <span class="id">SIMSKE</span>. <span class="id">clarify</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6367')">Next Obligation.</div>
+<div class="proofscript" id="proof6367">
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.SimSymbId.html#wf_load_sim_skenv">SimSymbId.wf_load_sim_skenv</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">eexists</span>. <span class="id">eexists</span> (<span class="id"><a href="compcert.compcertm.SimMemId.html#mk">mk</a></span> <span class="id">_</span> <span class="id">_</span>). <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6368')">Next Obligation.</div>
+<div class="proofscript" id="proof6368">
+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimSymbId.html#sim_skenv_monotone">SimSymbId.sim_skenv_monotone</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">SIMSKENV</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6369')">Next Obligation.</div>
+<div class="proofscript" id="proof6369">
+ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimSymbId.html#sim_skenv_func_bisim">SimSymbId.sim_skenv_func_bisim</a></span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6370')">Next Obligation.</div>
+<div class="proofscript" id="proof6370">
+ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimSymbId.html#system_sim_skenv">SimSymbId.system_sim_skenv</a></span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6371')">Next Obligation.</div>
+<div class="proofscript" id="proof6371">
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">ARGS</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="tactic">destruct</span> <span class="id">sm0</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">retv_src</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Events.html#external_call_symbols_preserved">external_call_symbols_preserved</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimSymbId.html#sim_skenv_equiv">SimSymbId.sim_skenv_equiv</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">instantiate</span> (1:= <span class="id"><a href="compcert.compcertm.ModSem.html#Retv.mk">Retv.mk</a></span> <span class="id">_</span> <span class="id">_</span>). <span class="id">ss</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">instantiate</span> (1:= <span class="id"><a href="compcert.compcertm.SimMemId.html#mk">mk</a></span> <span class="id">_</span> <span class="id">_</span>). <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ss</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

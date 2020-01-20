@@ -1,0 +1,173 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Fcalc_ops</title>
+<meta name="description" content="Documentation of Coq module Fcalc_ops" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Fcalc_ops</h1>
+<div class="coq">
+<br/>
+<div class="doc">Basic operations on floats: alignment, addition, multiplication </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html">Fcore_Raux</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html">Fcore_defs</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html">Fcore_float_prop</a></span>.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="Float_ops">Float_ops</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="Float_ops.beta">beta</a></span> : <span class="id"><a href="compcert.flocq.Core.Fcore_Zaux.html#radix">radix</a></span>.<br/>
+<br/>
+<span class="kwd">Notation</span> <span class="id"><a name="bpow">bpow</a></span> <span class="id">e</span> := (<span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow">bpow</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> <span class="id">e</span>).<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> {<span class="id">beta</span>} <span class="id">Fnum</span> <span class="id">Fexp</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Falign">Falign</a></span> (<span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id">m1</span> <span class="id">e1</span>) := <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id">m2</span> <span class="id">e2</span>) := <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> <span class="id">e1</span> <span class="id">e2</span><br/>
+&nbsp;&nbsp;<span class="kwd">then</span> (<span class="id">m1</span>, (<span class="id">m2</span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> (<span class="id">e2</span> - <span class="id">e1</span>))%<span class="id">Z</span>, <span class="id">e1</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">else</span> ((<span class="id">m1</span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zpow_def.html#Zpower">Zpower</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> (<span class="id">e1</span> - <span class="id">e2</span>))%<span class="id">Z</span>, <span class="id">m2</span>, <span class="id">e2</span>).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Falign_spec">Falign_spec</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id">m1</span>, <span class="id">m2</span>, <span class="id">e</span>) := <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign">Falign</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> = @<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id">m1</span> <span class="id">e</span>) /\ <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span> = @<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id">m2</span> <span class="id">e</span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5648')">Proof.</div>
+<div class="proofscript" id="proof5648">
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign">Falign</a></span>.<br/>
+<span class="tactic">intros</span> (<span class="id">m1</span>, <span class="id">e1</span>) (<span class="id">m2</span>, <span class="id">e2</span>).<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_cases">Zle_cases</a></span> <span class="id">e1</span> <span class="id">e2</span>).<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> <span class="id">e1</span> <span class="id">e2</span>) ; <span class="tactic">intros</span> <span class="id">He</span> ; <span class="tactic">split</span> ; <span class="tactic">trivial</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_change_exp">F2R_change_exp</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_change_exp">F2R_change_exp</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#refl_equal">refl_equal</a></span>.<br/>
+<span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Falign_spec_exp">Falign_spec_exp</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign">Falign</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmin">Zmin</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fexp">Fexp</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span>) (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fexp">Fexp</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5649')">Proof.</div>
+<div class="proofscript" id="proof5649">
+<span class="tactic">intros</span> (<span class="id">m1</span>,<span class="id">e1</span>) (<span class="id">m2</span>,<span class="id">e2</span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign">Falign</a></span>; <span class="tactic">simpl</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_cases">Zle_cases</a></span> <span class="id">e1</span> <span class="id">e2</span>);<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool">Zle_bool</a></span> <span class="id">e1</span> <span class="id">e2</span>); <span class="tactic">intros</span> <span class="id">He</span>.<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zmin.html#Zmin_spec">Zmin_spec</a></span> <span class="id">e1</span> <span class="id">e2</span>); <span class="tactic">intros</span> (<span class="id">H1</span>,<span class="id">H2</span>); <span class="id">easy</span>.<br/>
+<span class="tactic">case</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zmin.html#Zmin_spec">Zmin_spec</a></span> <span class="id">e1</span> <span class="id">e2</span>); <span class="tactic">intros</span> (<span class="id">H1</span>,<span class="id">H2</span>); <span class="id">easy</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Fopp">Fopp</a></span> (<span class="id">f1</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>) : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id">m1</span> <span class="id">e1</span>) := <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> (-<span class="id">m1</span>)%<span class="id">Z</span> <span class="id">e1</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="F2R_opp">F2R_opp</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f1</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fopp">Fopp</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span>) = -<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span>)%<span class="id">R</span>.<br/>
+<span class="tactic">intros</span> (<span class="id">m1</span>,<span class="id">e1</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_Zopp">F2R_Zopp</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Fabs">Fabs</a></span> (<span class="id">f1</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>) : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id">m1</span> <span class="id">e1</span>) := <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zabs">Zabs</a></span> <span class="id">m1</span>)%<span class="id">Z</span> <span class="id">e1</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="F2R_abs">F2R_abs</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f1</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;(<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fabs">Fabs</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.Rbasic_fun.html#Rabs">Rabs</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span>))%<span class="id">R</span>.<br/>
+<span class="tactic">intros</span> (<span class="id">m1</span>,<span class="id">e1</span>).<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Core.Fcore_float_prop.html#F2R_Zabs">F2R_Zabs</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Fplus">Fplus</a></span> (<span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>) : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id">m1</span>, <span class="id">m2</span> ,<span class="id">e</span>) := <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign">Falign</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> (<span class="id">m1</span> + <span class="id">m2</span>) <span class="id">e</span>.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="F2R_plus">F2R_plus</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fplus">Fplus</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>) = (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> + <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>)%<span class="id">R</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5650')">Proof.</div>
+<div class="proofscript" id="proof5650">
+<span class="tactic">intros</span> <span class="id">f1</span> <span class="id">f2</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fplus">Fplus</a></span>.<br/>
+<span class="tactic">generalize</span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign_spec">Falign_spec</a></span> <span class="id">f1</span> <span class="id">f2</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign">Falign</a></span> <span class="id">f1</span> <span class="id">f2</span>) <span class="kwd">as</span> ((<span class="id">m1</span>, <span class="id">m2</span>), <span class="id">e</span>).<br/>
+<span class="tactic">intros</span> (<span class="id">H1</span>, <span class="id">H2</span>).<br/>
+<span class="tactic">rewrite</span> <span class="id">H1</span>, <span class="id">H2</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span>. <span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_plus">Z2R_plus</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Reals.RIneq.html#Rmult_plus_distr_r">Rmult_plus_distr_r</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Fplus_same_exp">Fplus_same_exp</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">e</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fplus">Fplus</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#m1">m1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#e">e</a></span>) (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#m2">m2</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#e">e</a></span>) = <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#m1">m1</a></span> + <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#m2">m2</a></span>) <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#e">e</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5651')">Proof.</div>
+<div class="proofscript" id="proof5651">
+<span class="tactic">intros</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">e</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fplus">Fplus</a></span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zbool.html#Zle_bool_refl">Zle_bool_refl</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zminus_diag">Zminus_diag</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmult_1_r">Zmult_1_r</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Fexp_Fplus">Fexp_Fplus</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fexp">Fexp</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fplus">Fplus</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Zmin">Zmin</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fexp">Fexp</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span>) (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Fexp">Fexp</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5652')">Proof.</div>
+<div class="proofscript" id="proof5652">
+<span class="tactic">intros</span> <span class="id">f1</span> <span class="id">f2</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fplus">Fplus</a></span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign_spec_exp">Falign_spec_exp</a></span>.<br/>
+<span class="id">now</span> <span class="tactic">destruct</span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Falign">Falign</a></span> <span class="id">f1</span> <span class="id">f2</span>) <span class="kwd">as</span> ((<span class="id">p</span>,<span class="id">q</span>),<span class="id">e</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Fminus">Fminus</a></span> (<span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fplus">Fplus</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fopp">Fopp</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="F2R_minus">F2R_minus</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fminus">Fminus</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>) = (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> - <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>)%<span class="id">R</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5653')">Proof.</div>
+<div class="proofscript" id="proof5653">
+<span class="tactic">intros</span> <span class="id">f1</span> <span class="id">f2</span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fminus">Fminus</a></span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#F2R_plus">F2R_plus</a></span>, <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#F2R_opp">F2R_opp</a></span>.<br/>
+<span class="tactic">ring</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="Fminus_same_exp">Fminus_same_exp</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">e</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fminus">Fminus</a></span> (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#m1">m1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#e">e</a></span>) (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#m2">m2</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#e">e</a></span>) = <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#m1">m1</a></span> - <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#m2">m2</a></span>) <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#e">e</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5654')">Proof.</div>
+<div class="proofscript" id="proof5654">
+<span class="tactic">intros</span> <span class="id">m1</span> <span class="id">m2</span> <span class="id">e</span>.<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fminus">Fminus</a></span>.<br/>
+<span class="tactic">apply</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fplus_same_exp">Fplus_same_exp</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="Fmult">Fmult</a></span> (<span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>) : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id">m1</span> <span class="id">e1</span>) := <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> '(<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> <span class="id">m2</span> <span class="id">e2</span>) := <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#Float">Float</a></span> (<span class="id">m1</span> * <span class="id">m2</span>) (<span class="id">e1</span> + <span class="id">e2</span>).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="F2R_mult">F2R_mult</a></span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">f1</span> <span class="id">f2</span> : <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#float">float</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops.beta">beta</a></span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> (<span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fmult">Fmult</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>) = (<span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f1">f1</a></span> * <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#f2">f2</a></span>)%<span class="id">R</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5655')">Proof.</div>
+<div class="proofscript" id="proof5655">
+<span class="tactic">intros</span> (<span class="id">m1</span>, <span class="id">e1</span>) (<span class="id">m2</span>, <span class="id">e2</span>).<br/>
+<span class="tactic">unfold</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Fmult">Fmult</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_defs.html#F2R">F2R</a></span>. <span class="tactic">simpl</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#Z2R_mult">Z2R_mult</a></span>, <span class="id"><a href="compcert.flocq.Core.Fcore_Raux.html#bpow_plus">bpow_plus</a></span>.<br/>
+<span class="tactic">ring</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.flocq.Calc.Fcalc_ops.html#Float_ops">Float_ops</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

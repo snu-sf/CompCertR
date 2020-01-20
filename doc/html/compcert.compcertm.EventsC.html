@@ -1,0 +1,58 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module EventsC</title>
+<meta name="description" content="Documentation of Coq module EventsC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module EventsC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Strings.String.html">String</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.lib.Intv.html">Intv</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Integers.html">Integers</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Floats.html">Floats</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Values.html">Values</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Memory.html">Memory</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.Globalenvs.html">Globalenvs</a></span>.<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.common.Events.html">Events</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="eventval_valid_le">eventval_valid_le</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se_small</span> <span class="id">ev</span> <span class="id">se_big</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">VALID</span>: <span class="id"><a href="compcert.common.Events.html#eventval_valid">eventval_valid</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#se_small">se_small</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#ev">ev</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.EventsC.html#se_small">se_small</a></span>.(<span class="id"><a href="compcert.common.Globalenvs.html#Senv.public_symbol">Senv.public_symbol</a></span>) &lt;1= <span class="id"><a href="compcert.compcertm.EventsC.html#se_big">se_big</a></span>.(<span class="id"><a href="compcert.common.Globalenvs.html#Senv.public_symbol">Senv.public_symbol</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">VALID</span>: <span class="id"><a href="compcert.common.Events.html#eventval_valid">eventval_valid</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#se_big">se_big</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#ev">ev</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6637')">Proof.</div>
+<div class="proofscript" id="proof6637">
+ <span class="id">u</span> <span class="kwd">in</span> *. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Events.html#eventval_valid">eventval_valid</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="id">erewrite</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="match_traces_le">match_traces_le</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">se_small</span> <span class="id">tr0</span> <span class="id">tr1</span> <span class="id">se_big</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCH</span>: <span class="id"><a href="compcert.common.Events.html#match_traces">match_traces</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#se_small">se_small</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#tr0">tr0</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#tr1">tr1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.EventsC.html#se_small">se_small</a></span>.(<span class="id"><a href="compcert.common.Globalenvs.html#Senv.public_symbol">Senv.public_symbol</a></span>) &lt;1= <span class="id"><a href="compcert.compcertm.EventsC.html#se_big">se_big</a></span>.(<span class="id"><a href="compcert.common.Globalenvs.html#Senv.public_symbol">Senv.public_symbol</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">MATCH</span>: <span class="id"><a href="compcert.common.Events.html#match_traces">match_traces</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#se_big">se_big</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#tr0">tr0</a></span> <span class="id"><a href="compcert.compcertm.EventsC.html#tr1">tr1</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6638')">Proof.</div>
+<div class="proofscript" id="proof6638">
+ <span class="id">u</span> <span class="kwd">in</span> *. <span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.EventsC.html#eventval_valid_le">eventval_valid_le</a></span>; <span class="tactic">eauto</span>. Qed.</div>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">inv_match_traces</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [ <span class="id">H</span>: <span class="id"><a href="compcert.common.Events.html#match_traces">match_traces</a></span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> |- <span class="id">_</span> ] =&gt; <span class="id">inv</span> <span class="id">H</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

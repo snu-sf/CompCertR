@@ -1,0 +1,56 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Tuples</title>
+<meta name="description" content="Documentation of Coq module Tuples" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Tuples</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html">List</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Program.Syntax.html">Coq.Program.Syntax</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Program.Equality.html">Equality</a></span>.<br/>
+<br/>
+<div class="doc">A curryfied function with multiple parameters *</div>
+<span class="kwd">Definition</span> <span class="id"><a name="arrows_left">arrows_left</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span> -&gt; <span class="kwd">Type</span> -&gt; <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_left">fold_left</a></span> (<span class="kwd">fun</span> <span class="id">A</span> <span class="id">B</span> =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#B">B</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#A">A</a></span>).<br/>
+<br/>
+<div class="doc">A curryfied function with multiple parameters *</div>
+<span class="kwd">Definition</span> <span class="id"><a name="arrows_right">arrows_right</a></span>: <span class="kwd">Type</span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span> -&gt; <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_right">fold_right</a></span> (<span class="kwd">fun</span> <span class="id">A</span> <span class="id">B</span> =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#B">B</a></span>).<br/>
+<br/>
+<div class="doc">A tuple is a heterogeneous list. For convenience, we use pairs. *</div>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="tuple">tuple</a></span> (<span class="id">types</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span>) : <span class="kwd">Type</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#types">types</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span><br/>
+&nbsp;&nbsp;| <span class="id">t</span>::<span class="id">q</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#prod">prod</a></span> <span class="id">t</span> (<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#tuple">tuple</a></span> <span class="id">q</span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="uncurry">uncurry</a></span> {<span class="id">args</span>:<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="kwd">Type</span>} {<span class="id">res</span>:<span class="kwd">Type</span>}:<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#arrows_left">arrows_left</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#args">args</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#res">res</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#tuple">tuple</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#args">args</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#res">res</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#args">args</a></span> <span class="kwd">return</span> <span class="kwd">forall</span> <span class="id">res</span>, <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#arrows_left">arrows_left</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#args">args</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#res">res</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#tuple">tuple</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#args">args</a></span> -&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#res">res</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt; <span class="kwd">fun</span> <span class="id">_</span> <span class="id">f</span> <span class="id">_</span> =&gt; <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#f">f</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">t</span>::<span class="id">q</span> =&gt; <span class="kwd">fun</span> <span class="id">res</span> <span class="id">f</span> <span class="id">p</span> =&gt; <span class="kwd">let</span> (<span class="id">d</span>, <span class="id">t</span>) := <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#p">p</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(@<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#uncurry">uncurry</a></span> <span class="id">q</span> <span class="id">_</span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#f">f</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#t">t</a></span>) <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#d">d</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#res">res</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="JMeq_eqrect">JMeq_eqrect</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">U</span>:<span class="kwd">Type</span>) (<span class="id">a</span> <span class="id">b</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#U">U</a></span>) (<span class="id">P</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#U">U</a></span> -&gt; <span class="kwd">Type</span>) (<span class="id">x</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#P">P</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#a">a</a></span>) (<span class="id">e</span>:<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#a">a</a></span>=<span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#b">b</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_rect">eq_rect</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#a">a</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#P">P</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#x">x</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#b">b</a></span> <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#e">e</a></span> ~= <span class="id"><a href="compcert.cparser.MenhirLib.Tuples.html#x">x</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6030')">Proof.</div>
+<div class="proofscript" id="proof6030">
+<span class="tactic">destruct</span> <span class="id">e</span>.<br/>
+<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

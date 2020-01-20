@@ -1,0 +1,303 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Interpreter_safe</title>
+<meta name="description" content="Documentation of Coq module Interpreter_safe" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Interpreter_safe</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Streams</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Equality</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Alphabet</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Grammar</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Automaton</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Validator_safe</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Interpreter</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">Make</span>(<span class="kwd">Import</span> <span class="id">A</span>:<span class="id">Automaton.T</span>) (<span class="kwd">Import</span> <span class="id">Inter</span>:<span class="id">Interpreter.T</span> <span class="id">A</span>).<br/>
+<span class="kwd">Module</span> <span class="kwd">Import</span> <span class="id">Valid</span> := <span class="id">Validator_safe.Make</span> <span class="id">A</span>.<br/>
+<br/>
+<h1> A correct automaton does not crash *</h1>
+<br/>
+<span class="kwd">Section</span> <span class="id">Safety_proof</span>.<br/>
+<br/>
+<span class="kwd">Hypothesis</span> <span class="id">safe</span>: <span class="id">safe</span>.<br/>
+<br/>
+<span class="id">Proposition</span> <span class="id">shift_head_symbs</span>: <span class="id">shift_head_symbs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6018')">Proof.</div>
+<div class="proofscript" id="proof6018">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id">safe</span>; <span class="tactic">unfold</span> <span class="id">Valid.safe</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<span class="id">Proposition</span> <span class="id">goto_head_symbs</span>: <span class="id">goto_head_symbs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6019')">Proof.</div>
+<div class="proofscript" id="proof6019">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id">safe</span>; <span class="tactic">unfold</span> <span class="id">Valid.safe</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<span class="id">Proposition</span> <span class="id">shift_past_state</span>: <span class="id">shift_past_state</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6020')">Proof.</div>
+<div class="proofscript" id="proof6020">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id">safe</span>; <span class="tactic">unfold</span> <span class="id">Valid.safe</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<span class="id">Proposition</span> <span class="id">goto_past_state</span>: <span class="id">goto_past_state</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6021')">Proof.</div>
+<div class="proofscript" id="proof6021">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id">safe</span>; <span class="tactic">unfold</span> <span class="id">Valid.safe</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<span class="id">Proposition</span> <span class="id">reduce_ok</span>: <span class="id">reduce_ok</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6022')">Proof.</div>
+<div class="proofscript" id="proof6022">
+ <span class="id">pose</span> <span class="id">proof</span> <span class="id">safe</span>; <span class="tactic">unfold</span> <span class="id">Valid.safe</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">intuition</span>. Qed.</div>
+<br/>
+<div class="doc">We prove that a correct automaton won't crash : the interpreter will
+    not return <span class="bracket"><span class="id">Err</span></span> *</div>
+<br/>
+<span class="kwd">Variable</span> <span class="id">init</span> : <span class="id">initstate</span>.<br/>
+<br/>
+<div class="doc">The stack of states of an automaton stack *</div>
+<span class="kwd">Definition</span> <span class="id">state_stack_of_stack</span> (<span class="id">stack</span>:<span class="id">stack</span>) :=<br/>
+&nbsp;&nbsp;(<span class="id">List.map</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">cell</span>:<span class="id">sigT</span> <span class="id">noninitstate_type</span> =&gt; <span class="id">singleton_state_pred</span> (<span class="id">projT1</span> <span class="id">cell</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack</span> ++ [<span class="id">singleton_state_pred</span> <span class="id">init</span>])%<span class="id">list</span>.<br/>
+<br/>
+<div class="doc">The stack of symbols of an automaton stack *</div>
+<span class="kwd">Definition</span> <span class="id">symb_stack_of_stack</span> (<span class="id">stack</span>:<span class="id">stack</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">List.map</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">cell</span>:<span class="id">sigT</span> <span class="id">noninitstate_type</span> =&gt; <span class="id">last_symb_of_non_init_state</span> (<span class="id">projT1</span> <span class="id">cell</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack</span>.<br/>
+<br/>
+<div class="doc">The stack invariant : it basically states that the assumptions on the
+    states are true. *</div>
+<span class="kwd">Inductive</span> <span class="id">stack_invariant</span>: <span class="id">stack</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">stack_invariant_constr</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">stack</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prefix</span>      (<span class="id">head_symbs_of_state</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">symb_stack_of_stack</span> <span class="id">stack</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prefix_pred</span> (<span class="id">head_states_of_state</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">state_stack_of_stack</span> <span class="id">stack</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack_invariant_next</span> <span class="id">stack</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack_invariant</span> <span class="id">stack</span><br/>
+<span class="kwd">with</span> <span class="id">stack_invariant_next</span>: <span class="id">stack</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">stack_invariant_next_nil</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack_invariant_next</span> []<br/>
+&nbsp;&nbsp;| <span class="id">stack_invariant_next_cons</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">state_cur</span> <span class="id">st</span> <span class="id">stack_rec</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack_invariant</span> <span class="id">stack_rec</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack_invariant_next</span> (<span class="id">existT</span> <span class="id">_</span> <span class="id">state_cur</span> <span class="id">st</span>::<span class="id">stack_rec</span>).<br/>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">pop</span></span> conserves the stack invariant and does not crash
+     under the assumption that we can pop at this place.
+     Moreover, after a pop, the top state of the stack is allowed. *</div>
+<span class="kwd">Lemma</span> <span class="id">pop_stack_invariant_conserved</span><br/>
+&nbsp;&nbsp;(<span class="id">symbols_to_pop</span>:<span class="id">list</span> <span class="id">symbol</span>) (<span class="id">stack_cur</span>:<span class="id">stack</span>) <span class="id">A</span> <span class="id">action</span>:<br/>
+&nbsp;&nbsp;<span class="id">stack_invariant</span> <span class="id">stack_cur</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">prefix</span> <span class="id">symbols_to_pop</span> (<span class="id">head_symbs_of_state</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack_cur</span>)) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">pop</span> <span class="id">symbols_to_pop</span> <span class="id">stack_cur</span> (<span class="id">A</span>:=<span class="id">A</span>) <span class="id">action</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">stack_new</span>, <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">stack_invariant</span> <span class="id">stack_new</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_valid_after_pop</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack_new</span>) <span class="id">symbols_to_pop</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">head_states_of_state</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack_cur</span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Err</span> =&gt; <span class="id">False</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6023')">Proof with</div>
+<div class="proofscript" id="proof6023">
+ <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">pose</span> <span class="id">proof</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">H</span> <span class="id">H0</span> <span class="id">H1</span> <span class="id">H2</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">head_symbs_of_state</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack0</span>)).<br/>
+&nbsp;&nbsp;<span class="tactic">generalize</span> (<span class="id">head_states_of_state</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack0</span>)).<br/>
+&nbsp;&nbsp;<span class="id">revert</span> <span class="id">stack0</span> <span class="id">A</span> <span class="id">action</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">symbols_to_pop</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">split</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="id">constructor</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H2</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">H7</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack0</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">f2</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack0</span>)) <span class="kwd">as</span> [] <span class="id">eqn</span>:? ...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">stack0</span> <span class="kwd">as</span> [|[]]; <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">H6</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">singleton_state_pred</span> <span class="kwd">in</span> <span class="id">Heqb0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">compare_refl</span> <span class="kwd">in</span> <span class="id">Heqb0</span>; <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">H6</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">singleton_state_pred</span> <span class="kwd">in</span> <span class="id">Heqb0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> <span class="id">compare_refl</span> <span class="kwd">in</span> <span class="id">Heqb0</span>; <span class="tactic">discriminate</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">stack0</span> <span class="kwd">as</span> [|[]]; <span class="tactic">unfold</span> <span class="id">pop</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">inversion</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">fold</span> <span class="id">pop</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">compare_eqdec</span> (<span class="id">last_symb_of_non_init_state</span> <span class="id">x</span>) <span class="id">a</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>. <span class="tactic">clear</span> <span class="id">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>. <span class="tactic">clear</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">dependent</span> <span class="tactic">destruction</span> <span class="id">H3</span>; <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">prefix_pred</span> (<span class="id">List.tl</span> <span class="id">l</span>) (<span class="id">state_stack_of_stack</span> <span class="id">stack0</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id">tl</span>; <span class="tactic">destruct</span> <span class="id">l</span>; [<span class="id">constructor</span> | <span class="tactic">inversion</span> <span class="id">H2</span>]...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">pose</span> <span class="id">proof</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">H3</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">IHsymbols_to_pop</span> <span class="id">stack0</span> <span class="id">A</span> (<span class="id">action0</span> <span class="id">n</span>) <span class="id">_</span> <span class="id">_</span> <span class="id">H4</span> <span class="id">H7</span> <span class="id">H</span> <span class="id">H0</span> <span class="id">H6</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">IHsymbols_to_pop</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">fold</span> (<span class="id">noninitstate_type</span> <span class="id">x</span>); <span class="tactic">generalize</span> (<span class="id">pop</span> <span class="id">symbols_to_pop</span> <span class="id">stack0</span> (<span class="id">action0</span> <span class="id">n</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">r</span> <span class="kwd">as</span> [|[]]; <span class="tactic">intuition</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">l</span>; <span class="id">constructor</span>...<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">n0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>...<br/>
+Qed.</div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">prefix</span></span> is associative *</div>
+<span class="kwd">Lemma</span> <span class="id">prefix_ass</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">l1</span> <span class="id">l2</span> <span class="id">l3</span>:<span class="id">list</span> <span class="id">symbol</span>), <span class="id">prefix</span> <span class="id">l1</span> <span class="id">l2</span> -&gt; <span class="id">prefix</span> <span class="id">l2</span> <span class="id">l3</span> -&gt; <span class="id">prefix</span> <span class="id">l1</span> <span class="id">l3</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6024')">Proof.</div>
+<div class="proofscript" id="proof6024">
+<span class="tactic">induction</span> <span class="id">l1</span>; <span class="tactic">intros</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+<span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">prefix_pred</span></span> is associative *</div>
+<span class="kwd">Lemma</span> <span class="id">prefix_pred_ass</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">l1</span> <span class="id">l2</span> <span class="id">l3</span>:<span class="id">list</span> (<span class="id">state</span>-&gt;<span class="id">bool</span>)),<br/>
+&nbsp;&nbsp;<span class="id">prefix_pred</span> <span class="id">l1</span> <span class="id">l2</span> -&gt; <span class="id">prefix_pred</span> <span class="id">l2</span> <span class="id">l3</span> -&gt; <span class="id">prefix_pred</span> <span class="id">l1</span> <span class="id">l3</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6025')">Proof.</div>
+<div class="proofscript" id="proof6025">
+<span class="tactic">induction</span> <span class="id">l1</span>; <span class="tactic">intros</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">subst</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H0</span>; <span class="tactic">subst</span>.<br/>
+<span class="id">constructor</span>; <span class="tactic">eauto</span>.<br/>
+<span class="tactic">intro</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H3</span> <span class="id">x</span>).<br/>
+<span class="id">specialize</span> (<span class="id">H4</span> <span class="id">x</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id">f0</span> <span class="id">x</span>); <span class="tactic">simpl</span> <span class="kwd">in</span> *; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">H4</span> <span class="kwd">in</span> <span class="id">H3</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If we have the right to reduce at this state, then the stack invariant
+   is conserved by <span class="bracket"><span class="id">reduce_step</span></span> and <span class="bracket"><span class="id">reduce_step</span></span> does not crash. *</div>
+<span class="kwd">Lemma</span> <span class="id">reduce_step_stack_invariant_conserved</span> <span class="id">stack</span> <span class="id">prod</span> <span class="id">buff</span>:<br/>
+&nbsp;&nbsp;<span class="id">stack_invariant</span> <span class="id">stack</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id">valid_for_reduce</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack</span>) <span class="id">prod</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">reduce_step</span> <span class="id">init</span> <span class="id">stack</span> <span class="id">prod</span> <span class="id">buff</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Fail_sr</span> | <span class="id">Accept_sr</span> <span class="id">_</span> <span class="id">_</span>) =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Progress_sr</span> <span class="id">stack_new</span> <span class="id">_</span>) =&gt; <span class="id">stack_invariant</span> <span class="id">stack_new</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Err</span> =&gt; <span class="id">False</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6026')">Proof with</div>
+<div class="proofscript" id="proof6026">
+ <span class="tactic">eauto</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">valid_for_reduce</span>.<br/>
+<span class="tactic">intuition</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">reduce_step</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">pop_stack_invariant_conserved</span> (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>) <span class="id">stack</span> <span class="id">_</span> (<span class="id">prod_action</span>' <span class="id">prod</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">pop</span> (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>) <span class="id">stack</span> (<span class="id">prod_action</span>' <span class="id">prod</span>)) <span class="kwd">as</span> [|[]].<br/>
+<span class="tactic">apply</span> <span class="id">H0</span>...<br/>
+<span class="tactic">destruct</span> <span class="id">H0</span>...<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">goto_head_symbs</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">s</span>) (<span class="id">prod_lhs</span> <span class="id">prod</span>)).<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">goto_past_state</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">s</span>) (<span class="id">prod_lhs</span> <span class="id">prod</span>)).<br/>
+<span class="tactic">unfold</span> <span class="id">bind2</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H0</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H2</span> <span class="id">_</span> <span class="id">H3</span>)...<br/>
+<span class="tactic">destruct</span> (<span class="id">goto_table</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack0</span>) (<span class="id">prod_lhs</span> <span class="id">prod</span>)) <span class="kwd">as</span> [[]|].<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">simpl</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">eapply</span> <span class="id">prefix_ass</span>...<br/>
+<span class="tactic">unfold</span> <span class="id">state_stack_of_stack</span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+<span class="tactic">intro</span>; <span class="tactic">destruct</span> (<span class="id">singleton_state_pred</span> <span class="id">x</span> <span class="id">x0</span>); <span class="tactic">reflexivity</span>.<br/>
+<span class="tactic">eapply</span> <span class="id">prefix_pred_ass</span>...<br/>
+<span class="id">constructor</span>...<br/>
+<span class="id">constructor</span>...<br/>
+<span class="tactic">destruct</span> <span class="id">stack0</span> <span class="kwd">as</span> [|[]]...<br/>
+<span class="tactic">destruct</span> (<span class="id">compare_eqdec</span> (<span class="id">prod_lhs</span> <span class="id">prod</span>) (<span class="id">start_nt</span> <span class="id">init</span>))...<br/>
+<span class="tactic">apply</span> <span class="id">n</span>, <span class="id">H2</span>, <span class="id">eq_refl</span>.<br/>
+<span class="tactic">apply</span> <span class="id">H2</span>, <span class="id">eq_refl</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If the automaton is safe, then the stack invariant is conserved by
+    <span class="bracket"><span class="id">step</span></span> and <span class="bracket"><span class="id">step</span></span> does not crash. *</div>
+<span class="kwd">Lemma</span> <span class="id">step_stack_invariant_conserved</span> (<span class="id">stack</span>:<span class="id">stack</span>) <span class="id">buffer</span>:<br/>
+&nbsp;&nbsp;<span class="id">stack_invariant</span> <span class="id">stack</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">step</span> <span class="id">init</span> <span class="id">stack</span> <span class="id">buffer</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Fail_sr</span> | <span class="id">Accept_sr</span> <span class="id">_</span> <span class="id">_</span>) =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Progress_sr</span> <span class="id">stack_new</span> <span class="id">_</span>) =&gt; <span class="id">stack_invariant</span> <span class="id">stack_new</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Err</span> =&gt; <span class="id">False</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6027')">Proof with</div>
+<div class="proofscript" id="proof6027">
+ <span class="tactic">eauto</span>.<br/>
+<span class="tactic">intro</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">step</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">shift_head_symbs</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack</span>)).<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">shift_past_state</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack</span>)).<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">reduce_ok</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">action_table</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack</span>)).<br/>
+<span class="tactic">apply</span> <span class="id">reduce_step_stack_invariant_conserved</span>...<br/>
+<span class="tactic">destruct</span> <span class="id">buffer</span> <span class="kwd">as</span> [[]]; <span class="tactic">simpl</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H0</span> <span class="id">x</span>); <span class="id">specialize</span> (<span class="id">H1</span> <span class="id">x</span>); <span class="id">specialize</span> (<span class="id">H2</span> <span class="id">x</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id">l</span> <span class="id">x</span>)...<br/>
+<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">state_of_stack</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">eapply</span> <span class="id">prefix_ass</span>...<br/>
+<span class="tactic">unfold</span> <span class="id">state_stack_of_stack</span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+<span class="tactic">intro</span>; <span class="tactic">destruct</span> (<span class="id">singleton_state_pred</span> <span class="id">s0</span> <span class="id">x0</span>)...<br/>
+<span class="tactic">eapply</span> <span class="id">prefix_pred_ass</span>...<br/>
+<span class="id">constructor</span>...<br/>
+<span class="id">constructor</span>...<br/>
+<span class="tactic">apply</span> <span class="id">reduce_step_stack_invariant_conserved</span>...<br/>
+Qed.</div>
+<br/>
+<div class="doc">If the automaton is safe, then it does not crash *</div>
+<span class="kwd">Theorem</span> <span class="id">parse_no_err</span> <span class="id">buffer</span> <span class="id">n_steps</span>:<br/>
+&nbsp;&nbsp;<span class="id">parse</span> <span class="id">init</span> <span class="id">buffer</span> <span class="id">n_steps</span> &lt;&gt; <span class="id">Err</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6028')">Proof with</div>
+<div class="proofscript" id="proof6028">
+ <span class="tactic">eauto</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">parse</span>.<br/>
+<span class="tactic">assert</span> (<span class="id">stack_invariant</span> []).<br/>
+<span class="id">constructor</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">state_stack_of_stack</span>; <span class="tactic">simpl</span>; <span class="id">constructor</span>.<br/>
+<span class="tactic">intro</span>; <span class="tactic">destruct</span> (<span class="id">singleton_state_pred</span> <span class="id">init</span> <span class="id">x</span>)...<br/>
+<span class="id">constructor</span>.<br/>
+<span class="id">constructor</span>.<br/>
+<span class="id">revert</span> <span class="id">H</span>.<br/>
+<span class="tactic">generalize</span> <span class="id">buffer</span> ([]:<span class="id">stack</span>).<br/>
+<span class="tactic">induction</span> <span class="id">n_steps</span>; <span class="tactic">simpl</span>.<br/>
+<span class="id">now</span> <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">step_stack_invariant_conserved</span> <span class="id">s</span> <span class="id">buffer0</span> <span class="id">H</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id">step</span> <span class="id">init</span> <span class="id">s</span> <span class="id">buffer0</span>) <span class="kwd">as</span> [|[]]; <span class="tactic">simpl</span>...<br/>
+<span class="tactic">discriminate</span>.<br/>
+<span class="tactic">discriminate</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">A version of <span class="bracket"><span class="id">parse</span></span> that uses safeness in order to return a
+   <span class="bracket"><span class="id">parse_result</span></span>, and not a <span class="bracket"><span class="id">result</span> <span class="id">parse_result</span></span> : we have proven that
+   parsing does not return <span class="bracket"><span class="id">Err</span></span>. *</div>
+<span class="kwd">Definition</span> <span class="id">parse_with_safe</span> (<span class="id">buffer</span>:<span class="id">Stream</span> <span class="id">token</span>) (<span class="id">n_steps</span>:<span class="id">nat</span>):<br/>
+&nbsp;&nbsp;<span class="id">parse_result</span> <span class="id">init</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6029')">Proof with</div>
+<div class="proofscript" id="proof6029">
+ <span class="tactic">eauto</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">parse_no_err</span> <span class="id">buffer</span> <span class="id">n_steps</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id">parse</span> <span class="id">init</span> <span class="id">buffer</span> <span class="id">n_steps</span>)...<br/>
+<span class="tactic">congruence</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Safety_proof</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">Make</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

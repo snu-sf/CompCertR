@@ -1,0 +1,232 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module LinkingC</title>
+<meta name="description" content="Documentation of Coq module LinkingC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module LinkingC</h1>
+<div class="coq">
+<div class="doc">copied &amp;&amp; added "C" *</div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span> <span class="id"><a href="compcert.common.Errors.html">Errors</a></span> <span class="id"><a href="compcert.compcertm.ASTC.html">ASTC</a></span>.<br/>
+<br/>
+<div class="doc">newly added *</div>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="compcert.common.Linking.html">Linking</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Axioms.html">Axioms</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="link_res">link_res</a></span> (<span class="id">A</span>: <span class="kwd">Type</span>): <span class="kwd">Type</span> :=<br/>
+| <span class="id"><a name="empty">empty</a></span><br/>
+| <span class="tactic">fail</span><br/>
+| <span class="id"><a name="success">success</a></span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.compcertm.LinkingC.html#link_res">link_res</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#A">A</a></span>.<br/>
+<br/>
+<span class="id">Arguments</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#empty">empty</a></span> [<span class="id">A</span>].<br/>
+<span class="id">Arguments</span> <span class="tactic">fail</span> [<span class="id">A</span>].<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="link_list_aux">link_list_aux</a></span> <span class="id">X</span> `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>} (<span class="id">xs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>): <span class="id"><a href="compcert.compcertm.LinkingC.html#link_res">link_res</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#xs">xs</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| [] =&gt; <span class="id"><a href="compcert.compcertm.LinkingC.html#empty">empty</a></span><br/>
+&nbsp;&nbsp;| <span class="id">x0</span> :: <span class="id">tl</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux">link_list_aux</a></span> <span class="id">tl</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.LinkingC.html#empty">empty</a></span> =&gt; <span class="id"><a href="compcert.compcertm.LinkingC.html#success">success</a></span> <span class="id">x0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="tactic">fail</span> =&gt; <span class="tactic">fail</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.LinkingC.html#success">success</a></span> <span class="id">x1</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.common.Linking.html#link">link</a></span> <span class="id">x0</span> <span class="id">x1</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">x</span> =&gt; <span class="id"><a href="compcert.compcertm.LinkingC.html#success">success</a></span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="tactic">fail</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="link_list">link_list</a></span> <span class="id">X</span> `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>} (<span class="id">xs</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>): <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux">link_list_aux</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#xs">xs</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.LinkingC.html#empty">empty</a></span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> <br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.compcertm.LinkingC.html#success">success</a></span> <span class="id">x</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">x</span><br/>
+&nbsp;&nbsp;| <span class="tactic">fail</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="link_list_cons">link_list_cons</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>} <span class="id">hd</span> <span class="id">tl</span> <span class="id">restl</span> <span class="id">res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">TL</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#tl">tl</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#restl">restl</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">HD</span>: <span class="id"><a href="compcert.common.Linking.html#link">link</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#hd">hd</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#restl">restl</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#res">res</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LINK</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> (<span class="id"><a href="compcert.compcertm.LinkingC.html#hd">hd</a></span> :: <span class="id"><a href="compcert.compcertm.LinkingC.html#tl">tl</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#res">res</a></span>&gt;&gt; /\ &lt;&lt;<span class="id">LINKORDER</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="compcert.common.Linking.html#linkorder">linkorder</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#res">res</a></span>) (<span class="id"><a href="compcert.compcertm.LinkingC.html#hd">hd</a></span> :: <span class="id"><a href="compcert.compcertm.LinkingC.html#tl">tl</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6789')">Proof.</div>
+<div class="proofscript" id="proof6789">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">red</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Linking.html#link_linkorder">link_linkorder</a></span> <span class="kwd">in</span> <span class="id">HD</span>. <span class="id">des</span>. <span class="id">econs</span>; <span class="tactic">auto</span>. <span class="tactic">clear</span> <span class="id">HD</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="kwd">in</span> <span class="id">TL</span>. <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">restl</span>. <span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">res</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">tl</span> <span class="kwd">as</span> [|<span class="id">h</span> <span class="id">l</span>]; <span class="tactic">auto</span>. <span class="id">i</span>. <span class="id">econs</span>; <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux">link_list_aux</a></span> <span class="kwd">in</span> *; <span class="id">des_ifs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Linking.html#link_linkorder">link_linkorder</a></span> <span class="kwd">in</span> <span class="id">Heq1</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Linking.html#linkorder_trans">linkorder_trans</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">l</span>; <span class="tactic">auto</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">IHl</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Linking.html#link_linkorder">link_linkorder</a></span> <span class="kwd">in</span> <span class="id">Heq1</span>. <span class="id">des</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Linking.html#linkorder_trans">linkorder_trans</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="link_list_linkorder">link_list_linkorder</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>} <span class="id">xs</span> <span class="id">xs_res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#xs">xs</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#xs_res">xs_res</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LINKORDER</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#Forall">Forall</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id"><a href="compcert.common.Linking.html#linkorder">linkorder</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#xs_res">xs_res</a></span>) <span class="id"><a href="compcert.compcertm.LinkingC.html#xs">xs</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6790')">Proof.</div>
+<div class="proofscript" id="proof6790">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">xs</span> <span class="kwd">as</span> [| <span class="id">hd</span> <span class="id">tl</span>]; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="kwd">in</span> <span class="id">LINK</span>. <span class="id">des_ifs</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux">link_list_aux</a></span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="id">des_ifs</span>; <span class="id">fold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux">link_list_aux</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">tl</span>; <span class="id">ss</span>. <span class="id">econs</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Linking.html#linkorder_refl">linkorder_refl</a></span>. <span class="id">econs</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;<span class="id">econs</span>. { <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Linking.html#link_linkorder">link_linkorder</a></span> <span class="kwd">in</span> <span class="id">Heq1</span>. <span class="id">des</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="id">tl</span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">x</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span>. <span class="tactic">rewrite</span> <span class="id">Heq0</span>. <span class="tactic">auto</span>. }<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_cons">link_list_cons</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="id">inv</span> <span class="id">LINKORDER</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="link_list_cons_inv">link_list_cons_inv</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>} <span class="id">hd</span> <span class="id">tl</span> <span class="id">res</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> (<span class="id"><a href="compcert.compcertm.LinkingC.html#hd">hd</a></span> :: <span class="id"><a href="compcert.compcertm.LinkingC.html#tl">tl</a></span>) = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#res">res</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LEN</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#tl">tl</a></span> &lt;&gt; []):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">restl</span>, &lt;&lt;<span class="id">TL</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#tl">tl</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#restl">restl</a></span>&gt;&gt; /\ &lt;&lt;<span class="id">HD</span>: <span class="id"><a href="compcert.common.Linking.html#link">link</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#hd">hd</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#restl">restl</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#res">res</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6791')">Proof.</div>
+<div class="proofscript" id="proof6791">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="kwd">in</span> <span class="id">LINK</span>. <span class="id">des_ifs</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux">link_list_aux</a></span> <span class="kwd">in</span> <span class="id">Heq</span>. <span class="id">des_ifs</span>; <span class="id">fold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux">link_list_aux</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;{ <span class="tactic">destruct</span> <span class="id">tl</span>; <span class="id">ss</span>. <span class="id">econs</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">x</span>. <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span>. <span class="tactic">rewrite</span> <span class="id">Heq0</span>. <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">Unshelve</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="link_list_aux_empty_inv">link_list_aux_empty_inv</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>} <span class="id">xs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EMPTY</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux">link_list_aux</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#xs">xs</a></span>  = <span class="id"><a href="compcert.compcertm.LinkingC.html#empty">empty</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">NIL</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#xs">xs</a></span> = []&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6792')">Proof.</div>
+<div class="proofscript" id="proof6792">
+ <span class="id">ginduction</span> <span class="id">xs</span>; <span class="id">ii</span>; <span class="id">ss</span>. <span class="id">des_ifs</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="link_list_snoc_commut">link_list_snoc_commut</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#X">X</a></span>} <span class="id">x0</span> <span class="id">x1</span> <span class="id">x_link</span> <span class="id">xs</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id"><a href="compcert.common.Linking.html#link">link</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#x0">x0</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#x1">x1</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#x_link">x_link</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">CMT</span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> (<span class="id"><a href="compcert.compcertm.LinkingC.html#xs">xs</a></span> ++ [<span class="id"><a href="compcert.compcertm.LinkingC.html#x0">x0</a></span> ; <span class="id"><a href="compcert.compcertm.LinkingC.html#x1">x1</a></span>]) = <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> (<span class="id"><a href="compcert.compcertm.LinkingC.html#xs">xs</a></span> ++ [<span class="id"><a href="compcert.compcertm.LinkingC.html#x_link">x_link</a></span>])&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6793')">Proof.</div>
+<div class="proofscript" id="proof6793">
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">xs</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span>. <span class="id">ss</span>. <span class="id">des_ifs</span>. }<br/>
+&nbsp;&nbsp;<span class="id">exploit</span> <span class="id">IHxs</span>; <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">IH</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span> <span class="kwd">in</span> <span class="id">IH</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list">link_list</a></span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">apply_all_once</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#link_list_aux_empty_inv">link_list_aux_empty_inv</a></span>; <span class="id">clarify</span>; <span class="id">ss</span>; <span class="tactic">destruct</span> <span class="id">xs</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="match_program_refl">match_program_refl</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> <span class="id">V</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#F">F</a></span>} `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#V">V</a></span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">prog</span>: <span class="id"><a href="compcert.common.AST.html#program">AST.program</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#F">F</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#V">V</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Linking.html#match_program">match_program</a></span> (<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span>) <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#prog">prog</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#prog">prog</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6794')">Proof.</div>
+<div class="proofscript" id="proof6794">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">prog</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">ginduction</span> <span class="id">prog_defs</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">a</span>; <span class="id">ss</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">g</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Linking.html#linkorder_refl">linkorder_refl</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">rpapply</span> <span class="id">IHprog_defs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">do</span> 2 (<span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Axioms.html#functional_extensionality">Axioms.functional_extensionality</a></span>; <span class="id">i</span>; <span class="tactic">destruct</span> <span class="id">x</span>; <span class="id">ss</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.AxiomsC.html#prop_ext">AxiomsC.prop_ext</a></span>. <span class="tactic">split</span>; <span class="id">ii</span>; <span class="id">inv</span> <span class="id">H1</span>; <span class="id">ss</span>; <span class="id">clarify</span>; <span class="id">inv</span> <span class="id">H3</span>; <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.common.Linking.html#linkorder_refl">linkorder_refl</a></span>.<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="match_globdef_eq">match_globdef_eq</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">C</span> <span class="id">F</span> <span class="id">V</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#C">C</a></span>} <span class="id">ctx</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.common.Linking.html#match_globdef">match_globdef</a></span> ((<span class="kwd">fun</span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span>): <span class="id"><a href="compcert.compcertm.LinkingC.html#C">C</a></span> -&gt; <span class="id"><a href="compcert.compcertm.LinkingC.html#F">F</a></span> -&gt; <span class="id"><a href="compcert.compcertm.LinkingC.html#F">F</a></span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span>: <span class="id"><a href="compcert.compcertm.LinkingC.html#V">V</a></span> -&gt; <span class="id"><a href="compcert.compcertm.LinkingC.html#V">V</a></span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.LinkingC.html#ctx">ctx</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6795')">Proof.</div>
+<div class="proofscript" id="proof6795">
+&nbsp;&nbsp;<span class="tactic">do</span> 2 (<span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Axioms.html#functional_extensionality">Axioms.functional_extensionality</a></span>; <span class="id">i</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.AxiomsC.html#prop_ext">AxiomsC.prop_ext</a></span>. <span class="tactic">split</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H1</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">clarify</span>. <span class="tactic">destruct</span> <span class="id">x0</span>; <span class="id">econs</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id"><a href="compcert.common.Linking.html#linkorder_refl">linkorder_refl</a></span>; <span class="tactic">eauto</span>. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Transparent</span> <span class="id"><a href="compcert.common.Linking.html#Linker_def">Linker_def</a></span> <span class="id"><a href="compcert.common.Linking.html#Linker_vardef">Linker_vardef</a></span> <span class="id"><a href="compcert.common.Linking.html#Linker_varinit">Linker_varinit</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="link_unit_same">link_unit_same</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">F</span> (<span class="id">g</span> <span class="id">g0</span>: <span class="id"><a href="compcert.common.AST.html#globdef">globdef</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#F">F</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span>) (<span class="id">gv</span>: <span class="id"><a href="compcert.common.AST.html#globvar">globvar</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span>) `{<span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#F">F</a></span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LINK</span>: <span class="id"><a href="compcert.common.Linking.html#link">link</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#g">g</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#g0">g0</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.common.AST.html#Gvar">Gvar</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#gv">gv</a></span>)):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.LinkingC.html#g">g</a></span> = <span class="id"><a href="compcert.common.AST.html#Gvar">Gvar</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#gv">gv</a></span> \/ <span class="id"><a href="compcert.compcertm.LinkingC.html#g0">g0</a></span> = <span class="id"><a href="compcert.common.AST.html#Gvar">Gvar</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#gv">gv</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6796')">Proof.</div>
+<div class="proofscript" id="proof6796">
+&nbsp;&nbsp;<span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Linking.html#link_def">link_def</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>. <span class="id">ss</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Linking.html#link_vardef">link_vardef</a></span> <span class="kwd">in</span> *. <span class="tactic">destruct</span> <span class="id">v</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="id">des_ifs</span>; <span class="id">bsimpl</span>; <span class="id">des</span>; <span class="id">des_sumbool</span>; <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#eqb_true_iff">eqb_true_iff</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">gvar_info</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">v0</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">gvar_info</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">u</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.common.Linking.html#link_varinit">link_varinit</a></span> <span class="kwd">in</span> *. <span class="id">des_ifs</span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Local</span> <span class="id">Opaque</span> <span class="id"><a href="compcert.common.Linking.html#Linker_def">Linker_def</a></span> <span class="id"><a href="compcert.common.Linking.html#Linker_vardef">Linker_vardef</a></span> <span class="id"><a href="compcert.common.Linking.html#Linker_varinit">Linker_varinit</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="link_skfundef">link_skfundef</a></span> (<span class="id">fd1</span> <span class="id">fd2</span>: <span class="id"><a href="compcert.common.AST.html#fundef">AST.fundef</a></span> <span class="id"><a href="compcert.common.AST.html#signature">signature</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.compcertm.LinkingC.html#fd1">fd1</a></span>, <span class="id"><a href="compcert.compcertm.LinkingC.html#fd2">fd2</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#Internal">Internal</a></span> <span class="id">_</span>, <span class="id"><a href="compcert.common.AST.html#Internal">Internal</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id">ef1</span>, <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id">ef2</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">ef1</span>, <span class="id">ef2</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#EF_external">EF_external</a></span> <span class="id">_</span> <span class="id">sg1</span>, <span class="id"><a href="compcert.common.AST.html#EF_external">EF_external</a></span> <span class="id">_</span> <span class="id">sg2</span> =&gt; <span class="kwd">if</span> <span class="id"><a href="compcert.common.AST.html#signature_eq">signature_eq</a></span> <span class="id">sg1</span> <span class="id">sg2</span> <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id">ef1</span>) <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>, <span class="id">_</span> =&gt; <span class="kwd">if</span> <span class="id"><a href="compcert.common.AST.html#external_function_eq">external_function_eq</a></span> <span class="id">ef1</span> <span class="id">ef2</span> <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id">ef1</span>) <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#Internal">Internal</a></span> <span class="id">f</span>, <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id">ef</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">ef</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#EF_external">EF_external</a></span> <span class="id">id</span> <span class="id">sg</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.common.AST.html#signature_eq">signature_eq</a></span> <span class="id">f</span> <span class="id">sg</span> <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.common.AST.html#Internal">Internal</a></span> <span class="id">f</span>) <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#External">External</a></span> <span class="id">ef</span>, <span class="id"><a href="compcert.common.AST.html#Internal">Internal</a></span> <span class="id">f</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">ef</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="compcert.common.AST.html#EF_external">EF_external</a></span> <span class="id">id</span> <span class="id">sg</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.common.AST.html#signature_eq">signature_eq</a></span> <span class="id">f</span> <span class="id">sg</span> <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> (<span class="id"><a href="compcert.common.AST.html#Internal">Internal</a></span> <span class="id">f</span>) <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="linkorder_skfundef">linkorder_skfundef</a></span>: <span class="id"><a href="compcert.common.AST.html#fundef">AST.fundef</a></span> <span class="id"><a href="compcert.common.AST.html#signature">signature</a></span> -&gt; <span class="id"><a href="compcert.common.AST.html#fundef">AST.fundef</a></span> <span class="id"><a href="compcert.common.AST.html#signature">signature</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="linkorder_skfundef_refl">linkorder_skfundef_refl</a></span>: <span class="kwd">forall</span> <span class="id">fd</span>, <span class="id"><a href="compcert.compcertm.LinkingC.html#linkorder_skfundef">linkorder_skfundef</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#fd">fd</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#fd">fd</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a name="linkorder_fundef_ext_ext">linkorder_fundef_ext_ext</a></span>: <span class="kwd">forall</span> <span class="id">name0</span> <span class="id">name1</span> <span class="id">sg</span>, <span class="id"><a href="compcert.compcertm.LinkingC.html#linkorder_skfundef">linkorder_skfundef</a></span> (<span class="id"><a href="compcert.common.AST.html#External">External</a></span> (<span class="id"><a href="compcert.common.AST.html#EF_external">EF_external</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#name0">name0</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#sg">sg</a></span>)) (<span class="id"><a href="compcert.common.AST.html#External">External</a></span> (<span class="id"><a href="compcert.common.AST.html#EF_external">EF_external</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#name1">name1</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#sg">sg</a></span>))<br/>
+&nbsp;&nbsp;| <span class="id"><a name="linkorder_skfundef_ext_int">linkorder_skfundef_ext_int</a></span>: <span class="kwd">forall</span> <span class="id">id</span> <span class="id">sg</span>, <span class="id"><a href="compcert.compcertm.LinkingC.html#linkorder_skfundef">linkorder_skfundef</a></span> (<span class="id"><a href="compcert.common.AST.html#External">External</a></span> (<span class="id"><a href="compcert.common.AST.html#EF_external">EF_external</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#id">id</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#sg">sg</a></span>)) (<span class="id"><a href="compcert.common.AST.html#Internal">Internal</a></span> <span class="id"><a href="compcert.compcertm.LinkingC.html#sg">sg</a></span>).<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Linker_skfundef">Linker_skfundef</a></span>: <span class="id"><a href="compcert.common.Linking.html#Linker">Linker</a></span> (<span class="id"><a href="compcert.common.AST.html#fundef">AST.fundef</a></span> <span class="id"><a href="compcert.common.AST.html#signature">signature</a></span>) :=<br/>
+{| <span class="id"><a href="compcert.common.Linking.html#Build_Linker">link</a></span> := <span class="id"><a href="compcert.compcertm.LinkingC.html#link_skfundef">link_skfundef</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">linkorder</span> := <span class="id"><a href="compcert.compcertm.LinkingC.html#linkorder_skfundef">linkorder_skfundef</a></span>;<br/>
+|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6797')">Next Obligation.</div>
+<div class="proofscript" id="proof6797">
+ <span class="tactic">destruct</span> <span class="id">x</span>; <span class="id">econs</span>; <span class="tactic">eauto</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6798')">Next Obligation.</div>
+<div class="proofscript" id="proof6798">
+ <span class="id">inv</span> <span class="id">H</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">econs</span>; <span class="id">et</span>. Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof6799')">Next Obligation.</div>
+<div class="proofscript" id="proof6799">
+&nbsp;&nbsp;<span class="id">pose</span> <span class="id">x</span> <span class="kwd">as</span> <span class="id">X</span>. <span class="id">pose</span> <span class="id">y</span> <span class="kwd">as</span> <span class="id">Y</span>. <span class="tactic">destruct</span> <span class="id">x</span>, <span class="id">y</span>; <span class="id">ss</span>; <span class="id">des_ifs</span>; <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="tactic">try</span> (<span class="id">econs</span>; <span class="id">et</span>).<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

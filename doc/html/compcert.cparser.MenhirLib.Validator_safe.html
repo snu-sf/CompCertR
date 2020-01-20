@@ -1,0 +1,430 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Validator_safe</title>
+<meta name="description" content="Documentation of Coq module Validator_safe" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Validator_safe</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="id">Automaton</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Alphabet</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">Make</span>(<span class="kwd">Import</span> <span class="id">A</span>:<span class="id">Automaton.T</span>).<br/>
+<br/>
+<div class="doc">The singleton predicate for states *</div>
+<span class="kwd">Definition</span> <span class="id">singleton_state_pred</span> (<span class="id">state</span>:<span class="id">state</span>) :=<br/>
+&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">state</span>' =&gt; <span class="kwd">match</span> <span class="id">compare</span> <span class="id">state</span> <span class="id">state</span>' <span class="kwd">with</span> <span class="id">Eq</span> =&gt; <span class="id">true</span> |<span class="id">_</span> =&gt; <span class="id">false</span> <span class="kwd">end</span>).<br/>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">past_state_of_non_init_state</span></span>, extended for all states. *</div>
+<span class="kwd">Definition</span> <span class="id">past_state_of_state</span> (<span class="id">state</span>:<span class="id">state</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">state</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Init</span> <span class="id">_</span> =&gt; []<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Ninit</span> <span class="id">nis</span> =&gt; <span class="id">past_state_of_non_init_state</span> <span class="id">nis</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">Concatenations of last and past *</div>
+<span class="kwd">Definition</span> <span class="id">head_symbs_of_state</span> (<span class="id">state</span>:<span class="id">state</span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">state</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Init</span> <span class="id">_</span> =&gt; []<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Ninit</span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">last_symb_of_non_init_state</span> <span class="id">s</span>::<span class="id">past_symb_of_non_init_state</span> <span class="id">s</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<span class="kwd">Definition</span> <span class="id">head_states_of_state</span> (<span class="id">state</span>:<span class="id">state</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">singleton_state_pred</span> <span class="id">state</span>::<span class="id">past_state_of_state</span> <span class="id">state</span>.<br/>
+<br/>
+<h1> Validation for correctness *</h1>
+<br/>
+<div class="doc">Prefix predicate between two lists of symbols. *</div>
+<span class="kwd">Inductive</span> <span class="id">prefix</span>: <span class="id">list</span> <span class="id">symbol</span> -&gt; <span class="id">list</span> <span class="id">symbol</span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">prefix_nil</span>: <span class="kwd">forall</span> <span class="id">l</span>, <span class="id">prefix</span> [] <span class="id">l</span><br/>
+&nbsp;&nbsp;| <span class="id">prefix_cons</span>: <span class="kwd">forall</span> <span class="id">l1</span> <span class="id">l2</span> <span class="id">x</span>, <span class="id">prefix</span> <span class="id">l1</span> <span class="id">l2</span> -&gt; <span class="id">prefix</span> (<span class="id">x</span>::<span class="id">l1</span>) (<span class="id">x</span>::<span class="id">l2</span>).<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">is_prefix</span> (<span class="id">l1</span> <span class="id">l2</span>:<span class="id">list</span> <span class="id">symbol</span>):=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">l1</span>, <span class="id">l2</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [], <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">t1</span>::<span class="id">q1</span>, <span class="id">t2</span>::<span class="id">q2</span> =&gt; (<span class="id">compare_eqb</span> <span class="id">t1</span> <span class="id">t2</span> &amp;&amp; <span class="id">is_prefix</span> <span class="id">q1</span> <span class="id">q2</span>)%<span class="id">bool</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>::<span class="id">_</span>, [] =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_prefix_correct</span> (<span class="id">l1</span> <span class="id">l2</span>:<span class="id">list</span> <span class="id">symbol</span>):<br/>
+&nbsp;&nbsp;<span class="id">is_prefix</span> <span class="id">l1</span> <span class="id">l2</span> = <span class="id">true</span> -&gt; <span class="id">prefix</span> <span class="id">l1</span> <span class="id">l2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6004')">Proof.</div>
+<div class="proofscript" id="proof6004">
+<span class="id">revert</span> <span class="id">l2</span>.<br/>
+<span class="tactic">induction</span> <span class="id">l1</span>; <span class="tactic">intros</span>.<br/>
+<span class="tactic">apply</span> <span class="id">prefix_nil</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">is_prefix</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">l2</span>; <span class="tactic">intuition</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Bool.andb_true_iff</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">compare_eqb_iff</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id">prefix_cons</span>.<br/>
+<span class="tactic">apply</span> <span class="id">IHl1</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">If we shift, then the known top symbols of the destination state is
+    a prefix of the known top symbols of the source state, with the new
+    symbol added. *</div>
+<span class="kwd">Definition</span> <span class="id">shift_head_symbs</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awp</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span>, <span class="kwd">match</span> <span class="id">awp</span> <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Shift_act</span> <span class="id">s2</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prefix</span> (<span class="id">past_symb_of_non_init_state</span> <span class="id">s2</span>) (<span class="id">head_symbs_of_state</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_shift_head_symbs</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">s</span>:<span class="id">state</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awp</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">t</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">awp</span> <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Shift_act</span> <span class="id">s2</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_prefix</span> (<span class="id">past_symb_of_non_init_state</span> <span class="id">s2</span>) (<span class="id">head_symbs_of_state</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_shift_head_symbs_correct</span>:<br/>
+&nbsp;&nbsp;<span class="id">is_shift_head_symbs</span> () = <span class="id">true</span> -&gt; <span class="id">shift_head_symbs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6005')">Proof.</div>
+<div class="proofscript" id="proof6005">
+<span class="tactic">unfold</span> <span class="id">is_shift_head_symbs</span>, <span class="id">shift_head_symbs</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">s</span> (<span class="id">all_list_forall</span> <span class="id">s</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">action_table</span> <span class="id">s</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">t</span> (<span class="id">all_list_forall</span> <span class="id">t</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">l</span> <span class="id">t</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_prefix_correct</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">When a goto happens, then the known top symbols of the destination state
+    is a prefix of the known top symbols of the source state, with the new
+    symbol added. *</div>
+<span class="kwd">Definition</span> <span class="id">goto_head_symbs</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">nt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">s</span> <span class="id">nt</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> (<span class="id">exist</span> <span class="id">_</span> <span class="id">s2</span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prefix</span> (<span class="id">past_symb_of_non_init_state</span> <span class="id">s2</span>) (<span class="id">head_symbs_of_state</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_goto_head_symbs</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">s</span>:<span class="id">state</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">nt</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">s</span> <span class="id">nt</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> (<span class="id">exist</span> <span class="id">_</span> <span class="id">s2</span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_prefix</span> (<span class="id">past_symb_of_non_init_state</span> <span class="id">s2</span>) (<span class="id">head_symbs_of_state</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_goto_head_symbs_correct</span>:<br/>
+&nbsp;&nbsp;<span class="id">is_goto_head_symbs</span> () = <span class="id">true</span> -&gt; <span class="id">goto_head_symbs</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6006')">Proof.</div>
+<div class="proofscript" id="proof6006">
+<span class="tactic">unfold</span> <span class="id">is_goto_head_symbs</span>, <span class="id">goto_head_symbs</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">s</span> (<span class="id">all_list_forall</span> <span class="id">s</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">nt</span> (<span class="id">all_list_forall</span> <span class="id">nt</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">goto_table</span> <span class="id">s</span> <span class="id">nt</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">s0</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_prefix_correct</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">We have to say the same kind of checks for the assumptions about the
+    states stack. However, theses assumptions are predicates. So we define
+    a notion of "prefix" over predicates lists, that means, basically, that
+    an assumption entails another *</div>
+<span class="kwd">Inductive</span> <span class="id">prefix_pred</span>: <span class="id">list</span> (<span class="id">state</span>-&gt;<span class="id">bool</span>) -&gt; <span class="id">list</span> (<span class="id">state</span>-&gt;<span class="id">bool</span>) -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">prefix_pred_nil</span>: <span class="kwd">forall</span> <span class="id">l</span>, <span class="id">prefix_pred</span> [] <span class="id">l</span><br/>
+&nbsp;&nbsp;| <span class="id">prefix_pred_cons</span>: <span class="kwd">forall</span> <span class="id">l1</span> <span class="id">l2</span> <span class="id">f1</span> <span class="id">f2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">forall</span> <span class="id">x</span>, <span class="id">implb</span> (<span class="id">f2</span> <span class="id">x</span>) (<span class="id">f1</span> <span class="id">x</span>) = <span class="id">true</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prefix_pred</span> <span class="id">l1</span> <span class="id">l2</span> -&gt; <span class="id">prefix_pred</span> (<span class="id">f1</span>::<span class="id">l1</span>) (<span class="id">f2</span>::<span class="id">l2</span>).<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">is_prefix_pred</span> (<span class="id">l1</span> <span class="id">l2</span>:<span class="id">list</span> (<span class="id">state</span>-&gt;<span class="id">bool</span>)) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">l1</span>, <span class="id">l2</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [], <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">f1</span>::<span class="id">q1</span>, <span class="id">f2</span>::<span class="id">q2</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">implb</span> (<span class="id">f2</span> <span class="id">x</span>) (<span class="id">f1</span> <span class="id">x</span>)) <span class="id">all_list</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;&amp; <span class="id">is_prefix_pred</span> <span class="id">q1</span> <span class="id">q2</span>)%<span class="id">bool</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span>::<span class="id">_</span>, [] =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_prefix_pred_correct</span> (<span class="id">l1</span> <span class="id">l2</span>:<span class="id">list</span> (<span class="id">state</span>-&gt;<span class="id">bool</span>)) :<br/>
+&nbsp;&nbsp;<span class="id">is_prefix_pred</span> <span class="id">l1</span> <span class="id">l2</span> = <span class="id">true</span> -&gt; <span class="id">prefix_pred</span> <span class="id">l1</span> <span class="id">l2</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6007')">Proof.</div>
+<div class="proofscript" id="proof6007">
+<span class="id">revert</span> <span class="id">l2</span>.<br/>
+<span class="tactic">induction</span> <span class="id">l1</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">apply</span> <span class="id">prefix_pred_nil</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">l2</span>; <span class="tactic">intuition</span>; <span class="tactic">try</span> <span class="tactic">discriminate</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">is_prefix_pred</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Bool.andb_true_iff</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">apply</span> <span class="id">prefix_pred_cons</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">H0</span>.<br/>
+<span class="tactic">apply</span> <span class="id">all_list_forall</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">The assumptions about state stack is conserved when we shift *</div>
+<span class="kwd">Definition</span> <span class="id">shift_past_state</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awp</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span>, <span class="kwd">match</span> <span class="id">awp</span> <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Shift_act</span> <span class="id">s2</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prefix_pred</span> (<span class="id">past_state_of_non_init_state</span> <span class="id">s2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">head_states_of_state</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_shift_past_state</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">s</span>:<span class="id">state</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awp</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">t</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">awp</span> <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Shift_act</span> <span class="id">s2</span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_prefix_pred</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">past_state_of_non_init_state</span> <span class="id">s2</span>) (<span class="id">head_states_of_state</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_shift_past_state_correct</span>:<br/>
+&nbsp;<span class="id">is_shift_past_state</span> () = <span class="id">true</span> -&gt; <span class="id">shift_past_state</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6008')">Proof.</div>
+<div class="proofscript" id="proof6008">
+<span class="tactic">unfold</span> <span class="id">is_shift_past_state</span>, <span class="id">shift_past_state</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">s</span> (<span class="id">all_list_forall</span> <span class="id">s</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">action_table</span> <span class="id">s</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">t</span> (<span class="id">all_list_forall</span> <span class="id">t</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">l</span> <span class="id">t</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_prefix_pred_correct</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">The assumptions about state stack is conserved when we do a goto *</div>
+<span class="kwd">Definition</span> <span class="id">goto_past_state</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span> <span class="id">nt</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">s</span> <span class="id">nt</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> (<span class="id">exist</span> <span class="id">_</span> <span class="id">s2</span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prefix_pred</span> (<span class="id">past_state_of_non_init_state</span> <span class="id">s2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">head_states_of_state</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_goto_past_state</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">s</span>:<span class="id">state</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">nt</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">s</span> <span class="id">nt</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> (<span class="id">exist</span> <span class="id">_</span> <span class="id">s2</span> <span class="id">_</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_prefix_pred</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">past_state_of_non_init_state</span> <span class="id">s2</span>) (<span class="id">head_states_of_state</span> <span class="id">s</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_goto_past_state_correct</span> :<br/>
+&nbsp;&nbsp;<span class="id">is_goto_past_state</span> () = <span class="id">true</span> -&gt; <span class="id">goto_past_state</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6009')">Proof.</div>
+<div class="proofscript" id="proof6009">
+<span class="tactic">unfold</span> <span class="id">is_goto_past_state</span>, <span class="id">goto_past_state</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">s</span> (<span class="id">all_list_forall</span> <span class="id">s</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">nt</span> (<span class="id">all_list_forall</span> <span class="id">nt</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">goto_table</span> <span class="id">s</span> <span class="id">nt</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">s0</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_prefix_pred_correct</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">What states are possible after having popped these symbols from the
+    stack, given the annotation of the current state ? *</div>
+<span class="kwd">Inductive</span> <span class="id">state_valid_after_pop</span> (<span class="id">s</span>:<span class="id">state</span>):<br/>
+&nbsp;&nbsp;<span class="id">list</span> <span class="id">symbol</span> -&gt; <span class="id">list</span> (<span class="id">state</span> -&gt; <span class="id">bool</span>) -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">state_valid_after_pop_nil1</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">p</span> <span class="id">pl</span>, <span class="id">p</span> <span class="id">s</span> = <span class="id">true</span> -&gt; <span class="id">state_valid_after_pop</span> <span class="id">s</span> [] (<span class="id">p</span>::<span class="id">pl</span>)<br/>
+&nbsp;&nbsp;| <span class="id">state_valid_after_pop_nil2</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sl</span>, <span class="id">state_valid_after_pop</span> <span class="id">s</span> <span class="id">sl</span> []<br/>
+&nbsp;&nbsp;| <span class="id">state_valid_after_pop_cons</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">st</span> <span class="id">sq</span> <span class="id">p</span> <span class="id">pl</span>, <span class="id">state_valid_after_pop</span> <span class="id">s</span> <span class="id">sq</span> <span class="id">pl</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_valid_after_pop</span> <span class="id">s</span> (<span class="id">st</span>::<span class="id">sq</span>) (<span class="id">p</span>::<span class="id">pl</span>).<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id">is_state_valid_after_pop</span><br/>
+&nbsp;&nbsp;(<span class="id">state</span>:<span class="id">state</span>) (<span class="id">to_pop</span>:<span class="id">list</span> <span class="id">symbol</span>) <span class="id">annot</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">annot</span>, <span class="id">to_pop</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [], <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">p</span>::<span class="id">_</span>, [] =&gt; <span class="id">p</span> <span class="id">state</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">p</span>::<span class="id">pl</span>, <span class="id">s</span>::<span class="id">sl</span> =&gt; <span class="id">is_state_valid_after_pop</span> <span class="id">state</span> <span class="id">sl</span> <span class="id">pl</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_state_valid_after_pop_complete</span> <span class="id">state</span> <span class="id">sl</span> <span class="id">pl</span> :<br/>
+&nbsp;&nbsp;<span class="id">state_valid_after_pop</span> <span class="id">state</span> <span class="id">sl</span> <span class="id">pl</span> -&gt; <span class="id">is_state_valid_after_pop</span> <span class="id">state</span> <span class="id">sl</span> <span class="id">pl</span> = <span class="id">true</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6010')">Proof.</div>
+<div class="proofscript" id="proof6010">
+<span class="tactic">intro</span>.<br/>
+<span class="tactic">induction</span> <span class="id">H</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">sl</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">A state is valid for reducing a production when :
+      - The assumptions on the state are such that we will find the right hand
+        side of the production on the stack.
+      - We will be able to do a goto after having popped the right hand side.
+*</div>
+<span class="kwd">Definition</span> <span class="id">valid_for_reduce</span> (<span class="id">state</span>:<span class="id">state</span>) <span class="id">prod</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">prefix</span> (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>) (<span class="id">head_symbs_of_state</span> <span class="id">state</span>) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">state_new</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">state_valid_after_pop</span> <span class="id">state_new</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">prod_rhs_rev</span> <span class="id">prod</span>) (<span class="id">head_states_of_state</span> <span class="id">state</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">goto_table</span> <span class="id">state_new</span> (<span class="id">prod_lhs</span> <span class="id">prod</span>) = <span class="id">None</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">state_new</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Init</span> <span class="id">i</span> =&gt; <span class="id">prod_lhs</span> <span class="id">prod</span> = <span class="id">start_nt</span> <span class="id">i</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Ninit</span> <span class="id">_</span> =&gt; <span class="id">False</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_valid_for_reduce</span> (<span class="id">state</span>:<span class="id">state</span>) <span class="id">prod</span>:=<br/>
+&nbsp;&nbsp;(<span class="id">is_prefix</span> (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>) (<span class="id">head_symbs_of_state</span> <span class="id">state</span>) &amp;&amp;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">state_new</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id">is_state_valid_after_pop</span> <span class="id">state_new</span> (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">head_states_of_state</span> <span class="id">state</span>) <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">goto_table</span> <span class="id">state_new</span> (<span class="id">prod_lhs</span> <span class="id">prod</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Some</span> <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">None</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">state_new</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Init</span> <span class="id">i</span> =&gt; <span class="id">compare_eqb</span> (<span class="id">prod_lhs</span> <span class="id">prod</span>) (<span class="id">start_nt</span> <span class="id">i</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Ninit</span> <span class="id">_</span> =&gt; <span class="id">false</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">true</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>)%<span class="id">bool</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_valid_for_reduce_correct</span> (<span class="id">state</span>:<span class="id">state</span>) <span class="id">prod</span>:<br/>
+&nbsp;&nbsp;<span class="id">is_valid_for_reduce</span> <span class="id">state</span> <span class="id">prod</span> = <span class="id">true</span> -&gt; <span class="id">valid_for_reduce</span> <span class="id">state</span> <span class="id">prod</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6011')">Proof.</div>
+<div class="proofscript" id="proof6011">
+<span class="tactic">unfold</span> <span class="id">is_valid_for_reduce</span>, <span class="id">valid_for_reduce</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">Bool.andb_true_iff</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_prefix_correct</span>.<br/>
+<span class="tactic">intuition</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H2</span> <span class="id">state_new</span> (<span class="id">all_list_forall</span> <span class="id">state_new</span>)).<br/>
+<span class="tactic">rewrite</span> <span class="id">is_state_valid_after_pop_complete</span>, <span class="id">H1</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">state_new</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">compare_eqb_iff</span> <span class="kwd">in</span> <span class="id">H2</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">All the states that does a reduce are valid for reduction *</div>
+<span class="kwd">Definition</span> <span class="id">reduce_ok</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">s</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awp</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span>, <span class="kwd">match</span> <span class="id">awp</span> <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Reduce_act</span> <span class="id">p</span> =&gt; <span class="id">valid_for_reduce</span> <span class="id">s</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Default_reduce_act</span> <span class="id">p</span> =&gt; <span class="id">valid_for_reduce</span> <span class="id">s</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_reduce_ok</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">s</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">action_table</span> <span class="id">s</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Lookahead_act</span> <span class="id">awp</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">forallb</span> (<span class="kwd">fun</span> <span class="id">t</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">awp</span> <span class="id">t</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Reduce_act</span> <span class="id">p</span> =&gt; <span class="id">is_valid_for_reduce</span> <span class="id">s</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Default_reduce_act</span> <span class="id">p</span> =&gt; <span class="id">is_valid_for_reduce</span> <span class="id">s</span> <span class="id">p</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">all_list</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_reduce_ok_correct</span> :<br/>
+&nbsp;&nbsp;<span class="id">is_reduce_ok</span> () = <span class="id">true</span> -&gt; <span class="id">reduce_ok</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6012')">Proof.</div>
+<div class="proofscript" id="proof6012">
+<span class="tactic">unfold</span> <span class="id">is_reduce_ok</span>, <span class="id">reduce_ok</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">s</span> (<span class="id">all_list_forall</span> <span class="id">s</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">action_table</span> <span class="id">s</span>).<br/>
+<span class="tactic">apply</span> <span class="id">is_valid_for_reduce_correct</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">intro</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">forallb_forall</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H</span> <span class="id">t</span> (<span class="id">all_list_forall</span> <span class="id">t</span>)).<br/>
+<span class="tactic">destruct</span> (<span class="id">l</span> <span class="id">t</span>); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_valid_for_reduce_correct</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">The automaton is safe *</div>
+<span class="kwd">Definition</span> <span class="id">safe</span> :=<br/>
+&nbsp;&nbsp;<span class="id">shift_head_symbs</span> /\ <span class="id">goto_head_symbs</span> /\ <span class="id">shift_past_state</span> /\<br/>
+&nbsp;&nbsp;<span class="id">goto_past_state</span> /\ <span class="id">reduce_ok</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id">is_safe</span> (<span class="id">_</span>:<span class="id">unit</span>) :=<br/>
+&nbsp;&nbsp;(<span class="id">is_shift_head_symbs</span> () &amp;&amp; <span class="id">is_goto_head_symbs</span> () &amp;&amp; <span class="id">is_shift_past_state</span> () &amp;&amp;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">is_goto_past_state</span> () &amp;&amp; <span class="id">is_reduce_ok</span> ())%<span class="id">bool</span>.<br/>
+<br/>
+<span class="id">Property</span> <span class="id">is_safe_correct</span>:<br/>
+&nbsp;&nbsp;<span class="id">is_safe</span> () = <span class="id">true</span> -&gt; <span class="id">safe</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6013')">Proof.</div>
+<div class="proofscript" id="proof6013">
+<span class="tactic">unfold</span> <span class="id">safe</span>, <span class="id">is_safe</span>.<br/>
+<span class="tactic">repeat</span> <span class="tactic">rewrite</span> <span class="id">Bool.andb_true_iff</span>.<br/>
+<span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_shift_head_symbs_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_goto_head_symbs_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_shift_past_state_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_goto_past_state_correct</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">apply</span> <span class="id">is_reduce_ok_correct</span>; <span class="tactic">assumption</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Make</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

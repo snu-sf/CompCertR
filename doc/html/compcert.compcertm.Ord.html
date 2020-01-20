@@ -1,0 +1,206 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Ord</title>
+<meta name="description" content="Documentation of Coq module Ord" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Ord</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="LINK_WFO">LINK_WFO</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> (<span class="id"><a name="LINK_WFO.idx0">idx0</a></span> <span class="id"><a name="LINK_WFO.idx1">idx1</a></span>: <span class="kwd">Type</span>) (<span class="id"><a name="LINK_WFO.ord0">ord0</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#idx0">idx0</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#idx0">idx0</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id"><a name="LINK_WFO.ord1">ord1</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#idx1">idx1</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#idx1">idx1</a></span> -&gt; <span class="kwd">Prop</span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id"><a name="embedded">embedded</a></span> <span class="id">A</span> <span class="id">B</span> (<span class="id">ordA</span>: <span class="id"><a href="compcert.compcertm.Ord.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#A">A</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">ordB</span>: <span class="id"><a href="compcert.compcertm.Ord.html#B">B</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#B">B</a></span> -&gt; <span class="kwd">Prop</span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="embedded_intro">embedded_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">f</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PRESERVING</span>: <span class="kwd">forall</span> <span class="id">a0</span> <span class="id">a1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORDA</span>: <span class="id"><a href="compcert.compcertm.Ord.html#ordA">ordA</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#a0">a0</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#a1">a1</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ORDB</span>: <span class="id"><a href="compcert.compcertm.Ord.html#ordB">ordB</a></span> (<span class="id"><a href="compcert.compcertm.Ord.html#f">f</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#a0">a0</a></span>) (<span class="id"><a href="compcert.compcertm.Ord.html#f">f</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#a1">a1</a></span>)&gt;&gt;).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="idx_link">idx_link</a></span> := (<span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.idx0">idx0</a></span> + <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.idx1">idx1</a></span>)%<span class="id">type</span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Inductive</span> <span class="id"><a name="ord_link">ord_link</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#idx_link">idx_link</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#idx_link">idx_link</a></span> -&gt; <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id"><a name="ord_link_introl">ord_link_introl</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">idx0a</span> <span class="id">idx0b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD0</span>: <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord0">ord0</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx0a">idx0a</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx0b">idx0b</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Ord.html#ord_link">ord_link</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx0a">idx0a</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx0b">idx0b</a></span>)<br/>
+&nbsp;&nbsp;| <span class="id"><a name="ord_link_intror">ord_link_intror</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">idx1a</span> <span class="id">idx1b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD1</span>: <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord1">ord1</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx1a">idx1a</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx1b">idx1b</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Ord.html#ord_link">ord_link</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx1a">idx1a</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx1b">idx1b</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id"><a name="ord_link_embedded">ord_link_embedded</a></span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EMBED0</span>: <span class="id"><a href="compcert.compcertm.Ord.html#embedded">embedded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord0">ord0</a></span> (<span class="id"><a href="compcert.compcertm.Ord.html#ord_link">ord_link</a></span>)&gt;&gt; /\ &lt;&lt;<span class="id">EMBED1</span>: <span class="id"><a href="compcert.compcertm.Ord.html#embedded">embedded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord1">ord1</a></span> (<span class="id"><a href="compcert.compcertm.Ord.html#ord_link">ord_link</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7368')">Proof.</div>
+<div class="proofscript" id="proof7368">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.Ord.html#embedded_intro">embedded_intro</a></span> <span class="kwd">with</span> (<span class="id">f</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inl">inl</a></span>). <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.Ord.html#embedded_intro">embedded_intro</a></span> <span class="kwd">with</span> (<span class="id">f</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#inr">inr</a></span>). <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id"><a name="ord_link_wf">ord_link_wf</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF0</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord0">ord0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF1</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord1">ord1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">WF</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#ord_link">ord_link</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7369')">Proof.</div>
+<div class="proofscript" id="proof7369">
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">idx0a</span>. <span class="tactic">pattern</span> <span class="id">idx0b</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded_ind">well_founded_ind</a></span>; <span class="tactic">eauto</span>. <span class="tactic">clear</span> <span class="id">idx0b</span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">H0</span>; <span class="tactic">eapply</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">generalize</span> <span class="tactic">dependent</span> <span class="id">idx1a</span>. <span class="tactic">pattern</span> <span class="id">idx1b</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded_ind">well_founded_ind</a></span>; <span class="tactic">eauto</span>. <span class="tactic">clear</span> <span class="id">idx1b</span>. <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="tactic">eapply</span> <span class="id">H</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Theorem</span> <span class="id"><a name="ord_link_spec">ord_link_spec</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF0</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord0">ord0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF1</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord1">ord1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">idx</span>: <span class="kwd">Type</span>) (<span class="id">ord</span>: <span class="id"><a href="compcert.compcertm.Ord.html#idx">idx</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#idx">idx</a></span> -&gt; <span class="kwd">Prop</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">EMBED0</span>: <span class="id"><a href="compcert.compcertm.Ord.html#embedded">embedded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord0">ord0</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#ord">ord</a></span>&gt;&gt; /\ &lt;&lt;<span class="id">EMBED1</span>: <span class="id"><a href="compcert.compcertm.Ord.html#embedded">embedded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO.ord1">ord1</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#ord">ord</a></span>&gt;&gt; /\ &lt;&lt;<span class="id">WF</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#ord">ord</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7370')">Proof.</div>
+<div class="proofscript" id="proof7370">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id"><a href="compcert.compcertm.Ord.html#idx_link">idx_link</a></span>, <span class="id"><a href="compcert.compcertm.Ord.html#ord_link">ord_link</a></span>. <span class="tactic">generalize</span> <span class="id"><a href="compcert.compcertm.Ord.html#ord_link_embedded">ord_link_embedded</a></span>; <span class="id">i</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexploit</span> <span class="id"><a href="compcert.compcertm.Ord.html#ord_link_wf">ord_link_wf</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.Ord.html#LINK_WFO">LINK_WFO</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Program</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Axioms.html">Axioms</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Record</span> <span class="id"><a name="idx">idx</a></span> := <span class="id"><a name="mk">mk</a></span> { <span class="id"><a name="local_idx">local_idx</a></span>: <span class="kwd">Type</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="local_ord">local_ord</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="wf_local_ord">wf_local_ord</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#local_ord">local_ord</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a name="elem">elem</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="TMP">TMP</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="TMP.X">X</a></span> <span class="id"><a name="TMP.Y">Y</a></span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="TMP.EQ">EQ</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#TMP.X">X</a></span> = <span class="id"><a href="compcert.compcertm.Ord.html#TMP.Y">Y</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="TMP.ORDX">ORDX</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#TMP.X">X</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#TMP.X">X</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="TMP.ORDY">ORDY</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#TMP.Y">Y</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#TMP.Y">Y</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="my_funcX">my_funcX</a></span> (<span class="id">x</span>: <span class="id"><a href="compcert.compcertm.Ord.html#TMP.X">X</a></span>) (<span class="id">y</span>: <span class="id"><a href="compcert.compcertm.Ord.html#TMP.Y">Y</a></span>): <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id"><a href="compcert.compcertm.Ord.html#TMP.EQ">EQ</a></span> <span class="kwd">in</span> <span class="id">y</span>. <span class="id">specialize</span> (<span class="id"><a href="compcert.compcertm.Ord.html#TMP.ORDX">ORDX</a></span> <span class="id">x</span> <span class="id">y</span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.Ord.html#TMP.ORDX">ORDX</a></span>.<br/>
+&nbsp;&nbsp;Defined.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="my_funcY">my_funcY</a></span> (<span class="id">x</span>: <span class="id"><a href="compcert.compcertm.Ord.html#TMP.X">X</a></span>) (<span class="id">y</span>: <span class="id"><a href="compcert.compcertm.Ord.html#TMP.Y">Y</a></span>): <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.compcertm.Ord.html#TMP.EQ">EQ</a></span> <span class="kwd">in</span> <span class="id">x</span>. <span class="id">specialize</span> (<span class="id"><a href="compcert.compcertm.Ord.html#TMP.ORDY">ORDY</a></span> <span class="id">x</span> <span class="id">y</span>). <span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.Ord.html#TMP.ORDY">ORDY</a></span>.<br/>
+&nbsp;&nbsp;Defined.</div>
+<br/>
+&nbsp;&nbsp;<span class="id">About</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_rect">eq_rect</a></span>.<br/>
+&nbsp;&nbsp;<span class="id">About</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_rect_r">eq_rect_r</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.Ord.html#TMP">TMP</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="ord">ord</a></span> (<span class="id">x0</span> <span class="id">x1</span>: <span class="id"><a href="compcert.compcertm.Ord.html#idx">idx</a></span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="ord_intro">ord_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQLOCAL_IDX</span>: <span class="id"><a href="compcert.compcertm.Ord.html#x0">x0</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span>) = <span class="id"><a href="compcert.compcertm.Ord.html#x1">x1</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">EQORD</span>: <span class="id"><a href="compcert.compcertm.Ord.html#x0">x0</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#local_ord">local_ord</a></span>) ~= <span class="id"><a href="compcert.compcertm.Ord.html#x1">x1</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#local_ord">local_ord</a></span>))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD</span>: <span class="id"><a href="compcert.compcertm.Ord.html#x1">x1</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#local_ord">local_ord</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_rect">eq_rect</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#x0">x0</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span>) <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#id">id</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#x0">x0</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#elem">elem</a></span>) <span class="id"><a href="compcert.compcertm.Ord.html#x1">x1</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span>) <span class="id"><a href="compcert.compcertm.Ord.html#EQLOCAL_IDX">EQLOCAL_IDX</a></span>) <span class="id"><a href="compcert.compcertm.Ord.html#x1">x1</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#elem">elem</a></span>)).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="wf_ord">wf_ord</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#ord">ord</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7371')">Proof.</div>
+<div class="proofscript" id="proof7371">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">inv</span> <span class="id">H</span>. <span class="tactic">destruct</span> <span class="id">a</span>, <span class="id">y</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.JMeq.html#JMeq_eq">JMeq_eq</a></span> <span class="kwd">in</span> <span class="id">EQORD</span>. <span class="id">clarify</span>. <span class="id">clear_tac</span>. <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_rect">eq_rect</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id">swapname</span> <span class="id">elem1</span> <span class="id">elem0</span>. <span class="tactic">clear</span> <span class="id">ORD</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;{ <span class="tactic">pattern</span> <span class="id">elem0</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded_ind">well_founded_ind</a></span>; <span class="tactic">try</span> <span class="id">eassumption</span>. <span class="id">ii</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">destruct</span> <span class="id">y</span>; <span class="id">ss</span>. <span class="id">inv</span> <span class="id">H0</span>. <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;eapply&nbsp;H.&nbsp;Undo&nbsp;1.&nbsp;<span class="comment">(*&nbsp;IDK&nbsp;why&nbsp;but&nbsp;apply&nbsp;acts&nbsp;in&nbsp;weird&nbsp;way.&nbsp;*)</span>&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">H</span> <span class="id">elem0</span>). <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_rect">eq_rect</a></span> <span class="kwd">in</span> *. <span class="id">specialize</span> (<span class="id">H</span> <span class="id">ORD</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.JMeq.html#JMeq_eq">JMeq_eq</a></span> <span class="kwd">in</span> <span class="id">EQORD</span>. <span class="id">clarify</span>. <span class="id">clear_tac</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">generalize</span> <span class="id"><a href="compcert.lib.Axioms.html#proof_irr">proof_irr</a></span>. <span class="tactic">intro</span> <span class="id">IRR</span>. <span class="tactic">unfold</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.ClassicalFacts.html#proof_irrelevance">ClassicalFacts.proof_irrelevance</a></span> <span class="kwd">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">IRR</span> <span class="id">_</span> <span class="id">wf_local_ord0</span> <span class="id">wf_local_ord1</span>). <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;}<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="idx_greatest">idx_greatest</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">local_idx</span>: <span class="kwd">Type</span>) (<span class="id">local_ord</span>: <span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#local_idx">local_idx</a></span> -&gt; <span class="kwd">Prop</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">WF</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#local_ord">local_ord</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.Ord.html#embedded">embedded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#local_ord">local_ord</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#ord">ord</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7372')">Proof.</div>
+<div class="proofscript" id="proof7372">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="compcert.compcertm.Ord.html#embedded_intro">embedded_intro</a></span> <span class="kwd">with</span> (<span class="id">f</span>:= <span class="kwd">fun</span> <span class="id">local_elem</span> =&gt; <span class="id"><a href="compcert.compcertm.Ord.html#mk">mk</a></span> <span class="id">WF</span> <span class="id"><a href="compcert.compcertm.Ord.html#local_elem">local_elem</a></span>).<br/>
+&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="id">instantiate</span> (1:= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_refl">eq_refl</a></span>). <span class="id">ss</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="idx_bot">idx_bot</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#idx">idx</a></span> := @<span class="id"><a href="compcert.compcertm.Ord.html#mk">mk</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#unit">unit</a></span> <span class="id">bot2</span> <span class="id">_</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#tt">tt</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7373')">Next Obligation.</div>
+<div class="proofscript" id="proof7373">
+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>; <span class="id">ss</span>. Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="idx_bot_spec">idx_bot_spec</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i0</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD</span>: <span class="id"><a href="compcert.compcertm.Ord.html#ord">ord</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#i0">i0</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#idx_bot">idx_bot</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#False">False</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7374')">Proof.</div>
+<div class="proofscript" id="proof7374">
+ <span class="id">inv</span> <span class="id">ORD</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="LIFT">LIFT</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="LIFT.index">index</a></span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="LIFT.order">order</a></span>: <span class="id"><a href="compcert.compcertm.Ord.html#LIFT.index">index</a></span> -&gt; <span class="id"><a href="compcert.compcertm.Ord.html#LIFT.index">index</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="LIFT.WFORD">WFORD</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Wf.html#well_founded">well_founded</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LIFT.order">order</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Definition</span> <span class="id"><a name="lift_idx">lift_idx</a></span> (<span class="id">i0</span>: <span class="id"><a href="compcert.compcertm.Ord.html#LIFT.index">index</a></span>): <span class="id"><a href="compcert.compcertm.Ord.html#idx">idx</a></span> := (<span class="id"><a href="compcert.compcertm.Ord.html#mk">mk</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#LIFT.WFORD">WFORD</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#i0">i0</a></span>).<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="lift_idx_spec">lift_idx_spec</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i0</span> <span class="id">i1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ORD</span>: <span class="id"><a href="compcert.compcertm.Ord.html#LIFT.order">order</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#i0">i0</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#i1">i1</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">ORD</span>: <span class="id"><a href="compcert.compcertm.Ord.html#ord">ord</a></span> <span class="id"><a href="compcert.compcertm.Ord.html#i0">i0</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#lift_idx">lift_idx</a></span>) <span class="id"><a href="compcert.compcertm.Ord.html#i1">i1</a></span>.(<span class="id"><a href="compcert.compcertm.Ord.html#lift_idx">lift_idx</a></span>)&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7375')">Proof.</div>
+<div class="proofscript" id="proof7375">
+ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">cbn</span>. <span class="id">instantiate</span> (1:= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq_refl">eq_refl</a></span>). <span class="id">cbn</span>. <span class="id">ss</span>. Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Hint</span> <span class="kwd">Unfold</span> <span class="id"><a href="compcert.compcertm.Ord.html#lift_idx">lift_idx</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.Ord.html#LIFT">LIFT</a></span>.<br/>
+<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

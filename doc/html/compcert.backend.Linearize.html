@@ -1,0 +1,225 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Linearize</title>
+<meta name="description" content="Documentation of Coq module Linearize" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Linearize</h1>
+<div class="coq">
+<br/>
+<div class="doc">Linearization of the control-flow graph: translation from LTL to Linear </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSets.html">FSets</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSetAVL.html">FSetAVL</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="compcert.lib.Maps.html">Maps</a></span> <span class="id"><a href="compcert.lib.Ordered.html">Ordered</a></span> <span class="id"><a href="compcert.common.Errors.html">Errors</a></span> <span class="id"><a href="compcert.lib.Lattice.html">Lattice</a></span> <span class="id"><a href="compcert.backend.Kildall.html">Kildall</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.common.AST.html">AST</a></span> <span class="id"><a href="compcert.x86.Op.html">Op</a></span> <span class="id"><a href="compcert.backend.Locations.html">Locations</a></span> <span class="id"><a href="compcert.backend.LTL.html">LTL</a></span> <span class="id"><a href="compcert.backend.Linear.html">Linear</a></span>.<br/>
+<br/>
+<span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">error_monad_scope</span>.<br/>
+<br/>
+<div class="doc">To translate from LTL to Linear, we must lay out the nodes
+  of the LTL control-flow graph in some linear order, and insert
+  explicit branches and conditional branches to make sure that
+  each node jumps to its successors as prescribed by the
+  LTL control-flow graph.  However, branches are not necessary
+  if the fall-through behaviour of LTLin instructions already
+  implements the desired flow of control.  For instance,
+  consider the two LTL blocks
+<pre>
+    L1: Lop op args res; Lbranch L2
+    L2: ...</pre>
+  If the instructions <span class="bracket"><span class="id">L1</span></span> and <span class="bracket"><span class="id">L2</span></span> are laid out consecutively in the LTLin
+  code, we can generate the following Linear code:
+<pre>
+    L1: Lop op args res
+    L2: ...</pre>
+  However, if this is not possible, an explicit <span class="bracket"><span class="id">Lgoto</span></span> is needed:
+<pre>
+    L1: Lop op args res
+        Lgoto L2
+        ...
+    L2: ...</pre>
+  The main challenge in code linearization is therefore to pick a
+  ``good'' order for the nodes that exploits well the
+  fall-through behavior.  Many clever trace picking heuristics
+  have been developed for this purpose.
+  In this file, we present linearization in a way that clearly
+  separates the heuristic part (choosing an order for the basic blocks)
+  from the actual code transformation parts.  We proceed in two passes:
+<ul>
+<li>
+ Choosing an order for the nodes.  This returns an enumeration of CFG
+  nodes stating that they must be laid out in the order shown in the
+  list.
+</li>
+<li>
+ Generate Linear code where each node branches explicitly to its
+  successors, except if one of these successors is the immediately
+  following instruction.
+</li>
+</ul>
+  The beauty of this approach is that correct code is generated
+  under surprisingly weak hypotheses on the enumeration of
+  CFG nodes: it suffices that every reachable instruction occurs
+  exactly once in the enumeration.  We therefore follow an approach
+  based on validation a posteriori: a piece of untrusted Caml code
+  implements the node enumeration heuristics, and the resulting
+  enumeration is checked for correctness by Coq functions that are
+  proved to be sound.
+</div>
+<br/>
+<h1> Determination of the order of basic blocks </h1>
+<br/>
+<div class="doc">We first compute a mapping from CFG nodes to booleans,
+  indicating whether a CFG instruction is reachable or not.
+  This computation is a trivial forward dataflow analysis
+  where the transfer function is the identity: the successors
+  of a reachable instruction are reachable, by the very
+  definition of reachability. </div>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="DS">DS</a></span> := <span class="id"><a href="compcert.backend.Kildall.html#Dataflow_Solver">Dataflow_Solver</a></span>(<span class="id"><a href="compcert.lib.Lattice.html#LBoolean">LBoolean</a></span>)(<span class="id"><a href="compcert.backend.Kildall.html#NodeSetForward">NodeSetForward</a></span>).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="reachable_aux">reachable_aux</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> (<span class="id"><a href="compcert.lib.Maps.html#PMap.t">PMap.t</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linearize.html#fixpoint">DS.fixpoint</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.LTL.html#fn_code">LTL.fn_code</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>) <span class="id"><a href="compcert.backend.LTL.html#successors_block">successors_block</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="kwd">fun</span> <span class="id">pc</span> <span class="id">r</span> =&gt; <span class="id"><a href="compcert.backend.Linearize.html#r">r</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.LTL.html#fn_entrypoint">fn_entrypoint</a></span>) <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="reachable">reachable</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) : <span class="id"><a href="compcert.lib.Maps.html#PMap.t">PMap.t</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Linearize.html#reachable_aux">reachable_aux</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="compcert.lib.Maps.html#PMap.init">PMap.init</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">rs</span> =&gt; <span class="id">rs</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">We then enumerate the nodes of reachable blocks.
+  This task is performed by external, untrusted Caml code. </div>
+<br/>
+<span class="kwd">Parameter</span> <span class="id"><a name="enumerate_aux">enumerate_aux</a></span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span> -&gt; <span class="id"><a href="compcert.lib.Maps.html#PMap.t">PMap.t</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.LTL.html#node">node</a></span>.<br/>
+<br/>
+<div class="doc">Now comes the a posteriori validation of a node enumeration. </div>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Nodeset">Nodeset</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSetAVL.html#Make">FSetAVL.Make</a></span>(<span class="id"><a href="compcert.lib.Ordered.html#OrderedPositive">OrderedPositive</a></span>).<br/>
+<br/>
+<div class="doc">Build a <span class="bracket"><span class="id">Nodeset.t</span></span> from a list of nodes, checking that the list
+  contains no duplicates. </div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="nodeset_of_list">nodeset_of_list</a></span> (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.LTL.html#node">node</a></span>) (<span class="id">s</span>: <span class="id"><a href="compcert.backend.Linearize.html#t">Nodeset.t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="kwd">struct</span> <span class="id">l</span>}: <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.backend.Linearize.html#t">Nodeset.t</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Linearize.html#l">l</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.backend.Linearize.html#s">s</a></span><br/>
+&nbsp;&nbsp;| <span class="id">hd</span> :: <span class="id">tl</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Linearize.html#mem">Nodeset.mem</a></span> <span class="id">hd</span> <span class="id"><a href="compcert.backend.Linearize.html#s">s</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span> (<span class="id"><a href="compcert.common.Errors.html#msg">msg</a></span> "<span class="id">Linearize</span>: <span class="id">duplicates</span> <span class="kwd">in</span> <span class="id">enumeration</span>")<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="compcert.backend.Linearize.html#nodeset_of_list">nodeset_of_list</a></span> <span class="id">tl</span> (<span class="id"><a href="compcert.backend.Linearize.html#add">Nodeset.add</a></span> <span class="id">hd</span> <span class="id"><a href="compcert.backend.Linearize.html#s">s</a></span>)<br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="check_reachable_aux">check_reachable_aux</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">reach</span>: <span class="id"><a href="compcert.lib.Maps.html#PMap.t">PMap.t</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) (<span class="id">s</span>: <span class="id"><a href="compcert.backend.Linearize.html#t">Nodeset.t</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">ok</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) (<span class="id">pc</span>: <span class="id"><a href="compcert.backend.LTL.html#node">node</a></span>) (<span class="id">bb</span>: <span class="id"><a href="compcert.backend.LTL.html#bblock">LTL.bblock</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Linearize.html#reach">reach</a></span>!!<span class="id"><a href="compcert.backend.Linearize.html#pc">pc</a></span> <span class="kwd">then</span> <span class="id"><a href="compcert.backend.Linearize.html#ok">ok</a></span> &amp;&amp; <span class="id"><a href="compcert.backend.Linearize.html#mem">Nodeset.mem</a></span> <span class="id"><a href="compcert.backend.Linearize.html#pc">pc</a></span> <span class="id"><a href="compcert.backend.Linearize.html#s">s</a></span> <span class="kwd">else</span> <span class="id"><a href="compcert.backend.Linearize.html#ok">ok</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="check_reachable">check_reachable</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) (<span class="id">reach</span>: <span class="id"><a href="compcert.lib.Maps.html#PMap.t">PMap.t</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>) (<span class="id">s</span>: <span class="id"><a href="compcert.backend.Linearize.html#t">Nodeset.t</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Maps.html#PTree.fold">PTree.fold</a></span> (<span class="id"><a href="compcert.backend.Linearize.html#check_reachable_aux">check_reachable_aux</a></span> <span class="id"><a href="compcert.backend.Linearize.html#reach">reach</a></span> <span class="id"><a href="compcert.backend.Linearize.html#s">s</a></span>) <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.LTL.html#fn_code">LTL.fn_code</a></span>) <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="enumerate">enumerate</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.LTL.html#node">node</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">reach</span> := <span class="id"><a href="compcert.backend.Linearize.html#reachable">reachable</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">enum</span> := <span class="id"><a href="compcert.backend.Linearize.html#enumerate_aux">enumerate_aux</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span> <span class="id"><a href="compcert.backend.Linearize.html#reach">reach</a></span> <span class="kwd">in</span><br/>
+&nbsp;&nbsp;<span class="tactic">do</span> <span class="id">s</span> &lt;- <span class="id"><a href="compcert.backend.Linearize.html#nodeset_of_list">nodeset_of_list</a></span> <span class="id"><a href="compcert.backend.Linearize.html#enum">enum</a></span> <span class="id"><a href="compcert.backend.Linearize.html#empty">Nodeset.empty</a></span>;<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Linearize.html#check_reachable">check_reachable</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span> <span class="id"><a href="compcert.backend.Linearize.html#reach">reach</a></span> <span class="id"><a href="compcert.backend.Linearize.html#s">s</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">then</span> <span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> <span class="id"><a href="compcert.backend.Linearize.html#enum">enum</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span> <span class="id"><a href="compcert.common.Errors.html#Error">Error</a></span> (<span class="id"><a href="compcert.common.Errors.html#msg">msg</a></span> "<span class="id">Linearize</span>: <span class="id">wrong</span> <span class="id">enumeration</span>").<br/>
+<br/>
+<h1> Translation from LTL to Linear </h1>
+<br/>
+<div class="doc">We now flatten the structure of the CFG graph, laying out
+  LTL blocks consecutively in the order computed by <span class="bracket"><span class="id">enumerate</span></span>,
+  and inserting branches to the labels of sucessors if necessary.
+  Whether to insert a branch or not is determined by
+  the <span class="bracket"><span class="id">starts_with</span></span> function below.
+  For LTL conditional branches <span class="bracket"><span class="id">Lcond</span> <span class="id">cond</span> <span class="id">args</span> <span class="id">s1</span> <span class="id">s2</span></span>,
+  we have two possible translations:
+<pre>
+      Lcond cond args s1;       or     Lcond (not cond) args s2;
+      Lgoto s2                         Lgoto s1</pre>
+  We favour the first translation if <span class="bracket"><span class="id">s2</span></span> is the label of the
+  next instruction, and the second if <span class="bracket"><span class="id">s1</span></span> is the label of the
+  next instruction, thus avoiding the insertion of a redundant <span class="bracket"><span class="id">Lgoto</span></span>
+  instruction. </div>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="starts_with">starts_with</a></span> (<span class="id">lbl</span>: <span class="id"><a href="compcert.backend.Linear.html#label">label</a></span>) (<span class="id">k</span>: <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span>) {<span class="kwd">struct</span> <span class="id">k</span>} : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Linear.html#Llabel">Llabel</a></span> <span class="id">lbl</span>' :: <span class="id">k</span>' =&gt; <span class="kwd">if</span> <span class="id"><a href="compcert.lib.Coqlib.html#peq">peq</a></span> <span class="id"><a href="compcert.backend.Linearize.html#lbl">lbl</a></span> <span class="id">lbl</span>' <span class="kwd">then</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> <span class="kwd">else</span> <span class="id"><a href="compcert.backend.Linearize.html#starts_with">starts_with</a></span> <span class="id"><a href="compcert.backend.Linearize.html#lbl">lbl</a></span> <span class="id">k</span>'<br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="add_branch">add_branch</a></span> (<span class="id">s</span>: <span class="id"><a href="compcert.backend.Linear.html#label">label</a></span>) (<span class="id">k</span>: <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Linearize.html#starts_with">starts_with</a></span> <span class="id"><a href="compcert.backend.Linearize.html#s">s</a></span> <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span> <span class="kwd">then</span> <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span> <span class="kwd">else</span> <span class="id"><a href="compcert.backend.Linear.html#Lgoto">Lgoto</a></span> <span class="id"><a href="compcert.backend.Linearize.html#s">s</a></span> :: <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span>.<br/>
+<br/>
+<span class="kwd">Fixpoint</span> <span class="id"><a name="linearize_block">linearize_block</a></span> (<span class="id">b</span>: <span class="id"><a href="compcert.backend.LTL.html#bblock">LTL.bblock</a></span>) (<span class="id">k</span>: <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Linearize.html#b">b</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span> =&gt; <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lop">LTL.Lop</a></span> <span class="id">op</span> <span class="id">args</span> <span class="id">res</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lop">Lop</a></span> <span class="id">op</span> <span class="id">args</span> <span class="id">res</span> :: <span class="id"><a href="compcert.backend.Linearize.html#linearize_block">linearize_block</a></span> <span class="id">b</span>' <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lload">LTL.Lload</a></span> <span class="id">chunk</span> <span class="id">addr</span> <span class="id">args</span> <span class="id">dst</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lload">Lload</a></span> <span class="id">chunk</span> <span class="id">addr</span> <span class="id">args</span> <span class="id">dst</span> :: <span class="id"><a href="compcert.backend.Linearize.html#linearize_block">linearize_block</a></span> <span class="id">b</span>' <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lgetstack">LTL.Lgetstack</a></span> <span class="id">sl</span> <span class="id">ofs</span> <span class="id">ty</span> <span class="id">dst</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lgetstack">Lgetstack</a></span> <span class="id">sl</span> <span class="id">ofs</span> <span class="id">ty</span> <span class="id">dst</span> :: <span class="id"><a href="compcert.backend.Linearize.html#linearize_block">linearize_block</a></span> <span class="id">b</span>' <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lsetstack">LTL.Lsetstack</a></span> <span class="id">src</span> <span class="id">sl</span> <span class="id">ofs</span> <span class="id">ty</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lsetstack">Lsetstack</a></span> <span class="id">src</span> <span class="id">sl</span> <span class="id">ofs</span> <span class="id">ty</span> :: <span class="id"><a href="compcert.backend.Linearize.html#linearize_block">linearize_block</a></span> <span class="id">b</span>' <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lstore">LTL.Lstore</a></span> <span class="id">chunk</span> <span class="id">addr</span> <span class="id">args</span> <span class="id">src</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lstore">Lstore</a></span> <span class="id">chunk</span> <span class="id">addr</span> <span class="id">args</span> <span class="id">src</span> :: <span class="id"><a href="compcert.backend.Linearize.html#linearize_block">linearize_block</a></span> <span class="id">b</span>' <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lcall">LTL.Lcall</a></span> <span class="id">sig</span> <span class="id">ros</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lcall">Lcall</a></span> <span class="id">sig</span> <span class="id">ros</span> :: <span class="id"><a href="compcert.backend.Linearize.html#linearize_block">linearize_block</a></span> <span class="id">b</span>' <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Ltailcall">LTL.Ltailcall</a></span> <span class="id">sig</span> <span class="id">ros</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Ltailcall">Ltailcall</a></span> <span class="id">sig</span> <span class="id">ros</span> :: <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lbuiltin">LTL.Lbuiltin</a></span> <span class="id">ef</span> <span class="id">args</span> <span class="id">res</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lbuiltin">Lbuiltin</a></span> <span class="id">ef</span> <span class="id">args</span> <span class="id">res</span> :: <span class="id"><a href="compcert.backend.Linearize.html#linearize_block">linearize_block</a></span> <span class="id">b</span>' <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lbranch">LTL.Lbranch</a></span> <span class="id">s</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linearize.html#add_branch">add_branch</a></span> <span class="id">s</span> <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lcond">LTL.Lcond</a></span> <span class="id">cond</span> <span class="id">args</span> <span class="id">s1</span> <span class="id">s2</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.Linearize.html#starts_with">starts_with</a></span> <span class="id">s1</span> <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lcond">Lcond</a></span> (<span class="id"><a href="compcert.x86.Op.html#negate_condition">negate_condition</a></span> <span class="id">cond</span>) <span class="id">args</span> <span class="id">s2</span> :: <span class="id"><a href="compcert.backend.Linearize.html#add_branch">add_branch</a></span> <span class="id">s1</span> <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lcond">Lcond</a></span> <span class="id">cond</span> <span class="id">args</span> <span class="id">s1</span> :: <span class="id"><a href="compcert.backend.Linearize.html#add_branch">add_branch</a></span> <span class="id">s2</span> <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Ljumptable">LTL.Ljumptable</a></span> <span class="id">arg</span> <span class="id">tbl</span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Ljumptable">Ljumptable</a></span> <span class="id">arg</span> <span class="id">tbl</span> :: <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.LTL.html#Lreturn">LTL.Lreturn</a></span> :: <span class="id">b</span>' =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#Lreturn">Lreturn</a></span> :: <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<div class="doc">Linearize a function body according to an enumeration of its nodes.  </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="linearize_node">linearize_node</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) (<span class="id">pc</span>: <span class="id"><a href="compcert.backend.LTL.html#node">node</a></span>) (<span class="id">k</span>: <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>.(<span class="id"><a href="compcert.backend.LTL.html#fn_code">LTL.fn_code</a></span>)!<span class="id"><a href="compcert.backend.Linearize.html#pc">pc</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> =&gt; <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">b</span> =&gt; <span class="id"><a href="compcert.backend.Linear.html#Llabel">Llabel</a></span> <span class="id"><a href="compcert.backend.Linearize.html#pc">pc</a></span> :: <span class="id"><a href="compcert.backend.Linearize.html#linearize_block">linearize_block</a></span> <span class="id">b</span> <span class="id"><a href="compcert.backend.Linearize.html#k">k</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="linearize_body">linearize_body</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) (<span class="id">enum</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.backend.LTL.html#node">node</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Coqlib.html#list_fold_right">list_fold_right</a></span> (<span class="id"><a href="compcert.backend.Linearize.html#linearize_node">linearize_node</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>) <span class="id"><a href="compcert.backend.Linearize.html#enum">enum</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>.<br/>
+<br/>
+<h1> Entry points for code linearization </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_function">transf_function</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#function">LTL.function</a></span>) : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.backend.Linear.html#function">Linear.function</a></span> :=<br/>
+&nbsp;&nbsp;<span class="tactic">do</span> <span class="id">enum</span> &lt;- <span class="id"><a href="compcert.backend.Linearize.html#enumerate">enumerate</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.Errors.html#OK">OK</a></span> (<span class="id"><a href="compcert.backend.Linear.html#mkfunction">mkfunction</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.LTL.html#fn_sig">LTL.fn_sig</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.LTL.html#fn_stacksize">LTL.fn_stacksize</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.Linearize.html#add_branch">add_branch</a></span> (<span class="id"><a href="compcert.backend.LTL.html#fn_entrypoint">LTL.fn_entrypoint</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>) (<span class="id"><a href="compcert.backend.Linearize.html#linearize_body">linearize_body</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span> <span class="id"><a href="compcert.backend.Linearize.html#enum">enum</a></span>))).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_fundef">transf_fundef</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.LTL.html#fundef">LTL.fundef</a></span>) : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.backend.Linear.html#fundef">Linear.fundef</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.AST.html#transf_partial_fundef">AST.transf_partial_fundef</a></span> <span class="id"><a href="compcert.backend.Linearize.html#transf_function">transf_function</a></span> <span class="id"><a href="compcert.backend.Linearize.html#f">f</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_program">transf_program</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.backend.LTL.html#program">LTL.program</a></span>) : <span class="id"><a href="compcert.common.Errors.html#res">res</a></span> <span class="id"><a href="compcert.backend.Linear.html#program">Linear.program</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.AST.html#transform_partial_program">transform_partial_program</a></span> <span class="id"><a href="compcert.backend.Linearize.html#transf_fundef">transf_fundef</a></span> <span class="id"><a href="compcert.backend.Linearize.html#p">p</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

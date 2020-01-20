@@ -1,0 +1,346 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Intv</title>
+<meta name="description" content="Documentation of Coq module Intv" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Intv</h1>
+<div class="coq">
+<br/>
+<div class="doc">Definitions and theorems about semi-open integer intervals </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html">Zwf</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Program.Wf.html">Coq.Program.Wf</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.funind.Recdef.html">Recdef</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="interv">interv</a></span> : <span class="kwd">Type</span> := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> * <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>)%<span class="id">type</span>.<br/>
+<br/>
+<h1> Membership </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="In">In</a></span> (<span class="id">x</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) (<span class="id">i</span>: <span class="id"><a href="compcert.lib.Intv.html#interv">interv</a></span>) : <span class="kwd">Prop</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> &lt;= <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="In_dec">In_dec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span>, {<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>} + {~<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof118')">Proof.</div>
+<div class="proofscript" id="proof118">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zle">zle</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">i</span>) <span class="id">x</span>); <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zlt">zlt</a></span> <span class="id">x</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">i</span>)); <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">left</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>; <span class="tactic">intuition</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="notin_range">notin_range</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> \/ <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> &gt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; ~<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof119')">Proof.</div>
+<div class="proofscript" id="proof119">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span>; <span class="tactic">intros</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="range_notin">range_notin</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;~<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> \/ <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> &gt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof120')">Proof.</div>
+<div class="proofscript" id="proof120">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span>; <span class="tactic">intros</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Emptyness </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="empty">empty</a></span> (<span class="id">i</span>: <span class="id"><a href="compcert.lib.Intv.html#interv">interv</a></span>) : <span class="kwd">Prop</span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> &gt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="empty_dec">empty_dec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span>, {<span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>} + {~<span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof121')">Proof.</div>
+<div class="proofscript" id="proof121">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">case</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zle">zle</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">i</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">i</span>)); <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="id">left</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="is_notempty">is_notempty</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; ~<span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof122')">Proof.</div>
+<div class="proofscript" id="proof122">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span>; <span class="tactic">intros</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="empty_notin">empty_notin</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span>, <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; ~<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof123')">Proof.</div>
+<div class="proofscript" id="proof123">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span>; <span class="tactic">intros</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="in_notempty">in_notempty</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; ~<span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof124')">Proof.</div>
+<div class="proofscript" id="proof124">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span>; <span class="tactic">intros</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Disjointness </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="disjoint">disjoint</a></span> (<span class="id">i</span> <span class="id">j</span>: <span class="id"><a href="compcert.lib.Intv.html#interv">interv</a></span>) : <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; ~<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span>.<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="disjoint_sym">disjoint_sym</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">j</span>, <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof125')">Proof.</div>
+<div class="proofscript" id="proof125">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span>; <span class="tactic">intros</span>; <span class="tactic">red</span>; <span class="tactic">intros</span>. <span class="tactic">elim</span> (<span class="id">H</span> <span class="id">x</span>); <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="empty_disjoint_r">empty_disjoint_r</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">j</span>, <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof126')">Proof.</div>
+<div class="proofscript" id="proof126">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span>; <span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Intv.html#empty_notin">empty_notin</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="empty_disjoint_l">empty_disjoint_l</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">j</span>, <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof127')">Proof.</div>
+<div class="proofscript" id="proof127">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Intv.html#disjoint_sym">disjoint_sym</a></span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Intv.html#empty_disjoint_r">empty_disjoint_r</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="disjoint_range">disjoint_range</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">j</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> \/ <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof128')">Proof.</div>
+<div class="proofscript" id="proof128">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span>; <span class="tactic">intros</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="range_disjoint">range_disjoint</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">j</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> \/ <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> \/ <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> \/ <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof129')">Proof.</div>
+<div class="proofscript" id="proof129">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span>, <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zlt">zlt</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">i</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">i</span>)); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zlt">zlt</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">j</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">j</span>)); <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>; <span class="id">right</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zlt">zlt</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">i</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">j</span>)).<br/>
+<span class="comment">(*&nbsp;Case&nbsp;1:&nbsp;i&nbsp;starts&nbsp;to&nbsp;the&nbsp;left&nbsp;of&nbsp;j.&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zle">zle</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">i</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">j</span>)).<br/>
+<span class="comment">(*&nbsp;Case&nbsp;1.1:&nbsp;i&nbsp;ends&nbsp;to&nbsp;the&nbsp;left&nbsp;of&nbsp;j,&nbsp;OK&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+<span class="comment">(*&nbsp;Case&nbsp;1.2:&nbsp;i&nbsp;ends&nbsp;to&nbsp;the&nbsp;right&nbsp;of&nbsp;j's&nbsp;start,&nbsp;not&nbsp;disjoint.&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">elim</span> (<span class="id">H</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">j</span>)). <span class="tactic">red</span>; <span class="tactic">omega</span>. <span class="tactic">red</span>; <span class="tactic">omega</span>.<br/>
+<span class="comment">(*&nbsp;Case&nbsp;2:&nbsp;j&nbsp;starts&nbsp;to&nbsp;the&nbsp;left&nbsp;of&nbsp;i&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zle">zle</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">j</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">i</span>)).<br/>
+<span class="comment">(*&nbsp;Case&nbsp;2.1:&nbsp;j&nbsp;ends&nbsp;to&nbsp;the&nbsp;left&nbsp;of&nbsp;i,&nbsp;OK&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">auto</span>.<br/>
+<span class="comment">(*&nbsp;Case&nbsp;2.2:&nbsp;j&nbsp;ends&nbsp;to&nbsp;the&nbsp;right&nbsp;of&nbsp;i's&nbsp;start,&nbsp;not&nbsp;disjoint.&nbsp;*)</span><br/>
+&nbsp;&nbsp;<span class="tactic">elim</span> (<span class="id">H</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">i</span>)). <span class="tactic">red</span>; <span class="tactic">omega</span>. <span class="tactic">red</span>; <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">range_disjoint</span>':<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">j</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> &lt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> \/ <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span> &lt;= <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof130')">Proof.</div>
+<div class="proofscript" id="proof130">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.lib.Intv.html#range_disjoint">range_disjoint</a></span>; <span class="tactic">eauto</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#empty">empty</a></span>; <span class="tactic">intuition</span> <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="disjoint_dec">disjoint_dec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">i</span> <span class="id">j</span>, {<span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span>} + {~<span class="id"><a href="compcert.lib.Intv.html#disjoint">disjoint</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#j">j</a></span>}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof131')">Proof.</div>
+<div class="proofscript" id="proof131">
+&nbsp;&nbsp;<span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Intv.html#empty_dec">empty_dec</a></span> <span class="id">i</span>). <span class="id">left</span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Intv.html#empty_disjoint_l">empty_disjoint_l</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Intv.html#empty_dec">empty_dec</a></span> <span class="id">j</span>). <span class="id">left</span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Intv.html#empty_disjoint_r">empty_disjoint_r</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zle">zle</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">i</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">j</span>)). <span class="id">left</span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Intv.html#disjoint_range">disjoint_range</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zle">zle</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id">j</span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id">i</span>)). <span class="id">left</span>; <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Intv.html#disjoint_range">disjoint_range</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="id">right</span>; <span class="tactic">red</span>; <span class="tactic">intro</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.lib.Intv.html#range_disjoint">range_disjoint</a></span>; <span class="tactic">eauto</span>. <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Shifting an interval by some amount </h1>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="shift">shift</a></span> (<span class="id">i</span>: <span class="id"><a href="compcert.lib.Intv.html#interv">interv</a></span>) (<span class="id">delta</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) : <span class="id"><a href="compcert.lib.Intv.html#interv">interv</a></span> := (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> + <span class="id"><a href="compcert.lib.Intv.html#delta">delta</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> + <span class="id"><a href="compcert.lib.Intv.html#delta">delta</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="in_shift">in_shift</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span> <span class="id">delta</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> (<span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> + <span class="id"><a href="compcert.lib.Intv.html#delta">delta</a></span>) (<span class="id"><a href="compcert.lib.Intv.html#shift">shift</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#delta">delta</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof132')">Proof.</div>
+<div class="proofscript" id="proof132">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#shift">shift</a></span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span>; <span class="tactic">intros</span>. <span class="tactic">simpl</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="in_shift_inv">in_shift_inv</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span> <span class="id">delta</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> (<span class="id"><a href="compcert.lib.Intv.html#shift">shift</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> <span class="id"><a href="compcert.lib.Intv.html#delta">delta</a></span>) -&gt; <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> (<span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> - <span class="id"><a href="compcert.lib.Intv.html#delta">delta</a></span>) <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof133')">Proof.</div>
+<div class="proofscript" id="proof133">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#shift">shift</a></span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span>; <span class="tactic">simpl</span>; <span class="tactic">intros</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Enumerating the elements of an interval </h1>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="ELEMENTS">ELEMENTS</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="ELEMENTS.lo">lo</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>.<br/>
+<br/>
+<span class="id">Function</span> <span class="id">elements_rec</span> (<span class="id">hi</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) {<span class="kwd">wf</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html#Zwf">Zwf</a></span> <span class="id"><a href="compcert.lib.Intv.html#ELEMENTS.lo">lo</a></span>) <span class="id">hi</span>} : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.lib.Coqlib.html#zlt">zlt</a></span> <span class="id"><a href="compcert.lib.Intv.html#ELEMENTS.lo">lo</a></span> <span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span> <span class="kwd">then</span> (<span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span>-1) :: <span class="id"><a href="compcert.lib.Intv.html#elements_rec">elements_rec</a></span> (<span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span>-1) <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof134')">Proof.</div>
+<div class="proofscript" id="proof134">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">red</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html#Zwf_well_founded">Zwf_well_founded</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="In_elements_rec">In_elements_rec</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">hi</span> <span class="id">x</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">List.In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> (<span class="id"><a href="compcert.lib.Intv.html#elements_rec">elements_rec</a></span> <span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span>) &lt;-&gt; <span class="id"><a href="compcert.lib.Intv.html#ELEMENTS.lo">lo</a></span> &lt;= <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> &lt; <span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof135')">Proof.</div>
+<div class="proofscript" id="proof135">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">functional</span> <span class="tactic">induction</span> (<span class="id"><a href="compcert.lib.Intv.html#elements_rec">elements_rec</a></span> <span class="id">hi</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">split</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H</span>. <span class="tactic">clear</span> <span class="id">IHl</span>. <span class="tactic">omega</span>. <span class="tactic">rewrite</span> <span class="id">IHl</span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">clear</span> <span class="id">IHl</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="compcert.lib.Coqlib.html#zeq">zeq</a></span> (<span class="id">hi</span> - 1) <span class="id">x</span>); <span class="tactic">auto</span>. <span class="id">right</span>. <span class="tactic">rewrite</span> <span class="id">IHl</span>. <span class="tactic">clear</span> <span class="id">IHl</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Intv.html#ELEMENTS">ELEMENTS</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="elements">elements</a></span> (<span class="id">i</span>: <span class="id"><a href="compcert.lib.Intv.html#interv">interv</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#elements_rec">elements_rec</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="in_elements">in_elements</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">List.In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> (<span class="id"><a href="compcert.lib.Intv.html#elements">elements</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof136')">Proof.</div>
+<div class="proofscript" id="proof136">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#elements">elements</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Intv.html#In_elements_rec">In_elements_rec</a></span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="elements_in">elements_in</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">x</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">List.In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> (<span class="id"><a href="compcert.lib.Intv.html#elements">elements</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>) -&gt; <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof137')">Proof.</div>
+<div class="proofscript" id="proof137">
+&nbsp;&nbsp;<span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#elements">elements</a></span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Intv.html#In_elements_rec">In_elements_rec</a></span> <span class="kwd">in</span> <span class="id">H</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<h1> Checking properties on all elements of an interval </h1>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="FORALL">FORALL</a></span>.<br/>
+<br/>
+<span class="kwd">Variables</span> <span class="id"><a name="FORALL.P">P</a></span> <span class="id"><a name="FORALL.Q">Q</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FORALL.f">f</a></span>: <span class="kwd">forall</span> (<span class="id">x</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>), {<span class="id"><a href="compcert.lib.Intv.html#FORALL.P">P</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span>} + {<span class="id"><a href="compcert.lib.Intv.html#FORALL.Q">Q</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span>}.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FORALL.lo">lo</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>.<br/>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Fixpoint</span> <span class="id"><a name="forall_rec">forall_rec</a></span> (<span class="id">hi</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) {<span class="kwd">wf</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html#Zwf">Zwf</a></span> <span class="id"><a href="compcert.lib.Intv.html#FORALL.lo">lo</a></span>) <span class="id">hi</span>}:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Intv.html#FORALL.lo">lo</a></span> &lt;= <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> &lt; <span class="id">hi</span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#FORALL.P">P</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ {<span class="id">exists</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Intv.html#FORALL.lo">lo</a></span> &lt;= <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> &lt; <span class="id">hi</span> /\ <span class="id"><a href="compcert.lib.Intv.html#FORALL.Q">Q</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span>} :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.lib.Coqlib.html#zlt">zlt</a></span> <span class="id"><a href="compcert.lib.Intv.html#FORALL.lo">lo</a></span> <span class="id">hi</span> <span class="kwd">then</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Intv.html#FORALL.f">f</a></span> (<span class="id">hi</span> - 1) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#left">left</a></span> <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.lib.Intv.html#forall_rec">forall_rec</a></span> (<span class="id">hi</span> - 1) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#left">left</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#left">left</a></span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#right">right</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#right">right</a></span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#right">right</a></span> <span class="id">_</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#right">right</a></span> <span class="id">_</span> <span class="id">_</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
+&nbsp;&nbsp;<span class="kwd">else</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Specif.html#left">left</a></span> <span class="id">_</span> <span class="id">_</span><br/>
+.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof138')">Next Obligation.</div>
+<div class="proofscript" id="proof138">
+&nbsp;&nbsp;<span class="tactic">red</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof139')">Next Obligation.</div>
+<div class="proofscript" id="proof139">
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">x</span> = <span class="id">hi</span> - 1 \/ <span class="id">x</span> &lt; <span class="id">hi</span> - 1) <span class="tactic">by</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">H2</span>. <span class="tactic">congruence</span>. <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof140')">Next Obligation.</div>
+<div class="proofscript" id="proof140">
+&nbsp;&nbsp;<span class="id">exists</span> <span class="id">wildcard</span>'; <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof141')">Next Obligation.</div>
+<div class="proofscript" id="proof141">
+&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">hi</span> - 1); <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<div class="toggleproof" onclick="toggleDisplay('proof142')">Next Obligation.</div>
+<div class="proofscript" id="proof142">
+&nbsp;&nbsp;<span class="id">omegaContradiction</span>.<br/>
+Defined.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Intv.html#FORALL">FORALL</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="forall_dec">forall_dec</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">P</span> <span class="id">Q</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">f</span>: <span class="kwd">forall</span> (<span class="id">x</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>), {<span class="id"><a href="compcert.lib.Intv.html#P">P</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span>} + {<span class="id"><a href="compcert.lib.Intv.html#Q">Q</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span>}) (<span class="id">i</span>: <span class="id"><a href="compcert.lib.Intv.html#interv">interv</a></span>) :<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#P">P</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span>} + {<span class="id">exists</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Intv.html#In">In</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> /\ <span class="id"><a href="compcert.lib.Intv.html#Q">Q</a></span> <span class="id"><a href="compcert.lib.Intv.html#x">x</a></span>} :=<br/>
+&nbsp;<span class="id"><a href="compcert.lib.Intv.html#forall_rec">forall_rec</a></span> <span class="id"><a href="compcert.lib.Intv.html#P">P</a></span> <span class="id"><a href="compcert.lib.Intv.html#Q">Q</a></span> <span class="id"><a href="compcert.lib.Intv.html#f">f</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>) (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>).<br/>
+<br/>
+<h1> Folding a function over all elements of an interval </h1>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="FOLD">FOLD</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FOLD.A">A</a></span>: <span class="kwd">Type</span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FOLD.f">f</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#FOLD.A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#FOLD.A">A</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FOLD.lo">lo</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="FOLD.a">a</a></span>: <span class="id"><a href="compcert.lib.Intv.html#FOLD.A">A</a></span>.<br/>
+<br/>
+<span class="id">Function</span> <span class="id">fold_rec</span> (<span class="id">hi</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>) {<span class="kwd">wf</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html#Zwf">Zwf</a></span> <span class="id"><a href="compcert.lib.Intv.html#FOLD.lo">lo</a></span>) <span class="id">hi</span>} : <span class="id"><a href="compcert.lib.Intv.html#FOLD.A">A</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.lib.Coqlib.html#zlt">zlt</a></span> <span class="id"><a href="compcert.lib.Intv.html#FOLD.lo">lo</a></span> <span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span> <span class="kwd">then</span> <span class="id"><a href="compcert.lib.Intv.html#FOLD.f">f</a></span> (<span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span> - 1) (<span class="id"><a href="compcert.lib.Intv.html#fold_rec">fold_rec</a></span> (<span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span> - 1)) <span class="kwd">else</span> <span class="id"><a href="compcert.lib.Intv.html#FOLD.a">a</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof143')">Proof.</div>
+<div class="proofscript" id="proof143">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">red</span>. <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zwf.html#Zwf_well_founded">Zwf_well_founded</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="fold_rec_elements">fold_rec_elements</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">hi</span>, <span class="id"><a href="compcert.lib.Intv.html#fold_rec">fold_rec</a></span> <span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_right">List.fold_right</a></span> <span class="id"><a href="compcert.lib.Intv.html#FOLD.f">f</a></span> <span class="id"><a href="compcert.lib.Intv.html#FOLD.a">a</a></span> (<span class="id"><a href="compcert.lib.Intv.html#elements_rec">elements_rec</a></span> <span class="id"><a href="compcert.lib.Intv.html#FOLD.lo">lo</a></span> <span class="id"><a href="compcert.lib.Intv.html#hi">hi</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof144')">Proof.</div>
+<div class="proofscript" id="proof144">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="id">functional</span> <span class="tactic">induction</span> (<span class="id"><a href="compcert.lib.Intv.html#fold_rec">fold_rec</a></span> <span class="id">hi</span>).<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Intv.html#elements_rec_equation">elements_rec_equation</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Coqlib.html#zlt_true">zlt_true</a></span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">simpl</span>. <span class="tactic">congruence</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Intv.html#elements_rec_equation">elements_rec_equation</a></span>. <span class="tactic">rewrite</span> <span class="id"><a href="compcert.lib.Coqlib.html#zlt_false">zlt_false</a></span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.lib.Intv.html#FOLD">FOLD</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="fold">fold</a></span> {<span class="id">A</span>: <span class="kwd">Type</span>} (<span class="id">f</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#A">A</a></span>) (<span class="id">a</span>: <span class="id"><a href="compcert.lib.Intv.html#A">A</a></span>) (<span class="id">i</span>: <span class="id"><a href="compcert.lib.Intv.html#interv">interv</a></span>) : <span class="id"><a href="compcert.lib.Intv.html#A">A</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#fold_rec">fold_rec</a></span> <span class="id"><a href="compcert.lib.Intv.html#A">A</a></span> <span class="id"><a href="compcert.lib.Intv.html#f">f</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#fst">fst</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>) <span class="id"><a href="compcert.lib.Intv.html#a">a</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#snd">snd</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id"><a name="fold_elements">fold_elements</a></span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span>: <span class="kwd">Type</span>) (<span class="id">f</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.lib.Intv.html#A">A</a></span>) <span class="id">a</span> <span class="id">i</span>,<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Intv.html#fold">fold</a></span> <span class="id"><a href="compcert.lib.Intv.html#f">f</a></span> <span class="id"><a href="compcert.lib.Intv.html#a">a</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_right">List.fold_right</a></span> <span class="id"><a href="compcert.lib.Intv.html#f">f</a></span> <span class="id"><a href="compcert.lib.Intv.html#a">a</a></span> (<span class="id"><a href="compcert.lib.Intv.html#elements">elements</a></span> <span class="id"><a href="compcert.lib.Intv.html#i">i</a></span>).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof145')">Proof.</div>
+<div class="proofscript" id="proof145">
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> <span class="id"><a href="compcert.lib.Intv.html#fold">fold</a></span>, <span class="id"><a href="compcert.lib.Intv.html#elements">elements</a></span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Intv.html#fold_rec_elements">fold_rec_elements</a></span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Hints </div>
+<br/>
+<span class="kwd">Hint</span> <span class="kwd">Resolve</span><br/>
+&nbsp;&nbsp;<span class="id">notin_range</span> <span class="id">range_notin</span><br/>
+&nbsp;&nbsp;<span class="id">is_notempty</span> <span class="id">empty_notin</span> <span class="id">in_notempty</span><br/>
+&nbsp;&nbsp;<span class="id">disjoint_sym</span> <span class="id">empty_disjoint_r</span> <span class="id">empty_disjoint_l</span><br/>
+&nbsp;&nbsp;<span class="id">disjoint_range</span><br/>
+&nbsp;&nbsp;<span class="id">in_shift</span> <span class="id">in_shift_inv</span><br/>
+&nbsp;&nbsp;<span class="id">in_elements</span> <span class="id">elements_in</span> : <span class="id">intv</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

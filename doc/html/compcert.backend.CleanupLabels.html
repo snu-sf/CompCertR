@@ -1,0 +1,79 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CleanupLabels</title>
+<meta name="description" content="Documentation of Coq module CleanupLabels" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CleanupLabels</h1>
+<div class="coq">
+<br/>
+<div class="doc">Removal of useless labels introduced by the linearization pass.
+  The linearization pass introduces one label for each node of the
+  control-flow graph.  Many of these labels are never branched to,
+  which can complicate further optimizations over linearized code.
+  (There are no such optimizations yet.)  In preparation for these
+  further optimizations, and to make the generated Linear code
+  better-looking, the present pass removes labels that cannot be
+  branched to. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSets.html">FSets</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSetAVL.html">FSetAVL</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span> <span class="id"><a href="compcert.lib.Ordered.html">Ordered</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.backend.Linear.html">Linear</a></span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="Labelset">Labelset</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.FSets.FSetAVL.html#Make">FSetAVL.Make</a></span>(<span class="id"><a href="compcert.lib.Ordered.html#OrderedPositive">OrderedPositive</a></span>).<br/>
+<br/>
+<div class="doc">Compute the set of labels that are mentioned in branch instructions. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="add_label_branched_to">add_label_branched_to</a></span> (<span class="id">ls</span>: <span class="id"><a href="compcert.backend.CleanupLabels.html#t">Labelset.t</a></span>) (<span class="id">i</span>: <span class="id"><a href="compcert.backend.Linear.html#instruction">instruction</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.CleanupLabels.html#i">i</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Linear.html#Lgoto">Lgoto</a></span> <span class="id">lbl</span> =&gt; <span class="id"><a href="compcert.backend.CleanupLabels.html#add">Labelset.add</a></span> <span class="id">lbl</span> <span class="id"><a href="compcert.backend.CleanupLabels.html#ls">ls</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Linear.html#Lcond">Lcond</a></span> <span class="id">cond</span> <span class="id">args</span> <span class="id">lbl</span> =&gt; <span class="id"><a href="compcert.backend.CleanupLabels.html#add">Labelset.add</a></span> <span class="id">lbl</span> <span class="id"><a href="compcert.backend.CleanupLabels.html#ls">ls</a></span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Linear.html#Ljumptable">Ljumptable</a></span> <span class="id">arg</span> <span class="id">tbl</span> =&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_right">List.fold_right</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#add">Labelset.add</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#ls">ls</a></span> <span class="id">tbl</span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id"><a href="compcert.backend.CleanupLabels.html#ls">ls</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="labels_branched_to">labels_branched_to</a></span> (<span class="id">c</span>: <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span>) : <span class="id"><a href="compcert.backend.CleanupLabels.html#t">Labelset.t</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#fold_left">List.fold_left</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#add_label_branched_to">add_label_branched_to</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#c">c</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#empty">Labelset.empty</a></span>.<br/>
+<br/>
+<div class="doc">Remove label declarations for labels that are not in
+    the <span class="bracket"><span class="id">bto</span></span> (branched-to) set. </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="remove_unused">remove_unused</a></span> (<span class="id">bto</span>: <span class="id"><a href="compcert.backend.CleanupLabels.html#t">Labelset.t</a></span>) (<span class="id">i</span>: <span class="id"><a href="compcert.backend.Linear.html#instruction">instruction</a></span>) (<span class="id">k</span>: <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span> :=<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id"><a href="compcert.backend.CleanupLabels.html#i">i</a></span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;| <span class="id"><a href="compcert.backend.Linear.html#Llabel">Llabel</a></span> <span class="id">lbl</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">if</span> <span class="id"><a href="compcert.backend.CleanupLabels.html#mem">Labelset.mem</a></span> <span class="id">lbl</span> <span class="id"><a href="compcert.backend.CleanupLabels.html#bto">bto</a></span> <span class="kwd">then</span> <span class="id"><a href="compcert.backend.CleanupLabels.html#i">i</a></span> :: <span class="id"><a href="compcert.backend.CleanupLabels.html#k">k</a></span> <span class="kwd">else</span> <span class="id"><a href="compcert.backend.CleanupLabels.html#k">k</a></span><br/>
+&nbsp;&nbsp;| <span class="id">_</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.backend.CleanupLabels.html#i">i</a></span> :: <span class="id"><a href="compcert.backend.CleanupLabels.html#k">k</a></span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="remove_unused_labels">remove_unused_labels</a></span> (<span class="id">bto</span>: <span class="id"><a href="compcert.backend.CleanupLabels.html#t">Labelset.t</a></span>) (<span class="id">c</span>: <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Coqlib.html#list_fold_right">list_fold_right</a></span> (<span class="id"><a href="compcert.backend.CleanupLabels.html#remove_unused">remove_unused</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#bto">bto</a></span>) <span class="id"><a href="compcert.backend.CleanupLabels.html#c">c</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="cleanup_labels">cleanup_labels</a></span> (<span class="id">c</span>: <span class="id"><a href="compcert.backend.Linear.html#code">code</a></span>) :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.CleanupLabels.html#remove_unused_labels">remove_unused_labels</a></span> (<span class="id"><a href="compcert.backend.CleanupLabels.html#labels_branched_to">labels_branched_to</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#c">c</a></span>) <span class="id"><a href="compcert.backend.CleanupLabels.html#c">c</a></span>.<br/>
+<br/>
+<div class="doc">Entry points </div>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_function">transf_function</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.Linear.html#function">function</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#function">function</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.backend.Linear.html#mkfunction">mkfunction</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.Linear.html#fn_sig">fn_sig</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#f">f</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.Linear.html#fn_stacksize">fn_stacksize</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#f">f</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id"><a href="compcert.backend.CleanupLabels.html#cleanup_labels">cleanup_labels</a></span> (<span class="id"><a href="compcert.backend.Linear.html#fn_code">fn_code</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#f">f</a></span>)).<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_fundef">transf_fundef</a></span> (<span class="id">f</span>: <span class="id"><a href="compcert.backend.Linear.html#fundef">fundef</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#fundef">fundef</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.AST.html#transf_fundef">AST.transf_fundef</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#transf_function">transf_function</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#f">f</a></span>.<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="transf_program">transf_program</a></span> (<span class="id">p</span>: <span class="id"><a href="compcert.backend.Linear.html#program">program</a></span>) : <span class="id"><a href="compcert.backend.Linear.html#program">program</a></span> :=<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.common.AST.html#transform_program">AST.transform_program</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#transf_fundef">transf_fundef</a></span> <span class="id"><a href="compcert.backend.CleanupLabels.html#p">p</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

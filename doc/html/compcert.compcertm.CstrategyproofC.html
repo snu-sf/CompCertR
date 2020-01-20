@@ -1,0 +1,145 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module CstrategyproofC</title>
+<meta name="description" content="Documentation of Coq module CstrategyproofC" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module CstrategyproofC</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Axioms.html">Axioms</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical.html">Classical</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ErrorsC.html">ErrorsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MapsC.html">MapsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.IntegersC.html">IntegersC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Floats.html">Floats</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ValuesC.html">ValuesC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.ASTC.html">ASTC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MemoryC.html">MemoryC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.EventsC.html">EventsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.GlobalenvsC.html">GlobalenvsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.SmallstepC.html">SmallstepC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CtypesC.html">CtypesC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CopC.html">CopC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.cfrontend.Csyntax.html">Csyntax</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CsemC.html">CsemC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.sflib.html">sflib</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CstrategyC.html">CstrategyC</a></span> <span class="id"><a href="compcert.cfrontend.Cstrategyproof.html">Cstrategyproof</a></span>.<br/>
+<div class="doc">newly added </div>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Simulation.html">Simulation</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.Skeleton.html">Skeleton</a></span> <span class="id"><a href="compcert.compcertm.Mod.html">Mod</a></span> <span class="id"><a href="compcert.compcertm.ModSem.html">ModSem</a></span> <span class="id"><a href="compcert.compcertm.SimMod.html">SimMod</a></span> <span class="id"><a href="compcert.compcertm.SimModSem.html">SimModSem</a></span> <span class="id"><a href="compcert.compcertm.SimSymb.html">SimSymb</a></span> <span class="id"><a href="compcert.compcertm.SimMem.html">SimMem</a></span> <span class="id"><a href="compcert.compcertm.AsmregsC.html">AsmregsC</a></span> <span class="id"><a href="compcert.compcertm.MatchSimModSem.html">MatchSimModSem</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.SimMemId.html">SimMemId</a></span>.<br/>
+<span class="kwd">Require</span> <span class="id"><a href="compcert.compcertm.SoundTop.html">SoundTop</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="SIMMODSEM">SIMMODSEM</a></span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="SIMMODSEM.skenv_link">skenv_link</a></span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.t">SkEnv.t</a></span>.<br/>
+<span class="kwd">Variable</span> <span class="id"><a name="SIMMODSEM.sm_link">sm_link</a></span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">SimMem.t</a></span>.<br/>
+<span class="kwd">Variables</span> <span class="id"><a name="SIMMODSEM.prog">prog</a></span>: <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">program</a></span>.<br/>
+<span class="kwd">Let</span> <span class="id"><a name="SIMMODSEM.md_src">md_src</a></span>: <span class="id"><a href="compcert.compcertm.Mod.html#Mod.t">Mod.t</a></span> := (<span class="id"><a href="compcert.compcertm.CsemC.html#module">CsemC.module</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.prog">prog</a></span>).<br/>
+<span class="kwd">Let</span> <span class="id"><a name="SIMMODSEM.md_tgt">md_tgt</a></span>: <span class="id"><a href="compcert.compcertm.Mod.html#Mod.t">Mod.t</a></span> := (<span class="id"><a href="compcert.compcertm.CstrategyC.html#module">module</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.prog">prog</a></span>).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id"><a name="SIMMODSEM.INCLSRC">INCLSRC</a></span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.includes">SkEnv.includes</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.md_src">md_src</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.sk">Mod.sk</a></span>)).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id"><a name="SIMMODSEM.INCLTGT">INCLTGT</a></span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.includes">SkEnv.includes</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.md_tgt">md_tgt</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.sk">Mod.sk</a></span>)).<br/>
+<span class="kwd">Hypothesis</span> (<span class="id"><a name="SIMMODSEM.WF">WF</a></span>: <span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.wf">SkEnv.wf</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span>).<br/>
+<span class="kwd">Let</span> <span class="id"><a name="SIMMODSEM.ge">ge</a></span>: <span class="id"><a href="compcert.cfrontend.Csem.html#genv">genv</a></span> := <span class="id"><a href="compcert.cfrontend.Csem.html#Build_genv">Build_genv</a></span> (<span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.revive">SkEnv.revive</a></span> (<span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.project">SkEnv.project</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.md_src">md_src</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.sk">Mod.sk</a></span>)) <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.prog">prog</a></span>) <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.prog">prog</a></span>.(<span class="id"><a href="compcert.cfrontend.Ctypes.html#prog_comp_env">prog_comp_env</a></span>).<br/>
+<span class="kwd">Let</span> <span class="id"><a name="SIMMODSEM.tge">tge</a></span>: <span class="id"><a href="compcert.cfrontend.Csem.html#genv">genv</a></span> := <span class="id"><a href="compcert.cfrontend.Csem.html#Build_genv">Build_genv</a></span> (<span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.revive">SkEnv.revive</a></span> (<span class="id"><a href="compcert.compcertm.Skeleton.html#SkEnv.project">SkEnv.project</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.md_tgt">md_tgt</a></span>.(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.sk">Mod.sk</a></span>)) <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.prog">prog</a></span>) <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.prog">prog</a></span>.(<span class="id"><a href="compcert.cfrontend.Ctypes.html#prog_comp_env">prog_comp_env</a></span>).<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="msp">msp</a></span>: <span class="id"><a href="compcert.compcertm.SimModSem.html#ModSemPair.t">ModSemPair.t</a></span> := <span class="id"><a href="compcert.compcertm.SimModSem.html#ModSemPair.mk">ModSemPair.mk</a></span> (<span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.md_src">md_src</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span>) (<span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.md_tgt">md_tgt</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span>) (<span class="id"><a href="compcert.compcertm.SimSymbId.html#mk">SimSymbId.mk</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.md_src">md_src</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.md_tgt">md_tgt</a></span>) <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.sm_link">sm_link</a></span>.<br/>
+<br/>
+<span class="kwd">Inductive</span> <span class="id"><a name="match_states">match_states</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">idx</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>) (<span class="id">st_src0</span>: <span class="id"><a href="compcert.cfrontend.Csem.html#state">Csem.state</a></span>) (<span class="id">st_tgt0</span>: <span class="id"><a href="compcert.cfrontend.Csem.html#state">Csem.state</a></span>) (<span class="id">sm0</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.t">SimMem.t</a></span>): <span class="kwd">Prop</span> :=<br/>
+| <span class="id"><a name="match_states_intro">match_states_intro</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MATCHST</span>: <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#st_src0">st_src0</a></span> = <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#st_tgt0">st_tgt0</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">MWF</span>: <span class="id"><a href="compcert.compcertm.SimMem.html#SimMem.wf">SimMem.wf</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#sm0">sm0</a></span>).<br/>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.Equivalence.html">Classes.Equivalence</a></span>. <span class="kwd">Ltac</span> <span class="id">inv</span> <span class="id">H</span> := <span class="tactic">inversion</span> <span class="id">H</span>; <span class="tactic">clear</span> <span class="id">H</span>; <span class="tactic">subst</span> *.<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="sim_modsem">sim_modsem</a></span>: <span class="id"><a href="compcert.compcertm.SimModSem.html#ModSemPair.sim">ModSemPair.sim</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#msp">msp</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6745')">Proof.</div>
+<div class="proofscript" id="proof6745">
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.MatchSimModSem.html#match_states_sim">match_states_sim</a></span> <span class="kwd">with</span> (<span class="id">match_states</span> := <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#match_states">match_states</a></span>) (<span class="id">match_states_at</span> := <span class="id"><a href="compcert.compcertm.CoqlibC.html#top4">top4</a></span>) (<span class="id">sound_state</span> := <span class="id"><a href="compcert.compcertm.SoundTop.html#sound_state">SoundTop.sound_state</a></span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eauto</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">instantiate</span> (1:= <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.lt">Nat.lt</a></span>). <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.Wf_nat.html#lt_wf">lt_wf</a></span>.<br/>
+&nbsp;&nbsp;- <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SoundTop.html#sound_state_local_preservation">SoundTop.sound_state_local_preservation</a></span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;init&nbsp;bsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">sm_arg</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">INITTGT</span>. <span class="id">inv</span> <span class="id">SIMARGS</span>; <span class="id">ss</span>. <span class="tactic">subst</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eexists</span>. <span class="id">eexists</span> (<span class="id"><a href="compcert.compcertm.SimMemId.html#mk">SimMemId.mk</a></span> <span class="id">_</span> <span class="id">_</span>). <span class="id">esplits</span>; <span class="tactic">eauto</span>; <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;init&nbsp;progress&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="id">inv</span> <span class="id">SAFESRC</span>. <span class="id">inv</span> <span class="id">SIMARGS</span>; <span class="id">ss</span>. <span class="tactic">subst</span> *. <span class="id">inv</span> <span class="id">TYP</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;call&nbsp;wf&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;call&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="tactic">destruct</span> <span class="id">sm0</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="id">inv</span> <span class="id">CALLSRC</span>. <span class="id">ss</span>. <span class="id">des</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">folder</span>. <span class="id">eexists</span> <span class="id">_</span>, (<span class="id"><a href="compcert.compcertm.SimMemId.html#mk">SimMemId.mk</a></span> <span class="id">_</span> <span class="id">_</span>). <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;after&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">AFTERSRC</span>. <span class="id">inv</span> <span class="id">SIMRET</span>; <span class="id">ss</span>. <span class="id">exists</span> <span class="id">sm_ret</span>. <span class="tactic">destruct</span> <span class="id">sm_ret</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="id">des</span>; <span class="id">ss</span>. <span class="id">clarify</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;final&nbsp;fsim&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">MATCH</span>. <span class="id">inv</span> <span class="id">FINALSRC</span>. <span class="id">ss</span>. <span class="id">des</span>; <span class="id">ss</span>. <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">eexists</span> (<span class="id"><a href="compcert.compcertm.SimMemId.html#mk">SimMemId.mk</a></span> <span class="id">_</span> <span class="id">_</span>). <span class="id">esplits</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>. <span class="id">econs</span>; <span class="id">ss</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;- <span class="comment">(*&nbsp;step&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">right</span>; <span class="id">i</span>. <span class="id">inv</span> <span class="id">MATCH</span>; <span class="id">ss</span>. <span class="id">splits</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.cfrontend.Cstrategyproof.html#progress">Cstrategyproof.progress</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">instantiate</span> (1:= <span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.is_call">ModSem.is_call</a></span> (<span class="id"><a href="compcert.compcertm.CsemC.html#modsem">CsemC.modsem</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.prog">prog</a></span>) \1/<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="compcert.compcertm.ModSem.html#ModSem.is_return">ModSem.is_return</a></span> (<span class="id"><a href="compcert.compcertm.CsemC.html#modsem">CsemC.modsem</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.skenv_link">skenv_link</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM.prog">prog</a></span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ss</span>. <span class="tactic">intro</span> <span class="id">T</span>. <span class="id">des</span>; <span class="id">inv</span> <span class="id">T</span>; <span class="id">inv</span> <span class="id">H0</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">exploit</span> <span class="id">H</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>; <span class="id">des</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>. <span class="id">contradict</span> <span class="id">NOTRET</span>. <span class="id">rr</span>. <span class="id">esplits</span>. <span class="id">econs</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>. <span class="id">contradict</span> <span class="id">NOTCALL</span>. <span class="id">rr</span>. <span class="id">esplits</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">inv</span> <span class="id">H0</span>. <span class="id">contradict</span> <span class="id">NOTRET</span>. <span class="id">rr</span>. <span class="id">esplits</span>. <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">i</span>. <span class="id">folder</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> <span class="id"><a href="compcert.cfrontend.Cstrategyproof.html#step_simulation">Cstrategyproof.step_simulation</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">econs</span>; <span class="tactic">eauto</span>. <span class="id">instantiate</span> (1:= <span class="id">sm0</span>). <span class="id">ss</span>. }<br/>
+<span class="id">Unshelve</span>.<br/>
+&nbsp;&nbsp;<span class="id">all</span>: <span class="id">ss</span>; <span class="tactic">try</span> (<span class="tactic">by</span> <span class="id">econs</span>).<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMODSEM">SIMMODSEM</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="SIMMOD">SIMMOD</a></span>.<br/>
+<br/>
+<span class="kwd">Variables</span> <span class="id"><a name="SIMMOD.prog">prog</a></span>: <span class="id"><a href="compcert.cfrontend.Csyntax.html#program">program</a></span>.<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="mp">mp</a></span>: <span class="id"><a href="compcert.compcertm.SimMod.html#ModPair.t">ModPair.t</a></span> := <span class="id"><a href="compcert.compcertm.SimSymbId.html#mk_mp">SimSymbId.mk_mp</a></span> (<span class="id"><a href="compcert.compcertm.CsemC.html#module">CsemC.module</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMOD.prog">prog</a></span>) (<span class="id"><a href="compcert.compcertm.CstrategyC.html#module">module</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMOD.prog">prog</a></span>).(<span class="id"><a href="compcert.compcertm.Mod.html#Mod.Atomic.trans">Mod.Atomic.trans</a></span>).<br/>
+<br/>
+<span class="kwd">Theorem</span> <span class="id"><a name="sim_mod">sim_mod</a></span>: <span class="id"><a href="compcert.compcertm.SimMod.html#ModPair.sim">ModPair.sim</a></span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#mp">mp</a></span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6746')">Proof.</div>
+<div class="proofscript" id="proof6746">
+&nbsp;&nbsp;<span class="id">econs</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;- <span class="id">ii</span>. <span class="id">inv</span> <span class="id">SIMSKENVLINK</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SimModSem.html#factor_simmodsem_target">factor_simmodsem_target</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CsemC.html#single_events_at">CsemC.single_events_at</a></span>; <span class="tactic">eauto</span>. <span class="id">ss</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">ii</span>. <span class="id">ss</span>. <span class="id">hexploit</span> (@<span class="id"><a href="compcert.compcertm.CstrategyC.html#modsem_strongly_receptive">modsem_strongly_receptive</a></span> <span class="id">skenv_link_tgt</span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMOD.prog">prog</a></span> <span class="id">s</span>); <span class="tactic">eauto</span>. <span class="tactic">intro</span> <span class="id">SR</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inv</span> <span class="id">SR</span>. <span class="id">exploit</span> <span class="id">ssr_traces_at</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#sim_modsem">sim_modsem</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.CstrategyproofC.html#SIMMOD">SIMMOD</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

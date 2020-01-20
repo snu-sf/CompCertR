@@ -1,0 +1,253 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Decidableplus</title>
+<meta name="description" content="Documentation of Coq module Decidableplus" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Decidableplus</h1>
+<div class="coq">
+<br/>
+<div class="doc">This library provides type classes and tactics to decide logical
+  propositions by reflection into computable Boolean equalities.
+  It extends the <span class="bracket"><span class="id">DecidableClass</span></span> module from the standard library
+  of Coq 8.5 with more instances of decidable properties, including
+  universal and existential quantification over finite types. </div>
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Export</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html">DecidableClass</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.lib.Coqlib.html">Coqlib</a></span>.<br/>
+<br/>
+<span class="kwd">Ltac</span> <span class="id">decide_goal</span> := <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; <span class="tactic">reflexivity</span>.<br/>
+<br/>
+<div class="doc">Deciding logical connectives </div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_not">Decidable_not</a></span> (<span class="id">P</span>: <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (~ <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#negb">negb</a></span> (@<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">P</span> <span class="id">dP</span>)<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1164')">Next Obligation.</div>
+<div class="proofscript" id="proof1164">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#negb_true_iff">negb_true_iff</a></span>. <span class="tactic">split</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete_alt">Decidable_complete_alt</a></span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound_alt">Decidable_sound_alt</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_equiv">Decidable_equiv</a></span> (<span class="id">P</span> <span class="id">Q</span>: <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span>) (<span class="id">dQ</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#Q">Q</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> &lt;-&gt; <span class="id"><a href="compcert.lib.Decidableplus.html#Q">Q</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#eqb">Bool.eqb</a></span> (@<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">P</span> <span class="id">dP</span>) (@<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">Q</span> <span class="id">dQ</span>)<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1165')">Next Obligation.</div>
+<div class="proofscript" id="proof1165">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#eqb_true_iff">eqb_true_iff</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">intros</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">intros</span>; <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; [<span class="tactic">rewrite</span> &lt;- <span class="id">H</span> | <span class="tactic">rewrite</span> <span class="id">H</span>]; <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete">Decidable_complete</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (@<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">Q</span> <span class="id">dQ</span>) <span class="id">eqn</span>:<span class="id">D</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete">Decidable_complete</a></span>; <span class="tactic">rewrite</span> <span class="id">H</span>; <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound_alt">Decidable_sound_alt</a></span>; <span class="tactic">rewrite</span> <span class="id">H</span>; <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete_alt">Decidable_complete_alt</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_and">Decidable_and</a></span> (<span class="id">P</span> <span class="id">Q</span>: <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span>) (<span class="id">dQ</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#Q">Q</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> /\ <span class="id"><a href="compcert.lib.Decidableplus.html#Q">Q</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">P</span> <span class="id">dP</span> &amp;&amp; @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">Q</span> <span class="id">dQ</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1166')">Next Obligation.</div>
+<div class="proofscript" id="proof1166">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#andb_true_iff">andb_true_iff</a></span>. <span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_spec">Decidable_spec</a></span>. <span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_or">Decidable_or</a></span> (<span class="id">P</span> <span class="id">Q</span>: <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span>) (<span class="id">dQ</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#Q">Q</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> \/ <span class="id"><a href="compcert.lib.Decidableplus.html#Q">Q</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">P</span> <span class="id">dP</span> || @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">Q</span> <span class="id">dQ</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1167')">Next Obligation.</div>
+<div class="proofscript" id="proof1167">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#orb_true_iff">orb_true_iff</a></span>. <span class="tactic">rewrite</span> ! <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_spec">Decidable_spec</a></span>. <span class="tactic">tauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_implies">Decidable_implies</a></span> (<span class="id">P</span> <span class="id">Q</span>: <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span>) (<span class="id">dQ</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#Q">Q</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> -&gt; <span class="id"><a href="compcert.lib.Decidableplus.html#Q">Q</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="kwd">if</span> @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">P</span> <span class="id">dP</span> <span class="kwd">then</span> @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">Q</span> <span class="id">dQ</span> <span class="kwd">else</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1168')">Next Obligation.</div>
+<div class="proofscript" id="proof1168">
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+- <span class="tactic">intros</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete">Decidable_complete</a></span> <span class="kwd">in</span> <span class="id">H</span> <span class="tactic">by</span> <span class="tactic">auto</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; <span class="tactic">eauto</span>.<br/>
+- <span class="tactic">intros</span>. <span class="tactic">destruct</span> (@<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> <span class="id">P</span> <span class="id">dP</span>) <span class="id">eqn</span>:<span class="id">WP</span>; <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete">Decidable_complete</a></span>. <span class="tactic">apply</span> <span class="id">H</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Deciding equalities. </div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Definition</span> <span class="id"><a name="Decidable_eq">Decidable_eq</a></span> {<span class="id">A</span>: <span class="kwd">Type</span>} (<span class="id">eqdec</span>: <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>), {<span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>=<span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>} + {<span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>&lt;&gt;<span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>}) (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>) : <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {|<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Build_Decidable">Decidable_witness</a></span> := <span class="id"><a href="compcert.lib.Coqlib.html#proj_sumbool">proj_sumbool</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#eqdec">eqdec</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>)<br/>
+|}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1169')">Next Obligation.</div>
+<div class="proofscript" id="proof1169">
+&nbsp;&nbsp;<span class="tactic">split</span>; <span class="tactic">intros</span>. <span class="id">InvBooleans</span>. <span class="tactic">auto</span>. <span class="tactic">subst</span> <span class="id">y</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Coqlib.html#dec_eq_true">dec_eq_true</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_eq_bool">Decidable_eq_bool</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#eqb">Bool.eqb</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1170')">Next Obligation.</div>
+<div class="proofscript" id="proof1170">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Bool.Bool.html#eqb_true_iff">eqb_true_iff</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_eq_nat">Decidable_eq_nat</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nat">nat</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.eqb">Nat.eqb</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1171')">Next Obligation.</div>
+<div class="proofscript" id="proof1171">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Arith.PeanoNat.html#Nat.eqb_eq">Nat.eqb_eq</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_eq_positive">Decidable_eq_positive</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#positive">positive</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.eqb">Pos.eqb</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1172')">Next Obligation.</div>
+<div class="proofscript" id="proof1172">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.PArith.BinPos.html#Pos.eqb_eq">Pos.eqb_eq</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_eq_Z">Decidable_eq_Z</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span> : <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Logic.html#eq">eq</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1173')">Next Obligation.</div>
+<div class="proofscript" id="proof1173">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Deciding order on Z </div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_le_Z">Decidable_le_Z</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> &lt;= <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.leb">Z.leb</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1174')">Next Obligation.</div>
+<div class="proofscript" id="proof1174">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.leb_le">Z.leb_le</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_lt_Z">Decidable_lt_Z</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> &lt; <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb">Z.ltb</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1175')">Next Obligation.</div>
+<div class="proofscript" id="proof1175">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.ltb_lt">Z.ltb_lt</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_ge_Z">Decidable_ge_Z</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> &gt;= <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.geb">Z.geb</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1176')">Next Obligation.</div>
+<div class="proofscript" id="proof1176">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.geb_le">Z.geb_le</a></span>. <span class="tactic">intuition</span> <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_gt_Z">Decidable_gt_Z</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> &gt; <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.gtb">Z.gtb</a></span> <span class="id">x</span> <span class="id">y</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1177')">Next Obligation.</div>
+<div class="proofscript" id="proof1177">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.gtb_lt">Z.gtb_lt</a></span>. <span class="tactic">intuition</span> <span class="tactic">omega</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_divides">Decidable_divides</a></span> : <span class="kwd">forall</span> (<span class="id">x</span> <span class="id">y</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Numbers.BinNums.html#Z">Z</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> | <span class="id"><a href="compcert.lib.Decidableplus.html#y">y</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb">Z.eqb</a></span> <span class="id">y</span> ((<span class="id">y</span> / <span class="id">x</span>) * <span class="id">x</span>)%<span class="id">Z</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1178')">Next Obligation.</div>
+<div class="proofscript" id="proof1178">
+&nbsp;&nbsp;<span class="tactic">split</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span> <span class="kwd">in</span> <span class="id">H</span>. <span class="id">exists</span> (<span class="id">y</span> / <span class="id">x</span>). <span class="tactic">auto</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">intros</span> [<span class="id">k</span> <span class="id">EQ</span>]. <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eqb_eq">Z.eqb_eq</a></span>.<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.eq_dec">Z.eq_dec</a></span> <span class="id">x</span> 0).<br/>
+&nbsp;&nbsp;<span class="tactic">subst</span> <span class="id">x</span>. <span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.BinInt.html#Z.mul_0_r">Z.mul_0_r</a></span> <span class="kwd">in</span> <span class="id">EQ</span>. <span class="tactic">subst</span> <span class="id">y</span>. <span class="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">k</span> = <span class="id">y</span> / <span class="id">x</span>).<br/>
+&nbsp;&nbsp;{ <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.ZArith.Zdiv.html#Zdiv_unique_full">Zdiv_unique_full</a></span> <span class="kwd">with</span> 0. <span class="tactic">red</span>; <span class="tactic">omega</span>. <span class="tactic">rewrite</span> <span class="id">EQ</span>; <span class="tactic">ring</span>. }<br/>
+&nbsp;&nbsp;<span class="tactic">congruence</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Deciding properties over lists </div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_forall_in_list">Decidable_forall_in_list</a></span> :<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span>: <span class="kwd">Type</span>) (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>) (<span class="id">P</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="kwd">forall</span> <span class="id">x</span>:<span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="kwd">forall</span> <span class="id">x</span>:<span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#l">l</a></span> -&gt; <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#forallb">List.forallb</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> (<span class="id">P</span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>) (<span class="id">dP</span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>)) <span class="id">l</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1179')">Next Obligation.</div>
+<div class="proofscript" id="proof1179">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#forallb_forall">List.forallb_forall</a></span>. <span class="tactic">split</span>; <span class="tactic">intros</span>.<br/>
+- <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; <span class="tactic">eauto</span>.<br/>
+- <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete">Decidable_complete</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_exists_in_list">Decidable_exists_in_list</a></span> :<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">A</span>: <span class="kwd">Type</span>) (<span class="id">l</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>) (<span class="id">P</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="kwd">forall</span> <span class="id">x</span>:<span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id">exists</span> <span class="id">x</span>:<span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#l">l</a></span> /\ <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#existsb">List.existsb</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> (<span class="id">P</span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>) (<span class="id">dP</span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>)) <span class="id">l</span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1180')">Next Obligation.</div>
+<div class="proofscript" id="proof1180">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#existsb_exists">List.existsb_exists</a></span>. <span class="tactic">split</span>.<br/>
+- <span class="tactic">intros</span> (<span class="id">x</span> &amp; <span class="id">U</span> &amp; <span class="id">V</span>). <span class="id">exists</span> <span class="id">x</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; <span class="tactic">eauto</span>.<br/>
+- <span class="tactic">intros</span> (<span class="id">x</span> &amp; <span class="id">U</span> &amp; <span class="id">V</span>). <span class="id">exists</span> <span class="id">x</span>; <span class="tactic">split</span>; <span class="tactic">auto</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete">Decidable_complete</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Types with finitely many elements. </div>
+<br/>
+<span class="kwd">Class</span> <span class="id"><a name="Finite">Finite</a></span> (<span class="id">T</span>: <span class="kwd">Type</span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a name="Finite_elements">Finite_elements</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#list">list</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#T">T</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="Finite_elements_spec">Finite_elements_spec</a></span>: <span class="kwd">forall</span> <span class="id">x</span>:<span class="id"><a href="compcert.lib.Decidableplus.html#T">T</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span><br/>
+}.<br/>
+<br/>
+<div class="doc">Deciding forall and exists quantification over finite types. </div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_forall">Decidable_forall</a></span> : <span class="kwd">forall</span> (<span class="id">T</span>: <span class="kwd">Type</span>) (<span class="id">fT</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#Finite">Finite</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#T">T</a></span>) (<span class="id">P</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#T">T</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="kwd">forall</span> <span class="id">x</span>:<span class="id"><a href="compcert.lib.Decidableplus.html#T">T</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>)), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="kwd">forall</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#forallb">List.forallb</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> (<span class="id">P</span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>) (<span class="id">dP</span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>)) (@<span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span> <span class="id">T</span> <span class="id">fT</span>)<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1181')">Next Obligation.</div>
+<div class="proofscript" id="proof1181">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#forallb_forall">List.forallb_forall</a></span>. <span class="tactic">split</span>; <span class="tactic">intros</span>.<br/>
+- <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; <span class="tactic">eauto</span>. <span class="tactic">apply</span> <span class="id">H</span>. <span class="tactic">apply</span> <span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements_spec">Finite_elements_spec</a></span>.<br/>
+- <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete">Decidable_complete</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Decidable_exists">Decidable_exists</a></span> : <span class="kwd">forall</span> (<span class="id">T</span>: <span class="kwd">Type</span>) (<span class="id">fT</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#Finite">Finite</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#T">T</a></span>) (<span class="id">P</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#T">T</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">dP</span>: <span class="kwd">forall</span> <span class="id">x</span>:<span class="id"><a href="compcert.lib.Decidableplus.html#T">T</a></span>, <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>)), <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable">Decidable</a></span> (<span class="id">exists</span> <span class="id">x</span>, <span class="id"><a href="compcert.lib.Decidableplus.html#P">P</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#existsb">List.existsb</a></span> (<span class="kwd">fun</span> <span class="id">x</span> =&gt; @<span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_witness">Decidable_witness</a></span> (<span class="id">P</span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>) (<span class="id">dP</span> <span class="id"><a href="compcert.lib.Decidableplus.html#x">x</a></span>)) (@<span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span> <span class="id">T</span> <span class="id">fT</span>)<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1182')">Next Obligation.</div>
+<div class="proofscript" id="proof1182">
+&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#existsb_exists">List.existsb_exists</a></span>. <span class="tactic">split</span>.<br/>
+- <span class="tactic">intros</span> (<span class="id">x</span> &amp; <span class="id">A</span> &amp; <span class="id">B</span>). <span class="id">exists</span> <span class="id">x</span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_sound">Decidable_sound</a></span>; <span class="tactic">eauto</span>.<br/>
+- <span class="tactic">intros</span> (<span class="id">x</span> &amp; <span class="id">A</span>). <span class="id">exists</span> <span class="id">x</span>; <span class="tactic">split</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements_spec">Finite_elements_spec</a></span>. <span class="tactic">eapply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.DecidableClass.html#Decidable_complete">Decidable_complete</a></span>; <span class="tactic">eauto</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc">Some examples of finite types. </div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Finite_bool">Finite_bool</a></span> : <span class="id"><a href="compcert.lib.Decidableplus.html#Finite">Finite</a></span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#bool">bool</a></span> := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#false">false</a></span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#true">true</a></span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#nil">nil</a></span><br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1183')">Next Obligation.</div>
+<div class="proofscript" id="proof1183">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">auto</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Finite_pair">Finite_pair</a></span> : <span class="kwd">forall</span> (<span class="id">A</span> <span class="id">B</span>: <span class="kwd">Type</span>) (<span class="id">fA</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#Finite">Finite</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>) (<span class="id">fB</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#Finite">Finite</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#B">B</a></span>), <span class="id"><a href="compcert.lib.Decidableplus.html#Finite">Finite</a></span> (<span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span> * <span class="id"><a href="compcert.lib.Decidableplus.html#B">B</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#list_prod">list_prod</a></span> (@<span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span> <span class="id">A</span> <span class="id">fA</span>) (@<span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span> <span class="id">B</span> <span class="id">fB</span>)<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1184')">Next Obligation.</div>
+<div class="proofscript" id="proof1184">
+&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_prod">List.in_prod</a></span>; <span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements_spec">Finite_elements_spec</a></span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">Program</span> <span class="kwd">Instance</span> <span class="id"><a name="Finite_option">Finite_option</a></span> : <span class="kwd">forall</span> (<span class="id">A</span>: <span class="kwd">Type</span>) (<span class="id">fA</span>: <span class="id"><a href="compcert.lib.Decidableplus.html#Finite">Finite</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>), <span class="id"><a href="compcert.lib.Decidableplus.html#Finite">Finite</a></span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.lib.Decidableplus.html#A">A</a></span>) := {<br/>
+&nbsp;&nbsp;<span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span> := <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#None">None</a></span> :: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#map">List.map</a></span> (@<span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id">A</span>) (@<span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements">Finite_elements</a></span> <span class="id">A</span> <span class="id">fA</span>)<br/>
+}.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof1185')">Next Obligation.</div>
+<div class="proofscript" id="proof1185">
+&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">x</span>; <span class="tactic">auto</span>. <span class="id">right</span>; <span class="tactic">apply</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#in_map">List.in_map</a></span>; <span class="tactic">eapply</span> <span class="id"><a href="compcert.lib.Decidableplus.html#Finite_elements_spec">Finite_elements_spec</a></span>.<br/>
+Qed.</div>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

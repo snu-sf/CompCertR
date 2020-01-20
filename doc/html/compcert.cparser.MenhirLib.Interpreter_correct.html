@@ -1,0 +1,241 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module Interpreter_correct</title>
+<meta name="description" content="Documentation of Coq module Interpreter_correct" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module Interpreter_correct</h1>
+<div class="coq">
+<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Streams</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">List</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="kwd">Syntax</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Equality</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Alphabet</span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Grammar</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Automaton</span>.<br/>
+<span class="kwd">Require</span> <span class="id">Interpreter</span>.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id">Make</span>(<span class="kwd">Import</span> <span class="id">A</span>:<span class="id">Automaton.T</span>) (<span class="kwd">Import</span> <span class="id">Inter</span>:<span class="id">Interpreter.T</span> <span class="id">A</span>).<br/>
+<br/>
+<h1> Correctness of the interpreter *</h1>
+<br/>
+<div class="doc">We prove that, in any case, if the interpreter accepts returning a
+    semantic value, then this is a semantic value of the input *</div>
+<br/>
+<span class="kwd">Section</span> <span class="id">Init</span>.<br/>
+<br/>
+<span class="kwd">Variable</span> <span class="id">init</span>:<span class="id">initstate</span>.<br/>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">word_has_stack_semantics</span></span> relates a word with a state, stating that the
+    word is a concatenation of words that have the semantic values stored in
+    the stack. *</div>
+<span class="kwd">Inductive</span> <span class="id">word_has_stack_semantics</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">word</span>:<span class="id">list</span> <span class="id">token</span>) (<span class="id">stack</span>:<span class="id">stack</span>), <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id">Nil_stack_whss</span>: <span class="id">word_has_stack_semantics</span> [] []<br/>
+&nbsp;&nbsp;| <span class="id">Cons_stack_whss</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">wordq</span>:<span class="id">list</span> <span class="id">token</span>) (<span class="id">stackq</span>:<span class="id">stack</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">word_has_stack_semantics</span> <span class="id">wordq</span> <span class="id">stackq</span> -&gt;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">wordt</span>:<span class="id">list</span> <span class="id">token</span>) (<span class="id">s</span>:<span class="id">noninitstate</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">semantic_valuet</span>:<span class="id">_</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inhabited</span> (<span class="id">parse_tree</span> (<span class="id">last_symb_of_non_init_state</span> <span class="id">s</span>) <span class="id">wordt</span> <span class="id">semantic_valuet</span>) -&gt;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">word_has_stack_semantics</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">wordq</span>++<span class="id">wordt</span>) (<span class="id">existT</span> <span class="id">noninitstate_type</span> <span class="id">s</span> <span class="id">semantic_valuet</span>::<span class="id">stackq</span>).<br/>
+<br/>
+<span class="kwd">Lemma</span> <span class="id">pop_invariant_converter</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">A</span> <span class="id">symbols_to_pop</span> <span class="id">symbols_popped</span>,<br/>
+&nbsp;&nbsp;<span class="id">arrows_left</span> (<span class="id">map</span> <span class="id">symbol_semantic_type</span> (<span class="id">rev_append</span> <span class="id">symbols_to_pop</span> <span class="id">symbols_popped</span>)) <span class="id">A</span> =<br/>
+&nbsp;&nbsp;<span class="id">arrows_left</span> (<span class="id">map</span> <span class="id">symbol_semantic_type</span> <span class="id">symbols_popped</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">arrows_right</span> <span class="id">A</span> (<span class="id">map</span> <span class="id">symbol_semantic_type</span> <span class="id">symbols_to_pop</span>)).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5996')">Proof.</div>
+<div class="proofscript" id="proof5996">
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">arrows_right</span>, <span class="id">arrows_left</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">rev_append_rev</span>, <span class="id">map_app</span>, <span class="id">map_rev</span>, <span class="id">fold_left_app</span>.<br/>
+<span class="tactic">apply</span> <span class="tactic">f_equal</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">fold_left_rev_right</span>, <span class="id">rev_involutive</span>.<br/>
+<span class="tactic">reflexivity</span>.<br/>
+Qed.</div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">pop</span></span> preserves the invariant *</div>
+<span class="kwd">Lemma</span> <span class="id">pop_invariant</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">symbols_to_pop</span> <span class="id">symbols_popped</span>:<span class="id">list</span> <span class="id">symbol</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">stack_cur</span>:<span class="id">stack</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">A</span>:<span class="kwd">Type</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">action</span>:<span class="id">arrows_left</span> (<span class="id">map</span> <span class="id">symbol_semantic_type</span> (<span class="id">rev_append</span> <span class="id">symbols_to_pop</span> <span class="id">symbols_popped</span>)) <span class="id">A</span>),<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">word_stack</span> <span class="id">word_popped</span>,<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">sem_popped</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">word_has_stack_semantics</span> <span class="id">word_stack</span> <span class="id">stack_cur</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inhabited</span> (<span class="id">parse_tree_list</span> <span class="id">symbols_popped</span> <span class="id">word_popped</span> <span class="id">sem_popped</span>) -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">let</span> <span class="id">action</span>' := <span class="id">eq_rect</span> <span class="id">_</span> (<span class="kwd">fun</span> <span class="id">x</span>=&gt;<span class="id">x</span>) <span class="id">action</span> <span class="id">_</span> (<span class="id">pop_invariant_converter</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span>) <span class="kwd">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">pop</span> <span class="id">symbols_to_pop</span> <span class="id">stack_cur</span> (<span class="id">uncurry</span> <span class="id">action</span>' <span class="id">sem_popped</span>) <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">stack_new</span>, <span class="id">sem</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">word1res</span> <span class="id">word2res</span> <span class="id">sem_full</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">word_stack</span> = <span class="id">word1res</span> ++ <span class="id">word2res</span>)%<span class="id">list</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">word_has_stack_semantics</span> <span class="id">word1res</span> <span class="id">stack_new</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">sem</span> = <span class="id">uncurry</span> <span class="id">action</span> <span class="id">sem_full</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inhabited</span> (<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">parse_tree_list</span> (<span class="id">rev_append</span> <span class="id">symbols_to_pop</span> <span class="id">symbols_popped</span>) (<span class="id">word2res</span>++<span class="id">word_popped</span>) <span class="id">sem_full</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Err</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5997')">Proof.</div>
+<div class="proofscript" id="proof5997">
+<span class="tactic">induction</span> <span class="id">symbols_to_pop</span>; <span class="tactic">intros</span>; <span class="tactic">unfold</span> <span class="id">pop</span>; <span class="id">fold</span> <span class="id">pop</span>.<br/>
+<span class="id">exists</span> <span class="id">word_stack</span>, ([]:<span class="id">list</span> <span class="id">token</span>), <span class="id">sem_popped</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">f_equal</span>.<br/>
+<span class="tactic">apply</span> <span class="id">JMeq_eq</span>, <span class="id">JMeq_eqrect</span> <span class="kwd">with</span> (<span class="id">P</span>:=(<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span>)).<br/>
+<span class="tactic">destruct</span> <span class="id">stack_cur</span> <span class="kwd">as</span> [|[]]; <span class="tactic">eauto</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">compare_eqdec</span> (<span class="id">last_symb_of_non_init_state</span> <span class="id">x</span>) <span class="id">a</span>); <span class="tactic">eauto</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">e</span>; <span class="tactic">simpl</span>.<br/>
+<span class="tactic">dependent</span> <span class="tactic">destruction</span> <span class="id">H</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H0</span>, <span class="id">H1</span>. <span class="tactic">apply</span> (<span class="id">Cons_ptl</span> <span class="id">X</span>), <span class="id">inhabits</span> <span class="kwd">in</span> <span class="id">X0</span>.<br/>
+<span class="id">specialize</span> (<span class="id">IHsymbols_to_pop</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">action0</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span> <span class="id">X0</span>).<br/>
+<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;<span class="id">IHsymbols_to_pop</span>:<span class="kwd">match</span> ?<span class="id">p1</span> <span class="kwd">with</span> <span class="id">Err</span> =&gt; <span class="id">_</span> | <span class="id">OK</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span> |- <span class="kwd">match</span> ?<span class="id">p2</span> <span class="kwd">with</span> <span class="id">Err</span> =&gt; <span class="id">_</span> | <span class="id">OK</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">replace</span> <span class="id">p2</span> <span class="kwd">with</span> <span class="id">p1</span>; [<span class="tactic">destruct</span> <span class="id">p1</span> <span class="kwd">as</span> [|[]]|]; <span class="tactic">intuition</span><br/>
+<span class="kwd">end</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">IHsymbols_to_pop</span> <span class="kwd">as</span> [<span class="id">word1res</span> [<span class="id">word2res</span> [<span class="id">sem_full</span> []]]]; <span class="tactic">intuition</span>; <span class="tactic">subst</span>.<br/>
+<span class="id">exists</span> <span class="id">word1res</span>.<br/>
+<span class="id">eexists</span>.<br/>
+<span class="id">exists</span> <span class="id">sem_full</span>.<br/>
+<span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">app_assoc</span>; <span class="tactic">assumption</span>.<br/>
+<span class="tactic">simpl</span>; <span class="tactic">f_equal</span>; <span class="tactic">f_equal</span>.<br/>
+<span class="tactic">apply</span> <span class="id">JMeq_eq</span>.<br/>
+<span class="id">etransitivity</span>.<br/>
+<span class="tactic">apply</span> <span class="id">JMeq_eqrect</span> <span class="kwd">with</span> (<span class="id">P</span>:=(<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span>)).<br/>
+<span class="tactic">symmetry</span>.<br/>
+<span class="tactic">apply</span> <span class="id">JMeq_eqrect</span> <span class="kwd">with</span> (<span class="id">P</span>:=(<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span>)).<br/>
+Qed.</div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">reduce_step</span></span> preserves the invariant *</div>
+<span class="kwd">Lemma</span> <span class="id">reduce_step_invariant</span> (<span class="id">stack</span>:<span class="id">stack</span>) (<span class="id">prod</span>:<span class="id">production</span>):<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">word</span> <span class="id">buffer</span>, <span class="id">word_has_stack_semantics</span> <span class="id">word</span> <span class="id">stack</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">reduce_step</span> <span class="id">init</span> <span class="id">stack</span> <span class="id">prod</span> <span class="id">buffer</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Accept_sr</span> <span class="id">sem</span> <span class="id">buffer_new</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">buffer</span> = <span class="id">buffer_new</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inhabited</span> (<span class="id">parse_tree</span> (<span class="id">NT</span> (<span class="id">start_nt</span> <span class="id">init</span>)) <span class="id">word</span> <span class="id">sem</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Progress_sr</span> <span class="id">stack_new</span> <span class="id">buffer_new</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">buffer</span> = <span class="id">buffer_new</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">word_has_stack_semantics</span> <span class="id">word</span> <span class="id">stack_new</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Err</span> | <span class="id">OK</span> <span class="id">Fail_sr</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5998')">Proof with</div>
+<div class="proofscript" id="proof5998">
+ <span class="tactic">eauto</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">reduce_step</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">pop_invariant</span> (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>) [] <span class="id">stack</span> (<span class="id">symbol_semantic_type</span> (<span class="id">NT</span> (<span class="id">prod_lhs</span> <span class="id">prod</span>)))).<br/>
+<span class="id">revert</span> <span class="id">H0</span>.<br/>
+<span class="tactic">generalize</span> (<span class="id">pop_invariant_converter</span> (<span class="id">symbol_semantic_type</span> (<span class="id">NT</span> (<span class="id">prod_lhs</span> <span class="id">prod</span>))) (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>) []).<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">rev_alt</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="id">specialize</span> (<span class="id">H0</span> (<span class="id">prod_action</span> <span class="id">prod</span>) <span class="id">_</span> [] () <span class="id">H</span> (<span class="id">inhabits</span> <span class="id">Nil_ptl</span>)).<br/>
+<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span> <span class="id">H0</span>:<span class="kwd">let</span> <span class="id">action</span>' := ?<span class="id">a</span> <span class="kwd">in</span> <span class="id">_</span> |- <span class="id">_</span> =&gt; <span class="tactic">replace</span> <span class="id">a</span> <span class="kwd">with</span> (<span class="id">prod_action</span>' <span class="id">prod</span>) <span class="kwd">in</span> <span class="id">H0</span> <span class="kwd">end</span>.<br/>
+<span class="tactic">simpl</span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">pop</span> (<span class="id">prod_rhs_rev</span> <span class="id">prod</span>) <span class="id">stack</span> (<span class="id">prod_action</span>' <span class="id">prod</span>)) <span class="kwd">as</span> [|[]]; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H0</span> <span class="kwd">as</span> [<span class="id">word1res</span> [<span class="id">word2res</span> [<span class="id">sem_full</span>]]]; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H4</span>; <span class="tactic">apply</span> <span class="id">Non_terminal_pt</span>, <span class="id">inhabits</span> <span class="kwd">in</span> <span class="id">X</span>.<br/>
+<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span> <span class="id">X</span>:<span class="id">inhabited</span> (<span class="id">parse_tree</span> <span class="id">_</span> <span class="id">_</span> ?<span class="id">u</span>) |- <span class="id">_</span> =&gt; <span class="tactic">replace</span> <span class="id">u</span> <span class="kwd">with</span> <span class="id">s0</span> <span class="kwd">in</span> <span class="id">X</span> <span class="kwd">end</span>.<br/>
+<span class="tactic">clear</span> <span class="id">sem_full</span> <span class="id">H2</span>.<br/>
+<span class="tactic">simpl</span>; <span class="tactic">destruct</span> (<span class="id">goto_table</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">s</span>) (<span class="id">prod_lhs</span> <span class="id">prod</span>)) <span class="kwd">as</span> [[]|]; <span class="tactic">intuition</span>; <span class="tactic">subst</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">app_nil_r</span> <span class="kwd">in</span> <span class="id">X</span>; <span class="id">revert</span> <span class="id">s0</span> <span class="id">X</span>; <span class="tactic">rewrite</span> <span class="id">e0</span>; <span class="tactic">intro</span>; <span class="tactic">simpl</span>.<br/>
+<span class="id">constructor</span>...<br/>
+<span class="tactic">destruct</span> <span class="id">s</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">compare_eqdec</span> (<span class="id">prod_lhs</span> <span class="id">prod</span>) (<span class="id">start_nt</span> <span class="id">init</span>)); <span class="tactic">intuition</span>.<br/>
+<span class="tactic">rewrite</span> <span class="id">app_nil_r</span> <span class="kwd">in</span> <span class="id">X</span>.<br/>
+<span class="tactic">rewrite</span> &lt;- <span class="id">e0</span>.<br/>
+<span class="tactic">inversion</span> <span class="id">H0</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">X</span>; <span class="id">constructor</span>...<br/>
+<span class="tactic">apply</span> <span class="id">JMeq_eq</span>.<br/>
+<span class="id">etransitivity</span>.<br/>
+<span class="tactic">apply</span> <span class="id">JMeq_eqrect</span> <span class="kwd">with</span> (<span class="id">P</span>:=(<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span>)).<br/>
+<span class="tactic">symmetry</span>.<br/>
+<span class="tactic">apply</span> <span class="id">JMeq_eqrect</span> <span class="kwd">with</span> (<span class="id">P</span>:=(<span class="kwd">fun</span> <span class="id">x</span> =&gt; <span class="id">x</span>)).<br/>
+Qed.</div>
+<br/>
+<div class="doc"><span class="bracket"><span class="id">step</span></span> preserves the invariant *</div>
+<span class="kwd">Lemma</span> <span class="id">step_invariant</span> (<span class="id">stack</span>:<span class="id">stack</span>) (<span class="id">buffer</span>:<span class="id">Stream</span> <span class="id">token</span>):<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">buffer_tmp</span>,<br/>
+&nbsp;&nbsp;(<span class="id">exists</span> <span class="id">word_old</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">buffer</span> = <span class="id">word_old</span> ++ <span class="id">buffer_tmp</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">word_has_stack_semantics</span> <span class="id">word_old</span> <span class="id">stack</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">step</span> <span class="id">init</span> <span class="id">stack</span> <span class="id">buffer_tmp</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Accept_sr</span> <span class="id">sem</span> <span class="id">buffer_new</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">word_new</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">buffer</span> = <span class="id">word_new</span> ++ <span class="id">buffer_new</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inhabited</span> (<span class="id">parse_tree</span> (<span class="id">NT</span> (<span class="id">start_nt</span> <span class="id">init</span>)) <span class="id">word_new</span> <span class="id">sem</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Progress_sr</span> <span class="id">stack_new</span> <span class="id">buffer_new</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">word_new</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">buffer</span> = <span class="id">word_new</span> ++ <span class="id">buffer_new</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">word_has_stack_semantics</span> <span class="id">word_new</span> <span class="id">stack_new</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">Err</span> | <span class="id">OK</span> <span class="id">Fail_sr</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof5999')">Proof with</div>
+<div class="proofscript" id="proof5999">
+ <span class="tactic">eauto</span>.<br/>
+<span class="tactic">intros</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">H</span>, <span class="id">H</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">step</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">action_table</span> (<span class="id">state_of_stack</span> <span class="id">init</span> <span class="id">stack</span>)).<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">reduce_step_invariant</span> <span class="id">stack</span> <span class="id">p</span> <span class="id">x</span> <span class="id">buffer_tmp</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id">reduce_step</span> <span class="id">init</span> <span class="id">stack</span> <span class="id">p</span> <span class="id">buffer_tmp</span>) <span class="kwd">as</span> [|[]]; <span class="tactic">intuition</span>; <span class="tactic">subst</span>...<br/>
+<span class="tactic">destruct</span> <span class="id">buffer_tmp</span>.<br/>
+<span class="tactic">unfold</span> <span class="id">Streams.hd</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">t</span>.<br/>
+<span class="tactic">destruct</span> (<span class="id">l</span> <span class="id">x0</span>); <span class="tactic">intuition</span>.<br/>
+<span class="id">exists</span> (<span class="id">x</span> ++ [<span class="id">existT</span> (<span class="kwd">fun</span> <span class="id">t</span> =&gt; <span class="id">symbol_semantic_type</span> (<span class="id">T</span> <span class="id">t</span>)) <span class="id">x0</span> <span class="id">s</span>])%<span class="id">list</span>.<br/>
+<span class="tactic">split</span>.<br/>
+<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id">app_str_app_assoc</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">Cons_stack_whss</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">e</span>; <span class="tactic">simpl</span>.<br/>
+<span class="id">now</span> <span class="tactic">exact</span> (<span class="id">inhabits</span> (<span class="id">Terminal_pt</span> <span class="id">_</span> <span class="id">_</span>)).<br/>
+<span class="kwd">match</span> <span class="id">goal</span> <span class="kwd">with</span> |- (<span class="kwd">match</span> <span class="id">reduce_step</span> <span class="id">init</span> <span class="id">stack</span> <span class="id">p</span> ?<span class="id">buff</span> <span class="kwd">with</span> <span class="id">Err</span> =&gt; <span class="id">_</span> | <span class="id">OK</span> <span class="id">_</span> =&gt; <span class="id">_</span> <span class="kwd">end</span>) =&gt;<br/>
+&nbsp;&nbsp;<span class="id">pose</span> <span class="id">proof</span> (<span class="id">reduce_step_invariant</span> <span class="id">stack</span> <span class="id">p</span> <span class="id">x</span> <span class="id">buff</span>);<br/>
+&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">reduce_step</span> <span class="id">init</span> <span class="id">stack</span> <span class="id">p</span> <span class="id">buff</span>) <span class="kwd">as</span> [|[]]; <span class="tactic">intuition</span>; <span class="tactic">subst</span><br/>
+<span class="kwd">end</span>...<br/>
+Qed.</div>
+<br/>
+<div class="doc">The interpreter is correct : if it returns a semantic value, then the input
+    word has this semantic value.
+*</div>
+<span class="kwd">Theorem</span> <span class="id">parse_correct</span> <span class="id">buffer</span> <span class="id">n_steps</span>:<br/>
+&nbsp;&nbsp;<span class="kwd">match</span> <span class="id">parse</span> <span class="id">init</span> <span class="id">buffer</span> <span class="id">n_steps</span> <span class="kwd">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">OK</span> (<span class="id">Parsed_pr</span> <span class="id">sem</span> <span class="id">buffer_new</span>) =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">word_new</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">buffer</span> = <span class="id">word_new</span> ++ <span class="id">buffer_new</span> /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">inhabited</span> (<span class="id">parse_tree</span> (<span class="id">NT</span> (<span class="id">start_nt</span> <span class="id">init</span>)) <span class="id">word_new</span> <span class="id">sem</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">_</span> =&gt; <span class="id">True</span><br/>
+&nbsp;&nbsp;<span class="kwd">end</span>.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof6000')">Proof.</div>
+<div class="proofscript" id="proof6000">
+<span class="tactic">unfold</span> <span class="id">parse</span>.<br/>
+<span class="tactic">assert</span> (<span class="id">exists</span> <span class="id">w</span>, <span class="id">buffer</span> = <span class="id">w</span> ++ <span class="id">buffer</span> /\ <span class="id">word_has_stack_semantics</span> <span class="id">w</span> []).<br/>
+<span class="id">exists</span> ([]:<span class="id">list</span> <span class="id">token</span>); <span class="tactic">intuition</span>.<br/>
+<span class="id">now</span> <span class="tactic">apply</span> <span class="id">Nil_stack_whss</span>.<br/>
+<span class="id">revert</span> <span class="id">H</span>.<br/>
+<span class="tactic">generalize</span> ([]:<span class="id">stack</span>), <span class="id">buffer</span> <span class="tactic">at</span> 2 3.<br/>
+<span class="tactic">induction</span> <span class="id">n_steps</span>; <span class="tactic">simpl</span>; <span class="tactic">intuition</span>.<br/>
+<span class="id">pose</span> <span class="id">proof</span> (<span class="id">step_invariant</span> <span class="id">_</span> <span class="id">_</span> <span class="id">_</span> <span class="id">H</span>).<br/>
+<span class="tactic">destruct</span> (<span class="id">step</span> <span class="id">init</span> <span class="id">s</span> <span class="id">buffer0</span>); <span class="tactic">simpl</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">destruct</span> <span class="id">s0</span>; <span class="tactic">intuition</span>.<br/>
+<span class="tactic">apply</span> <span class="id">IHn_steps</span>; <span class="tactic">intuition</span>.<br/>
+Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id">Init</span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id">Make</span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>

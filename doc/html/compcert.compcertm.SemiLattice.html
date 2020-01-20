@@ -1,0 +1,271 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Module SemiLattice</title>
+<meta name="description" content="Documentation of Coq module SemiLattice" />
+<link href="coq2html.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="coq2html.js"> </script>
+</head>
+
+<body onload="hideAll('proofscript')">
+<h1 class="title">Module SemiLattice</h1>
+<div class="coq">
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.CoqlibC.html">CoqlibC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="compcert.compcertm.MapsC.html">MapsC</a></span>.<br/>
+<span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FinFun.html">FinFun</a></span>.<br/>
+<br/>
+<span class="kwd">Set</span> <span class="kwd">Implicit</span> <span class="id">Arguments</span>.<br/>
+<br/>
+<span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">nat_scope</span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Definition</span> <span class="id"><a name="greatest">greatest</a></span> <span class="id">A</span> (<span class="id">le</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#A">A</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#A">A</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">P</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#A">A</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">max</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#A">A</a></span>): <span class="kwd">Prop</span> :=<br/>
+&nbsp;&nbsp;&lt;&lt;<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt; /\ &lt;&lt;<span class="id">MAX</span>: <span class="kwd">forall</span> <span class="id">a</span> (<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a">a</a></span>), <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a">a</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;<br/>
+.<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="TRIAL1">TRIAL1</a></span>.<br/>
+<br/>
+<span class="kwd">Class</span> <span class="id"><a name="TRIAL1.FSL">FSL</a></span>: <span class="kwd">Type</span> := {<br/>
+&nbsp;&nbsp;<span class="id"><a name="TRIAL1.t">t</a></span>: <span class="kwd">Type</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="TRIAL1.finite">finite</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FinFun.html#Finite">Finite</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="TRIAL1.le">le</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span> -&gt; <span class="kwd">Prop</span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="TRIAL1.le_PreOrder">le_PreOrder</a></span> :&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="TRIAL1.lub">lub</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="TRIAL1.lub_spec">lub_spec</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> ,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>)&gt;&gt;) /\ (&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>)&gt;&gt;);<br/>
+&nbsp;&nbsp;<span class="id">greatest</span> <span class="id">P</span> := <span class="id"><a href="compcert.compcertm.SemiLattice.html#greatest">greatest</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#P">P</a></span>;<br/>
+}.<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="TRIAL1.SemiLatticeProps">SemiLatticeProps</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.FSL">FSL</a></span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="TRIAL1.SemiLatticeProps.P">P</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.t">t</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="TRIAL1.SemiLatticeProps.CLOSED">CLOSED</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PXY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>)&gt;&gt;.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id"><a name="TRIAL1.SemiLatticeProps.find_greatest_aux">find_greatest_aux</a></span>: <span class="kwd">forall</span> <span class="id">l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#inhab">inhab</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="kwd">forall</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">List.In</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#l">l</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7207')">Proof.</div>
+<div class="proofscript" id="proof7207">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Prop.html#classic">classic</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> <span class="id">a</span>)); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.lub">lub</a></span> <span class="id">max</span> <span class="id">a</span>). <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.CLOSED">CLOSED</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.lub_spec">lub_spec</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etrans</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.lub_spec">lub_spec</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="TRIAL1.find_greatest">find_greatest</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#inhab">inhab</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>, &lt;&lt;<span class="id">MAX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.greatest">greatest</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7208')">Proof.</div>
+<div class="proofscript" id="proof7208">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">hexpl</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.finite">finite</a></span> <span class="id">FIN</span>. <span class="id">rr</span> <span class="kwd">in</span> <span class="id">FIN</span>. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps.find_greatest_aux">find_greatest_aux</a></span> <span class="id">l</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1.SemiLatticeProps">SemiLatticeProps</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#TRIAL1">TRIAL1</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Module</span> <span class="id"><a name="FSL">FSL</a></span>.<br/>
+<br/>
+<br/>
+<span class="kwd">Class</span> <span class="id"><a name="FSL.class">class</a></span> (<span class="id">t</span>: <span class="kwd">Type</span>) (<span class="id">le</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span> -&gt; <span class="kwd">Prop</span>) (<span class="id">lub</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#t">t</a></span>): <span class="kwd">Type</span> := {<br/>
+&nbsp;&nbsp;<span class="id"><a name="FSL.le_PreOrder">le_PreOrder</a></span> :&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span>;<br/>
+&nbsp;&nbsp;<span class="id"><a name="FSL.lub_spec">lub_spec</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>)&gt;&gt;) /\ (&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>)&gt;&gt;);<br/>
+&nbsp;&nbsp;<span class="id">greatest</span> <span class="id">P</span> := <span class="id"><a href="compcert.compcertm.SemiLattice.html#greatest">greatest</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#P">P</a></span>;<br/>
+}.<br/>
+<span class="kwd">Section</span> <span class="id"><a name="FSL.SemiLatticeProps">SemiLatticeProps</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="FSL.SemiLatticeProps.t">t</a></span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="FSL.SemiLatticeProps.le">le</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.t">t</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="FSL.SemiLatticeProps.lub">lub</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.t">t</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Context</span> `{<span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.class">class</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.t">t</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.lub">lub</a></span>}.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="FSL.SemiLatticeProps.P">P</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.t">t</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="FSL.SemiLatticeProps.FIN">FIN</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.FinFun.html#Finite">Finite</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.t">t</a></span>. <br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="FSL.SemiLatticeProps.CLOSED">CLOSED</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PXY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>)&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id"><a name="FSL.SemiLatticeProps.find_greatest_aux">find_greatest_aux</a></span>: <span class="kwd">forall</span> <span class="id">l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#inhab">inhab</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="kwd">forall</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">List.In</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#l">l</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7209')">Proof.</div>
+<div class="proofscript" id="proof7209">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Prop.html#classic">classic</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> <span class="id">a</span>)); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.lub">lub</a></span> <span class="id">max</span> <span class="id">a</span>). <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.CLOSED">CLOSED</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.lub_spec">lub_spec</a></span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etrans</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. <span class="tactic">eapply</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.lub_spec">lub_spec</a></span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="FSL.find_greatest">find_greatest</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#inhab">inhab</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>, &lt;&lt;<span class="id">MAX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.greatest">greatest</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7210')">Proof.</div>
+<div class="proofscript" id="proof7210">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">FIN</span>. <span class="tactic">destruct</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.FIN">FIN</a></span> <span class="kwd">as</span> [<span class="id">l</span> ?].<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps.find_greatest_aux">find_greatest_aux</a></span> <span class="id">l</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL.SemiLatticeProps">SemiLatticeProps</a></span>.<br/>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#FSL">FSL</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="SemiLatticeProps">SemiLatticeProps</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="SemiLatticeProps.t">t</a></span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="SemiLatticeProps.le">le</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.t">t</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="SemiLatticeProps.lub">lub</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.t">t</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.t">t</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="SemiLatticeProps.P">P</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.t">t</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="SemiLatticeProps.LEORD">LEORD</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.le">le</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="SemiLatticeProps.LUBSUCC">LUBSUCC</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">z</span>, <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="SemiLatticeProps.LUBSPEC">LUBSPEC</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LUB</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>&gt;&gt;) /\ (&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>&gt;&gt;).<br/>
+ <br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="SemiLatticeProps.FIN">FIN</a></span>: <span class="id">exists</span> <span class="id">l</span>, <span class="kwd">forall</span> <span class="id">x</span> (<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#l">l</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="SemiLatticeProps.CLOSED">CLOSED</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LUB</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PXY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>&gt;&gt;.<br/>
+&nbsp;&nbsp;<span class="kwd">Let</span> <span class="id"><a name="SemiLatticeProps.find_greatest_aux">find_greatest_aux</a></span>: <span class="kwd">forall</span> <span class="id">l</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#inhab">inhab</a></span>) ,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;) /\<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="kwd">forall</span> <span class="id">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">IN</span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">List.In</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#l">l</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;&gt;&gt;).<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7211')">Proof.</div>
+<div class="proofscript" id="proof7211">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">induction</span> <span class="id">l</span>; <span class="id">ii</span>; <span class="id">ss</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">ss</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">des</span>. <span class="tactic">destruct</span> (<span class="id"><a href="http://coq.inria.fr/library/Coq.Logic.Classical_Prop.html#classic">classic</a></span> (<span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id">a</span>)); <span class="id">cycle</span> 1.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">des</span>; <span class="id">clarify</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.LUBSUCC">LUBSUCC</a></span> <span class="id">max</span> <span class="id">a</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.CLOSED">CLOSED</a></span> <span class="id">max</span> <span class="id">a</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">z</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.LUBSPEC">LUBSPEC</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des_safe</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">etrans</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="find_greatest">find_greatest</a></span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">INHAB</span>: <span class="id">exists</span> <span class="id">inhab</span>, <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#inhab">inhab</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">max</span>, &lt;&lt;<span class="id">MAX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#greatest">greatest</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7212')">Proof.</div>
+<div class="proofscript" id="proof7212">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">rr</span> <span class="kwd">in</span> <span class="id">FIN</span>. <span class="tactic">destruct</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.FIN">FIN</a></span> <span class="kwd">as</span> [<span class="id">l</span> ?]. <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;set&nbsp;(l'&nbsp;:=&nbsp;map&nbsp;(@proj1_sig&nbsp;_&nbsp;P)&nbsp;l).&nbsp;*)</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exploit</span> (@<span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps.find_greatest_aux">find_greatest_aux</a></span> <span class="id">l</span>); <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">rr</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>. <span class="id">ii</span>. <span class="tactic">eapply</span> <span class="id">LE</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">(*&nbsp;eapply&nbsp;in_map_iff.&nbsp;unshelve&nbsp;eexists&nbsp;(exist&nbsp;_&nbsp;_&nbsp;_);&nbsp;ss.&nbsp;*)</span><br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#SemiLatticeProps">SemiLatticeProps</a></span>.<br/>
+<br/>
+<br/>
+<br/>
+<span class="kwd">Section</span> <span class="id"><a name="GRLE">GRLE</a></span>.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="GRLE.t">t</a></span>: <span class="kwd">Type</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="GRLE.le">le</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.t">t</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="GRLE.lub">lub</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.t">t</a></span> -&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.t">t</a></span> -&gt; <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#option">option</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.t">t</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Variable</span> <span class="id"><a name="GRLE.P">P</a></span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.t">t</a></span> -&gt; <span class="kwd">Prop</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="GRLE.LEORD">LEORD</a></span>: <span class="id"><a href="http://coq.inria.fr/library/Coq.Classes.RelationClasses.html#PreOrder">PreOrder</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="GRLE.LUBSUCC">LUBSUCC</a></span>: <span class="kwd">forall</span> <span class="id">su0</span> <span class="id">x</span> <span class="id">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> /\ <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> /\ <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> <span class="id">z</span>, <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="GRLE.LUBSPEC">LUBSPEC</a></span>: <span class="kwd">forall</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LUB</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>&gt;&gt;) /\ (&lt;&lt;<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>&gt;&gt;).<br/>
+ <br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="GRLE.FIN">FIN</a></span>: <span class="id">exists</span> <span class="id">l</span>, <span class="kwd">forall</span> <span class="id">x</span> (<span class="id">PROP</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>), <span class="id"><a href="http://coq.inria.fr/library/Coq.Lists.List.html#In">In</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#l">l</a></span>.<br/>
+&nbsp;&nbsp;<span class="kwd">Hypothesis</span> <span class="id"><a name="GRLE.CLOSED">CLOSED</a></span>: <span class="kwd">forall</span> <span class="id">su0</span> <span class="id">x</span> <span class="id">y</span> <span class="id">z</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PX</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> /\ <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">PY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#su0">su0</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> /\ <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LUB</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.lub">lub</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#x">x</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#y">y</a></span> = <span class="id"><a href="http://coq.inria.fr/library/Coq.Init.Datatypes.html#Some">Some</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">PXY</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#z">z</a></span>&gt;&gt;.<br/>
+<br/>
+&nbsp;&nbsp;<span class="kwd">Lemma</span> <span class="id"><a name="greatest_le_irr">greatest_le_irr</a></span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">a0</span> <span class="id">a1</span> <span class="id">max</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">LE</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a0">a0</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a1">a1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">P1</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a1">a1</a></span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">GR</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#greatest">greatest</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> (<span class="kwd">fun</span> <span class="id">a</span> =&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a1">a1</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a">a</a></span> /\ <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a">a</a></span>) <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>):<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;&lt;<span class="id">GR</span>: <span class="id"><a href="compcert.compcertm.SemiLattice.html#greatest">greatest</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> (<span class="kwd">fun</span> <span class="id">a</span> =&gt; <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.le">le</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a0">a0</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a">a</a></span> /\ <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.P">P</a></span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#a">a</a></span>) <span class="id"><a href="compcert.compcertm.SemiLattice.html#max">max</a></span>&gt;&gt;.<br/>
+<div class="toggleproof" onclick="toggleDisplay('proof7213')">Proof.</div>
+<div class="proofscript" id="proof7213">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">r</span> <span class="kwd">in</span> <span class="id">GR</span>. <span class="id">rr</span>. <span class="id">des</span>. <span class="id">esplits</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">etrans</span>; <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">ii</span>. <span class="id">des</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.LUBSUCC">LUBSUCC</a></span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="id">cycle</span> 1. <span class="tactic">eapply</span> <span class="id">P1</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id">esplits</span>; <span class="id">cycle</span> 1. <span class="tactic">eapply</span> <span class="id">PROP2</span>. <span class="tactic">eauto</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intro</span> <span class="id">LUB</span>; <span class="id">des</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.LUBSPEC">LUBSPEC</a></span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">exploit</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE.CLOSED">CLOSED</a></span>; <span class="tactic">try</span> <span class="tactic">apply</span> <span class="id">LUB</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">specialize</span> (<span class="id">MAX</span> <span class="id">z</span>). <span class="id">exploit</span> <span class="id">MAX</span>; <span class="tactic">eauto</span>. <span class="id">i</span>; <span class="id">des</span>. <span class="id">etrans</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;Qed.</div>
+<br/>
+<span class="kwd">End</span> <span class="id"><a href="compcert.compcertm.SemiLattice.html#GRLE">GRLE</a></span>.<br/>
+
+</div>
+<div class="footer"><hr/>Generated by <a href="https://github.com/xavierleroy/coq2html/">coq2html</div>
+</body>
+</html>
