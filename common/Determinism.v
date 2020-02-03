@@ -303,9 +303,9 @@ Lemma partial_terminates_not_goes_wrong:
 Proof.
   intros.
   { use_star_step_diamond.
-    - admit "ez".
+    - apply trace_intact_app_rev in INTACT. des. auto.
     - inv P; ss.
-      + admit "ez".
+      + rewrite E0_right in PTERM. auto.
       + use_nostep.
   }
 Qed.
@@ -342,7 +342,7 @@ Proof.
   use_step_deterministic.
   eapply IHstar with (T := t4 *** T0). eauto.
   eapply star_forever_reactive; eauto.
-  admit "ez".
+  apply trace_intact_app_rev in INTACT. des. auto.
 Qed.
 
 (** Determinism for infinite transition sequences. -- partial termination version *)
@@ -372,7 +372,7 @@ Proof.
     { eapply trace_intact_app; eauto. rename t into tr. clear - H1 P DET.
       ginduction P; i; ss. clarify. inv H1. use_step_deterministic. hexploit IHP; eauto.
     }
-    admit "ez".
+    apply trace_intact_app_rev in INTACT. des. auto.
   }
   hexploit INTACTALL; eauto.
 Qed.
@@ -388,9 +388,10 @@ Proof.
     ginduction STAR; i; ss. clarify.
     inv H1. inv H0; ss. use_step_deterministic. clear_tac.
     eapply trace_intact_app; eauto.
-    { admit "ez". }
-    { eapply IHSTAR; eauto. eapply star_forever_reactive; try apply H4; eauto. admit "ez". }
-  }
+    { apply trace_intact_app_rev in INTACT. des. auto. }
+    { eapply IHSTAR; eauto. eapply star_forever_reactive; try apply H4; eauto.
+      apply trace_intact_app_rev in INTACT. des. auto. }
+ }
   hexploit INTACTALL; eauto.
 Qed.
 
@@ -438,9 +439,9 @@ Proof.
   exists (t2 *** T1); exists (t4 *** T2).
   split. unfold E0; congruence.
   split. eapply star_forever_reactive; eauto.
-  admit "ez".
+  apply trace_intact_app_rev in INTACT1. des. auto.
   split. eapply star_forever_reactive; eauto.
-  admit "ez".
+  apply trace_intact_app_rev in INTACT2. des. auto.
   split; traceEq.
 Qed.
 
@@ -476,7 +477,9 @@ Proof.
   exists T; auto.
   inv H2. inv H3. congruence.
   use_step_deterministic.
-  exploit IHstar. eapply star_forever_reactive. 2: eauto. admit "ez". eauto.
+  exploit IHstar. eapply star_forever_reactive. 2: eauto.
+  apply trace_intact_app_rev in INTACT. des. auto.
+  eauto.
   intros [T' [A B]]. exists T'; intuition. traceEq. congruence.
 Qed.
 
@@ -514,7 +517,8 @@ Proof.
   assert (t = t0 /\ s' = s'0). eapply steps_deterministic; eauto.
   destruct H3. split; auto. subst. eapply det_final_state; eauto.
 (* terminates, partial terminates *)
-  { exploit star_step_triangle; try (eapply dfns; eauto); eauto. i; des. clarify. eapply PTERM. admit "ez". }
+  { exploit star_step_triangle; try (eapply dfns; eauto); eauto. i; des. clarify. eapply PTERM.
+    apply trace_intact_app_rev in INTACT. des. auto. }
 (* terminates, diverges *)
   eapply star2_final_not_forever_silent with (s1 := s') (s2 := s'0); eauto.
 (* terminates, reacts *)
@@ -523,11 +527,12 @@ Proof.
   eapply terminates_not_goes_wrong with (s1 := s') (s2 := s'0); eauto.
 (* partial terminates, terminates *)
   { exploit star_step_triangle; try (eapply dfns; eauto).
-    2: eauto. eapply STAR. i; des. clarify. eapply PTERM. admit "ez". }
+    2: eauto. eapply STAR. i; des. clarify. eapply PTERM.
+    apply trace_intact_app_rev in INTACT. des. auto. }
 (* partial terminates, partial terminates *)
   { use_star_step_diamond.
-    - admit "ez - make lemma".
-    - admit "ez - make lemma".
+    - symmetry. apply trace_cut_pterm_pterm_app; auto.
+    - apply trace_cut_pterm_pterm_app; auto.
   }
 (* partial terminates, diverges *)
   { eapply star2_pterm_not_forever_silent; try apply PTERM; eauto. }

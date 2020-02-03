@@ -647,21 +647,20 @@ Proof.
             apply trace_intact_app; auto. }
           econs; eauto.
           eapply star_trans; eauto.
-          intros INTACT.
-
-          admit "ez - make lemma".
+          intros INTACT. apply trace_intact_app_rev in INTACT. des. auto.
         * destruct (trace_cut_pterm t ** tl) eqn:Q.
           { ss. clear - STAR0 H. revert_until L1. cofix CIH. i. inv H. econs; eauto. eapply star_trans; eauto. }
           { econs; eauto. rewrite <- Q. (eapply trace_intact_app; eauto). ss. }
       + rr. right. right. esplits; eauto. rr.
         exists (behavior_app tl beh). rewrite behavior_app_assoc. traceEq.
     - eexists (Partial_terminates (trace_cut_pterm (trace_cut_pterm t ** tl))). esplits; eauto.
-      + econs; eauto. admit "ez - make lemma".
+      + econs; eauto.
+        intros INTACT. apply trace_intact_app_rev in INTACT. des. auto.
       + rr. right. right. esplits; eauto. rr. exists (Partial_terminates (trace_cut_pterm tl)).
         traceEq.
         replace (trace_cut_pterm (trace_cut_pterm t ** tl)) with (trace_cut_pterm t ** trace_cut_pterm tl).
         { ss. }
-        { admit "make lemma". }
+        { rewrite trace_cut_pterm_intact_app; auto. apply trace_cut_pterm_intact. }
   }
 + (* silent divergence *)
   assert (Diverges t = behavior_app t (Diverges E0)).
@@ -758,7 +757,7 @@ Proof.
     hexploit H; try apply H4; eauto.
     + rewrite app_length. destruct t; ss. Require Import Lia. lia.
     +  i. eapply trace_intact_app; eauto.
-  - admit "ez - make lemma. trace_intact_app_iff".
+  - apply trace_intact_app_rev in INTACT. des. auto.
 Unshelve.
   all: ss.
 Qed.
@@ -860,7 +859,7 @@ Proof.
   induction t; intros. exists T; auto.
   inv H. inv H0. congruence. simpl in H; inv H.
   destruct (IHt s (t2***T0)) as [T' [A B]]. eapply star_forever_reactive; eauto.
-  admit "ez - make lemma".
+  apply trace_intact_app_rev in INTACT. des. auto.
   exists T'; split; auto. simpl. congruence.
 
   cofix COINDHYP; intros. inv H0. destruct s2 as [t2 s2].
@@ -933,11 +932,11 @@ Proof.
   destruct s' as [t' s']. simpl in H2; destruct H2; subst t'.
   econstructor. ss. eapply atomic_star_star; eauto. auto.
 * (* partial termination *)
-  destruct s'; ss.
-  admit "do in-split Event_pterm. step until then".
-  (* assert(STAR2: Star (atomic L) (t0, s0) t0 (E0, s0)). *)
-  (* { clear - t0. ginduction t0; ii; ss. { eapply star_refl. } econs; eauto. econs; eauto. ss. } *)
-  (* econs; eauto. eapply atomic_star_star; eauto. *)
+  destruct s'; ss. exploit atomic_star_star_gen; eauto. i. des. ss. subst.
+  replace (trace_cut_pterm t) with (trace_cut_pterm (t ** t0)).
+  { econs; eauto. intros INTACT.
+    apply trace_intact_app_rev in INTACT. des. auto. }
+  apply trace_cut_pterm_pterm_app; auto.
 * (* silent divergence *)
   destruct s' as [t' s'].
   assert (t' = E0). inv H2. inv H1; auto. subst t'.

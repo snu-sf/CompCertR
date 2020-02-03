@@ -866,6 +866,36 @@ Record determinate (L: semantics) : Prop :=
       final_state L s r1 -> final_state L s r2 -> r1 = r2
   }.
 
+Section SINGLEEVENTS.
+
+Variable L: semantics.
+Hypothesis L_single_events: single_events L.
+
+Lemma single_events_steps_split s0 t0 t1 s2
+      (STEPS: Star L s0 (t0 ** t1) s2)
+  :
+    exists s1,
+      (<<STEPS0: Star L s0 t0 s1>>) /\
+      (<<STEPS1: Star L s1 t1 s2>>).
+Proof.
+  remember (t0 ** t1). ginduction STEPS; i.
+  - destruct t0; ss. subst. exists s. split; apply star_refl.
+  - subst. exploit L_single_events; eauto. i.
+    destruct t1; ss.
+    + exploit IHSTEPS; eauto. i. des. esplits; eauto.
+      econs; eauto.
+    + destruct t1; ss; cycle 1.
+      { inv H0. inv H2. }
+      destruct t0; ss.
+      * subst. exists s1. split.
+        { apply star_refl. }
+        { econs; eauto. }
+      * inv Heqt. exploit IHSTEPS; eauto.
+        i. des. esplits; eauto. econs; eauto.
+Qed.
+
+End SINGLEEVENTS.
+
 Section DETERMINACY.
 
 Variable L: semantics.
@@ -1354,47 +1384,50 @@ Proof.
   right; split. apply star_refl. right; auto.
   eapply bb_match_at; eauto.
 - des. right. split; ss.
-  admit "WE WILL REMOVE THIS LEMMA - BB COMPOSE".
-  (* assert(exists t1 s1', Star L1 s1 t1 s1' /\ exists tl1, t1 = trace_cut_pterm t' ** tl1). *)
-  (* { clear - H2 H0 STAR S12. *)
-  (*   ginduction STAR; ii; ss. *)
-  (*   { esplits; eauto. apply star_refl. } *)
-  (*   exploit IHSTAR; eauto. *)
-  (* } *)
-  (* des. clarify. *)
-  (* esplits; eauto. *)
-  (* admit "there should be this thing". *)
+  assert (t = [Event_pterm]).
+  { exploit L3_single_events; eauto.
+    destruct t; ss.
+    - exfalso. apply PTERM0. ss.
+    - destruct t; ss.
+      + unfold trace_intact in PTERM0.
+        destruct e; ss; exfalso; apply PTERM0; ii; des; clarify.
+      + intros. omegaContradiction. }
+  subst. ss. exists s1, E0. esplits; eauto. apply star_refl.
 Qed.
 
 Lemma bb_simulation:
   forall s3 t s3', Step L3 s3 t s3' ->
   forall i s1, bb_match_states i s1 s3 -> safe L1 s1 ->
-  exists i', exists s1',
+  (exists i', exists s1',
     (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ bb_order i' i))
-    /\ bb_match_states i' s1' s3'.
+    /\ bb_match_states i' s1' s3') \/
+  (<<PTERM: ~trace_intact t>> /\ exists s1' t',
+       <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
 Proof.
-  admit "WE WILL REMOVE THIS LEMMA - BB COMPOSE".
-(*   intros. inv H0. *)
-(*   exploit star_inv; eauto. intros [[EQ1 EQ2] | PLUS]. *)
-(* - (* 1. match at *) *)
-(*   subst. eapply bb_simulation_base; eauto. *)
-(* - (* 2. match later *) *)
-(*   exploit (bsim_E0_plus S12); eauto. *)
-(*   intros [[i1' [s1' [A B]]] | [i1' [A B]]]. *)
-(* + (* 2.1 one or several silent transitions *) *)
-(*   exploit bb_simulation_base. eauto. auto. eexact B. eauto. *)
-(*     eapply star_safe; eauto. eapply plus_star; eauto. *)
-(*   intros [i'' [s1'' [C D]]]. *)
-(*   exists i''; exists s1''; split; auto. *)
-(*   left. eapply plus_star_trans; eauto. *)
-(*   destruct C as [P | [P Q]]. apply plus_star; eauto. eauto. *)
-(*   traceEq. *)
-(* + (* 2.2 no silent transition *) *)
-(*   exploit bb_simulation_base. eauto. auto. eexact B. eauto. auto. *)
-(*   intros [i'' [s1'' [C D]]]. *)
-(*   exists i''; exists s1''; split; auto. *)
-(*   intuition. right; intuition. *)
-(*   inv H6. left. eapply t_trans; eauto. left; auto. *)
+  intros. inv H0.
+  exploit star_inv; eauto. intros [[EQ1 EQ2] | PLUS].
+- (* 1. match at *)
+  subst. eapply bb_simulation_base; eauto.
+- (* 2. match later *)
+  exploit (bsim_E0_plus S12); eauto.
+  intros [[i1' [s1' [A B]]] | [i1' [A B]]].
++ (* 2.1 one or several silent transitions *)
+  exploit bb_simulation_base. eauto. auto. eexact B. eauto.
+    eapply star_safe; eauto. eapply plus_star; eauto.
+  intros [[i'' [s1'' [C D]]] | PTERM].
+  left. exists i''; exists s1''; split; auto.
+  left. eapply plus_star_trans; eauto.
+  destruct C as [P | [P Q]]. apply plus_star; eauto. eauto.
+  traceEq.
+  des. right. esplits; eauto. apply plus_star.
+  eapply plus_star_trans; eauto.
++ (* 2.2 no silent transition *)
+  exploit bb_simulation_base. eauto. auto. eexact B. eauto. auto.
+  intros [[i'' [s1'' [C D]]] | PTERM].
+  left. exists i''; exists s1''; split; auto.
+  intuition. right; intuition.
+  inv H6. left. eapply t_trans; eauto. left; auto.
+  des. right. esplits; eauto.
 Qed.
 
 End COMPOSE_BACKWARD_SIMULATIONS.
@@ -1434,8 +1467,7 @@ Proof.
   intros i s1 s3 MS SAFE. inv MS.
   eapply (bsim_progress props'). eauto. eapply star_safe; eauto. eapply bsim_safe; eauto.
 - (* simulation *)
-  admit "WE WILL REMOVE THIS LEMMA - BB COMPOSE".
-  (* apply bb_simulation; auto. *)
+  apply bb_simulation; auto.
 - (* symbols *)
   intros. transitivity (Senv.public_symbol (symbolenv L2) id); eapply bsim_public_preserved; eauto.
 Qed.
@@ -1922,13 +1954,11 @@ Proof.
     - left. replace (trace_cut_pterm (ev :: t) ** tl) with (ev :: trace_cut_pterm (t) ** tl) in STAR; cycle 1.
       { ss. des_ifs. }
       apply star_non_E0_split' in STAR; ss. des_safe.
-      assert(exists s2y, Star L1 s2x (trace_cut_pterm t) s2y /\ Star L1 s2y tl s1'0).
-      { admit "ez - single events". }
-      des_safe.
+      apply single_events_steps_split in STAR0; eauto. des_safe.
       esplits; eauto.
       + left. eapply star_plus_trans; eauto.
       + econs 2; eauto.
-        { (* TODO: make lemma *) ii. eapply PTERM0. ii. eapply H5. ss. des; clarify. }
+        { (* TODO: make lemma *) ii. eapply PTERM0. ii. eapply H0. ss. des; clarify. }
         exploit L2wb; eauto.
   }
 - (* continue step *)

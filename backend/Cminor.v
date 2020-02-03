@@ -1201,7 +1201,7 @@ Proof.
   eapply star_right. eexact A. constructor.
   reflexivity. reflexivity.
   apply CIH_STMT. eauto. traceEq.
-  admit "ez".
+  rewrite E0_right. rewrite E0_left. auto.
 
 (* loop body *)
   eapply forever_plus_intro.
@@ -1217,7 +1217,7 @@ Proof.
   eapply star_right. eexact A. constructor.
   reflexivity. reflexivity.
   apply CIH_STMT. eauto. traceEq.
-  admit "ez".
+  rewrite E0_right. rewrite E0_left. auto.
 
 (* block *)
   eapply forever_plus_intro.
