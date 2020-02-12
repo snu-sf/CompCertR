@@ -79,7 +79,9 @@ Inductive possible_event: world -> event -> world -> Prop :=
       nextworld_vstore w1 chunk id ofs evarg = Some w2 ->
       possible_event w1 (Event_vstore chunk id ofs evarg) w2
   | possible_event_annot: forall w1 id args,
-      possible_event w1 (Event_annot id args) w1.
+      possible_event w1 (Event_annot id args) w1
+  | possible_event_custom: forall w1 data,
+      possible_event w1 (Event_custom data) w1.
 
 Inductive possible_trace: world -> trace -> world -> Prop :=
   | possible_trace_nil: forall w,
@@ -119,6 +121,7 @@ Proof.
   inv H7; inv H6. inv H9; inv H10. split; congruence.
   inv H7; inv H6. inv H9; inv H10. split; congruence.
   inv H4; inv H3. inv H6; inv H7. split; congruence.
+  inv H4; inv H3. inv H7; inv H6. auto.
   inv H4; inv H3. inv H7; inv H6. auto.
 Qed.
 

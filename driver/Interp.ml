@@ -74,6 +74,8 @@ let print_event p = function
       fprintf p "annotation \"%s\" %a"
                 (camlstring_of_coqstring text)
                 print_eventval_list args
+  | Event_custom(data) ->
+      fprintf p "custom event"
 
 (* Printing states *)
 
