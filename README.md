@@ -29,7 +29,7 @@ Our development is tested with Coq 8.9.1. CompCertR only supports x86_64 archite
 opam switch 4.07.1               # Use OCaml version 4.07.1
 eval \`opam env\`
 opam install coq=8.9.1           # Use Coq version 8.9.1
-opam install menhir=<b>20181113</b>     # Use Menhir version 20181113
+opam install menhir=<b>20190626</b>     # Use Menhir version 20190626
 </pre>
 
 2) Install [Paco coq library](https://github.com/snu-sf/paco) via opam.  
