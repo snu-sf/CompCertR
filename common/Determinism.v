@@ -24,6 +24,7 @@ Require Import Events.
 Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Behaviors.
+Require Import sflib.
 
 (** * Deterministic worlds *)
 
@@ -175,6 +176,7 @@ Ltac possibleTraceInv :=
 Definition possible_behavior (w: world) (b: program_behavior) : Prop :=
   match b with
   | Terminates t r => exists w', possible_trace w t w'
+  | Partial_terminates t => exists w', possible_trace w t w'
   | Diverges t => exists w', possible_trace w t w'
   | Reacts T => possible_traceinf w T
   | Goes_wrong t => exists w', possible_trace w t w'
@@ -293,6 +295,21 @@ Proof.
   destruct H4; subst. elim (H3 _ H0).
 Qed.
 
+Lemma partial_terminates_not_goes_wrong:
+  forall s t1 s1 t2 s2,
+  Star L s t1 s1 -> forall (PTERM: ~trace_intact t1),
+  Star L s t2 s2 -> forall (INTACT: trace_intact t2), Nostep L s2 ->
+  (forall r, ~final_state L s2 r) -> False.
+Proof.
+  intros.
+  { use_star_step_diamond.
+    - apply trace_intact_app_rev in INTACT. des. auto.
+    - inv P; ss.
+      + rewrite E0_right in PTERM. auto.
+      + use_nostep.
+  }
+Qed.
+
 (** Determinism for infinite transition sequences. *)
 
 Lemma star_final_not_forever_silent:
@@ -325,6 +342,57 @@ Proof.
   use_step_deterministic.
   eapply IHstar with (T := t4 *** T0). eauto.
   eapply star_forever_reactive; eauto.
+  apply trace_intact_app_rev in INTACT. des. auto.
+Qed.
+
+(** Determinism for infinite transition sequences. -- partial termination version *)
+
+Lemma star_pterm_not_forever_silent:
+  forall s t s', Star L s t s' ->
+  forall (PTERM: ~trace_intact t),
+  Forever_silent L s -> False.
+Proof.
+  induction 1; intros.
+  inv H. apply PTERM; ss.
+  inv H2. use_step_deterministic. eauto.
+Qed.
+
+Lemma star2_pterm_not_forever_silent:
+  forall s t1 s1 t2 s2,
+  Star L s t1 s1 ->
+  forall (PTERM: ~trace_intact t1) (INTACT: trace_intact t2),
+  Star L s t2 s2 -> Forever_silent L s2 ->
+  False.
+Proof.
+  i.
+  assert(INTACTALL: forall tr st (STAR: Star L s tr st), trace_intact tr).
+  { clear - H0 H1 INTACT DET.
+    i.
+    use_star_step_diamond.
+    { eapply trace_intact_app; eauto. rename t into tr. clear - H1 P DET.
+      ginduction P; i; ss. clarify. inv H1. use_step_deterministic. hexploit IHP; eauto.
+    }
+    apply trace_intact_app_rev in INTACT. des. auto.
+  }
+  hexploit INTACTALL; eauto.
+Qed.
+
+Lemma star_pterm_not_forever_reactive:
+  forall s t s', Star L s t s' -> forall (PTERM: ~trace_intact t),
+  forall T, Forever_reactive L s T -> False.
+Proof.
+  i.
+  assert(INTACTALL: forall tr st (STAR: Star L s tr st), trace_intact tr).
+  { clear - H0 DET.
+    i.
+    ginduction STAR; i; ss. clarify.
+    inv H1. inv H0; ss. use_step_deterministic. clear_tac.
+    eapply trace_intact_app; eauto.
+    { apply trace_intact_app_rev in INTACT. des. auto. }
+    { eapply IHSTAR; eauto. eapply star_forever_reactive; try apply H4; eauto.
+      apply trace_intact_app_rev in INTACT. des. auto. }
+ }
+  hexploit INTACTALL; eauto.
 Qed.
 
 Lemma star_forever_silent_inv:
@@ -352,6 +420,7 @@ Lemma forever_reactive_inv2:
   t1 <> E0 -> t2 <> E0 ->
   Forever_reactive L s1 T1 ->
   Forever_reactive L s2 T2 ->
+  forall (INTACT1: trace_intact t1) (INTACT2: trace_intact t2),
   exists s', exists t, exists T1', exists T2',
   t <> E0 /\
   Forever_reactive L s' T1' /\
@@ -370,7 +439,9 @@ Proof.
   exists (t2 *** T1); exists (t4 *** T2).
   split. unfold E0; congruence.
   split. eapply star_forever_reactive; eauto.
+  apply trace_intact_app_rev in INTACT1. des. auto.
   split. eapply star_forever_reactive; eauto.
+  apply trace_intact_app_rev in INTACT2. des. auto.
   split; traceEq.
 Qed.
 
@@ -406,7 +477,9 @@ Proof.
   exists T; auto.
   inv H2. inv H3. congruence.
   use_step_deterministic.
-  exploit IHstar. eapply star_forever_reactive. 2: eauto. eauto.
+  exploit IHstar. eapply star_forever_reactive. 2: eauto.
+  apply trace_intact_app_rev in INTACT. des. auto.
+  eauto.
   intros [T' [A B]]. exists T'; intuition. traceEq. congruence.
 Qed.
 
@@ -426,6 +499,7 @@ Qed.
 Definition same_behaviors (beh1 beh2: program_behavior) : Prop :=
   match beh1, beh2 with
   | Terminates t1 r1, Terminates t2 r2 => t1 = t2 /\ r1 = r2
+  | Partial_terminates t1, Partial_terminates t2 => t1 = t2
   | Diverges t1, Diverges t2 => t1 = t2
   | Reacts t1, Reacts t2 => traceinf_sim t1 t2
   | Goes_wrong t1, Goes_wrong t2 => t1 = t2
@@ -442,14 +516,34 @@ Proof.
 (* terminates, terminates *)
   assert (t = t0 /\ s' = s'0). eapply steps_deterministic; eauto.
   destruct H3. split; auto. subst. eapply det_final_state; eauto.
+(* terminates, partial terminates *)
+  { exploit star_step_triangle; try (eapply dfns; eauto); eauto. i; des. clarify. eapply PTERM.
+    apply trace_intact_app_rev in INTACT. des. auto. }
 (* terminates, diverges *)
   eapply star2_final_not_forever_silent with (s1 := s') (s2 := s'0); eauto.
 (* terminates, reacts *)
   eapply star_final_not_forever_reactive; eauto.
 (* terminates, goes_wrong *)
   eapply terminates_not_goes_wrong with (s1 := s') (s2 := s'0); eauto.
+(* partial terminates, terminates *)
+  { exploit star_step_triangle; try (eapply dfns; eauto).
+    2: eauto. eapply STAR. i; des. clarify. eapply PTERM.
+    apply trace_intact_app_rev in INTACT. des. auto. }
+(* partial terminates, partial terminates *)
+  { use_star_step_diamond.
+    - symmetry. apply trace_cut_pterm_pterm_app; auto.
+    - apply trace_cut_pterm_pterm_app; auto.
+  }
+(* partial terminates, diverges *)
+  { eapply star2_pterm_not_forever_silent; try apply PTERM; eauto. }
+(* partial terminates, reacts *)
+  { eapply star_pterm_not_forever_reactive; eauto. }
+(* partial terminates, goes wrong *)
+  { eapply partial_terminates_not_goes_wrong; try apply PTERM; eauto. }
 (* diverges, terminates *)
   eapply star2_final_not_forever_silent with (s2 := s') (s1 := s'0); eauto.
+(* diverges, partial terminates *)
+  { eapply star2_pterm_not_forever_silent; try apply PTERM; eauto. }
 (* diverges, diverges *)
   use_star_step_diamond.
   exploit star_forever_silent_inv. eexact P. eauto.
@@ -462,6 +556,8 @@ Proof.
   eapply star2_final_not_forever_silent with (s1 := s'0) (s2 := s'); eauto.
 (* reacts, terminates *)
   eapply star_final_not_forever_reactive; eauto.
+(* reacts, partial terminates *)
+  { eapply star_pterm_not_forever_reactive; eauto. }
 (* reacts, diverges *)
   eapply forever_silent_reactive_exclusive2; eauto.
 (* reacts, reacts *)
@@ -470,6 +566,8 @@ Proof.
   eapply star_final_not_forever_reactive; eauto.
 (* goes wrong, terminate *)
   eapply terminates_not_goes_wrong with (s1 := s'0) (s2 := s'); eauto.
+(* goes wrong, partial terminate *)
+  { eapply partial_terminates_not_goes_wrong; try apply INTACT; eauto. }
 (* goes wrong, diverges *)
   eapply star2_final_not_forever_silent with (s1 := s') (s2 := s'0); eauto.
 (* goes wrong, reacts *)
