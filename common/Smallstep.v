@@ -25,6 +25,7 @@ Require Import Coqlib.
 Require Import Events.
 Require Import Globalenvs.
 Require Import Integers.
+Require Import sflib.
 
 Set Implicit Arguments.
 
@@ -300,18 +301,21 @@ Qed.
 (** Infinitely many transitions *)
 
 CoInductive forever (ge: genv): state -> traceinf -> Prop :=
-  | forever_intro: forall s1 t s2 T,
+  | forever_intro: forall s1 t s2 T (INTACT: trace_intact t),
       step ge s1 t s2 -> forever ge s2 T ->
       forever ge s1 (t *** T).
 
 Lemma star_forever:
-  forall ge s1 t s2, star ge s1 t s2 ->
+  forall ge s1 t s2 (INTACT: trace_intact t), star ge s1 t s2 ->
   forall T, forever ge s2 T ->
   forever ge s1 (t *** T).
 Proof.
-  induction 1; intros. simpl. auto.
+  induction 2; intros. simpl. auto.
   subst t. rewrite Eappinf_assoc.
   econstructor; eauto.
+  apply trace_intact_app_rev in INTACT. des. auto.
+  eapply IHstar; eauto.
+  apply trace_intact_app_rev in INTACT. des. auto.
 Qed.
 
 (** An alternate, equivalent definition of [forever] that is useful
@@ -326,11 +330,13 @@ CoInductive forever_N (ge: genv) : A -> state -> traceinf -> Prop :=
       order a2 a1 ->
       forever_N ge a2 s2 T2 ->
       T1 = t *** T2 ->
+      forall (INTACT: trace_intact t),
       forever_N ge a1 s1 T1
   | forever_N_plus: forall s1 t s2 a1 a2 T1 T2,
       plus ge s1 t s2 ->
       forever_N ge a2 s2 T2 ->
       T1 = t *** T2 ->
+      forall (INTACT: trace_intact t),
       forever_N ge a1 s1 T1.
 
 Hypothesis order_wf: well_founded order.
@@ -339,7 +345,7 @@ Lemma forever_N_inv:
   forall ge a s T,
   forever_N ge a s T ->
   exists t, exists s', exists a', exists T',
-  step ge s t s' /\ forever_N ge a' s' T' /\ T = t *** T'.
+  step ge s t s' /\ forever_N ge a' s' T' /\ T = t *** T' /\ <<INTACT: trace_intact t>>.
 Proof.
   intros ge a0. pattern a0. apply (well_founded_ind order_wf).
   intros. inv H0.
@@ -349,14 +355,18 @@ Proof.
   change (E0 *** T2) with T2. apply H with a2. auto. auto.
   (* at least one transition *)
   exists t1; exists s0; exists x; exists (t2 *** T2).
+  apply trace_intact_app_rev in INTACT. des.
   split. auto. split. eapply forever_N_star; eauto.
+  split; cycle 1. auto.
   apply Eappinf_assoc.
   (* plus case *)
   inv H1.
   exists t1; exists s0; exists a2; exists (t2 *** T2).
   split. auto.
+  apply trace_intact_app_rev in INTACT. des.
   split. inv H3. auto.
   eapply forever_N_plus. econstructor; eauto. eauto. auto.
+  auto. split; cycle 1. auto.
   apply Eappinf_assoc.
 Qed.
 
@@ -364,8 +374,8 @@ Lemma forever_N_forever:
   forall ge a s T, forever_N ge a s T -> forever ge s T.
 Proof.
   cofix COINDHYP; intros.
-  destruct (forever_N_inv H) as [t [s' [a' [T' [P [Q R]]]]]].
-  rewrite R. apply forever_intro with s'. auto.
+  destruct (forever_N_inv H) as [t [s' [a' [T' [P [Q [R INTACT]]]]]]].
+  rewrite R. apply forever_intro with s'. auto. auto.
   apply COINDHYP with a'; auto.
 Qed.
 
@@ -376,16 +386,18 @@ CoInductive forever_plus (ge: genv) : state -> traceinf -> Prop :=
       plus ge s1 t s2 ->
       forever_plus ge s2 T2 ->
       T1 = t *** T2 ->
+      forall (INTACT: trace_intact t),
       forever_plus ge s1 T1.
 
 Lemma forever_plus_inv:
   forall ge s T,
   forever_plus ge s T ->
   exists s', exists t, exists T',
-  step ge s t s' /\ forever_plus ge s' T' /\ T = t *** T'.
+  step ge s t s' /\ forever_plus ge s' T' /\ T = t *** T' /\ <<INTACT: trace_intact t>>.
 Proof.
   intros. inv H. inv H0. exists s0; exists t1; exists (t2 *** T2).
   split. auto.
+  apply trace_intact_app_rev in INTACT. des.
   split. exploit star_inv; eauto. intros [[P Q] | R].
     subst. simpl. auto. econstructor; eauto.
   traceEq.
@@ -395,7 +407,7 @@ Lemma forever_plus_forever:
   forall ge s T, forever_plus ge s T -> forever ge s T.
 Proof.
   cofix COINDHYP; intros.
-  destruct (forever_plus_inv H) as [s' [t [T' [P [Q R]]]]].
+  destruct (forever_plus_inv H) as [s' [t [T' [P [Q [R INTACT]]]]]].
   subst. econstructor; eauto.
 Qed.
 
@@ -454,16 +466,17 @@ Qed.
 (** Infinitely many non-silent transitions *)
 
 CoInductive forever_reactive (ge: genv): state -> traceinf -> Prop :=
-  | forever_reactive_intro: forall s1 s2 t T,
+  | forever_reactive_intro: forall s1 s2 t T (INTACT: trace_intact t),
       star ge s1 t s2 -> t <> E0 -> forever_reactive ge s2 T ->
       forever_reactive ge s1 (t *** T).
 
 Lemma star_forever_reactive:
-  forall ge s1 t s2 T,
+  forall ge s1 t s2 T (INTACT: trace_intact t),
   star ge s1 t s2 -> forever_reactive ge s2 T ->
   forever_reactive ge s1 (t *** T).
 Proof.
   intros. inv H0. rewrite <- Eappinf_assoc. econstructor.
+  eapply trace_intact_app; eauto.
   eapply star_trans; eauto.
   red; intro. exploit Eapp_E0_inv; eauto. intros [P Q]. contradiction.
   auto.
@@ -855,6 +868,36 @@ Record determinate (L: semantics) : Prop :=
       final_state L s r1 -> final_state L s r2 -> r1 = r2
   }.
 
+Section SINGLEEVENTS.
+
+Variable L: semantics.
+Hypothesis L_single_events: single_events L.
+
+Lemma single_events_steps_split s0 t0 t1 s2
+      (STEPS: Star L s0 (t0 ** t1) s2)
+  :
+    exists s1,
+      (<<STEPS0: Star L s0 t0 s1>>) /\
+      (<<STEPS1: Star L s1 t1 s2>>).
+Proof.
+  remember (t0 ** t1). ginduction STEPS; i.
+  - destruct t0; ss. subst. exists s. split; apply star_refl.
+  - subst. exploit L_single_events; eauto. i.
+    destruct t1; ss.
+    + exploit IHSTEPS; eauto. i. des. esplits; eauto.
+      econs; eauto.
+    + destruct t1; ss; cycle 1.
+      { inv H0. inv H2. }
+      destruct t0; ss.
+      * subst. exists s1. split.
+        { apply star_refl. }
+        { econs; eauto. }
+      * inv Heqt. exploit IHSTEPS; eauto.
+        i. des. esplits; eauto. econs; eauto.
+Qed.
+
+End SINGLEEVENTS.
+
 Section DETERMINACY.
 
 Variable L: semantics.
@@ -1025,10 +1068,10 @@ Proof.
     (order := ltof _ measure).
 - assumption.
 - apply well_founded_ltof.
-- intros. exploit match_initial_states; eauto. intros (s2 & A & B). 
+- intros. exploit match_initial_states; eauto. intros (s2 & A & B).
   exists s1, s2; auto.
 - intros. destruct H. eapply match_final_states; eauto.
-- intros. destruct H0; subst i. 
+- intros. destruct H0; subst i.
   exploit simulation; eauto. intros (s1'' & s2' & A & B & C).
   exists s1'', s1'', s2'. auto.
 - assumption.
@@ -1108,9 +1151,11 @@ Record bsim_properties (L1 L2: semantics) (index: Type)
     bsim_simulation:
       forall s2 t s2', Step L2 s2 t s2' ->
       forall i s1, match_states i s1 s2 -> safe L1 s1 ->
-      exists i', exists s1',
+      (exists i', exists s1',
          (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ order i' i))
-      /\ match_states i' s1' s2';
+      /\ match_states i' s1' s2') \/
+      (<<PTERM: ~trace_intact t>> /\ exists s1' t',
+           <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>);
   }.
 
 Arguments bsim_properties: clear implicits.
@@ -1130,14 +1175,14 @@ Lemma bsim_simulation':
   forall i s2 t s2', Step L2 s2 t s2' ->
   forall s1, match_states i s1 s2 -> safe L1 s1 ->
   (exists i', exists s1', Plus L1 s1 t s1' /\ match_states i' s1' s2')
-  \/ (exists i', order i' i /\ t = E0 /\ match_states i' s1 s2').
+  \/ (exists i', order i' i /\ t = E0 /\ match_states i' s1 s2') \/
+  (<<PTERM: ~trace_intact t>> /\ exists s1' t',
+       <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
 Proof.
   intros. exploit bsim_simulation; eauto.
-  intros [i' [s1' [A B]]]. intuition.
-  left; exists i'; exists s1'; auto.
-  inv H4.
-  right; exists i'; auto.
-  left; exists i'; exists s1'; split; auto. econstructor; eauto.
+  i. des_safe eauto. inv H3.
+  right. left. esplits; eauto.
+  left. esplits; eauto. econs; eauto.
 Qed.
 
 (** ** Backward simulation diagrams. *)
@@ -1188,7 +1233,7 @@ Proof.
 - intros. exists tt; eauto.
 - intros. exists s1; split. apply star_refl. eauto.
 - intros. exploit simulation; eauto. intros [s1' [A B]].
-  exists tt; exists s1'; auto.
+  left. exists tt; exists s1'; auto.
 Qed.
 
 End BACKWARD_SIMULATION_PLUS.
@@ -1210,10 +1255,11 @@ Proof.
 - (* base case *)
   intros. exists i; exists s1; split; auto. apply star_refl.
 - (* inductive case *)
-  intros. exploit bsim_simulation; eauto. intros [i' [s1' [A B]]].
+  intros. exploit bsim_simulation; eauto. intros [[i' [s1' [A B]]] | PTERM].
   assert (Star L1 s0 E0 s1'). intuition. apply plus_star; auto.
   exploit H0. eauto. eapply star_safe; eauto. intros [i'' [s1'' [C D]]].
   exists i''; exists s1''; split; auto. eapply star_trans; eauto.
+  des; ss. unfold trace_intact in *. ss. (* TODO: make lemma? *)
 Qed.
 
 Lemma bsim_safe:
@@ -1233,18 +1279,20 @@ Lemma bsim_E0_plus:
 Proof.
   induction 1 using plus_ind2; intros; subst t.
 - (* base case *)
-  exploit bsim_simulation'; eauto. intros [[i' [s1' [A B]]] | [i' [A [B C]]]].
+  exploit bsim_simulation'; eauto. intros [[i' [s1' [A B]]] | [[i' [A [B C]]] | PTERM]].
 + left; exists i'; exists s1'; auto.
 + right; exists i'; intuition.
++ des. unfold trace_intact in *. ss. (* TODO: make lemma *)
 - (* inductive case *)
   exploit Eapp_E0_inv; eauto. intros [EQ1 EQ2]; subst.
-  exploit bsim_simulation'; eauto. intros [[i' [s1' [A B]]] | [i' [A [B C]]]].
+  exploit bsim_simulation'; eauto. intros [[i' [s1' [A B]]] | [[i' [A [B C]]] | PTERM]].
 + exploit bsim_E0_star. apply plus_star; eauto. eauto. eapply star_safe; eauto. apply plus_star; auto.
   intros [i'' [s1'' [P Q]]].
   left; exists i''; exists s1''; intuition. eapply plus_star_trans; eauto.
 + exploit IHplus; eauto. intros [P | [i'' [P Q]]].
   left; auto.
   right; exists i''; intuition. eapply t_trans; eauto. apply t_step; auto.
++ des. unfold trace_intact in *. ss. (* TODO: make lemma *)
 Qed.
 
 Lemma star_non_E0_split:
@@ -1295,13 +1343,15 @@ Qed.
 Lemma bb_simulation_base:
   forall s3 t s3', Step L3 s3 t s3' ->
   forall i1 s1 i2 s2, match_states i1 s1 s2 -> match_states' i2 s2 s3 -> safe L1 s1 ->
-  exists i', exists s1',
+  (exists i', exists s1',
     (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ bb_order i' (i1, i2)))
-    /\ bb_match_states i' s1' s3'.
+    /\ bb_match_states i' s1' s3') \/
+  (<<PTERM: ~trace_intact t>> /\ exists s1' t',
+       <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
 Proof.
   intros.
   exploit (bsim_simulation' S23); eauto. eapply bsim_safe; eauto.
-  intros [ [i2' [s2' [PLUS2 MATCH2]]] | [i2' [ORD2 [EQ MATCH2]]]].
+  intros [ [i2' [s2' [PLUS2 MATCH2]]] | [[i2' [ORD2 [EQ MATCH2]]] | PTERM]].
 - (* 1 L2 makes one or several transitions *)
   assert (EITHER: t = E0 \/ (length t = 1)%nat).
   { exploit L3_single_events; eauto.
@@ -1311,8 +1361,10 @@ Proof.
   subst t. exploit (bsim_E0_plus S12); eauto.
   intros [ [i1' [s1' [PLUS1 MATCH1]]] | [i1' [ORD1 MATCH1]]].
 * (* 1.1.1 L1 makes one or several transitions *)
+  left.
   exists (i1', i2'); exists s1'; split. auto. eapply bb_match_at; eauto.
 * (* 1.1.2 L1 makes no transitions *)
+  left.
   exists (i1', i2'); exists s1; split.
   right; split. apply star_refl. left; auto.
   eapply bb_match_at; eauto.
@@ -1321,21 +1373,36 @@ Proof.
   intros [s2x [s2y [P [Q R]]]].
   exploit (bsim_E0_star S12). eexact P. eauto. auto. intros [i1' [s1x [X Y]]].
   exploit (bsim_simulation' S12). eexact Q. eauto. eapply star_safe; eauto.
-  intros [[i1'' [s1y [U V]]] | [i1'' [U [V W]]]]; try (subst t; discriminate).
+  intros [[i1'' [s1y [U V]]] | [[i1'' [U [V W]]] | PTERM]]; try (subst t; discriminate).
+  left.
   exists (i1'', i2'); exists s1y; split.
   left. eapply star_plus_trans; eauto. eapply bb_match_later; eauto.
+  { des. right. split; ss. esplits; cycle 1. { eauto. } eapply star_trans; eauto. }
 - (* 2. L2 makes no transitions *)
+  left.
   subst. exists (i1, i2'); exists s1; split.
   right; split. apply star_refl. right; auto.
   eapply bb_match_at; eauto.
+- des. right. split; ss.
+  assert (t = [Event_pterm]).
+  { exploit L3_single_events; eauto.
+    destruct t; ss.
+    - exfalso. apply PTERM0. ss.
+    - destruct t; ss.
+      + unfold trace_intact in PTERM0.
+        destruct e; ss; exfalso; apply PTERM0; ii; des; clarify.
+      + intros. omegaContradiction. }
+  subst. ss. exists s1, E0. esplits; eauto. apply star_refl.
 Qed.
 
 Lemma bb_simulation:
   forall s3 t s3', Step L3 s3 t s3' ->
   forall i s1, bb_match_states i s1 s3 -> safe L1 s1 ->
-  exists i', exists s1',
+  (exists i', exists s1',
     (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ bb_order i' i))
-    /\ bb_match_states i' s1' s3'.
+    /\ bb_match_states i' s1' s3') \/
+  (<<PTERM: ~trace_intact t>> /\ exists s1' t',
+       <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
 Proof.
   intros. inv H0.
   exploit star_inv; eauto. intros [[EQ1 EQ2] | PLUS].
@@ -1347,17 +1414,20 @@ Proof.
 + (* 2.1 one or several silent transitions *)
   exploit bb_simulation_base. eauto. auto. eexact B. eauto.
     eapply star_safe; eauto. eapply plus_star; eauto.
-  intros [i'' [s1'' [C D]]].
-  exists i''; exists s1''; split; auto.
+  intros [[i'' [s1'' [C D]]] | PTERM].
+  left. exists i''; exists s1''; split; auto.
   left. eapply plus_star_trans; eauto.
   destruct C as [P | [P Q]]. apply plus_star; eauto. eauto.
   traceEq.
+  des. right. esplits; eauto. apply plus_star.
+  eapply plus_star_trans; eauto.
 + (* 2.2 no silent transition *)
   exploit bb_simulation_base. eauto. auto. eexact B. eauto. auto.
-  intros [i'' [s1'' [C D]]].
-  exists i''; exists s1''; split; auto.
+  intros [[i'' [s1'' [C D]]] | PTERM].
+  left. exists i''; exists s1''; split; auto.
   intuition. right; intuition.
   inv H6. left. eapply t_trans; eauto. left; auto.
+  des. right. esplits; eauto.
 Qed.
 
 End COMPOSE_BACKWARD_SIMULATIONS.
@@ -1690,6 +1760,7 @@ Proof.
   inv H4. congruence. right; econstructor; econstructor; eauto.
   inv H1. right; econstructor; econstructor; eauto.
 - (* simulation *)
+  i. left.
   eapply f2b_simulation_step; eauto.
 Qed.
 
@@ -1834,38 +1905,74 @@ Inductive fbs_match: index -> state L1 -> (trace * state L2) -> Prop :=
   | fbs_match_intro: forall i s1 t s2 s1',
       Star L1 s1 t s1' -> match_states i s1' s2 ->
       t = E0 \/ output_trace t ->
+      fbs_match i s1 (t, s2)
+  | fbs_match_pterm_intro: forall
+      i s1 t s2 s1' (PTERM: ~trace_intact t) (WB: output_trace t)
+      (SRC: Star L1 s1 (trace_cut_pterm t) s1'),
       fbs_match i s1 (t, s2).
 
 Lemma fbs_simulation:
   forall s2 t s2', Step (atomic L2) s2 t s2' ->
   forall i s1, fbs_match i s1 s2 -> safe L1 s1 ->
-  exists i', exists s1',
+  (exists i', exists s1',
      (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ order i' i))
-     /\ fbs_match i' s1' s2'.
+     /\ fbs_match i' s1' s2') \/
+  (<<PTERM: ~trace_intact t>> /\ exists s1' t',
+       <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
 Proof.
   induction 1; intros.
 - (* silent step *)
-  inv H0.
+  inv H0; cycle 1.
+  { unfold trace_intact in *. ss. (* TODO: make lemma *) }
   exploit (bsim_simulation sim); eauto. eapply star_safe; eauto.
-  intros [i' [s1'' [A B]]].
+  intros [[i' [s1'' [A B]]] | PTERM].
+  left.
   exists i'; exists s1''; split.
   destruct A as [P | [P Q]]. left. eapply star_plus_trans; eauto. right; split; auto. eapply star_trans; eauto.
   econstructor. apply star_refl. auto. auto.
+  { des_safe. unfold trace_intact in *. ss. (* TODO: make lemma *) }
 - (* start step *)
-  inv H0.
+  inv H0; cycle 1.
+  { unfold trace_intact in *. ss. (* TODO: make lemma *) }
   exploit (bsim_simulation sim); eauto. eapply star_safe; eauto.
-  intros [i' [s1'' [A B]]].
+  intros [[i' [s1'' [A B]]] | PTERM].
   assert (C: Star L1 s1 (ev :: t) s1'').
     eapply star_trans. eauto. destruct A as [P | [P Q]]. apply plus_star; eauto. eauto. auto.
   exploit star_non_E0_split'; eauto. simpl. intros [s1x [P Q]].
+  left.
   exists i'; exists s1x; split.
   left; auto.
   econstructor; eauto.
   exploit L2wb; eauto.
+  { des_safe.
+    destruct (Classical_Prop.classic (ev = Event_pterm)).
+    - clarify. right. split; ss. { unfold trace_intact. ii. apply H0. ss. eauto. } esplits; eauto.
+    - left. replace (trace_cut_pterm (ev :: t) ** tl) with (ev :: trace_cut_pterm (t) ** tl) in STAR; cycle 1.
+      { ss. des_ifs. }
+      apply star_non_E0_split' in STAR; ss. des_safe.
+      apply single_events_steps_split in STAR0; eauto. des_safe.
+      esplits; eauto.
+      + left. eapply star_plus_trans; eauto.
+      + econs 2; eauto.
+        { (* TODO: make lemma *) ii. eapply PTERM0. ii. eapply H0. ss. des; clarify. }
+        exploit L2wb; eauto.
+  }
 - (* continue step *)
-  inv H0. unfold E0 in H8; destruct H8; try congruence.
+  inv H0; cycle 1.
+  { destruct (Classical_Prop.classic (ev = Event_pterm)).
+    - clarify. right. split; ss. { unfold trace_intact. ii. apply H0. ss. eauto. } esplits; eauto.
+    - left. replace (trace_cut_pterm (ev :: t)) with (ev :: trace_cut_pterm (t)) in SRC; cycle 1.
+      { ss. des_ifs. }
+      apply star_non_E0_split' in SRC; ss. des_safe.
+      esplits; eauto. econs 2; eauto.
+      { (* TODO: make lemma *) ii. eapply PTERM. ii. eapply H3. ss. des; clarify. }
+  }
+  unfold E0 in H8; destruct H8; try congruence.
   exploit star_non_E0_split'; eauto. simpl. intros [s1x [P Q]].
+  left.
   exists i; exists s1x; split. left; auto. econstructor; eauto. simpl in H0; tauto.
+Unshelve.
+  all: eauto.
 Qed.
 
 Lemma fbs_progress:
@@ -1874,7 +1981,9 @@ Lemma fbs_progress:
   (exists r, final_state (atomic L2) s2 r) \/
   (exists t, exists s2', Step (atomic L2) s2 t s2').
 Proof.
-  intros. inv H. destruct t.
+  intros. inv H; cycle 1.
+  { destruct t; ss. { exfalso. (* TODO: make lemma *) eapply PTERM. ss. } right. esplits; eauto. econs; eauto. }
+  destruct t.
 - (* 1. no buffered events *)
   exploit (bsim_progress sim); eauto. eapply star_safe; eauto.
   intros [[r A] | [t [s2' A]]].
@@ -1910,7 +2019,9 @@ Proof.
   exists i; exists s1'; split. auto. econstructor. apply star_refl. auto. auto.
 - (* final states match *)
   intros. destruct s2 as [t s2]; simpl in H1; destruct H1; subst.
-  inv H. exploit (bsim_match_final_states sim); eauto. eapply star_safe; eauto.
+  inv H; cycle 1.
+  { exfalso. apply PTERM. ss. (* TODO: make lemma *) }
+  exploit (bsim_match_final_states sim); eauto. eapply star_safe; eauto.
   intros [s1'' [A B]]. exists s1''; split; auto. eapply star_trans; eauto.
 - (* progress *)
   eapply fbs_progress; eauto.
@@ -1959,6 +2070,7 @@ Qed.
 Record bigstep_semantics : Type :=
   Bigstep_semantics {
     bigstep_terminates: trace -> int -> Prop;
+    bigstep_partial_terminates: trace -> Prop;
     bigstep_diverges: traceinf -> Prop
   }.
 
@@ -1969,10 +2081,15 @@ Record bigstep_sound (B: bigstep_semantics) (L: semantics) : Prop :=
     bigstep_terminates_sound:
       forall t r,
       bigstep_terminates B t r ->
-      exists s1, exists s2, initial_state L s1 /\ Star L s1 t s2 /\ final_state L s2 r;
+      exists s1, exists s2, initial_state L s1 /\ Star L s1 t s2 /\ final_state L s2 r /\ <<INTACT: trace_intact t>>;
+    bigstep_partial_terminates_sound:
+      forall t,
+      bigstep_partial_terminates B t ->
+      exists s1, exists s2 t', initial_state L s1 /\ Star L s1 t' s2 /\ <<PTERM: ~trace_intact t'>> /\ <<TRACE: trace_cut_pterm t' = t>>;
     bigstep_diverges_sound:
       forall T,
       bigstep_diverges B T ->
       exists s1, initial_state L s1 /\ forever (step L) (symbolenv L) (globalenv L) s1 T
 }.
 
+(* Note: there is no "completenes"!. E.g. A safe program (no UB) in smallstep has some behavior in bigstep. *)
