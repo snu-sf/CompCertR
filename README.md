@@ -1,5 +1,5 @@
 # CompCertR
-This is the refactored version of [CompCert 3.5](https://github.com/AbsInt/CompCert/tree/v3.5) in the style of open simulations.
+This is the refactored version of [CompCert 3.6](https://github.com/AbsInt/CompCert/tree/v3.6) in the style of open simulations.
 
 Main differences include:  
 
@@ -21,14 +21,14 @@ Note that, in spite of these technical modifications, mathematical meaning of th
 - For target language (`/x86/Asm.v`), we didn't modify the semantics at all.
 
 ## Installation Instructions
-Our development is tested with Coq 8.9.1. CompCertR only supports x86_64 architecture.
+Our development is tested with Coq 8.10.1. CompCertR only supports x86_64 architecture.
 
 1) Follow _2-2 Prerequisites_ in [standard CompCert build process](http://compcert.inria.fr/man/manual002.html) to install prerequisites.  
 - Install [opam](https://opam.ocaml.org/) **>= [2.0.0](https://opam.ocaml.org/blog/opam-2-0-0/)**.
 - Install required dependencies. <pre>
 opam switch 4.07.1               # Use OCaml version 4.07.1
 eval \`opam env\`
-opam install coq=8.9.1           # Use Coq version 8.9.1
+opam install coq=8.10.1           # Use Coq version 8.10.1
 opam install menhir=<b>20190626</b>     # Use Menhir version 20190626
 </pre>
 
