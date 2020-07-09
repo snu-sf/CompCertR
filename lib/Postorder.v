@@ -295,12 +295,12 @@ Fixpoint size_worklist (w: list (positive * list positive)) : nat :=
   end.
 
 Definition lt_state (s1 s2: state) : Prop :=
-  lex_ord lt lt (PTree_Properties.cardinal s1.(gr), size_worklist s1.(wrk))
-                (PTree_Properties.cardinal s2.(gr), size_worklist s2.(wrk)).
+  lex_ord lt lt (ppair (PTree_Properties.cardinal s1.(gr)) (size_worklist s1.(wrk)))
+                (ppair (PTree_Properties.cardinal s2.(gr)) (size_worklist s2.(wrk))).
 
 Lemma lt_state_wf: well_founded lt_state.
 Proof.
-  set (f := fun s => (PTree_Properties.cardinal s.(gr), size_worklist s.(wrk))).
+  set (f := fun s => (ppair (PTree_Properties.cardinal s.(gr)) (size_worklist s.(wrk)))).
   change (well_founded (fun s1 s2 => lex_ord lt lt (f s1) (f s2))).
   apply wf_inverse_image.
   apply wf_lex_ord.

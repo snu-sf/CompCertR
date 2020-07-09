@@ -805,10 +805,10 @@ Proof.
   destruct S12 as [index order match_states props].
   destruct S23 as [index' order' match_states' props'].
 
-  set (ff_index := (index' * index)%type).
+  set (ff_index := (pprod index' index)%type).
   set (ff_order := lex_ord (clos_trans _ order') order).
   set (ff_match_states := fun (i: ff_index) (s1: state L1) (s3: state L3) =>
-                             exists s2, match_states (snd i) s1 s2 /\ match_states' (fst i) s2 s3).
+                             exists s2, match_states (psnd i) s1 s2 /\ match_states' (pfst i) s2 s3).
   apply Forward_simulation with ff_order ff_match_states; constructor.
 - (* well founded *)
   unfold ff_order. apply wf_lex_ord. apply wf_clos_trans.
@@ -816,7 +816,7 @@ Proof.
 - (* initial states *)
   intros. exploit (fsim_match_initial_states props); eauto. intros [i [s2 [A B]]].
   exploit (fsim_match_initial_states props'); eauto. intros [i' [s3 [C D]]].
-  exists (i', i); exists s3; split; auto. exists s2; auto.
+  exists (ppair i' i); exists s3; split; auto. exists s2; auto.
 - (* final states *)
   intros. destruct H as [s3 [A B]].
   eapply (fsim_match_final_states props'); eauto.
@@ -827,13 +827,13 @@ Proof.
 + (* L2 makes one or several steps. *)
   exploit simulation_plus; eauto. intros [[i2' [s2' [P Q]]] | [i2' [P [Q R]]]].
 * (* L3 makes one or several steps *)
-  exists (i2', i1'); exists s2'; split. auto. exists s3'; auto.
+  exists (ppair i2' i1'); exists s2'; split. auto. exists s3'; auto.
 * (* L3 makes no step *)
-  exists (i2', i1'); exists s2; split.
+  exists (ppair i2' i1'); exists s2; split.
   right; split. subst t; apply star_refl. red. left. auto.
   exists s3'; auto.
 + (* L2 makes no step *)
-  exists (i2, i1'); exists s2; split.
+  exists (ppair i2 i1'); exists s2; split.
   right; split. subst t; apply star_refl. red. right. auto.
   exists s3; auto.
 - (* symbols *)
@@ -984,16 +984,16 @@ Hypothesis simulation:
 Hypothesis public_preserved:
   forall id, Senv.public_symbol (symbolenv L2) id = Senv.public_symbol (symbolenv L1) id.
 
-Inductive match_states_later: index * nat -> state L1 -> state L2 -> Prop :=
+Inductive match_states_later: pprod index nat -> state L1 -> state L2 -> Prop :=
 | msl_now: forall i s1 s2,
-    match_states i s1 s2 -> match_states_later (i, O) s1 s2
+    match_states i s1 s2 -> match_states_later (ppair i O) s1 s2
 | msl_later: forall i n s1 s1' s2,
-    Step L1 s1 E0 s1' -> match_states_later (i, n) s1' s2 -> match_states_later (i, S n) s1 s2.
+    Step L1 s1 E0 s1' -> match_states_later (ppair i n) s1' s2 -> match_states_later (ppair i (S n)) s1 s2.
 
 Lemma star_match_states_later:
   forall s1 s1', Star L1 s1 E0 s1' ->
   forall i s2, match_states i s1' s2 ->
-  exists n, match_states_later (i, n) s1 s2.
+  exists n, match_states_later (ppair i n) s1 s2.
 Proof.
   intros s10 s10' STAR0. pattern s10, s10'; eapply star_E0_ind; eauto.
   - intros s1 i s2 M. exists O; constructor; auto.
@@ -1008,17 +1008,17 @@ Proof.
   constructor.
 - apply wf_lex_ord. apply wf_order. apply lt_wf.
 - intros. exploit match_initial_states; eauto. intros (i & s2 & A & B).
-  exists (i, O), s2; auto using msl_now.
+  exists (ppair i O), s2; auto using msl_now.
 - intros. inv H.
   + eapply match_final_states; eauto.
   + eelim (sd_final_nostep L1det); eauto.
 - intros s1 t s1' A; destruct 1.
   + exploit simulation; eauto. intros (s1'' & i' & s2' & B & C & D).
     exploit star_match_states_later; eauto. intros (n & E).
-    exists (i', n), s2'; split; auto.
+    exists (ppair i' n), s2'; split; auto.
     destruct C as [P | [P Q]]; auto using lex_ord_left.
   + exploit sd_determ_3. eauto. eexact A. eauto. intros [P Q]; subst t s1'0.
-    exists (i, n), s2; split; auto.
+    exists (ppair i n), s2; split; auto.
     right; split. apply star_refl. apply lex_ord_right. omega.
 - exact public_preserved.
 Qed.
@@ -1324,18 +1324,18 @@ Hypothesis L3_single_events: single_events L3.
 Context index order match_states (S12: bsim_properties L1 L2 index order match_states).
 Context index' order' match_states' (S23: bsim_properties L2 L3 index' order' match_states').
 
-Let bb_index : Type := (index * index')%type.
+Let bb_index : Type := (pprod index index')%type.
 
 Definition bb_order : bb_index -> bb_index -> Prop := lex_ord (clos_trans _ order) order'.
 
 Inductive bb_match_states: bb_index -> state L1 -> state L3 -> Prop :=
   | bb_match_later: forall i1 i2 s1 s3 s2x s2y,
       match_states i1 s1 s2x -> Star L2 s2x E0 s2y -> match_states' i2 s2y s3 ->
-      bb_match_states (i1, i2) s1 s3.
+      bb_match_states (ppair i1 i2) s1 s3.
 
 Lemma bb_match_at: forall i1 i2 s1 s3 s2,
   match_states i1 s1 s2 -> match_states' i2 s2 s3 ->
-  bb_match_states (i1, i2) s1 s3.
+  bb_match_states (ppair i1 i2) s1 s3.
 Proof.
   intros. econstructor; eauto. apply star_refl.
 Qed.
@@ -1344,7 +1344,7 @@ Lemma bb_simulation_base:
   forall s3 t s3', Step L3 s3 t s3' ->
   forall i1 s1 i2 s2, match_states i1 s1 s2 -> match_states' i2 s2 s3 -> safe L1 s1 ->
   (exists i', exists s1',
-    (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ bb_order i' (i1, i2)))
+    (Plus L1 s1 t s1' \/ (Star L1 s1 t s1' /\ bb_order i' (ppair i1 i2)))
     /\ bb_match_states i' s1' s3') \/
   (<<PTERM: ~trace_intact t>> /\ exists s1' t',
        <<STAR: Star L1 s1 t' s1'>> /\ <<SUB: exists tl, t' = (trace_cut_pterm t) ** tl>>).
@@ -1362,10 +1362,10 @@ Proof.
   intros [ [i1' [s1' [PLUS1 MATCH1]]] | [i1' [ORD1 MATCH1]]].
 * (* 1.1.1 L1 makes one or several transitions *)
   left.
-  exists (i1', i2'); exists s1'; split. auto. eapply bb_match_at; eauto.
+  exists (ppair i1' i2'); exists s1'; split. auto. eapply bb_match_at; eauto.
 * (* 1.1.2 L1 makes no transitions *)
   left.
-  exists (i1', i2'); exists s1; split.
+  exists (ppair i1' i2'); exists s1; split.
   right; split. apply star_refl. left; auto.
   eapply bb_match_at; eauto.
 + (* 1.2 non-silent transitions *)
@@ -1375,12 +1375,12 @@ Proof.
   exploit (bsim_simulation' S12). eexact Q. eauto. eapply star_safe; eauto.
   intros [[i1'' [s1y [U V]]] | [[i1'' [U [V W]]] | PTERM]]; try (subst t; discriminate).
   left.
-  exists (i1'', i2'); exists s1y; split.
+  exists (ppair i1'' i2'); exists s1y; split.
   left. eapply star_plus_trans; eauto. eapply bb_match_later; eauto.
   { des. right. split; ss. esplits; cycle 1. { eauto. } eapply star_trans; eauto. }
 - (* 2. L2 makes no transitions *)
   left.
-  subst. exists (i1, i2'); exists s1; split.
+  subst. exists (ppair i1 i2'); exists s1; split.
   right; split. apply star_refl. right; auto.
   eapply bb_match_at; eauto.
 - des. right. split; ss.
@@ -1452,7 +1452,7 @@ Proof.
   exploit (bsim_initial_states_exist props); eauto. intros [s2 INIT2].
   exploit (bsim_match_initial_states props'); eauto. intros [i2 [s2' [INIT2' M2]]].
   exploit (bsim_match_initial_states props); eauto. intros [i1 [s1' [INIT1' M1]]].
-  exists (i1, i2); exists s1'; intuition auto. eapply bb_match_at; eauto.
+  exists (ppair i1 i2); exists s1'; intuition auto. eapply bb_match_at; eauto.
 - (* match final states *)
   intros i s1 s3 r MS SAFE FIN. inv MS.
   exploit (bsim_match_final_states props'); eauto.

@@ -1118,8 +1118,8 @@ Fixpoint size_cont (k: cont) : nat :=
 
 Definition measure_state (S: CminorSel.state) :=
   match S with
-  | CminorSel.State _ s k _ _ _ => (size_stmt s + size_cont k, size_stmt s)
-  | _                           => (0, 0)
+  | CminorSel.State _ s k _ _ _ => (ppair (size_stmt s + size_cont k) (size_stmt s))
+  | _                           => (ppair 0 0)
   end.
 
 Definition lt_state (S1 S2: CminorSel.state) :=
