@@ -1265,17 +1265,19 @@ Variable B: Type.
 Variable ordA: A -> A -> Prop.
 Variable ordB: B -> B -> Prop.
 
-Inductive lex_ord: A*B -> A*B -> Prop :=
+Record pprod: Type := ppair { pfst: A ; psnd: B }.
+
+Inductive lex_ord: pprod -> pprod -> Prop :=
   | lex_ord_left: forall a1 b1 a2 b2,
-      ordA a1 a2 -> lex_ord (a1,b1) (a2,b2)
+      ordA a1 a2 -> lex_ord (ppair a1 b1) (ppair a2 b2)
   | lex_ord_right: forall a b1 b2,
-      ordB b1 b2 -> lex_ord (a,b1) (a,b2).
+      ordB b1 b2 -> lex_ord (ppair a b1) (ppair a b2).
 
 Lemma wf_lex_ord:
   well_founded ordA -> well_founded ordB -> well_founded lex_ord.
 Proof.
   intros Awf Bwf.
-  assert (forall a, Acc ordA a -> forall b, Acc ordB b -> Acc lex_ord (a, b)).
+  assert (forall a, Acc ordA a -> forall b, Acc ordB b -> Acc lex_ord (ppair a b)).
     induction 1. induction 1. constructor; intros. inv H3.
     apply H0. auto. apply Bwf.
     apply H2; auto.

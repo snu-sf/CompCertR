@@ -491,3 +491,7 @@ Proof.
   destruct H2 as (asm_program & P & Q).
   exists asm_program; split; auto. apply c_semantic_preservation; auto.
 Qed.
+
+Let __marker__ := tt.
+Constraint prod.u0 < forward_simulation.u0.
+Reset __marker__.
