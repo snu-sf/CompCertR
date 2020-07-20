@@ -26,13 +26,13 @@ Our development is tested with Coq 8.9.1. CompCertR only supports x86_64 archite
 1) Follow _2-2 Prerequisites_ in [standard CompCert build process](http://compcert.inria.fr/man/manual002.html) to install prerequisites.  
 - Install [opam](https://opam.ocaml.org/) **>= [2.0.0](https://opam.ocaml.org/blog/opam-2-0-0/)**.
 - Install required dependencies. <pre>
-opam switch 4.07.1               # Use OCaml version 4.07.1
+opam switch 4.09.0               # Use OCaml version 4.09.0
 eval \`opam env\`
-opam install coq=8.9.1           # Use Coq version 8.9.1
-opam install menhir=<b>20181113</b>     # Use Menhir version 20181113
+opam install coq=8.10.1           # Use Coq version 8.10.1
+opam install menhir=<b>20190924</b>     # Use Menhir version 20190924
 </pre>
 
-2) Install [Paco coq library](https://github.com/snu-sf/paco) via opam.  
+2) Install [Paco coq library](https://github.com/snu-sf/paco) via opam. (version 4.0.0)
    `opam repo add coq-released https://coq.inria.fr/opam/released; opam install coq-paco`  
    
 3) Configure and Build.  
