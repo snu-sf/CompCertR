@@ -17,6 +17,7 @@ Require Import Integers Floats AST Linking.
 Require Import Values Memory Events Globalenvs Smallstep.
 Require Import Machregs Locations Conventions Op Linear.
 Require Import Debugvar.
+Require Import sflib.
 
 (** * Relational characterization of the transformation *)
 
@@ -291,30 +292,35 @@ Variable tprog: program.
 
 Hypothesis TRANSF: match_prog prog tprog.
 
-Let ge := Genv.globalenv prog.
-Let tge := Genv.globalenv tprog.
+Section CORELEMMA.
+
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
+Variable ge tge: genv.
+
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef (fun _ f tf => transf_fundef f = OK tf) eq prog) ge tge).
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match TRANSF).
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match TRANSF).
+Proof (Genv.senv_match_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall (v: val) (f: fundef),
   Genv.find_funct ge v = Some f ->
   exists tf,
   Genv.find_funct tge v = Some tf /\ transf_fundef f = OK tf.
-Proof (Genv.find_funct_transf_partial TRANSF).
+Proof (Genv.find_funct_transf_partial_genv MATCH_GENV).
 
 Lemma function_ptr_translated:
   forall (b: block) (f: fundef),
   Genv.find_funct_ptr ge b = Some f ->
   exists tf,
   Genv.find_funct_ptr tge b = Some tf /\ transf_fundef f = OK tf.
-Proof (Genv.find_funct_ptr_transf_partial TRANSF).
+Proof (Genv.find_funct_ptr_transf_partial_genv MATCH_GENV).
 
 Lemma sig_preserved:
   forall f tf,
@@ -328,16 +334,13 @@ Proof.
 Qed.
 
 Lemma find_function_translated:
-  forall ros ls f,
-  find_function ge ros ls = Some f ->
-  exists tf,
-  find_function tge ros ls = Some tf /\ transf_fundef f = OK tf.
+  forall ros ls fptr,
+  find_function_ptr ge ros ls m= fptr ->
+  exists tfptr, find_function_ptr tge ros ls m= tfptr /\ <<EQ: fptr = tfptr>>.
 Proof.
-  unfold find_function; intros; destruct ros; simpl.
-  apply functions_translated; auto.
-  rewrite symbols_preserved. destruct (Genv.find_symbol ge i).
-  apply function_ptr_translated; auto.
-  congruence.
+  unfold find_function_ptr; intros; destruct ros; simpl.
+- esplits; eauto.
+- rewrite symbols_preserved. destruct (Genv.find_symbol ge i); eauto.
 Qed.
 
 (** Evaluation of the debug annotations introduced by the transformation. *)
@@ -355,7 +358,7 @@ Qed.
 
 Lemma eval_add_delta_ranges:
   forall s f sp c rs m before after,
-  star step tge (State s f sp (add_delta_ranges before after c) rs m)
+  star step tse tge (State s f sp (add_delta_ranges before after c) rs m)
              E0 (State s f sp c rs m).
 Proof.
   intros. unfold add_delta_ranges.
@@ -399,11 +402,10 @@ Inductive match_states: Linear.state ->  Linear.state -> Prop :=
       match_states (State s f sp c rs m)
                    (State ts tf sp tc rs m)
   | match_states_call:
-      forall s f rs m tf ts,
+      forall s fptr sg rs m ts,
       list_forall2 match_stackframes s ts ->
-      transf_fundef f = OK tf ->
-      match_states (Callstate s f rs m)
-                   (Callstate ts tf rs m)
+      match_states (Callstate s fptr sg rs m)
+                   (Callstate ts fptr sg rs m)
   | match_states_return:
       forall s rs m ts,
       list_forall2 match_stackframes s ts ->
@@ -421,9 +423,9 @@ Qed.
 (** The simulation diagram. *)
 
 Theorem transf_step_correct:
-  forall s1 t s2, step ge s1 t s2 ->
+  forall s1 t s2, step se ge s1 t s2 ->
   forall ts1 (MS: match_states s1 ts1),
-  exists ts2, plus step tge ts1 t ts2 /\ match_states s2 ts2.
+  exists ts2, plus step tse tge ts1 t ts2 /\ match_states s2 ts2.
 Proof.
   induction 1; intros ts1 MS; inv MS; try (inv TRC).
 - (* getstack *)
@@ -461,23 +463,22 @@ Proof.
   exploit find_function_translated; eauto. intros (tf' & A & B).
   econstructor; split.
   apply plus_one.
-  econstructor. eexact A. symmetry; apply sig_preserved; auto. traceEq.
+  econstructor. rewrite A. constructor. auto. auto. des. clarify.
   constructor; auto. constructor; auto. constructor; auto.
 - (* tailcall *)
   exploit find_function_translated; eauto. intros (tf' & A & B).
   exploit parent_locset_match; eauto. intros PLS.
   econstructor; split.
   apply plus_one.
-  econstructor. eauto. rewrite PLS. eexact A.
-  symmetry; apply sig_preserved; auto.
+  econstructor. eauto. rewrite PLS. auto. auto. auto.
   inv TRF; eauto. traceEq.
-  rewrite PLS. constructor; auto.
+  des; clarify. constructor; auto.
 - (* builtin *)
   econstructor; split.
   eapply plus_left.
   econstructor; eauto.
   eapply eval_builtin_args_preserved with (ge1 := ge); eauto. exact symbols_preserved.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   apply eval_add_delta_ranges. traceEq.
   constructor; auto.
 - (* label *)
@@ -509,16 +510,18 @@ Proof.
   apply plus_one.  constructor. inv TRF; eauto. traceEq.
   rewrite (parent_locset_match _ _ STACKS). constructor; auto.
 - (* internal function *)
-  monadInv H7. rename x into tf.
+  exploit functions_translated; eauto. intros (tf & FIND' & TRANS).
+  monadInv TRANS. rename x into tf.
   assert (MF: match_function f tf) by (apply transf_function_match; auto).
   inversion MF; subst.
   econstructor; split.
-  apply plus_one. constructor. simpl; eauto. reflexivity.
+  apply plus_one. constructor. simpl; eauto. auto. auto. eauto. reflexivity.
   constructor; auto.
 - (* external function *)
-  monadInv H8. econstructor; split.
+  exploit functions_translated; eauto. intros (tf & FIND' & TRANS).
+  monadInv TRANS. econstructor; split.
   apply plus_one. econstructor; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  eapply external_call_symbols_preserved; eauto.
   constructor; auto.
 - (* return *)
   inv H3. inv H1.
@@ -527,17 +530,25 @@ Proof.
   constructor; auto.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := Genv.globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef (fun _ f tf => transf_fundef f = OK tf) eq prog) ge tge.
+Proof. apply Genv.globalenvs_match; auto. Qed.
+
 Lemma transf_initial_states:
   forall st1, initial_state prog st1 ->
   exists st2, initial_state tprog st2 /\ match_states st1 st2.
 Proof.
   intros. inversion H.
-  exploit function_ptr_translated; eauto. intros [tf [A B]].
-  exists (Callstate nil tf (Locmap.init Vundef) m0); split.
+  exists (Callstate nil (Vptr b Ptrofs.zero) signature_main (Locmap.init Vundef) m0); split.
   econstructor; eauto. eapply (Genv.init_mem_transf_partial TRANSF); eauto.
-  rewrite (match_program_main TRANSF), symbols_preserved. auto.
-  rewrite <- H3. apply sig_preserved. auto.
-  constructor. constructor. auto.
+  erewrite (match_program_main TRANSF), symbols_preserved; eauto.
+  constructor. constructor.
 Qed.
 
 Lemma transf_final_states:
@@ -551,10 +562,12 @@ Theorem transf_program_correct:
   forward_simulation (semantics prog) (semantics tprog).
 Proof.
   eapply forward_simulation_plus.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact transf_initial_states.
   eexact transf_final_states.
-  eexact transf_step_correct.
+  apply transf_step_correct; auto. apply senv_preserved; eauto.
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.

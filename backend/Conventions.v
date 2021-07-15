@@ -17,6 +17,7 @@ Require Import Coqlib.
 Require Import AST.
 Require Import Locations.
 Require Export Conventions1.
+Require Import sflib.
 
 (** The processor-dependent and EABI-dependent definitions are in
     [arch/abi/Conventions1.v].  This file adds various processor-independent
@@ -198,6 +199,9 @@ Definition callee_save_loc (l: loc) :=
 Definition agree_callee_save (ls1 ls2: Locmap.t) : Prop :=
   forall l, callee_save_loc l -> ls1 l = ls2 l.
 
+Definition agree_callee_save_regs (ls1 ls2: Locmap.t) : Prop :=
+  forall r, is_callee_save r = true -> ls1 (R r) = ls2 (R r).
+
 (** * Assigning result locations *)
 
 (** Useful lemmas to reason about the result of an external call. *)
@@ -221,3 +225,25 @@ Proof.
   intros. apply locmap_get_set_loc_result. 
   red in H; destruct l; auto.
 Qed.
+
+Local Opaque Z.add Z.mul Z.divide list_nth_z.
+
+Lemma tailcall_size
+      sg
+      (TAIL: tailcall_possible sg):
+    size_arguments sg = 0.
+Proof.
+  unfold size_arguments. unfold tailcall_possible in *.
+  abstr (loc_arguments sg) locs. clear sg.
+  {
+    generalize 0. ginduction locs; ii; ss.
+    destruct a.
+    - hexploit (TAIL r); ss; eauto. intro T. des_ifs. ss. eapply IHlocs. ii. eapply TAIL; eauto.
+    - hexploit (TAIL rhi); ss; eauto. intro T. des_ifs. ss.
+      hexploit (TAIL rlo); ss; eauto. intro U. des_ifs. ss.
+      eapply IHlocs. ii. eapply TAIL; eauto.
+  }
+Qed.
+
+Class main_args_ctx: Type := { main_args: bool }.
+Local Instance main_args_none: main_args_ctx := { main_args := false }.

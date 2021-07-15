@@ -1226,11 +1226,11 @@ Proof.
   - (* Stk ofs *)
     constructor; simpl; intros.
     rewrite ISet.In_remove. intros [A B]. elim A; auto.
-    assert (bc b = BCglob id) by (eapply H; eauto). congruence.
+    assert (bc b = BCglob (Some id)) by (eapply H; eauto). congruence.
   - (* Stack *)
     constructor; simpl; intros.
     apply ISet.In_empty.
-    assert (bc b = BCglob id) by (eapply H; eauto). congruence.
+    assert (bc b = BCglob (Some id)) by (eapply H; eauto). congruence.
 Qed.
 
 Lemma incl_nmem_add:

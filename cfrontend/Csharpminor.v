@@ -156,7 +156,8 @@ Inductive state: Type :=
              (m: mem),                  (**r current memory state *)
       state
   | Callstate:                  (**r Invocation of a function *)
-      forall (f: fundef)                (**r function to invoke *)
+      forall (fptr: val)
+             (sg: signature)
              (args: list val)           (**r arguments provided by caller *)
              (k: cont)                  (**r what to do next  *)
              (m: mem),                  (**r memory state *)
@@ -288,6 +289,7 @@ Definition blocks_of_env (e: env) : list (block * Z * Z) :=
 
 Section RELSEM.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (* Evaluation of the address of a variable:
@@ -382,17 +384,17 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State f (Sstore chunk addr a) k e le m)
         E0 (State f Sskip k e le m')
 
-  | step_call: forall f optid sig a bl k e le m vf vargs fd,
+  | step_call: forall f optid sig a bl k e le m vf vargs,
       eval_expr e le m a vf ->
       eval_exprlist e le m bl vargs ->
-      Genv.find_funct ge vf = Some fd ->
-      funsig fd = sig ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
       step (State f (Scall optid sig a bl) k e le m)
-        E0 (Callstate fd vargs (Kcall optid f e le k) m)
+        E0 (Callstate vf sig vargs (Kcall optid f e le k) m)
 
   | step_builtin: forall f optid ef bl k e le m vargs t vres m',
       eval_exprlist e le m bl vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       step (State f (Sbuiltin optid ef bl) k e le m)
          t (State f Sskip k e (Cminor.set_optvar optid vres le) m')
 
@@ -448,18 +450,22 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State f (Sgoto lbl) k e le m)
         E0 (State f s' k' e le m)
 
-  | step_internal_function: forall f vargs k m m1 e le,
+  | step_internal_function: forall f vargs k m m1 e le fptr sg
+      (FPTR: Genv.find_funct ge fptr = Some (Internal f))
+      (SIG: funsig (Internal f) = sg),
       list_norepet (map fst f.(fn_vars)) ->
       list_norepet f.(fn_params) ->
       list_disjoint f.(fn_params) f.(fn_temps) ->
       alloc_variables empty_env m (fn_vars f) e m1 ->
       bind_parameters f.(fn_params) vargs (create_undef_temps f.(fn_temps)) = Some le ->
-      step (Callstate (Internal f) vargs k m)
+      step (Callstate fptr sg vargs k m)
         E0 (State f f.(fn_body) k e le m1)
 
-  | step_external_function: forall ef vargs k m t vres m',
-      external_call ef ge vargs m t vres m' ->
-      step (Callstate (External ef) vargs k m)
+  | step_external_function: forall ef vargs k m t vres m' fptr sg
+      (FPTR: Genv.find_funct ge fptr = Some (External ef))
+      (SIG: funsig (External ef) = sg),
+      external_call ef se vargs m t vres m' ->
+      step (Callstate fptr sg vargs k m)
          t (Returnstate vres k m')
 
   | step_return: forall v optid f e le k m,
@@ -474,13 +480,13 @@ End RELSEM.
   without arguments and with an empty continuation. *)
 
 Inductive initial_state (p: program): state -> Prop :=
-  | initial_state_intro: forall b f m0,
+  | initial_state_intro: forall b m0,
       let ge := Genv.globalenv p in
       Genv.init_mem p = Some m0 ->
       Genv.find_symbol ge p.(prog_main) = Some b ->
-      Genv.find_funct_ptr ge b = Some f ->
-      funsig f = signature_main ->
-      initial_state p (Callstate f nil Kstop m0).
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      initial_state p (Callstate (Vptr b Ptrofs.zero) signature_main nil Kstop m0).
 
 (** A final state is a [Returnstate] with an empty continuation. *)
 
@@ -492,3 +498,28 @@ Inductive final_state: state -> int -> Prop :=
 
 Definition semantics (p: program) :=
   Semantics step (initial_state p) final_state (Genv.globalenv p).
+
+Lemma alloc_variables_nextblock: forall e1 m1 vars e2 m2,
+  alloc_variables e1 m1 vars e2 m2 -> Ple (Mem.nextblock m1) (Mem.nextblock m2).
+Proof.
+  induction 1.
+  - apply Ple_refl.
+  - eapply Ple_trans; eauto. exploit Mem.nextblock_alloc; eauto. intros EQ; rewrite EQ. apply Ple_succ.
+Qed.
+
+Lemma alloc_variables_unchanged_on: forall e m l e' m' P,
+    alloc_variables e m l e' m' -> Mem.unchanged_on P m m'.
+Proof.
+  induction 1; intros.
+  - eapply Mem.unchanged_on_refl.
+  - eapply Mem.unchanged_on_trans; eauto. eapply Mem.alloc_unchanged_on; eauto.
+Qed.
+
+Lemma alloc_variables_perm: forall e m l e' m' b i k p,
+    Mem.valid_block m b -> alloc_variables e m l e' m' ->
+    Mem.perm m' b i k p -> Mem.perm m b i k p.
+Proof.
+  induction 2; intros; eauto. eapply Mem.perm_alloc_4; eauto.
+  - eapply IHalloc_variables; eauto. eapply Mem.valid_block_alloc; eauto.
+  - unfold not. intros. subst b1. exploit Mem.fresh_block_alloc; eauto.
+Qed.

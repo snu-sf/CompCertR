@@ -27,6 +27,7 @@ Require Import Memory.
 Require Import Globalenvs.
 Require Import Smallstep.
 Require Import Switch.
+Require Import sflib.
 
 (** * Abstract syntax *)
 
@@ -232,7 +233,8 @@ Inductive state: Type :=
              (m: mem),                  (**r current memory state *)
       state
   | Callstate:                  (**r Invocation of a function *)
-      forall (f: fundef)                (**r function to invoke *)
+      forall (fptr: val)                (**r function to invoke *)
+             (sg: signature)
              (args: list val)           (**r arguments provided by caller *)
              (k: cont)                  (**r what to do next  *)
              (m: mem),                  (**r memory state *)
@@ -245,6 +247,7 @@ Inductive state: Type :=
 
 Section RELSEM.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** Evaluation of constants and operator applications.
@@ -457,26 +460,26 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State f (Sstore chunk addr a) k sp e m)
         E0 (State f Sskip k sp e m')
 
-  | step_call: forall f optid sig a bl k sp e m vf vargs fd,
+  | step_call: forall f optid sig a bl k sp e m vf vargs,
       eval_expr sp e m a vf ->
       eval_exprlist sp e m bl vargs ->
-      Genv.find_funct ge vf = Some fd ->
-      funsig fd = sig ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
       step (State f (Scall optid sig a bl) k sp e m)
-        E0 (Callstate fd vargs (Kcall optid f sp e k) m)
+        E0 (Callstate vf sig vargs (Kcall optid f sp e k) m)
 
-  | step_tailcall: forall f sig a bl k sp e m vf vargs fd m',
+  | step_tailcall: forall f sig a bl k sp e m vf vargs m',
       eval_expr (Vptr sp Ptrofs.zero) e m a vf ->
       eval_exprlist (Vptr sp Ptrofs.zero) e m bl vargs ->
-      Genv.find_funct ge vf = Some fd ->
-      funsig fd = sig ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
       Mem.free m sp 0 f.(fn_stackspace) = Some m' ->
       step (State f (Stailcall sig a bl) k (Vptr sp Ptrofs.zero) e m)
-        E0 (Callstate fd vargs (call_cont k) m')
+        E0 (Callstate vf sig vargs (call_cont k) m')
 
   | step_builtin: forall f optid ef bl k sp e m vargs t vres m',
       eval_exprlist sp e m bl vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       step (State f (Sbuiltin optid ef bl) k sp e m)
          t (State f Sskip k sp (set_optvar optid vres e) m')
 
@@ -533,14 +536,18 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State f (Sgoto lbl) k sp e m)
         E0 (State f s' k' sp e m)
 
-  | step_internal_function: forall f vargs k m m' sp e,
+  | step_internal_function: forall fptr sg f vargs k m m' sp e
+     (FPTR: Genv.find_funct ge fptr = Some (Internal f))
+     (SIG: f.(fn_sig) = sg),
       Mem.alloc m 0 f.(fn_stackspace) = (m', sp) ->
       set_locals f.(fn_vars) (set_params vargs f.(fn_params)) = e ->
-      step (Callstate (Internal f) vargs k m)
+      step (Callstate fptr sg vargs k m)
         E0 (State f f.(fn_body) k (Vptr sp Ptrofs.zero) e m')
-  | step_external_function: forall ef vargs k m t vres m',
-      external_call ef ge vargs m t vres m' ->
-      step (Callstate (External ef) vargs k m)
+  | step_external_function: forall fptr sg ef vargs k m t vres m'
+     (FPTR: Genv.find_funct ge fptr = Some (External ef))
+     (SIG: (ef_sig ef) = sg),
+      external_call ef se vargs m t vres m' ->
+      step (Callstate fptr sg vargs k m)
          t (Returnstate vres k m')
 
   | step_return: forall v optid f sp e k m,
@@ -555,13 +562,14 @@ End RELSEM.
   without arguments and with an empty continuation. *)
 
 Inductive initial_state (p: program): state -> Prop :=
-  | initial_state_intro: forall b f m0,
+  | initial_state_intro: forall b m0,
       let ge := Genv.globalenv p in
       Genv.init_mem p = Some m0 ->
       Genv.find_symbol ge p.(prog_main) = Some b ->
-      Genv.find_funct_ptr ge b = Some f ->
-      funsig f = signature_main ->
-      initial_state p (Callstate f nil Kstop m0).
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      DUMMY_PROP ->
+      initial_state p (Callstate (Vptr b Ptrofs.zero) signature_main nil Kstop m0).
 
 (** A final state is a [Returnstate] with an empty continuation. *)
 
@@ -581,7 +589,7 @@ Lemma semantics_receptive:
 Proof.
   intros. constructor; simpl; intros.
 (* receptiveness *)
-  assert (t1 = E0 -> exists s2, step (Genv.globalenv p) s t2 s2).
+  assert (t1 = E0 -> exists s2, Step (semantics p) s t2 s2).
     intros. subst. inv H0. exists s1; auto.
   inversion H; subst; auto.
   exploit external_call_receptive; eauto. intros [vres2 [m2 EC2]].
@@ -642,7 +650,7 @@ Proof.
     apply B in H; destruct H; congruence.
   + subst v0. assert (b0 = b) by (inv H2; inv H13; auto). subst b0; auto.
   + assert (n0 = n) by (inv H2; inv H14; auto). subst n0; auto.
-  + exploit external_call_determ. eexact H1. eexact H7.
+  + clarify. exploit external_call_determ. eexact H1. eexact H8.
     intros (A & B). split; intros; auto.
     apply B in H; destruct H; congruence.
 - (* single event *)
@@ -709,6 +717,7 @@ Definition outcome_free_mem
 Section NATURALSEM.
 
 Variable ge: genv.
+Variable se: Senv.t.
 
 (** Evaluation of a function invocation: [eval_funcall ge m f args t m' res]
   means that the function [f], applied to the arguments [args] in
@@ -729,7 +738,7 @@ Inductive eval_funcall:
       eval_funcall m (Internal f) vargs t m3 vres
   | eval_funcall_external:
       forall ef m args t res m',
-      external_call ef ge args m t res m' ->
+      external_call ef se args m t res m' ->
       eval_funcall m (External ef) args t m' res
 
 (** Execution of a statement: [exec_stmt ge f sp e m s t e' m' out]
@@ -769,7 +778,7 @@ with exec_stmt:
   | exec_Sbuiltin:
       forall f sp e m optid ef bl t m' vargs vres e',
       eval_exprlist ge sp e m bl vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       e' = set_optvar optid vres e ->
       exec_stmt f sp e m (Sbuiltin optid ef bl) t e' m' Out_normal
   | exec_Sifthenelse:
@@ -917,7 +926,7 @@ Inductive bigstep_program_terminates (p: program): trace -> int -> Prop :=
       Genv.find_symbol ge p.(prog_main) = Some b ->
       Genv.find_funct_ptr ge b = Some f ->
       funsig f = signature_main ->
-      eval_funcall ge m0 f nil t m (Vint r) ->
+      eval_funcall ge ge m0 f nil t m (Vint r) ->
       bigstep_program_terminates p t r.
 
 Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
@@ -928,7 +937,7 @@ Inductive bigstep_program_diverges (p: program): traceinf -> Prop :=
       Genv.find_symbol ge p.(prog_main) = Some b ->
       Genv.find_funct_ptr ge b = Some f ->
       funsig f = signature_main ->
-      evalinf_funcall ge m0 f nil t ->
+      evalinf_funcall ge ge m0 f nil t ->
       bigstep_program_diverges p t.
 
 Definition bigstep_semantics (p: program) :=
@@ -982,16 +991,18 @@ Qed.
 
 Lemma eval_funcall_exec_stmt_steps:
   (forall m fd args t m' res,
-   eval_funcall ge m fd args t m' res ->
-   forall k,
+   eval_funcall ge ge m fd args t m' res ->
+   forall fptr sg k
+   (FPTR: Genv.find_funct ge fptr = Some fd)
+   (SIG: funsig fd = sg),
    is_call_cont k ->
-   star step ge (Callstate fd args k m)
+   star step ge ge (Callstate fptr sg args k m)
               t (Returnstate res k m'))
 /\(forall f sp e m s t e' m' out,
-   exec_stmt ge f sp e m s t e' m' out ->
+   exec_stmt ge ge f sp e m s t e' m' out ->
    forall k,
    exists S,
-   star step ge (State f s k sp e m) t S
+   Star (semantics prog) (State f s k sp e m) t S
    /\ outcome_state_match sp e' m' f k out S).
 Proof.
   apply eval_funcall_exec_stmt_ind2; intros.
@@ -1017,7 +1028,7 @@ Proof.
   reflexivity. traceEq.
 
 (* funcall external *)
-  apply star_one. constructor; auto.
+  apply star_one. rewrite <- SIG. econstructor; eauto.
 
 (* skip *)
   econstructor; split.
@@ -1037,7 +1048,7 @@ Proof.
 (* call *)
   econstructor; split.
   eapply star_left. econstructor; eauto.
-  eapply star_right. apply H4. red; auto.
+  eapply star_right. apply H4. auto. auto. red; auto.
   constructor. reflexivity. traceEq.
   subst e'. constructor.
 
@@ -1138,44 +1149,48 @@ Proof.
 (* tailcall *)
   econstructor; split.
   eapply star_left. econstructor; eauto.
-  apply H5. apply is_call_cont_call_cont. traceEq.
+  apply H5. auto. auto. apply is_call_cont_call_cont. traceEq.
   econstructor.
 Qed.
 
 Lemma eval_funcall_steps:
    forall m fd args t m' res,
-   eval_funcall ge m fd args t m' res ->
-   forall k,
+   eval_funcall ge ge m fd args t m' res ->
+   forall fptr sg k
+   (FPTR: Genv.find_funct ge fptr = Some fd)
+   (SIG: funsig fd = sg),
    is_call_cont k ->
-   star step ge (Callstate fd args k m)
+   star step ge ge (Callstate fptr sg args k m)
               t (Returnstate res k m').
 Proof (proj1 eval_funcall_exec_stmt_steps).
 
 Lemma exec_stmt_steps:
    forall f sp e m s t e' m' out,
-   exec_stmt ge f sp e m s t e' m' out ->
+   exec_stmt ge ge f sp e m s t e' m' out ->
    forall k,
    exists S,
-   star step ge (State f s k sp e m) t S
+   Star (semantics prog) (State f s k sp e m) t S
    /\ outcome_state_match sp e' m' f k out S.
 Proof (proj2 eval_funcall_exec_stmt_steps).
 
 Lemma evalinf_funcall_forever:
-  forall m fd args T k,
-  evalinf_funcall ge m fd args T ->
-  forever_plus step ge (Callstate fd args k m) T.
+  forall m fd args T fptr sg k
+  (FPTR: Genv.find_funct ge fptr = Some fd)
+  (SIG: funsig fd = sg),
+  evalinf_funcall ge ge m fd args T ->
+  forever_plus step ge ge (Callstate fptr sg args k m) T.
 Proof.
   cofix CIH_FUN.
   assert (forall sp e m s T f k,
-          execinf_stmt ge f sp e m s T ->
-          forever_plus step ge (State f s k sp e m) T).
+          execinf_stmt ge ge f sp e m s T ->
+          forever_plus step ge ge (State f s k sp e m) T).
   cofix CIH_STMT.
   intros. inv H.
 
 (* call *)
   eapply forever_plus_intro.
   apply plus_one. econstructor; eauto.
-  apply CIH_FUN. eauto. traceEq.
+  eapply CIH_FUN; eauto. traceEq.
 
 (* ifthenelse *)
   eapply forever_plus_intro with (s2 := State f (if b then s1 else s2) k sp e m).
@@ -1218,7 +1233,7 @@ Proof.
 (* tailcall *)
   eapply forever_plus_intro.
   apply plus_one. econstructor; eauto.
-  apply CIH_FUN. eauto. traceEq.
+  eapply CIH_FUN; eauto. traceEq.
 
 (* function call *)
   intros. inv H0.
@@ -1235,7 +1250,7 @@ Proof.
 (* termination *)
   inv H. econstructor; econstructor.
   split. econstructor; eauto.
-  split. apply eval_funcall_steps. eauto. red; auto.
+  split. eapply eval_funcall_steps; eauto. red; auto.
   econstructor.
 (* divergence *)
   inv H. econstructor.

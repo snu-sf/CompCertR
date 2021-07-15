@@ -1010,6 +1010,12 @@ Definition classify_fun (ty: type) :=
   | _ => fun_default
   end.
 
+Definition classify_fun_strong (ty: type) :=
+  match ty with
+  | Tfunction args res cc => fun_case_f args res cc
+  | _ => fun_default
+  end.
+
 (** ** Argument of a [switch] statement *)
 
 Inductive classify_switch_cases : Type :=

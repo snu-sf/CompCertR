@@ -167,7 +167,8 @@ Definition eval_static_operation (op: operation) (vl: list aval): aval :=
 Section SOUNDNESS.
 
 Variable bc: block_classification.
-Variable ge: genv.
+Variable F V: Type.
+Variable ge: Genv.t F V.
 Hypothesis GENV: genv_match bc ge.
 Variable sp: block.
 Hypothesis STACK: bc sp = BCstack.
@@ -197,7 +198,7 @@ Lemma symbol_address_sound_2:
   forall id ofs,
   vmatch bc (Genv.symbol_address ge id ofs) (Ifptr (Gl id ofs)).
 Proof.
-  intros. unfold Genv.symbol_address. destruct (Genv.find_symbol ge id) as [b|] eqn:F.
+  intros. unfold Genv.symbol_address. destruct (Genv.find_symbol ge id) as [b|] eqn:F0.
   constructor. constructor. apply GENV; auto.
   constructor.
 Qed.

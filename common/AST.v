@@ -137,22 +137,25 @@ Proof.
 Defined.
 Global Opaque calling_convention_eq.
 
-Record signature : Type := mksignature {
+Record signature : Type := _mksignature {
   sig_args: list typ;
   sig_res: rettype;
-  sig_cc: calling_convention
+  sig_cc: calling_convention;
+  sig_cstyle: bool;
 }.
+Definition mksignature sig_args sig_res sig_cc := _mksignature sig_args sig_res sig_cc true.
 
 Definition proj_sig_res (s: signature) : typ := proj_rettype s.(sig_res).
 
 Definition signature_eq: forall (s1 s2: signature), {s1=s2} + {s1<>s2}.
 Proof.
   generalize rettype_eq, list_typ_eq, calling_convention_eq; decide equality.
+  destruct sig_cstyle0, sig_cstyle1; decide equality.
 Defined.
 Global Opaque signature_eq.
 
 Definition signature_main :=
-  {| sig_args := nil; sig_res := Tint; sig_cc := cc_default |}.
+  {| sig_args := nil; sig_res := Tint; sig_cc := cc_default; sig_cstyle := true|}.
 
 (** Memory accesses (load and store instructions) are annotated by
   a ``memory chunk'' indicating the type, size and signedness of the
@@ -544,6 +547,12 @@ Definition ef_inline (ef: external_function) : bool :=
   | EF_annot_val kind Text rg => true
   | EF_inline_asm text sg clob => true
   | EF_debug kind text targs => true
+  end.
+
+Definition is_external_ef (ef: external_function): bool :=
+  match ef with
+  | EF_external name sg  => true
+  | _ => false
   end.
 
 (** Whether an external function must reload its arguments. *)

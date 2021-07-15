@@ -487,10 +487,16 @@ Section CMCONSTRS.
 Variable prog: program.
 Variable hf: helper_functions.
 Hypothesis HELPERS: helper_functions_declared prog hf.
-Let ge := Genv.globalenv prog.
+Variable se: Senv.t.
+Variable ge : genv.
 Variable sp: val.
 Variable e: env.
 Variable m: mem.
+
+Notation "'eval_expr'" := (eval_expr se) (only parsing).
+Notation "'eval_exprlist'" := (eval_exprlist se) (only parsing).
+
+Hypothesis (GENV_COMPAT: genv_compat ge prog).
 
 Lemma is_intconst_sound:
   forall v a n le,
@@ -704,7 +710,7 @@ Proof.
             || Int.eq i (Int.repr Int.min_signed) && Int.eq n2 Int.mone) eqn:Z2; inv DIV.
   destruct (Int.is_power2 n2) as [l | ] eqn:P2.
 - destruct (Int.ltu l (Int.repr 31)) eqn:LT31.
-  + exploit (eval_shrximm ge sp e m (Vint i :: le) (Eletvar O)).
+  + exploit (eval_shrximm se ge sp e m (Vint i :: le) (Eletvar O)).
     constructor. simpl; eauto. eapply Val.divs_pow2; eauto.
     intros [v1 [X LD]]. inv LD.
     econstructor; split. econstructor. eauto.
@@ -763,8 +769,8 @@ Lemma eval_divlu_mull:
 Proof.
   intros. unfold divlu_mull. exploit (divlu_mul_shift x); eauto. intros [A B].
   assert (A0: eval_expr ge sp e m le (Eletvar O) (Vlong x)) by (constructor; auto).
-  exploit eval_mullhu. try apply HELPERS. eexact A0. instantiate (1 := Int64.repr M). intros (v1 & A1 & B1).
-  exploit eval_shrluimm. try apply HELPERS. eexact A1. instantiate (1 := Int.repr p). intros (v2 & A2 & B2).
+  exploit eval_mullhu. try apply HELPERS. eauto. eexact A0. instantiate (1 := Int64.repr M). intros (v1 & A1 & B1).
+  exploit eval_shrluimm. try apply HELPERS. eauto. eexact A1. instantiate (1 := Int.repr p). intros (v2 & A2 & B2).
   simpl in B1; inv B1. simpl in B2. replace (Int.ltu (Int.repr p) Int64.iwordsize') with true in B2. inv B2.
   rewrite B. assumption.
   unfold Int.ltu. rewrite Int.unsigned_repr. rewrite zlt_true; auto. tauto.
@@ -786,7 +792,7 @@ Proof.
   simpl in H1. destruct (Int64.eq n2 Int64.zero); inv H1.
   econstructor; split. apply eval_longconst. constructor.
 + destruct (Int64.is_power2' n2) as [l|] eqn:POW.
-* exploit Val.divlu_pow2; eauto. intros EQ; subst z. apply eval_shrluimm; auto.
+* exploit Val.divlu_pow2; eauto. intros EQ; subst z. eapply eval_shrluimm; eauto.
 * destruct (Compopts.optim_for_size tt). eapply eval_divlu_base; eauto.
   destruct (divlu_mul_params (Int64.unsigned n2)) as [[p M]|] eqn:PARAMS.
 ** destruct x; simpl in H1; try discriminate.
@@ -834,16 +840,16 @@ Proof.
   intros. unfold divls_mull.
   assert (A0: eval_expr ge sp e m le (Eletvar O) (Vlong x)).
   { constructor; auto. }
-  exploit eval_mullhs. try apply HELPERS. eexact A0. instantiate (1 := Int64.repr M).  intros (v1 & A1 & B1).
+  exploit eval_mullhs. try apply HELPERS. eauto. eexact A0. instantiate (1 := Int64.repr M).  intros (v1 & A1 & B1).
   exploit eval_addl. auto. eexact A1. eexact A0. intros (v2 & A2 & B2).
-  exploit eval_shrluimm. try apply HELPERS. eexact A0. instantiate (1 := Int.repr 63). intros (v3 & A3 & B3).
+  exploit eval_shrluimm. try apply HELPERS. eauto. eexact A0. instantiate (1 := Int.repr 63). intros (v3 & A3 & B3).
   set (a4 := if zlt M Int64.half_modulus
              then mullhs (Eletvar 0) (Int64.repr M)
              else addl (mullhs (Eletvar 0) (Int64.repr M)) (Eletvar 0)).
   set (v4 := if zlt M Int64.half_modulus then v1 else v2).
   assert (A4: eval_expr ge sp e m le a4 v4).
   { unfold a4, v4; destruct (zlt M Int64.half_modulus); auto. }
-  exploit eval_shrlimm. try apply HELPERS. eexact A4. instantiate (1 := Int.repr p). intros (v5 & A5 & B5).
+  exploit eval_shrlimm. try apply HELPERS. eauto. eexact A4. instantiate (1 := Int.repr p). intros (v5 & A5 & B5).
   exploit eval_addl. auto. eexact A5. eexact A3. intros (v6 & A6 & B6).
   assert (RANGE: forall x, 0 <= x < 64 -> Int.ltu (Int.repr x) Int64.iwordsize' = true).
   { intros. unfold Int.ltu. rewrite Int.unsigned_repr. rewrite zlt_true by tauto. auto.

@@ -565,7 +565,13 @@ let expand_instruction instr =
          (* Save the registers *)
          emit (Pleaq (R10, linear_addr RSP (Z.of_uint save_regs)));
          emit (Pcall_s (intern_string "__compcert_va_saveregs",
+<<<<<<< HEAD
                         {sig_args = []; sig_res = Tvoid; sig_cc = cc_default}))
+||||||| 4b042d57
+                        {sig_args = []; sig_res = None; sig_cc = cc_default}))
+=======
+                        {sig_args = []; sig_res = None; sig_cc = cc_default; sig_cstyle = true}))
+>>>>>>> v3.6_stable
        end;
        (* Stack chaining *)
        let fullsz = sz + 8 in

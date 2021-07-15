@@ -14,6 +14,7 @@ Require Import Coqlib Maps Errors.
 Require Import AST Integers Floats Values Memory Globalenvs Events Smallstep.
 Require Import Cminor.
 Require Import Unityping.
+Require Import sflib.
 
 Local Open Scope string_scope.
 Local Open Scope error_monad_scope.
@@ -419,8 +420,8 @@ Definition def_env (f: function) (e: Cminor.env) : Prop :=
   forall id, In id f.(fn_params) \/ In id f.(fn_vars) -> exists v, e!id = Some v.
 
 Inductive wt_cont_call: cont -> rettype -> Prop :=
-  | wt_cont_Kstop:
-      wt_cont_call Kstop Tint
+  | wt_cont_Kstop: forall ty,
+      wt_cont_call Kstop ty
   | wt_cont_Kcall: forall optid f sp e k tret env
         (WT_FN: wt_function env f)
         (WT_CONT: wt_cont env f.(fn_sig).(sig_res) k)
@@ -449,11 +450,11 @@ Inductive wt_state: state -> Prop :=
         (WT_ENV: wt_env env e)
         (DEF_ENV: def_env f e),
       wt_state (State f s k sp e m)
-  | wt_call_state: forall f args k m
-        (WT_FD: wt_fundef f)
-        (WT_ARGS: Val.has_type_list args (funsig f).(sig_args))
-        (WT_CONT: wt_cont_call k (funsig f).(sig_res)),
-      wt_state (Callstate f args k m)
+  | wt_call_state: forall fptr sg args k m
+        (* (WT_FD: wt_fundef f) *)
+        (WT_ARGS: Val.has_type_list args sg.(sig_args))
+        (WT_CONT: wt_cont_call k sg.(sig_res)),
+      wt_state (Callstate fptr sg args k m)
   | wt_return_state: forall v k m tret
         (WT_RES: Val.has_type v (proj_rettype tret))
         (WT_CONT: wt_cont_call k tret),
@@ -550,7 +551,12 @@ Variable p: program.
 
 Hypothesis wt_p: wt_program p.
 
-Let ge := Genv.globalenv p.
+Variable se: Senv.t.
+Variable ge: genv.
+
+Hypothesis CONTAINED: forall fptr f
+    (FINDF: Genv.find_funct ge fptr = Some f),
+    exists i, In (i, Gfun f) (prog_defs p).
 
 Ltac VHT :=
   match goal with
@@ -630,11 +636,11 @@ Qed.
 Lemma wt_find_funct: forall v fd,
   Genv.find_funct ge v = Some fd -> wt_fundef fd.
 Proof.
-  intros. eapply Genv.find_funct_prop; eauto.
+  intros. exploit CONTAINED; eauto. i; des. eapply wt_p; eauto.
 Qed.
 
 Lemma subject_reduction:
-  forall st1 t st2, step ge st1 t st2 ->
+  forall st1 t st2, step se ge st1 t st2 ->
   forall (WT: wt_state st1), wt_state st2.
 Proof.
   destruct 1; intros; inv WT.
@@ -646,13 +652,13 @@ Proof.
   apply def_env_assign; auto.
 - econstructor; eauto using wt_Sskip.
 - inv WT_STMT. econstructor; eauto.
-  eapply wt_find_funct; eauto.
+  (* eapply wt_find_funct; eauto. *)
   eapply wt_eval_exprlist; eauto.
   econstructor; eauto.
 - inv WT_STMT. econstructor; eauto.
-  eapply wt_find_funct; eauto.
+  (* eapply wt_find_funct; eauto. *)
   eapply wt_eval_exprlist; eauto.
-  rewrite H8; eapply call_cont_wt; eauto.
+  rewrite H9; eapply call_cont_wt; eauto.
 - inv WT_STMT. exploit external_call_well_typed; eauto. intros TRES.
   econstructor; eauto using wt_Sskip.
   destruct optid; auto. apply wt_env_assign; auto. rewrite <- H5; auto.
@@ -674,7 +680,8 @@ Proof.
   { constructor. eapply call_cont_wt; eauto. }
   generalize (wt_find_label _ _ lbl _ _ H2 WT_CK).
   rewrite H. intros [WT_STMT' WT_CONT']. econstructor; eauto.
-- inv WT_FD. inversion H1; subst. econstructor; eauto.
+- exploit wt_find_funct; eauto. intro WT_FD.
+  inv WT_FD. inversion H1; subst. econstructor; eauto.
   constructor; auto.
   apply wt_env_set_locals. apply wt_env_set_params. rewrite H2; auto.
   red; intros. apply def_set_locals. destruct H4; auto. left; apply def_set_params; auto.
@@ -687,7 +694,7 @@ Proof.
 Qed.
 
 Lemma subject_reduction_star:
-  forall st1 t st2, star step ge st1 t st2 ->
+  forall st1 t st2, star step se ge st1 t st2 ->
   forall (WT: wt_state st1), wt_state st2.
 Proof.
   induction 1; eauto using subject_reduction.
@@ -696,9 +703,7 @@ Qed.
 Lemma wt_initial_state:
   forall S, initial_state p S -> wt_state S.
 Proof.
-  intros. inv H. constructor. eapply Genv.find_funct_ptr_prop; eauto.
-  rewrite H3; constructor.
-  rewrite H3; constructor.
+  intros. inv H. constructor. ss. ss. econs; eauto.
 Qed.
 
 End SUBJECT_REDUCTION.
@@ -786,7 +791,7 @@ Proof.
     exists v; constructor; auto.
   - destruct (eval_constant ge sp c) as [v|] eqn:E.
     exists v; constructor; auto.
-    destruct c; discriminate.
+    destruct c; try discriminate.
   - InvBooleans. destruct IHa as [v1 E1]; auto.
     destruct (eval_unop u v1) as [v|] eqn:E.
     exists v; econstructor; eauto.

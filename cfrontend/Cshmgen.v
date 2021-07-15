@@ -630,10 +630,10 @@ Fixpoint transl_statement (ce: composite_env) (tyret: type) (nbrk ncnt: nat)
       | fun_case_f args res cconv =>
           do tb <- transl_expr ce b;
           do tcl <- transl_arglist ce cl args;
-          let sg := {| sig_args := typlist_of_arglist cl args;
-                       sig_res  := rettype_of_type res;
-                       sig_cc   := cconv |} in
-          OK (make_funcall x res sg tb tcl)
+          OK(Scall x {| sig_args := typlist_of_arglist cl args;
+                        sig_res  := rettype_of_type res;
+                        sig_cc   := cconv ;  sig_cstyle := true |}
+                   tb tcl)
       | _ => Error(msg "Cshmgen.transl_stmt(call)")
       end
   | Clight.Sbuiltin x ef tyargs bl =>
@@ -697,7 +697,7 @@ Definition transl_var (ce: composite_env) (v: ident * type) :=
 Definition signature_of_function (f: Clight.function) :=
   {| sig_args := map typ_of_type (map snd (Clight.fn_params f));
      sig_res  := rettype_of_type (Clight.fn_return f);
-     sig_cc   := Clight.fn_callconv f |}.
+     sig_cc   := Clight.fn_callconv f ; sig_cstyle := true |}.
 
 Definition transl_function (ce: composite_env) (f: Clight.function) : res function :=
   do tbody <- transl_statement ce f.(Clight.fn_return) 1%nat 0%nat (Clight.fn_body f);

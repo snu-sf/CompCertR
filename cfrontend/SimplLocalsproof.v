@@ -17,6 +17,8 @@ Require Import Coqlib Errors Ordered Maps Integers Floats.
 Require Import AST Linking.
 Require Import Values Memory Globalenvs Events Smallstep.
 Require Import Ctypes Cop Clight SimplLocals.
+Require Import sflib.
+Require SimMemInj.
 
 Module VSF := FSetFacts.Facts(VSet).
 Module VSP := FSetProperties.Properties(VSet).
@@ -37,34 +39,43 @@ Section PRESERVATION.
 Variable prog: program.
 Variable tprog: program.
 Hypothesis TRANSF: match_prog prog tprog.
-Let ge := globalenv prog.
-Let tge := globalenv tprog.
+
+Section CORELEMMA.
+
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
+Variable ge tge: Clight.genv.
+Hypothesis SECOMPATSRC: senv_genv_compat se ge.
+Hypothesis SECOMPATTGT: senv_genv_compat tse tge.
+
+Hypothesis (MATCH_CGENV: Genv.match_genvs (match_globdef (fun (ctx : AST.program fundef type) f tf =>
+                                                            transf_fundef f = OK tf) eq prog) ge tge /\ genv_cenv tge = genv_cenv ge).
 
 Lemma comp_env_preserved:
   genv_cenv tge = genv_cenv ge.
 Proof.
-  unfold tge, ge. destruct prog, tprog; simpl. destruct TRANSF as [_ EQ]. simpl in EQ. congruence.
+  apply MATCH_CGENV.
 Qed.
 
 Lemma symbols_preserved:
   forall (s: ident), Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match (proj1 TRANSF)).
+Proof (Genv.find_symbol_match_genv (proj1 MATCH_CGENV)).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match (proj1 TRANSF)).
+Proof (Genv.senv_match_genv (proj1 MATCH_CGENV)).
 
 Lemma functions_translated:
   forall (v: val) (f: fundef),
   Genv.find_funct ge v = Some f ->
   exists tf, Genv.find_funct tge v = Some tf /\ transf_fundef f = OK tf.
-Proof (Genv.find_funct_transf_partial (proj1 TRANSF)).
+Proof (Genv.find_funct_transf_partial_genv (proj1 MATCH_CGENV)).
 
 Lemma function_ptr_translated:
   forall (b: block) (f: fundef),
   Genv.find_funct_ptr ge b = Some f ->
   exists tf, Genv.find_funct_ptr tge b = Some tf /\ transf_fundef f = OK tf.
-Proof (Genv.find_funct_ptr_transf_partial (proj1 TRANSF)).
+Proof (Genv.find_funct_ptr_transf_partial_genv (proj1 MATCH_CGENV)).
 
 Lemma type_of_fundef_preserved:
   forall fd tfd,
@@ -290,7 +301,7 @@ Lemma step_Sdebug_temp:
   forall f id ty k e le m v,
   le!id = Some v ->
   val_casted v ty ->
-  step2 tge (State f (Sdebug_temp id ty) k e le m)
+  step2 tse tge (State f (Sdebug_temp id ty) k e le m)
          E0 (State f Sskip k e le m).
 Proof.
   intros. unfold Sdebug_temp. eapply step_builtin with (optid := None).
@@ -301,7 +312,7 @@ Qed.
 Lemma step_Sdebug_var:
   forall f id ty k e le m b,
   e!id = Some(b, ty) ->
-  step2 tge (State f (Sdebug_var id ty) k e le m)
+  step2 tse tge (State f (Sdebug_var id ty) k e le m)
          E0 (State f Sskip k e le m).
 Proof.
   intros. unfold Sdebug_var. eapply step_builtin with (optid := None).
@@ -314,11 +325,11 @@ Lemma step_Sset_debug:
   forall f id ty a k e le m v v',
   eval_expr tge e le m a v ->
   sem_cast v (typeof a) ty m = Some v' ->
-  plus step2 tge (State f (Sset_debug id ty a) k e le m)
+  plus step2 tse tge (State f (Sset_debug id ty a) k e le m)
               E0 (State f Sskip k e (PTree.set id v' le) m).
 Proof.
   intros; unfold Sset_debug.
-  assert (forall k, step2 tge (State f (Sset id (make_cast a ty)) k e le m)
+  assert (forall k, step2 tse tge (State f (Sset id (make_cast a ty)) k e le m)
                            E0 (State f Sskip k e (PTree.set id v' le) m)).
   { intros. apply step_set. eapply make_cast_correct; eauto. }
   destruct (Compopts.debug tt).
@@ -334,7 +345,7 @@ Qed.
 Lemma step_add_debug_vars:
   forall f s e le m vars k,
   (forall id ty, In (id, ty) vars -> exists b, e!id = Some (b, ty)) ->
-  star step2 tge (State f (add_debug_vars vars s) k e le m)
+  star step2 tse tge (State f (add_debug_vars vars s) k e le m)
               E0 (State f s k e le m).
 Proof.
   unfold add_debug_vars. destruct (Compopts.debug tt).
@@ -368,7 +379,7 @@ Lemma step_add_debug_params:
   list_norepet (var_names params) ->
   list_forall2 val_casted vl (map snd params) ->
   bind_parameter_temps params vl le1 = Some le ->
-  star step2 tge (State f (add_debug_params params s) k e le m)
+  star step2 tse tge (State f (add_debug_params params s) k e le m)
               E0 (State f s k e le m).
 Proof.
   unfold add_debug_params. destruct (Compopts.debug tt).
@@ -650,6 +661,7 @@ Lemma match_alloc_variables:
        /\ if VSet.mem id cenv
           then te'!id = te!id /\ j' b = None
           else exists tb, te'!id = Some(tb, ty) /\ j' b = Some(tb, 0))
+  /\ inject_separated j j' m tm
   /\ (forall id, ~In id (var_names vars) -> e'!id = e!id /\ te'!id = te!id).
 Proof.
   induction 1; intros.
@@ -658,7 +670,7 @@ Proof.
   split. constructor.
   split. auto. split. auto. split. auto.  split. auto.
   split. intros. elim H2. eapply Mem.mi_mappedblocks; eauto.
-  split. tauto. auto.
+  split. tauto. split. econstructor; congruence. auto.
 
   (* inductive case *)
   simpl in H1. inv H1. simpl.
@@ -667,7 +679,7 @@ Proof.
   exploit Mem.alloc_left_unmapped_inject; eauto.
   intros [j1 [A [B [C D]]]].
   exploit IHalloc_variables; eauto. instantiate (1 := te).
-  intros [j' [te' [tm' [J [K [L [M [N [Q [O P]]]]]]]]]].
+  intros [j' [te' [tm' [J [K [L [M [N [Q [O [INJ_SEP P]]]]]]]]]]].
   exists j'; exists te'; exists tm'.
   split. auto.
   split. auto.
@@ -691,6 +703,9 @@ Proof.
     rewrite M. auto. eapply Mem.valid_new_block; eauto.
     (* other vars *)
     eapply O; eauto. destruct H1. congruence. auto.
+  split.
+  { ii. exploit INJ_SEP; try eapply H3. destruct (eq_block b0 b1); try congruence. rewrite D; eauto.
+    i; des. split; eauto. ii. eapply H4. eapply Mem.valid_block_alloc; eauto. }
   intros. exploit (P id0). tauto. intros [X Y]. rewrite X; rewrite Y.
     split; auto. apply PTree.gso. intuition.
 
@@ -699,7 +714,7 @@ Proof.
     eauto. eauto. apply Z.le_refl. apply Z.le_refl.
   intros [j1 [tm1 [tb1 [A [B [C [D E]]]]]]].
   exploit IHalloc_variables; eauto. instantiate (1 := PTree.set id (tb1, ty) te).
-  intros [j' [te' [tm' [J [K [L [M [N [Q [O P]]]]]]]]]].
+  intros [j' [te' [tm' [J [K [L [M [N [Q [O [INJ_SEP P]]]]]]]]]]].
   exists j'; exists te'; exists tm'.
   split. simpl. econstructor; eauto. rewrite comp_env_preserved; auto.
   split. auto.
@@ -734,6 +749,13 @@ Proof.
     (* other vars *)
     exploit (O id0 ty0). destruct H1. congruence. auto.
     rewrite PTree.gso; auto.
+  split.
+  { ii. destruct (eq_block b0 b1).
+    - subst b0. erewrite M in H3; try eapply Mem.valid_new_block; eauto. clarify.
+      split; eapply Mem.fresh_block_alloc; eauto.
+    - exploit INJ_SEP; try eapply H3. rewrite E; eauto. i. unfold Mem.valid_block in *.
+      erewrite (Mem.nextblock_alloc _ _ _ _ _ A) in H4. erewrite (Mem.nextblock_alloc _ _ _ _ _ H) in H4. split; extlia.
+  }
   intros. exploit (P id0). tauto. intros [X Y]. rewrite X; rewrite Y.
     split; apply PTree.gso; intuition.
 Qed.
@@ -870,7 +892,7 @@ Lemma create_undef_temps_lifted:
   (create_undef_temps (add_lifted (cenv_for f) (fn_vars f) (fn_temps f))) ! id =
   (create_undef_temps (add_lifted (cenv_for f) (fn_params f ++ fn_vars f) (fn_temps f))) ! id.
 Proof.
-  intros. apply create_undef_temps_exten.
+  sguard in MATCH_CGENV. intros. apply create_undef_temps_exten.
   unfold add_lifted. rewrite filter_app.
   unfold var_names in *.
   repeat rewrite map_app. repeat rewrite in_app. intuition.
@@ -914,6 +936,7 @@ Theorem match_envs_alloc_variables:
      alloc_variables tge empty_env tm (remove_lifted cenv vars) te tm'
   /\ match_envs j' cenv e (create_undef_temps temps) m' (Mem.nextblock m) (Mem.nextblock m')
                         te (create_undef_temps (add_lifted cenv vars temps)) (Mem.nextblock tm) (Mem.nextblock tm')
+  /\ <<INJ_SEP: inject_separated j j' m tm>>
   /\ Mem.inject j' m' tm'
   /\ inject_incr j j'
   /\ (forall b, Mem.valid_block m b -> j' b = j b)
@@ -922,7 +945,7 @@ Theorem match_envs_alloc_variables:
 Proof.
   intros.
   exploit (match_alloc_variables cenv); eauto. instantiate (1 := empty_env).
-  intros [j' [te [tm' [A [B [C [D [E [K [F G]]]]]]]]]].
+  intros [j' [te [tm' [A [B [C [D [E [K [F [INJ_SEP G]]]]]]]]]]].
   exists j'; exists te; exists tm'.
   split. auto. split; auto.
   constructor; intros.
@@ -999,7 +1022,7 @@ Proof.
   eapply alloc_variables_nextblock; eauto.
 
   (* other properties *)
-  intuition auto. edestruct F as (b & X & Y); eauto. rewrite H5 in Y.
+  sguard in MATCH_CGENV. intuition auto. edestruct F as (b & X & Y); eauto. rewrite H5 in Y.
   destruct Y as (tb & U & V). exists tb; auto.
 Qed.
 
@@ -1090,7 +1113,7 @@ Proof.
 Qed.
 
 Theorem store_params_correct:
-  forall j f k cenv le lo hi te tlo thi e m params args m',
+  forall j f k cenv le lo hi te tlo thi e m params args m' ext_tgt,
   bind_parameters ge e m params args m' ->
   forall s tm tle1 tle2 targs,
   list_norepet (var_names params) ->
@@ -1100,20 +1123,23 @@ Theorem store_params_correct:
   Mem.inject j m tm ->
   (forall id, ~In id (var_names params) -> tle2!id = tle1!id) ->
   (forall id, In id (var_names params) -> le!id = None) ->
+  (forall id b' ty i, te!id = Some (b', ty) -> ~ ext_tgt b' i) ->
   exists tle, exists tm',
-  star step2 tge (State f (store_params cenv params s) k te tle tm)
+  star step2 tse tge (State f (store_params cenv params s) k te tle tm)
               E0 (State f s k te tle tm')
   /\ bind_parameter_temps params targs tle2 = Some tle
   /\ Mem.inject j m' tm'
   /\ match_envs j cenv e le m' lo hi te tle tlo thi
+  /\ Mem.unchanged_on ext_tgt tm tm'
+  /\ (forall b ofs p, Mem.valid_block tm b -> Mem.perm tm' b ofs Max p -> Mem.perm tm b ofs Max p)
   /\ Mem.nextblock tm' = Mem.nextblock tm.
 Proof.
 Local Opaque Conventions1.parameter_needs_normalization.
-  induction 1; simpl; intros until targs; intros NOREPET CASTED VINJ MENV MINJ TLE LE.
-- (* base case *)
+  induction 1; simpl; intros until targs; intros NOREPET CASTED VINJ MENV MINJ TLE LE EXT_TGT_BOUND.
+  (* base case *)
   inv VINJ. exists tle2; exists tm; split. apply star_refl. split. auto. split. auto.
-  split. apply match_envs_temps_exten with tle1; auto. auto.
-- (* inductive case *)
+  split. apply match_envs_temps_exten with tle1; auto. split. eapply Mem.unchanged_on_refl. auto.
+  (* inductive case *)
   inv NOREPET. inv CASTED. inv VINJ.
   exploit me_vars; eauto. instantiate (1 := id); intros MV.
   destruct (VSet.mem id cenv) eqn:LIFTED.
@@ -1126,6 +1152,7 @@ Local Opaque Conventions1.parameter_needs_normalization.
     unfold Mem.storev in H2. eapply Mem.store_unmapped_inject; eauto.
     intros. repeat rewrite PTree.gsspec. destruct (peq id0 id). auto.
     apply TLE. intuition.
+    eauto.
     eauto.
   intros (tle & tm' & U & V & X & Y & Z).
   exists tle, tm'; split; [|auto].
@@ -1151,9 +1178,9 @@ Local Opaque Conventions1.parameter_needs_normalization.
   instantiate (1 := PTree.set id v' tle2).
   intros. repeat rewrite PTree.gsspec. destruct (peq id0 id). auto.
   apply TLE. intuition.
-  intros. apply LE. auto.
+  intros. apply LE. auto. auto.
   instantiate (1 := s).
-  intros [tle [tm' [U [V [X [Y Z]]]]]].
+  intros [tle [tm' [U [V [X [Y [UNCHANGED_ON [MAX Z]]]]]]]].
   exists tle; exists tm'; split.
   eapply star_trans.
   eapply star_left. econstructor.
@@ -1168,7 +1195,10 @@ Local Opaque Conventions1.parameter_needs_normalization.
   reflexivity. reflexivity.
   eexact U.
   traceEq.
-  rewrite (assign_loc_nextblock _ _ _ _ _ _ _ A) in Z. auto.
+  rewrite (assign_loc_nextblock _ _ _ _ _ _ _ A) in Z. esplits; auto.
+  - eapply Mem.unchanged_on_trans; eauto. eapply assign_loc_unchanged_on; eauto.
+  - ii. eapply assign_loc_perm; eauto. eapply MAX; eauto.
+    unfold Mem.valid_block in *. erewrite assign_loc_nextblock; eauto.
 Qed.
 
 Lemma bind_parameters_nextblock:
@@ -1545,6 +1575,7 @@ End EVAL_EXPR.
 
 Inductive match_cont (f: meminj): compilenv -> cont -> cont -> mem -> block -> block -> Prop :=
   | match_Kstop: forall cenv m bound tbound hi,
+      forall (SYMBINJ: symbols_inject f se tse) (HI: hi = ge.(Genv.genv_next)),
       match_globalenvs f hi -> Ple hi bound -> Ple hi tbound ->
       match_cont f cenv Kstop Kstop m bound tbound
   | match_Kseq: forall cenv s k ts tk m bound tbound,
@@ -1589,6 +1620,10 @@ Lemma match_cont_invariant:
   match_cont f' cenv k tk m' bound tbound.
 Proof.
   induction 1; intros LOAD INCR INJ1 INJ2; econstructor; eauto.
+  { eapply symbols_inject_incr; eauto.
+    - i. erewrite <- INJ1; eauto. inv SECOMPATSRC. rewrite NB in *. extlia.
+    - i. erewrite <- INJ2; eauto. inv SECOMPATTGT. rewrite NB in *. inv MATCH_CGENV. inv H4. rewrite mge_next in *. extlia.
+  }
 (* globalenvs *)
   inv H. constructor; intros; eauto.
   assert (f b1 = Some (b2, delta)). rewrite <- H; symmetry; eapply INJ2; eauto. extlia.
@@ -1729,6 +1764,10 @@ Qed.
 
 (** Matching of global environments *)
 
+Lemma match_cont_symbols_inject:
+  forall f cenv k tk m bound tbound, match_cont f cenv k tk m bound tbound -> symbols_inject f se tse.
+Proof. induction 1; auto. Qed.
+
 Lemma match_cont_globalenv:
   forall f cenv k tk m bound tbound,
   match_cont f cenv k tk m bound tbound ->
@@ -1737,7 +1776,7 @@ Proof.
   induction 1; auto. exists hi; auto.
 Qed.
 
-Hint Resolve match_cont_globalenv: compat.
+Hint Resolve match_cont_symbols_inject match_cont_globalenv: compat.
 
 Lemma match_cont_find_funct:
   forall f cenv k tk m bound tbound vf fd tvf,
@@ -1757,36 +1796,50 @@ Qed.
 
 (** Relating execution states *)
 
-Inductive match_states: state -> state -> Prop :=
+Inductive match_states: state -> state -> SimMemInj.t' -> Prop :=
   | match_regular_states:
       forall f s k e le m tf ts tk te tle tm j lo hi tlo thi
+        sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm j)
+        (MWF: SimMemInj.wf' sm0)
         (TRF: transf_function f = OK tf)
         (TRS: simpl_stmt (cenv_for f) s = OK ts)
         (MENV: match_envs j (cenv_for f) e le m lo hi te tle tlo thi)
+        (EXTSRC: forall id b ty i, PTree.get id e = Some (b, ty) -> ~ sm0.(SimMemInj.src_external) b i)
+        (EXTTGT: forall id b ty i, PTree.get id te = Some (b, ty) ->  ~ sm0.(SimMemInj.tgt_external) b i)
         (MCONT: match_cont j (cenv_for f) k tk m lo tlo)
+        (CONT_EXTSRC: Forall_cont_ext k (SimMemInj.src_external sm0))
+        (CONT_EXTTGT: Forall_cont_ext tk (SimMemInj.tgt_external sm0))
         (MINJ: Mem.inject j m tm)
         (COMPAT: compat_cenv (addr_taken_stmt s) (cenv_for f))
         (BOUND: Ple hi (Mem.nextblock m))
         (TBOUND: Ple thi (Mem.nextblock tm)),
       match_states (State f s k e le m)
-                   (State tf ts tk te tle tm)
+                   (State tf ts tk te tle tm) sm0
   | match_call_state:
-      forall fd vargs k m tfd tvargs tk tm j targs tres cconv
-        (TRFD: transf_fundef fd = OK tfd)
+      forall v vargs k m tv tvargs tk tm j targs tres cconv ty
+        sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm j)
+        (MWF: SimMemInj.wf' sm0)
         (MCONT: forall cenv, match_cont j cenv k tk m (Mem.nextblock m) (Mem.nextblock tm))
+        (CONT_EXTSRC: Forall_cont_ext k (SimMemInj.src_external sm0))
+        (CONT_EXTTGT: Forall_cont_ext tk (SimMemInj.tgt_external sm0))
         (MINJ: Mem.inject j m tm)
+        (VAL: Val.inject j v tv)
         (AINJ: Val.inject_list j vargs tvargs)
-        (FUNTY: type_of_fundef fd = Tfunction targs tres cconv)
+        (TYP: ty = (Tfunction targs tres cconv)) (* inlining "ty" will make spurious names when "inv"ed. *)
         (ANORM: val_casted_list vargs targs),
-      match_states (Callstate fd vargs k m)
-                   (Callstate tfd tvargs tk tm)
+      match_states (Callstate v ty vargs k m)
+                   (Callstate tv ty tvargs tk tm) sm0
   | match_return_state:
       forall v k m tv tk tm j
+        sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm j)
+        (MWF: SimMemInj.wf' sm0)
         (MCONT: forall cenv, match_cont j cenv k tk m (Mem.nextblock m) (Mem.nextblock tm))
+        (CONT_EXTSRC: Forall_cont_ext k (SimMemInj.src_external sm0))
+        (CONT_EXTTGT: Forall_cont_ext tk (SimMemInj.tgt_external sm0))
         (MINJ: Mem.inject j m tm)
         (RINJ: Val.inject j v tv),
       match_states (Returnstate v k m)
-                   (Returnstate tv tk tm).
+                   (Returnstate tv tk tm) sm0.
 
 (** The simulation diagrams *)
 
@@ -1894,10 +1947,12 @@ Variables bound tbound: block.
 Variable lbl: ident.
 
 Lemma simpl_find_label:
-  forall s k ts tk,
+  forall s k ts tk ext_src ext_tgt,
   simpl_stmt cenv s = OK ts ->
   match_cont f cenv k tk m bound tbound ->
   compat_cenv (addr_taken_stmt s) cenv ->
+  Forall_cont_ext k ext_src ->
+  Forall_cont_ext tk ext_tgt ->
   match find_label lbl s k with
   | None =>
       find_label lbl ts tk = None
@@ -1907,13 +1962,17 @@ Lemma simpl_find_label:
       /\ compat_cenv (addr_taken_stmt s') cenv
       /\ simpl_stmt cenv s' = OK ts'
       /\ match_cont f cenv k' tk' m bound tbound
+      /\ Forall_cont_ext k' ext_src
+      /\ Forall_cont_ext tk' ext_tgt
   end
 
 with simpl_find_label_ls:
-  forall ls k tls tk,
+  forall ls k tls tk ext_src ext_tgt,
   simpl_lblstmt cenv ls = OK tls ->
   match_cont f cenv k tk m bound tbound ->
   compat_cenv (addr_taken_lblstmt ls) cenv ->
+  Forall_cont_ext k ext_src ->
+  Forall_cont_ext tk ext_tgt ->
   match find_label_ls lbl ls k with
   | None =>
       find_label_ls lbl tls tk = None
@@ -1923,10 +1982,12 @@ with simpl_find_label_ls:
       /\ compat_cenv (addr_taken_stmt s') cenv
       /\ simpl_stmt cenv s' = OK ts'
       /\ match_cont f cenv k' tk' m bound tbound
+      /\ Forall_cont_ext k' ext_src
+      /\ Forall_cont_ext tk' ext_tgt
   end.
 
 Proof.
-  induction s; simpl; intros until tk; intros TS MC COMPAT; auto.
+  induction s; simpl; intros until ext_tgt; intros TS MC COMPAT CONT_EXTSRC CONT_EXTTGT; auto.
   (* skip *)
   monadInv TS; auto.
   (* var *)
@@ -1969,8 +2030,8 @@ Proof.
   eapply simpl_find_label_ls; eauto with compat. constructor; auto.
   (* label *)
   monadInv TS. simpl.
-  destruct (ident_eq lbl l).
-  exists x; exists tk; auto.
+  destruct (ident_eq lbl l) eqn:EQN.
+  exists x; exists tk; auto. esplits; eauto.
   eapply IHs; eauto.
   (* goto *)
   monadInv TS; auto.
@@ -1984,6 +2045,7 @@ Proof.
     eauto. constructor. eapply simpl_seq_of_labeled_statement; eauto. eauto.
     rewrite addr_taken_seq_of_labeled_statement. eauto with compat.
     eauto with compat.
+    eauto. eauto.
   destruct (find_label lbl s (Kseq (seq_of_labeled_statement ls) k)) as [[s' k']|].
   intros [ts' [tk' [P [Q [R S]]]]]. exists ts'; exists tk'; split. simpl; rewrite P. auto. auto.
   intros E. simpl; rewrite E. eapply IHls; eauto with compat.
@@ -2012,10 +2074,44 @@ Qed.
 
 End FIND_LABEL.
 
+Require Import sflib.
+
+Lemma functions_injected
+      j v tv f
+      (SRC: Genv.find_funct ge v = Some f)
+      (INJ: Val.inject j v tv)
+      bound
+      (MATCH: match_globalenvs j bound):
+    exists tf, <<TGT: Genv.find_funct tge tv = Some tf>> /\ <<TRANSF: transf_fundef f = OK tf>>.
+Proof.
+  inv MATCH. unfold Genv.find_funct in *. des_ifs_safe. inv INJ.
+  exploit FUNCTIONS; eauto. intro BD.
+  exploit DOMAIN; eauto. i; des. clarify. des_ifs.
+  exploit functions_translated; eauto.
+  { rewrite Genv.find_funct_find_funct_ptr. eauto. }
+  eauto.
+Qed.
+
+Lemma bind_parameters_unchanged_on:
+  forall e m l vargs m' P,
+    bind_parameters ge e m l vargs m' ->
+    (forall id b ty, e!id = Some (b,ty) -> (forall i, 0 <= i < sizeof ge ty -> ~ P b i)) ->
+    Mem.unchanged_on P m m'.
+Proof.
+  induction 1; ii.
+  - eapply Mem.unchanged_on_refl.
+  - eapply Mem.unchanged_on_trans; eauto. inv H0.
+    + inv H4. eapply Mem.store_unchanged_on; eauto.
+      ii. eapply H2; eauto. eapply sizeof_by_value in H3. rewrite Ptrofs.unsigned_zero in *. extlia.
+    + eapply Mem.storebytes_unchanged_on; eauto.
+      ii. eapply H2; eauto. erewrite Mem.loadbytes_length in H0; eauto. erewrite Ptrofs.unsigned_zero in *.
+      rewrite Z2Nat.id in H0. extlia. generalize (sizeof_pos ge ty); i. extlia.
+Qed.
 
 Lemma step_simulation:
-  forall S1 t S2, step1 ge S1 t S2 ->
-  forall S1' (MS: match_states S1 S1'), exists S2', plus step2 tge S1' t S2' /\ match_states S2 S2'.
+  forall S1 t S2, step1 se ge S1 t S2 ->
+  forall S1' sm0 (MS: match_states S1 S1' sm0),
+  exists S2', plus step2 tse tge S1' t S2' /\ (exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>).
 Proof.
   induction 1; simpl; intros; inv MS; simpl in *; try (monadInv TRS).
 
@@ -2030,7 +2126,23 @@ Proof.
   (* local variable *)
   econstructor; split.
   eapply step_Sset_debug. eauto. rewrite typeof_simpl_expr. eauto.
+  assert(exists sm1, (<<MLE: SimMemInj.le' sm0 sm1>>) /\ (<<MCOMPAT':SimMemInj.mcompat sm1 m' tm j>>)).
+  { SimMemInj.spl_approx sm0; cycle 1. SimMemInj.compat_tac.
+    inv MV; try congruence. inv H2; try congruence. unfold Mem.storev in H3.
+    inv MCOMPAT. inv MWF. econs; ss; eauto.
+    - eapply Mem.store_unchanged_on; eauto.
+    - eapply Mem.unchanged_on_refl.
+    - eapply SimMemInj.frozen_refl. - eapply SimMemInj.frozen_refl.
+    - ii. eapply Mem.perm_store_2; eauto.
+  }
+  des. SimMemInj.spl_exact sm1.
+  inversion MWF. inversion MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *.
   econstructor; eauto with compat.
+  { inv MV; try congruence. inv H2; try congruence. unfold Mem.storev in H3.
+    inv MCOMPAT. inv MCOMPAT'. eapply SimMemInj.same_inj_le_wf; eauto.
+    - rewrite mcompat_tgt. rewrite mcompat_inj.
+      eapply Mem.store_unmapped_inject; eauto. congruence.
+  }
   eapply match_envs_assign_lifted; eauto. eapply cast_val_is_casted; eauto.
   eapply match_cont_assign_loc; eauto. exploit me_range; eauto. extlia.
   inv MV; try congruence. inv H2; try congruence. unfold Mem.storev in H3.
@@ -2047,7 +2159,33 @@ Proof.
   econstructor; split.
   apply plus_one. econstructor. eexact E. eexact A. repeat rewrite typeof_simpl_expr. eexact C.
   rewrite typeof_simpl_expr; auto. eexact X.
+  assert(exists sm1, (<<MLE: SimMemInj.le' sm0 sm1>>) /\ (<<MCOMPAT':SimMemInj.mcompat sm1 m' tm' j>>)).
+  { SimMemInj.spl_approx sm0; cycle 1. SimMemInj.compat_tac.
+    inv MCOMPAT. inv MWF. econs; ss.
+    - inv F. eapply assign_loc_unchanged_on; eauto. ii.
+      eapply SRCEXT in H4. red in H4. des. red in H4. congruence.
+    - inv F. eapply assign_loc_unchanged_on; eauto. ii.
+      eapply TGTEXT in H4. red in H4. des. red in H4. eapply H4; eauto.
+      inv MATCH_CGENV. rewrite H9 in *. clear H8 H9.
+      exploit assign_loc_perm2; try eapply H2; eauto with mem.
+      destruct (Classical_Prop.classic (assign_loc_size ge (typeof a1) > 0)); cycle 1.
+      { clear - H3 H7 H8. eapply Znot_gt_le in H8. try extlia. }
+      exploit Mem.mi_representable; try eapply MINJ; eauto.
+      { left. eapply Mem.perm_implies; [|eauto with mem]. eapply Mem.perm_cur_max.
+        eapply assign_loc_perm2; eauto. split; [eapply Z.le_refl| extlia]. }
+      i; des. clear - H3 H7 H9 H10 H11.
+      assert(Ptrofs.unsigned (Ptrofs.add ofs (Ptrofs.repr delta)) - delta = Ptrofs.unsigned ofs).
+      { rewrite <- Ptrofs.repr_unsigned with (i := ofs). rewrite Ptrofs.Ptrofs_add_repr.
+        rewrite Ptrofs.unsigned_repr; [|extlia]. rewrite Ptrofs.unsigned_repr. extlia. eauto with ints. }
+      extlia.
+    - eapply SimMemInj.frozen_refl. - eapply SimMemInj.frozen_refl.
+    - ii. eapply assign_loc_perm; eauto.
+    - ii. eapply assign_loc_perm; eauto.
+  }
+  des. SimMemInj.spl_exact sm1.
+  inversion MWF. inversion MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *.
   econstructor; eauto with compat.
+  { inv MCOMPAT. inv MCOMPAT'. eapply SimMemInj.same_inj_le_wf; eauto. rewrite mcompat_inj. eauto. }
   eapply match_envs_invariant; eauto.
   eapply match_cont_invariant; eauto.
   erewrite assign_loc_nextblock; eauto.
@@ -2057,28 +2195,27 @@ Proof.
   exploit eval_simpl_expr; eauto with compat. intros [tv [A B]].
   econstructor; split.
   apply plus_one. econstructor. eauto.
-  econstructor; eauto with compat.
+  SimMemInj.spl. econstructor; eauto with compat.
   eapply match_envs_set_temp; eauto.
 
 (* call *)
   exploit eval_simpl_expr; eauto with compat. intros [tvf [A B]].
   exploit eval_simpl_exprlist; eauto with compat. intros [CASTED [tvargs [C D]]].
-  exploit match_cont_find_funct; eauto. intros [tfd [P Q]].
   econstructor; split.
-  apply plus_one. eapply step_call with (fd := tfd).
+  apply plus_one. eapply step_call with (vf := tvf); eauto.
   rewrite typeof_simpl_expr. eauto.
-  eauto. eauto. eauto.
-  erewrite type_of_fundef_preserved; eauto.
-  econstructor; eauto.
-  intros. econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto.
+  intros. econstructor; eauto. { econstructor; eauto. } { econstructor; eauto. }
 
 (* builtin *)
   exploit eval_simpl_exprlist; eauto with compat. intros [CASTED [tvargs [C D]]].
-  exploit external_call_mem_inject; eauto. apply match_globalenvs_preserves_globals; eauto with compat.
+  exploit external_call_mem_inject_gen; eauto with compat.
   intros [j' [tvres [tm' [P [Q [R [S [T [U V]]]]]]]]].
   econstructor; split.
-  apply plus_one. econstructor; eauto. eapply external_call_symbols_preserved; eauto. apply senv_preserved.
-  econstructor; eauto with compat.
+  apply plus_one. econstructor; eauto.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des. SimMemInj.spl_exact sm1.
+  inv MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *.
+  econstructor; eauto with compat. { SimMemInj.compat_tac. }
   eapply match_envs_set_opttemp; eauto.
   eapply match_envs_extcall; eauto.
   eapply match_cont_extcall; eauto.
@@ -2088,49 +2225,55 @@ Proof.
 
 (* sequence *)
   econstructor; split. apply plus_one. econstructor.
-  econstructor; eauto with compat. econstructor; eauto with compat.
+  SimMemInj.spl. econstructor; eauto with compat. econstructor; eauto with compat.
 
 (* skip sequence *)
-  inv MCONT. econstructor; split. apply plus_one. econstructor. econstructor; eauto.
+  inv MCONT. econstructor; split. apply plus_one. econstructor. SimMemInj.spl. econstructor; eauto.
 
 (* continue sequence *)
-  inv MCONT. econstructor; split. apply plus_one. econstructor. econstructor; eauto.
+  inv MCONT. econstructor; split. apply plus_one. econstructor. SimMemInj.spl. econstructor; eauto.
 
 (* break sequence *)
-  inv MCONT. econstructor; split. apply plus_one. econstructor. econstructor; eauto.
+  inv MCONT. econstructor; split. apply plus_one. econstructor. SimMemInj.spl. econstructor; eauto.
 
 (* ifthenelse *)
   exploit eval_simpl_expr; eauto with compat. intros [tv [A B]].
   econstructor; split.
   apply plus_one. apply step_ifthenelse with (v1 := tv) (b := b). auto.
   rewrite typeof_simpl_expr. eapply bool_val_inject; eauto.
-  destruct b; econstructor; eauto with compat.
+  SimMemInj.spl. destruct b; econstructor; eauto with compat.
 
 (* loop *)
-  econstructor; split. apply plus_one. econstructor. econstructor; eauto with compat. econstructor; eauto with compat.
+  econstructor; split. apply plus_one. econstructor. SimMemInj.spl. econstructor; eauto with compat. econstructor; eauto with compat.
 
 (* skip-or-continue loop *)
   inv MCONT. econstructor; split.
   apply plus_one. econstructor. destruct H; subst x; simpl in *; intuition congruence.
-  econstructor; eauto with compat. econstructor; eauto with compat.
+  SimMemInj.spl. econstructor; eauto with compat. econstructor; eauto with compat.
 
 (* break loop1 *)
   inv MCONT. econstructor; split. apply plus_one. eapply step_break_loop1.
-  econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto.
 
 (* skip loop2 *)
   inv MCONT. econstructor; split. apply plus_one. eapply step_skip_loop2.
-  econstructor; eauto with compat. simpl; rewrite H2; rewrite H4; auto.
+  SimMemInj.spl. econstructor; eauto with compat. simpl; rewrite H2; rewrite H4; auto.
 
 (* break loop2 *)
   inv MCONT. econstructor; split. apply plus_one. eapply step_break_loop2.
-  econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto.
 
 (* return none *)
   exploit match_envs_free_blocks; eauto. intros [tm' [P Q]].
   econstructor; split. apply plus_one. econstructor; eauto.
-  econstructor; eauto.
+  inv MCOMPAT. exploit SimMemInj.free_list; eauto.
+  { ii. exploit blocks_of_env_in; eauto. i; des. eapply EXTSRC; eauto. }
+  { ii. exploit blocks_of_env_in; eauto. i; des. eapply EXTTGT; eauto. }
+  i; des. SimMemInj.spl_exact sm1.
+  inv MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *.
+  econstructor; eauto. { SimMemInj.compat_tac. }
   intros. eapply match_cont_call_cont. eapply match_cont_free_env; eauto.
+  { eapply Forall_cont_ext_call_cont; eauto. } { eapply Forall_cont_ext_call_cont; eauto. }
 
 (* return some *)
   exploit eval_simpl_expr; eauto with compat. intros [tv [A B]].
@@ -2138,15 +2281,26 @@ Proof.
   exploit match_envs_free_blocks; eauto. intros [tm' [P Q]].
   econstructor; split. apply plus_one. econstructor; eauto.
   rewrite typeof_simpl_expr. monadInv TRF; simpl. eauto.
-  econstructor; eauto.
+  inv MCOMPAT. exploit SimMemInj.free_list; eauto.
+  { ii. exploit blocks_of_env_in; eauto. i; des. eapply EXTSRC; eauto. }
+  { ii. exploit blocks_of_env_in; eauto. i; des. eapply EXTTGT; eauto. }
+  i; des. SimMemInj.spl_exact sm1.
+  inv MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *.
+  econstructor; eauto. { SimMemInj.compat_tac. }
   intros. eapply match_cont_call_cont. eapply match_cont_free_env; eauto.
+  { eapply Forall_cont_ext_call_cont; eauto. } { eapply Forall_cont_ext_call_cont; eauto. }
 
 (* skip call *)
   exploit match_envs_free_blocks; eauto. intros [tm' [P Q]].
   econstructor; split. apply plus_one. econstructor; eauto.
   eapply match_cont_is_call_cont; eauto.
   monadInv TRF; auto.
-  econstructor; eauto.
+  inv MCOMPAT. exploit SimMemInj.free_list; eauto.
+  { ii. exploit blocks_of_env_in; eauto. i; des. eapply EXTSRC; eauto. }
+  { ii. exploit blocks_of_env_in; eauto. i; des. eapply EXTTGT; eauto. }
+  i; des. SimMemInj.spl_exact sm1.
+  inv MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *.
+  econstructor; eauto. { SimMemInj.compat_tac. }
   intros. apply match_cont_change_cenv with (cenv_for f); auto. eapply match_cont_free_env; eauto.
 
 (* switch *)
@@ -2156,7 +2310,7 @@ Proof.
   unfold sem_switch_arg in *;
   destruct (classify_switch (typeof a)); try discriminate;
   inv B; inv H0; auto.
-  econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto.
   erewrite simpl_seq_of_labeled_statement. reflexivity.
   eapply simpl_select_switch; eauto.
   econstructor; eauto. rewrite addr_taken_seq_of_labeled_statement.
@@ -2165,29 +2319,32 @@ Proof.
 (* skip-break switch *)
   inv MCONT. econstructor; split.
   apply plus_one. eapply step_skip_break_switch. destruct H; subst x; simpl in *; intuition congruence.
-  econstructor; eauto with compat.
+  SimMemInj.spl. econstructor; eauto with compat.
 
 (* continue switch *)
   inv MCONT. econstructor; split.
   apply plus_one. eapply step_continue_switch.
-  econstructor; eauto with compat.
+  SimMemInj.spl. econstructor; eauto with compat.
 
 (* label *)
-  econstructor; split. apply plus_one. econstructor. econstructor; eauto.
+  econstructor; split. apply plus_one. econstructor. SimMemInj.spl. econstructor; eauto.
 
 (* goto *)
   generalize TRF; intros TRF'. monadInv TRF'.
   exploit (simpl_find_label j (cenv_for f) m lo tlo lbl (fn_body f) (call_cont k) x (call_cont tk)).
     eauto. eapply match_cont_call_cont. eauto.
     apply compat_cenv_for.
-  rewrite H. intros [ts' [tk' [A [B [C D]]]]].
+    { eapply Forall_cont_ext_call_cont; eauto. } { eapply Forall_cont_ext_call_cont; eauto. }
+  rewrite H. intros [ts' [tk' [A [B [C [D [CONT_EXTSRC' CONT_EXTTGT']]]]]]].
   econstructor; split.
   apply plus_one. econstructor; eauto. simpl.
   rewrite find_label_add_debug_params. rewrite find_label_store_params. rewrite find_label_add_debug_vars. eexact A.
-  econstructor; eauto.
+  SimMemInj.spl. econstructor; eauto.
 
 (* internal function *)
-  monadInv TRFD. inv H.
+  (* monadInv TRFD. *) inv H.
+  exploit match_cont_globalenv; eauto. intro MG; des.
+  exploit functions_injected; eauto. i; des. ss. monadInv TRANSF0.
   generalize EQ; intro EQ'; monadInv EQ'.
   assert (list_norepet (var_names (fn_params f ++ fn_vars f))).
     unfold var_names. rewrite map_app. auto.
@@ -2195,9 +2352,17 @@ Proof.
     instantiate (1 := cenv_for_gen (addr_taken_stmt f.(fn_body)) (fn_params f ++ fn_vars f)).
     intros. eapply cenv_for_gen_by_value; eauto. rewrite VSF.mem_iff. eexact H4.
     intros. eapply cenv_for_gen_domain. rewrite VSF.mem_iff. eexact H3.
-  intros [j' [te [tm0 [A [B [C [D [E [F G]]]]]]]]].
+  intros [j' [te [tm0 [A [B [INJ_SEP [C [D [E [F G]]]]]]]]]].
+  assert(EXTSRC: forall id b ty i,  PTree.get id e = Some (b, ty) -> ~ (SimMemInj.src_external sm0) b i).
+  { ii. exploit alloc_variables_range; try eapply H1; eauto. i; des.
+    - rewrite PTree.gempty in H5. ss.
+    - inv MWF. inv MCOMPAT. eapply SRCEXT in H4. red in H4. des. red in H7. red in H7. extlia. }
+  assert(EXTTGT: forall id b ty i,  PTree.get id te = Some (b, ty) -> ~ (SimMemInj.tgt_external sm0) b i).
+  { ii. exploit alloc_variables_range; try eapply A; eauto. i; des.
+    - rewrite PTree.gempty in H5. ss.
+    - inv MWF. inv MCOMPAT. eapply TGTEXT in H4. red in H4. des. red in H7. red in H7. extlia. }
   assert (K: list_forall2 val_casted vargs (map snd (fn_params f))).
-  { apply val_casted_list_params. unfold type_of_function in FUNTY. congruence. }
+  { apply val_casted_list_params. unfold type_of_function in TYP. congruence. }
   exploit store_params_correct.
     eauto.
     eapply list_norepet_append_left; eauto.
@@ -2207,20 +2372,32 @@ Proof.
     intros. apply (create_undef_temps_lifted id f). auto.
     intros. destruct (create_undef_temps (fn_temps f))!id as [v|] eqn:?; auto.
     exploit create_undef_temps_inv; eauto. intros [P Q]. elim (l id id); auto.
-  intros [tel [tm1 [P [Q [R [S T]]]]]].
+    eauto.
+  intros [tel [tm1 [P [Q [R [S [UNCHANGED_ON [MAX T]]]]]]]].
   change (cenv_for_gen (addr_taken_stmt (fn_body f)) (fn_params f ++ fn_vars f))
     with (cenv_for f) in *.
   generalize (vars_and_temps_properties (cenv_for f) (fn_params f) (fn_vars f) (fn_temps f)).
   intros [X [Y Z]]. auto. auto.
   econstructor; split.
-  eapply plus_left. econstructor.
+  eapply plus_left. econstructor; eauto.
   econstructor. exact Y. exact X. exact Z. simpl. eexact A. simpl. eexact Q.
   simpl. eapply star_trans. eapply step_add_debug_params. auto. eapply forall2_val_casted_inject; eauto. eexact Q.
   eapply star_trans. eexact P. eapply step_add_debug_vars.
   unfold remove_lifted; intros. rewrite List.filter_In in H3. destruct H3.
   apply negb_true_iff in H4. eauto.
   reflexivity. reflexivity. traceEq.
-  econstructor; eauto.
+  SimMemInj.spl_approx sm0. econstructor; eauto. { SimMemInj.compat_tac. }
+  { inv MCOMPAT. inv MWF. econs; ss; eauto.
+    - etransitivity; eauto. unfold SimMemInj.src_private. ii. des. ss. splits; eauto.
+      + unfold loc_unmapped in *. rewrite <- PR. eauto.
+      + eapply Plt_Ple_trans; eauto. eapply bind_parameters_nextblock in H2. rewrite H2. eapply alloc_variables_nextblock; eauto.
+    - etransitivity; eauto. unfold SimMemInj.tgt_private. ii. des. ss. splits; eauto.
+      + ii. erewrite F in H3; eauto. eapply PR; eauto. eapply alloc_variables_perm; eauto.
+        eapply Mem.valid_block_inject_1; eauto. eapply bind_parameters_perm; eauto.
+      + red. red. rewrite T. eapply Plt_Ple_trans; eauto. eapply alloc_variables_nextblock; eauto.
+    - eapply bind_parameters_nextblock in H2. rewrite H2. etransitivity; eauto. eapply alloc_variables_nextblock; eauto.
+    - rewrite T. etransitivity; eauto. eapply alloc_variables_nextblock; eauto.
+  }
   eapply match_cont_invariant; eauto.
   intros. transitivity (Mem.load chunk m0 b 0).
   eapply bind_parameters_load; eauto. intros.
@@ -2231,15 +2408,29 @@ Proof.
   apply compat_cenv_for.
   rewrite (bind_parameters_nextblock _ _ _ _ _ _ H2). extlia.
   rewrite T; extlia.
+  { inv MCOMPAT. inv MWF. econs; ss; eauto.
+    - eapply Mem.unchanged_on_trans. eapply alloc_variables_unchanged_on; eauto. eapply bind_parameters_unchanged_on; eauto.
+    - eapply Mem.unchanged_on_trans; eauto. eapply alloc_variables_unchanged_on; eauto.
+    - eapply SimMemInj.frozen_shortened; eauto.
+      eapply SimMemInj.frozen_shortened; eauto. eapply SimMemInj.inject_separated_frozen; eauto.
+    - eapply SimMemInj.frozen_shortened; eauto. eapply SimMemInj.inject_separated_frozen; eauto.
+    - ii. eapply alloc_variables_perm; eauto. eapply bind_parameters_perm; eauto.
+    - ii. eapply alloc_variables_perm; eauto. eapply MAX; eauto.
+      eapply alloc_variables_nextblock in A. unfold Mem.valid_block in *. extlia.
+  }
 
 (* external function *)
-  monadInv TRFD. inv FUNTY.
-  exploit external_call_mem_inject; eauto. apply match_globalenvs_preserves_globals.
-  eapply match_cont_globalenv. eexact (MCONT VSet.empty).
+  inv TYP.
+  exploit match_cont_symbols_inject; eauto. intro SYMBINJ; des.
+  exploit match_cont_globalenv; eauto. intro MG; des.
+  exploit functions_injected; eauto. i; des. ss. monadInv TRANSF0.
+  exploit external_call_mem_inject_gen; eauto.
   intros [j' [tvres [tm' [P [Q [R [S [T [U V]]]]]]]]].
   econstructor; split.
-  apply plus_one. econstructor; eauto. eapply external_call_symbols_preserved; eauto. apply senv_preserved.
-  econstructor; eauto.
+  apply plus_one. econstructor; eauto.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des. SimMemInj.spl_exact sm1.
+  inv MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *. eauto.
+  econstructor; eauto. { SimMemInj.compat_tac. }
   intros. apply match_cont_incr_bounds with (Mem.nextblock m) (Mem.nextblock tm).
   eapply match_cont_extcall; eauto. extlia. extlia.
   eapply external_call_nextblock; eauto.
@@ -2249,27 +2440,46 @@ Proof.
   specialize (MCONT (cenv_for f)). inv MCONT.
   econstructor; split.
   apply plus_one. econstructor.
-  econstructor; eauto with compat.
+  SimMemInj.spl. inv CONT_EXTTGT. des. econstructor; eauto with compat.
   eapply match_envs_set_opttemp; eauto.
+  
+Unshelve.
+  all: try econs; econs.
+Qed.
+
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := globalenv prog.
+Let tge := globalenv tprog.
+
+Let MATCH_CGENV: Genv.match_genvs (match_globdef (fun (ctx : AST.program fundef type) f tf =>
+                                                    transf_fundef f = OK tf) eq prog) ge tge /\ genv_cenv tge = genv_cenv ge.
+Proof.
+  constructor.
+  - apply Genv.globalenvs_match; eauto. apply TRANSF.
+  - unfold tge, ge. destruct prog, tprog; simpl. destruct TRANSF as [_ EQ]. simpl in EQ. congruence.
 Qed.
 
 Lemma initial_states_simulation:
   forall S, initial_state prog S ->
-  exists R, initial_state tprog R /\ match_states S R.
+  exists R, initial_state tprog R /\ (exists sm, match_states ge tge ge S R sm).
 Proof.
   intros. inv H.
-  exploit function_ptr_translated; eauto. intros [tf [A B]].
   econstructor; split.
-  econstructor.
+  econstructor; eauto.
   eapply (Genv.init_mem_transf_partial (proj1 TRANSF)). eauto.
   replace (prog_main tprog) with (prog_main prog). 
-  instantiate (1 := b). rewrite <- H1. apply symbols_preserved.
+  instantiate (1 := b). rewrite <- H1. apply (symbols_preserved ge tge); auto.
   generalize (match_program_main (proj1 TRANSF)). simpl; auto.
-  eauto.
-  rewrite <- H3; apply type_of_fundef_preserved; auto.
+  exists (SimMemInj.mk m0 m0 (Mem.flat_inj (Mem.nextblock m0)) bot2 bot2 1%positive 1%positive 1%positive 1%positive).
   econstructor; eauto.
-  intros. instantiate (1 := Mem.flat_inj (Mem.nextblock m0)).
-  econstructor. instantiate (1 := Mem.nextblock m0).
+  { instantiate (1 := Mem.flat_inj (Mem.nextblock m0)). SimMemInj.compat_tac. }
+  { econs; ss; eauto; try extlia. eapply Genv.initmem_inject; eauto. }
+  intros. econstructor.
+  { erewrite <- Genv.init_mem_genv_next; eauto. inv MATCH_CGENV. eapply (init_symbols_inject H); eauto. }
+  { instantiate (1 := Mem.nextblock m0). erewrite <- Genv.init_mem_genv_next; eauto. unfold ge; ss. }
   constructor; intros.
   unfold Mem.flat_inj. apply pred_dec_true; auto.
   unfold Mem.flat_inj in H. destruct (plt b1 (Mem.nextblock m0)); inv H. auto.
@@ -2278,14 +2488,16 @@ Proof.
   eapply Genv.find_var_info_not_fresh; eauto.
   extlia. extlia.
   eapply Genv.initmem_inject; eauto.
+  { exploit Genv.find_symbol_not_fresh; eauto. i.
+    econs; eauto. unfold Mem.flat_inj. des_ifs; eauto. rewrite Ptrofs.add_zero. ss. }
   constructor.
 Qed.
 
 Lemma final_states_simulation:
   forall S R r,
-  match_states S R -> final_state S r -> final_state R r.
+  (exists sm, match_states ge tge ge S R sm) -> final_state S r -> final_state R r.
 Proof.
-  intros. inv H0. inv H.
+  intros. des. inv H0. inv H.
   specialize (MCONT VSet.empty). inv MCONT.
   inv RINJ. constructor.
 Qed.
@@ -2293,12 +2505,14 @@ Qed.
 Theorem transf_program_correct:
   forward_simulation (semantics1 prog) (semantics2 tprog).
 Proof.
-  eapply forward_simulation_plus.
-  apply senv_preserved.
+  eapply forward_simulation_plus with (match_states := fun s1 s2 => exists sm, match_states ge tge ge s1 s2 sm).
+  apply senv_preserved; auto.
   eexact initial_states_simulation.
   eexact final_states_simulation.
-  eexact step_simulation.
+  { i. des. exploit step_simulation; eauto. i; des; eauto. }
 Qed.
+
+End WHOLE.
 
 End PRESERVATION.
 

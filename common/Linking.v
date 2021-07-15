@@ -17,6 +17,7 @@
 (** Separate compilation and syntactic linking *)
 
 Require Import Coqlib Maps Errors AST.
+Require Import sflib.
 
 (** This file follows "approach A" from the paper
        "Lightweight Verification of Separate Compilation"
@@ -49,7 +50,10 @@ Definition link_fundef {F: Type} (fd1 fd2: fundef F) :=
   match fd1, fd2 with
   | Internal _, Internal _ => None
   | External ef1, External ef2 =>
-      if external_function_eq ef1 ef2 then Some (External ef1) else None
+    match ef1, ef2 with
+    | EF_external _ sg1, EF_external _ sg2 => if signature_eq sg1 sg2 then Some (External ef1) else None
+    | _, _ => if external_function_eq ef1 ef2 then Some (External ef1) else None
+    end
   | Internal f, External ef =>
       match ef with EF_external id sg => Some (Internal f) | _ => None end
   | External ef, Internal f =>
@@ -58,6 +62,7 @@ Definition link_fundef {F: Type} (fd1 fd2: fundef F) :=
 
 Inductive linkorder_fundef {F: Type}: fundef F -> fundef F -> Prop :=
   | linkorder_fundef_refl: forall fd, linkorder_fundef fd fd
+  | linkorder_fundef_ext_ext: forall name0 name1 sg, linkorder_fundef (External (EF_external name0 sg)) (External (EF_external name1 sg))
   | linkorder_fundef_ext_int: forall f id sg, linkorder_fundef (External (EF_external id sg)) (Internal f).
 
 Program Instance Linker_fundef (F: Type): Linker (fundef F) := {
@@ -75,7 +80,7 @@ Next Obligation.
 + discriminate.
 + destruct e; inv H. split; constructor.
 + destruct e; inv H. split; constructor.
-+ destruct (external_function_eq e e0); inv H. split; constructor.
++ des_ifs; esplits; try econstructor; eauto.
 Defined.
 
 Global Opaque Linker_fundef.
@@ -696,7 +701,7 @@ Local Transparent Linker_fundef.
 - discriminate.
 - destruct ef2; inv H. exists (Internal x); split; auto. left; simpl; rewrite EQ; auto.
 - destruct ef1; inv H. exists (Internal x); split; auto. right; simpl; rewrite EQ; auto.
-- destruct (external_function_eq ef1 ef2); inv H. exists (External ef2); split; auto. simpl. rewrite dec_eq_true; auto.
+- des_ifs; esplits; ss; des_ifs; eauto.
 Qed.
 
 Instance TransfPartialContextualLink
@@ -743,7 +748,7 @@ Proof.
 + discriminate.
 + destruct e; inv H2. econstructor; eauto.
 + destruct e; inv H2. econstructor; eauto.
-+ destruct (external_function_eq e e0); inv H2. econstructor; eauto.
++ des_ifs; esplits; eauto.
 - intros; subst. exists v; auto.
 Qed.
 
@@ -761,7 +766,7 @@ Proof.
 + discriminate.
 + destruct e; inv H2. econstructor; eauto.
 + destruct e; inv H2. econstructor; eauto.
-+ destruct (external_function_eq e e0); inv H2. econstructor; eauto.
++ des_ifs; esplits; eauto.
 - intros; subst. exists v; auto.
 Qed.
 

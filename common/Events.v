@@ -26,6 +26,7 @@ Require Import Values.
 Require Import Memory.
 Require Import Globalenvs.
 Require Import Builtins.
+Require Import sflib.
 
 (** * Events and traces *)
 
@@ -448,6 +449,19 @@ Section EVENTVAL_INJECT.
 Variable f: block -> option (block * Z).
 Variable ge1 ge2: Senv.t.
 
+Definition symbols_inject_weak m : Prop :=
+   (forall id, Senv.public_symbol ge2 id = Senv.public_symbol ge1 id)
+/\ (forall id b1 b2 delta,
+     f b1 = Some(b2, delta) -> Senv.find_symbol ge1 id = Some b1 ->
+     delta = 0 /\ Senv.find_symbol ge2 id = Some b2)
+/\ (forall id b1,
+     Senv.public_symbol ge1 id = true -> Senv.find_symbol ge1 id = Some b1 ->
+     exists b2, f b1 = Some(b2, 0) /\ Senv.find_symbol ge2 id = Some b2)
+/\ (forall b1 b2 delta,
+     f b1 = Some(b2, delta) ->
+     Senv.block_is_volatile ge2 b2 = Senv.block_is_volatile ge1 b1 \/
+     (Senv.block_is_volatile ge1 b1 = false /\ forall ofs p k, ~ Mem.perm m b1 ofs k p)).
+
 Definition symbols_inject : Prop :=
    (forall id, Senv.public_symbol ge2 id = Senv.public_symbol ge1 id)
 /\ (forall id b1 b2 delta,
@@ -460,7 +474,17 @@ Definition symbols_inject : Prop :=
      f b1 = Some(b2, delta) ->
      Senv.block_is_volatile ge2 b2 = Senv.block_is_volatile ge1 b1).
 
-Hypothesis symb_inj: symbols_inject.
+Lemma symbols_inject_weak_imply
+      (SYMBINJ: symbols_inject):
+    forall m, symbols_inject_weak m.
+Proof.
+  intros m. destruct SYMBINJ as (A & B & C & D).
+  unfold symbols_inject_weak. esplits; auto.
+  intros. left. eapply D; eauto.
+Qed.
+
+Variable m: mem.
+Hypothesis symb_inj: symbols_inject_weak m.
 
 Lemma eventval_match_inject:
   forall ev ty v1 v2,
@@ -491,6 +515,43 @@ Proof.
 Qed.
 
 End EVENTVAL_INJECT.
+
+Lemma init_symbols_inject
+      C `{Linking.Linker C} F1 V1 F2 V2
+      (ge: Genv.t F1 V1) (tge: Genv.t F2 V2)
+      match_fundef match_varinfo CTX
+      (MGE: Genv.match_genvs (Linking.match_globdef match_fundef match_varinfo CTX) ge tge):
+    symbols_inject (Mem.flat_inj ge.(Genv.genv_next)) ge tge.
+Proof.
+  inv MGE. rr. s.
+  unfold Mem.flat_inj, Genv.public_symbol, Genv.find_symbol, Genv.block_is_volatile, Genv.find_var_info, Genv.find_def.
+  splits; ss.
+  - i. specialize (mge_symb id). rewrite mge_symb. des_ifs. rewrite mge_pubs. ss.
+  - i. des_ifs. split; ss. specialize (mge_symb id). rewrite mge_symb. des_ifs.
+  - i. des_ifs_safe. des_sumbool. exploit Genv.genv_symb_range; eauto. intro T.
+    des_ifs. esplits; eauto. specialize (mge_symb id). congruence.
+  - i. des_ifs_safe. specialize (mge_defs b2). inv mge_defs; ss. inv H2; ss. inv H3; ss.
+Qed.
+
+Lemma symbols_inject_incr
+      j se tse j'
+      (SYMBINJ: symbols_inject j se tse)
+      (INCR: inject_incr j j')
+      (SAME: forall b b' delta, Plt b (Senv.nextblock se) -> j' b = Some(b', delta) -> j b = Some(b', delta))
+      (SAME': forall b b' delta, Plt b' (Senv.nextblock tse) -> j' b = Some(b', delta) -> j b = Some (b', delta)):
+    <<SYMBINJ: symbols_inject j' se tse>>.
+Proof.
+  rr in SYMBINJ. des. rr. esplits; ss.
+  * i. eapply SYMBINJ0; eauto. erewrite <- SAME; ss. eapply Senv.find_symbol_below; eauto.
+  * i. exploit SYMBINJ1; eauto. i; des. esplits; eauto.
+  * i. destruct (Classical_Prop.classic (Plt b1 (Senv.nextblock se))).
+    { erewrite SYMBINJ2; eauto. }
+    { destruct (Senv.block_is_volatile se b1) eqn:TSRC.
+      { exploit Senv.block_is_volatile_below; eauto. }
+      destruct (Senv.block_is_volatile tse b2) eqn:TTGT; ss.
+      { exploit Senv.block_is_volatile_below; eauto. }
+    }
+Qed.
 
 (** * Matching traces. *)
 
@@ -672,9 +733,9 @@ Record extcall_properties (sem: extcall_sem) (sg: signature) : Prop :=
 
 (** External calls must commute with memory injections,
   in the following sense. *)
-  ec_mem_inject:
+  ec_mem_inject_weak:
     forall ge1 ge2 vargs m1 t vres m2 f m1' vargs',
-    symbols_inject f ge1 ge2 ->
+    symbols_inject_weak f ge1 ge2 m1 ->
     sem ge1 vargs m1 t vres m2 ->
     Mem.inject f m1 m1' ->
     Val.inject_list f vargs vargs' ->
@@ -704,6 +765,24 @@ Record extcall_properties (sem: extcall_sem) (sg: signature) : Prop :=
     sem ge vargs m t1 vres1 m1 -> sem ge vargs m t2 vres2 m2 ->
     match_traces ge t1 t2 /\ (t1 = t2 -> vres1 = vres2 /\ m1 = m2)
 }.
+
+Lemma ec_mem_inject sem sg (ECPROP: extcall_properties sem sg):
+  forall ge1 ge2 vargs m1 t vres m2 f m1' vargs',
+    symbols_inject f ge1 ge2 ->
+    sem ge1 vargs m1 t vres m2 ->
+    Mem.inject f m1 m1' ->
+    Val.inject_list f vargs vargs' ->
+    exists f', exists vres', exists m2',
+          sem ge2 vargs' m1' t vres' m2'
+          /\ Val.inject f' vres vres'
+          /\ Mem.inject f' m2 m2'
+          /\ Mem.unchanged_on (loc_unmapped f) m1 m2
+          /\ Mem.unchanged_on (loc_out_of_reach f m1) m1' m2'
+          /\ inject_incr f f'
+          /\ inject_separated f f' m1 m1'.
+Proof.
+  intros. exploit ec_mem_inject_weak; eauto. apply symbols_inject_weak_imply. auto.
+Qed.
 
 (** ** Semantics of volatile loads *)
 
@@ -739,7 +818,7 @@ Qed.
 
 Lemma volatile_load_inject:
   forall ge1 ge2 f chunk m b ofs t v b' ofs' m',
-  symbols_inject f ge1 ge2 ->
+  symbols_inject_weak f ge1 ge2 m ->
   volatile_load ge1 chunk m b ofs t v ->
   Val.inject f (Vptr b ofs) (Vptr b' ofs') ->
   Mem.inject f m m' ->
@@ -751,14 +830,16 @@ Proof.
   inv VI. exploit B; eauto. intros [U V]. subst delta.
   exploit eventval_match_inject_2; eauto. intros (v2 & X & Y).
   rewrite Ptrofs.add_zero. exists (Val.load_result chunk v2); split.
-  constructor; auto.
-  erewrite D; eauto.
+  econs; auto. destruct (D _ _ _ H5) as [|[]].
+  rewrite H2. assumption. congruence.
   apply Val.load_result_inject. auto.
 - (* normal load *)
   exploit Mem.loadv_inject; eauto. simpl; eauto. simpl; intros (v2 & X & Y).
   exists v2; split; auto.
-  constructor; auto.
-  inv VI. erewrite D; eauto.
+  constructor; auto. inv VI.
+  destruct (D _ _ _ H4) as [|[]]. congruence.
+  exfalso. eapply H2. eapply Mem.load_valid_access in H0. destruct H0. eapply H0.
+  split. reflexivity. set (size_chunk_pos chunk). omega.
 Qed.
 
 Lemma volatile_load_receptive:
@@ -890,7 +971,7 @@ Qed.
 
 Lemma volatile_store_inject:
   forall ge1 ge2 f chunk m1 b ofs v t m2 m1' b' ofs' v',
-  symbols_inject f ge1 ge2 ->
+  symbols_inject_weak f ge1 ge2 m1 ->
   volatile_store ge1 chunk m1 b ofs v t m2 ->
   Val.inject f (Vptr b ofs) (Vptr b' ofs') ->
   Val.inject f v v' ->
@@ -907,7 +988,8 @@ Proof.
 - (* volatile store *)
   inv AI. exploit Q; eauto. intros [A B]. subst delta.
   rewrite Ptrofs.add_zero. exists m1'; split.
-  constructor; auto. erewrite S; eauto.
+  constructor; auto. destruct (S _ _ _ H5) as [|[]].
+  rewrite H2. assumption. congruence.
   eapply eventval_match_inject; eauto. apply Val.load_result_inject. auto.
   intuition auto with mem.
 - (* normal store *)
@@ -915,7 +997,10 @@ Proof.
   assert (Mem.storev chunk m1 (Vptr b ofs) v = Some m2). simpl; auto.
   exploit Mem.storev_mapped_inject; eauto. intros [m2' [A B]].
   exists m2'; intuition auto.
-+ constructor; auto. erewrite S; eauto.
++ constructor; auto. destruct (S _ _ _ H4) as [|[]].
+  rewrite H2. auto.
+  exfalso. eapply H3. eapply Mem.store_valid_access_3 in H1.
+  destruct H1. eapply H1. split. reflexivity. set (size_chunk_pos chunk). omega.
 + eapply Mem.store_unchanged_on; eauto.
   unfold loc_unmapped; intros. inv AI; congruence.
 + eapply Mem.store_unchanged_on; eauto.
@@ -1687,7 +1772,7 @@ Lemma eval_builtin_arg_determ:
 Proof.
   induction 1; intros v' EV; inv EV; try congruence.
   f_equal; eauto.
-  apply IHeval_builtin_arg1 in H3. apply IHeval_builtin_arg2 in H5. subst; auto. 
+  apply IHeval_builtin_arg1 in H3. apply IHeval_builtin_arg2 in H5. subst; auto.
 Qed.
 
 Lemma eval_builtin_args_determ:
@@ -1762,7 +1847,7 @@ Proof.
   econstructor; split; eauto with barg. apply Val.longofwords_lessdef; auto.
 - destruct IHeval_builtin_arg1 as (vhi' & P & Q).
   destruct IHeval_builtin_arg2 as (vlo' & R & S).
-  econstructor; split; eauto with barg. 
+  econstructor; split; eauto with barg.
   destruct Archi.ptr64; auto using Val.add_lessdef, Val.addl_lessdef.
 Qed.
 
@@ -1778,4 +1863,3 @@ Proof.
 Qed.
 
 End EVAL_BUILTIN_ARG_LESSDEF.
-

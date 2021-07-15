@@ -96,7 +96,13 @@ let translate_annot sp preg_to_dwarf annot =
   | a::_ -> aux a)
 
 let builtin_nop =
+<<<<<<< HEAD
   let signature ={sig_args = []; sig_res = Tvoid; sig_cc = cc_default} in
+||||||| 4b042d57
+  let signature ={sig_args = []; sig_res = None; sig_cc = cc_default} in
+=======
+  let signature ={sig_args = []; sig_res = None; sig_cc = cc_default; sig_cstyle = true} in
+>>>>>>> v3.6_stable
   let name = coqstring_of_camlstring "__builtin_nop" in
   Pbuiltin(EF_builtin(name,signature),[],BR_none)
 

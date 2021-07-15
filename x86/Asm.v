@@ -78,7 +78,7 @@ Inductive testcond: Type :=
   | Cond_e | Cond_ne
   | Cond_b | Cond_be | Cond_ae | Cond_a
   | Cond_l | Cond_le | Cond_ge | Cond_g
-  | Cond_p | Cond_np.
+  | Cond_p | Cond_np | Cond_s  | Cond_ns.
 
 (** Instructions.  IA32 instructions accept many combinations of
   registers, memory references and immediate constants as arguments.
@@ -375,6 +375,7 @@ Fixpoint label_pos (lbl: label) (pos: Z) (c: code) {struct c} : option Z :=
       if is_label lbl instr then Some (pos + 1) else label_pos lbl (pos + 1) c'
   end.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 (** Evaluating an addressing mode *)
@@ -537,6 +538,16 @@ Definition eval_testcond (c: testcond) (rs: regset) : option bool :=
       | Vint n => Some (Int.eq n Int.zero)
       | _ => None
       end
+  | Cond_s =>
+    match rs SF with
+    | Vint n => Some (Int.eq n Int.one)
+    | _ => None
+    end
+  | Cond_ns =>
+    match rs SF with
+    | Vint n => Some (Int.eq n Int.zero)
+    | _ => None
+    end
   end.
 
 (** The semantics is purely small-step and defined as a function
@@ -960,7 +971,7 @@ Definition exec_instr (f: function) (i: instruction) (rs: regset) (m: mem) : out
           | Some sp =>
               match rs#RSP with
               | Vptr stk ofs =>
-                  match Mem.free m stk 0 sz with
+                  match Mem.free m stk (Ptrofs.unsigned ofs) (Ptrofs.unsigned ofs + sz) with
                   | None => Stuck
                   | Some m' => Next (nextinstr (rs#RSP <- sp #RA <- ra)) m'
                   end
@@ -1061,6 +1072,58 @@ Definition undef_caller_save_regs (rs: regset) : regset :=
     then rs r
     else Vundef.
 
+Definition to_mreg (pr: preg): option mreg :=
+  match pr with
+  | PC => None
+  | ST0 => Some FP0
+  | CR _ => None
+  | RA => None
+  | IR ir =>
+    match ir with
+    | RAX => Some AX
+    | RBX => Some BX
+    | RCX => Some CX
+    | RDX => Some DX
+    | RSI => Some SI
+    | RDI => Some DI
+    | RBP => Some BP
+    | RSP => None
+    | R8 => Some Machregs.R8
+    | R9 => Some Machregs.R9
+    | R10 => Some Machregs.R10
+    | R11 => Some Machregs.R11
+    | R12 => Some Machregs.R12
+    | R13 => Some Machregs.R13
+    | R14 => Some Machregs.R14
+    | R15 => Some Machregs.R15
+    end
+  | FR fr =>
+    match fr with
+    | XMM0 => Some X0
+    | XMM1 => Some X1
+    | XMM2 => Some X2
+    | XMM3 => Some X3
+    | XMM4 => Some X4
+    | XMM5 => Some X5
+    | XMM6 => Some X6
+    | XMM7 => Some X7
+    | XMM8 => Some X8
+    | XMM9 => Some X9
+    | XMM10 => Some X10
+    | XMM11 => Some X11
+    | XMM12 => Some X12
+    | XMM13 => Some X13
+    | XMM14 => Some X14
+    | XMM15 => Some X15
+    end
+  end.
+
+Definition to_preg := preg_of.
+
+Lemma to_preg_to_mreg: forall mr0,
+    (to_mreg (to_preg mr0)) = Some mr0.
+Proof. destruct mr0; eauto. Qed.
+
 (** Extract the values of the arguments of an external call.
     We exploit the calling conventions from module [Conventions], except that
     we use machine registers instead of locations. *)
@@ -1090,6 +1153,30 @@ Definition extcall_arguments
 Definition loc_external_result (sg: signature) : rpair preg :=
   map_rpair preg_of (loc_result sg).
 
+Definition regset_after_external (rs0: regset): regset :=
+  fun pr =>
+    match (to_mreg pr) with
+    | Some mr =>
+      if is_callee_save mr
+      then rs0 pr
+      else Vundef
+    | None =>
+      match pr with
+      | RSP => rs0 pr
+      | _ => Vundef
+      end
+    end.
+
+Lemma regset_after_external_eq:
+    regset_after_external = undef_caller_save_regs.
+Proof.
+  apply Axioms.functional_extensionality. intro.
+  apply Axioms.functional_extensionality. intro.
+  destruct x0; simpl; auto.
+  - destruct i; simpl; auto.
+  - destruct f; simpl; auto.
+Qed.
+
 (** Execution of the instruction at [rs#PC]. *)
 
 Inductive state: Type :=
@@ -1109,7 +1196,7 @@ Inductive step: state -> trace -> state -> Prop :=
       Genv.find_funct_ptr ge b = Some (Internal f) ->
       find_instr (Ptrofs.unsigned ofs) f.(fn_code) = Some (Pbuiltin ef args res) ->
       eval_builtin_args ge rs (rs RSP) m args vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       rs' = nextinstr_nf
              (set_res res vres
                (undef_regs (map preg_of (destroyed_by_builtin ef)) rs)) ->
@@ -1119,8 +1206,8 @@ Inductive step: state -> trace -> state -> Prop :=
       rs PC = Vptr b Ptrofs.zero ->
       Genv.find_funct_ptr ge b = Some (External ef) ->
       extcall_arguments rs m (ef_sig ef) args ->
-      external_call ef ge args m t res m' ->
-      rs' = (set_pair (loc_external_result (ef_sig ef)) res (undef_caller_save_regs rs)) #PC <- (rs RA) ->
+      external_call ef se args m t res m' ->
+      rs' = (set_pair (loc_external_result (ef_sig ef)) res (regset_after_external rs)) #PC <- (rs RA) ->
       step (State rs m) t (State rs' m').
 
 End RELSEM.
@@ -1135,7 +1222,7 @@ Inductive initial_state (p: program): state -> Prop :=
         (Pregmap.init Vundef)
         # PC <- (Genv.symbol_address ge p.(prog_main) Ptrofs.zero)
         # RA <- Vnullptr
-        # RSP <- Vnullptr in
+        # RSP <- (Vptr 1%positive Ptrofs.zero) in
       initial_state p (State rs0 m0).
 
 Inductive final_state: state -> int -> Prop :=
@@ -1217,4 +1304,3 @@ Definition data_preg (r: preg) : bool :=
   | CR _ => false
   | RA => false
   end.
-

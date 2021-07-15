@@ -209,18 +209,17 @@ Section RELSEM.
 
 Variable return_address_offset: function -> code -> ptrofs -> Prop.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
-Definition find_function_ptr
-        (ge: genv) (ros: mreg + ident) (rs: regset) : option block :=
+Definition find_function_ptr (ge: genv) (ros: mreg + ident) (rs: regset) : val :=
   match ros with
-  | inl r =>
-      match rs r with
-      | Vptr b ofs => if Ptrofs.eq ofs Ptrofs.zero then Some b else None
-      | _ => None
-      end
+  | inl r => (rs r)
   | inr symb =>
-      Genv.find_symbol ge symb
+    match Genv.find_symbol ge symb with
+    | Some b => (Vptr b Ptrofs.zero)
+    | None => Vundef
+    end
   end.
 
 (** Extract the values of the arguments to an external call. *)
@@ -268,7 +267,7 @@ Inductive state: Type :=
       state
   | Callstate:
       forall (stack: list stackframe)  (**r call stack *)
-             (f: block)                (**r pointer to function to call *)
+             (f: val)                (**r pointer to function to call *)
              (rs: regset)              (**r register state *)
              (m: mem),                 (**r memory state *)
       state
@@ -280,7 +279,7 @@ Inductive state: Type :=
 
 Definition parent_sp (s: list stackframe) : val :=
   match s with
-  | nil => Vnullptr
+  | nil => Vptr 1%positive Ptrofs.zero
   | Stackframe f sp ra c :: s' => sp
   end.
 
@@ -289,6 +288,10 @@ Definition parent_ra (s: list stackframe) : val :=
   | nil => Vnullptr
   | Stackframe f sp ra c :: s' => ra
   end.
+
+Definition regset_after_external (rs0: regset): regset :=
+  fun mr => if is_callee_save mr
+         then rs0 mr else Vundef.
 
 Inductive step: state -> trace -> state -> Prop :=
   | exec_Mlabel:
@@ -336,7 +339,7 @@ Inductive step: state -> trace -> state -> Prop :=
         E0 (State s f sp c rs' m')
   | exec_Mcall:
       forall s fb sp sig ros c rs m f f' ra,
-      find_function_ptr ge ros rs = Some f' ->
+      find_function_ptr ge ros rs m= f' ->
       Genv.find_funct_ptr ge fb = Some (Internal f) ->
       return_address_offset f c ra ->
       step (State s fb sp (Mcall sig ros :: c) rs m)
@@ -344,7 +347,7 @@ Inductive step: state -> trace -> state -> Prop :=
                        f' rs m)
   | exec_Mtailcall:
       forall s fb stk soff sig ros c rs m f f' m',
-      find_function_ptr ge ros rs = Some f' ->
+      find_function_ptr ge ros rs m= f' ->
       Genv.find_funct_ptr ge fb = Some (Internal f) ->
       load_stack m (Vptr stk soff) Tptr f.(fn_link_ofs) = Some (parent_sp s) ->
       load_stack m (Vptr stk soff) Tptr f.(fn_retaddr_ofs) = Some (parent_ra s) ->
@@ -354,7 +357,7 @@ Inductive step: state -> trace -> state -> Prop :=
   | exec_Mbuiltin:
       forall s f sp rs m ef args res b vargs t vres rs' m',
       eval_builtin_args ge rs sp m args vargs ->
-      external_call ef ge vargs m t vres m' ->
+      external_call ef se vargs m t vres m' ->
       rs' = set_res res vres (undef_regs (destroyed_by_builtin ef) rs) ->
       step (State s f sp (Mbuiltin ef args res :: b) rs m)
          t (State s f sp b rs' m')
@@ -396,20 +399,21 @@ Inductive step: state -> trace -> state -> Prop :=
       step (State s fb (Vptr stk soff) (Mreturn :: c) rs m)
         E0 (Returnstate s rs m')
   | exec_function_internal:
-      forall s fb rs m f m1 m2 m3 stk rs',
+      forall s fptr fb rs m f m1 m2 m3 stk rs'
+      (FPTR: fptr = Vptr fb Ptrofs.zero),
       Genv.find_funct_ptr ge fb = Some (Internal f) ->
       Mem.alloc m 0 f.(fn_stacksize) = (m1, stk) ->
       let sp := Vptr stk Ptrofs.zero in
       store_stack m1 sp Tptr f.(fn_link_ofs) (parent_sp s) = Some m2 ->
       store_stack m2 sp Tptr f.(fn_retaddr_ofs) (parent_ra s) = Some m3 ->
       rs' = undef_regs destroyed_at_function_entry rs ->
-      step (Callstate s fb rs m)
+      step (Callstate s fptr rs m)
         E0 (State s fb sp f.(fn_code) rs' m3)
   | exec_function_external:
       forall s fb rs m t rs' ef args res m',
-      Genv.find_funct_ptr ge fb = Some (External ef) ->
+      Genv.find_funct ge fb = Some (External ef) ->
       extcall_arguments rs m (parent_sp s) (ef_sig ef) args ->
-      external_call ef ge args m t res m' ->
+      external_call ef se args m t res m' ->
       rs' = set_pair (loc_result (ef_sig ef)) res (undef_caller_save_regs rs) ->
       step (Callstate s fb rs m)
          t (Returnstate s rs' m')
@@ -425,7 +429,7 @@ Inductive initial_state (p: program): state -> Prop :=
       let ge := Genv.globalenv p in
       Genv.init_mem p = Some m0 ->
       Genv.find_symbol ge p.(prog_main) = Some fb ->
-      initial_state p (Callstate nil fb (Regmap.init Vundef) m0).
+      initial_state p (Callstate nil (Vptr fb Ptrofs.zero) (Regmap.init Vundef) m0).
 
 Inductive final_state: state -> int -> Prop :=
   | final_state_intro: forall rs m r retcode,
@@ -452,6 +456,7 @@ Section WF_STATES.
 
 Variable rao: function -> code -> ptrofs -> Prop.
 
+Variable se: Senv.t.
 Variable ge: genv.
 
 Inductive wf_frame: stackframe -> Prop :=
@@ -475,7 +480,7 @@ Inductive wf_state: state -> Prop :=
       wf_state (Returnstate s rs m).
 
 Lemma wf_step:
-  forall S1 t S2, step rao ge S1 t S2 -> wf_state S1 -> wf_state S2.
+  forall S1 t S2, step rao se ge S1 t S2 -> wf_state S1 -> wf_state S2.
 Proof.
   induction 1; intros WF; inv WF; try (econstructor; now eauto with coqlib).
 - (* call *)
@@ -502,3 +507,6 @@ Lemma wf_initial:
 Proof.
   intros. inv H. fold ge. constructor. constructor.
 Qed.
+
+Definition dummy_stack (parent_sp parent_ra: val): stackframe := Stackframe 1%positive parent_sp parent_ra nil.
+Hint Unfold dummy_stack.

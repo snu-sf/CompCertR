@@ -16,9 +16,9 @@ Require Import FSets Coqlib Maps Ordered Iteration Errors.
 Require Import AST Linking.
 Require Import Integers Values Memory Globalenvs Events Smallstep.
 Require Import Op Registers RTL.
-Require Import Unusedglob.
+Require Import Unreadglob.
 Require Import sflib.
-Require SimMemInj.
+Require SimMemInjInv.
 
 Module ISF := FSetFacts.Facts(IS).
 Module ISP := FSetProperties.Properties(IS).
@@ -29,9 +29,9 @@ Coercion IS_to_idset: IS.t >-> Funclass.
 
 (** * Relational specification of the transformation *)
 
-(** The transformed program is obtained from the original program
-  by keeping only the global definitions that belong to a given
-  set [u] of names.  *)
+(** The transformed program is obtained from the original program *)
+(*   by keeping only the global definitions that belong to a given *)
+(*   set [u] of names.  *)
 
 Record match_prog_1 (used: ident -> bool) (p tp: program) : Prop := {
   match_prog_main:
@@ -40,13 +40,13 @@ Record match_prog_1 (used: ident -> bool) (p tp: program) : Prop := {
     tp.(prog_public) = p.(prog_public);
   match_prog_def:
     forall id,
-       (prog_defmap tp)!id = if used id then (prog_defmap p)!id else None;
+       (prog_defmap tp)!id = if used id then (option_map (map_globdef used) ((prog_defmap p)!id)) else None;
   match_prog_unique:
     list_norepet (prog_defs_names tp)
 }.
 
-(** This set [u] (as "used") must be closed under references, and
-  contain the entry point and the public identifiers of the program. *)
+(** This set [u] (as "used") must be closed under references, and *)
+(*   contain the entry point and the public identifiers of the program. *)
 
 Definition ref_function (f: function) (id: ident) : Prop :=
   exists pc i, f.(fn_code)!pc = Some i /\ In id (ref_instruction i).
@@ -76,17 +76,23 @@ Record valid_used_set (p: program) (used: ident -> bool) : Prop := {
 }.
 
 Definition used_set (tp: program): ident -> bool :=
-  fun id => in_dec Pos.eq_dec id (tp.(prog_main) :: ((prog_defs_names tp))).
+  fun id => in_dec Pos.eq_dec id (tp.(prog_main) :: ((prog_defs_names tp)))
+.
 
 Definition match_prog (p tp: program) : Prop :=
-  exists used: ident -> bool, valid_used_set p used /\ match_prog_1 used p tp
+  exists used: ident -> bool, valid_used_set p used /\ match_prog_1 used p tp /\ check_program p
         /\ <<EXACT: used = used_set tp>>.
 
 Definition match_prog_weak (p tp: program) : Prop :=
-  exists used: ident -> bool, valid_used_set p used /\ match_prog_1 used p tp.
+  exists used: ident -> bool, valid_used_set p used /\ match_prog_1 used p tp /\ check_program p.
 
-Lemma match_prog_weakening: match_prog <2= match_prog_weak.
-Proof. i. inv PR. des. econs; eauto. Qed.
+Lemma match_prog_weakening
+  :
+    match_prog <2= match_prog_weak
+.
+Proof.
+  i. inv PR. des. econs; eauto.
+Qed.
 
 (** * Properties of the static analysis *)
 
@@ -429,16 +435,18 @@ Proof.
 Qed.
 
 Lemma filter_globdefs_image:
-  forall id l u,
-  IS.In id u /\ In id (map fst l) -> In id (map fst (filter_globdefs u nil l)).
+  forall id l u kept,
+  IS.In id u /\ In id (map fst l) -> In id (map fst (filter_globdefs u nil (map_globdefs kept l))).
 Proof.
-  induction l as [ | [id1 gd1] l]; simpl; intros; try tauto.
- destruct (IS.mem id1 u) eqn:MEM.
-  - rewrite filter_globdefs_nil, map_app, in_app_iff. destruct H. ss.
-    destruct (Pos.eq_dec id1 id).
-    + clarify. tauto.
-    + des; clarify. left. eapply IHl; eauto. esplits; eauto. rewrite ISF.remove_iff. esplits; eauto.
-  - apply ISF.not_mem_iff in MEM. des; clarify. eapply IHl; eauto.
+  induction l as [ | [id1 gd1] l]; simpl; intros.
+- tauto.
+- destruct (IS.mem id1 u) eqn:MEM.
++ rewrite filter_globdefs_nil, map_app, in_app_iff. destruct H.
+  ss.
+  destruct (Pos.eq_dec id1 id).
+  * clarify. tauto.
+  * des; clarify. left. eapply IHl; eauto. esplits; eauto. rewrite ISF.remove_iff. esplits; eauto.
++ apply ISF.not_mem_iff in MEM. des; clarify. eapply IHl; eauto.
 Qed.
 
 Lemma filter_globdefs_unique_names:
@@ -456,44 +464,80 @@ Qed.
 
 End TRANSFORMATION.
 
+Lemma PTree_Properties_of_list_map
+      X Y (f: X -> Y)
+      (xs: list (PTree.elt * X))
+  :
+    forall id,
+    (PTree_Properties.of_list (map (fun idx => ((fst idx), (f (snd idx)))) xs)) ! id
+    =
+    (PTree.map (fun _ x => f x) (PTree_Properties.of_list xs)) ! id
+.
+Proof.
+  i. unfold PTree_Properties.of_list. rewrite PTree.gmap. unfold option_map.
+  rewrite <- ! fold_left_rev_right.
+  rewrite <- map_rev.
+  (* unfold PTree.elt, ident. *)
+  abstr (rev xs) ixs. clear_tac.
+  induction ixs; ii; ss.
+  { rewrite ! PTree.gempty. ss. }
+  rewrite ! PTree.gsspec in *.
+  des_ifs; ss.
+Qed.
+
 Theorem transf_program_match:
   forall p tp, transform_program p = OK tp -> match_prog p tp.
 Proof.
   unfold transform_program; intros p tp TR. set (pm := prog_defmap p) in *.
+  destruct (check_program p) eqn:CHK; ss.
   destruct (used_globals p pm) as [u|] eqn:U; try discriminate.
   destruct (IS.for_all (global_defined p pm) u) eqn:DEF; inv TR.
   exists u; split.
   apply used_globals_valid; auto.
-  assert(MATCH: match_prog_1 u p (mkprogram (filter_globdefs u [] (rev (prog_defs p)))
+  assert(MATCH: match_prog_1 u p (mkprogram (filter_globdefs u [] (map_globdefs u (rev (prog_defs p))))
                                             (prog_public p) (prog_main p))).
   {
   constructor; simpl; auto.
-  intros. unfold prog_defmap; simpl. apply filter_globdefs_map.
+  intros. unfold prog_defmap; simpl.
+  { unfold map_globdefs. rewrite map_rev. rewrite filter_globdefs_map.
+    unfold IS_to_idset. des_ifs. unfold option_map. rewrite PTree_Properties_of_list_map. rewrite PTree.gmap. des_ifs.
+  }
   apply filter_globdefs_unique_names.
   }
   split; auto.
-  { unfold used_set in *.
-    exploit used_globals_valid; eauto. intro VAL. r. unfold prog_defs_names. ss.
+  split; auto.
+  {
+    unfold used_set in *.
+    exploit used_globals_valid; eauto. intro VAL.
+    r. unfold prog_defs_names. ss.
     apply Axioms.functional_extensionality. i.
     inv MATCH. ss. unfold prog_defmap in *. ss.
-    specialize (match_prog_def0 x). symmetry. unfold prog_defs_names in *. ss.
-    set (filter_globdefs u [] (rev (prog_defs p))) as tdefs in *. rename u into kept.
+    specialize (match_prog_def0 x).
+    symmetry.
+    unfold prog_defs_names in *. ss.
+    set (filter_globdefs u [] (rev (prog_defs p))) as tdefs in *.
+    rename u into kept.
     apply ISF.for_all_iff in DEF; cycle 1.
     { ii; ss; clarify. }
-    r in DEF. unfold global_defined in *. subst pm. clear_tac.
+    r in DEF. unfold global_defined in *.
+    subst pm. clear_tac.
     destruct (kept x) eqn:T; des_sumbool; unfold IS_to_idset in *; cycle 1.
     - ii. des; clarify.
       + inv VAL. clarify.
-      + exploit filter_globdefs_domain; eauto. i; des. erewrite <- ISF.not_mem_iff in *; eauto.
+      + exploit filter_globdefs_domain; eauto. i; des.
+        erewrite <- ISF.not_mem_iff in *; eauto.
     - destruct (Pos.eq_dec x p.(prog_main)).
       { clarify. tauto. }
-      right. eapply filter_globdefs_image. esplits; eauto.
+      right.
+      eapply filter_globdefs_image. esplits; eauto.
       + rewrite ISF.mem_iff; ss.
       + exploit DEF; eauto.
         { eapply ISF.mem_iff; eauto. }
         intro DEFX. des_ifs.
-        * exploit PTree_Properties.in_of_list; try apply Heq. i. rewrite in_map_iff.
-          eexists (_, _). ss. esplits; eauto. rewrite <- in_rev; eauto.
+        * exploit PTree_Properties.in_of_list; try apply Heq. i.
+          rewrite in_map_iff. eexists (_, _). ss.
+          esplits; eauto.
+          rewrite <- in_rev; eauto.
         * des_sumbool. clarify.
   }
 Qed.
@@ -512,7 +556,8 @@ Let pm := prog_defmap p.
 Section CORELEMMA.
 
 Variable (se tse: Senv.t).
-Variable ge tge: genv.
+Variable ge : genv.
+Variable tge : genv.
 Hypothesis SECOMPATSRC: senv_genv_compat se ge.
 Hypothesis SECOMPATTGT: senv_genv_compat tse tge.
 
@@ -537,28 +582,30 @@ Qed.
 
 (** Injections that preserve used globals. *)
 
-Record meminj_preserves_globals (f: meminj) : Prop := {
+Record meminj_preserves_globals (invar: block -> Prop) (f: meminj): Prop := {
   symbols_inject_1: forall id b b' delta,
     f b = Some(b', delta) -> Genv.find_symbol ge id = Some b ->
-    delta = 0 /\ Genv.find_symbol tge id = Some b';
+    delta = 0 /\ Genv.find_symbol tge id = Some b' /\ kept id;
   symbols_inject_2: forall id b,
     kept id -> Genv.find_symbol ge id = Some b ->
     exists b', Genv.find_symbol tge id = Some b' /\ f b = Some(b', 0);
   symbols_inject_3: forall id b',
     Genv.find_symbol tge id = Some b' ->
     exists b, Genv.find_symbol ge id = Some b /\ f b = Some(b', 0);
+  symbols_inject_4: forall id b,
+    ~ kept id -> Genv.find_symbol ge id = Some b -> invar b;
   defs_inject: forall b b' delta gd,
     f b = Some(b', delta) -> Genv.find_def ge b = Some gd ->
-    Genv.find_def tge b' = Some gd /\ delta = 0 /\
+    Genv.find_def tge b' = Some (map_globdef kept gd) /\ delta = 0 /\
     (forall id, ref_def gd id -> kept id);
-  defs_rev_inject: forall b b' delta gd,
-    f b = Some(b', delta) -> Genv.find_def tge b' = Some gd ->
-    Genv.find_def ge b = Some gd /\ delta = 0;
+  defs_rev_inject: forall b b' delta gd_tgt,
+    f b = Some(b', delta) -> Genv.find_def tge b' = Some gd_tgt ->
+    exists gd_src, Genv.find_def ge b = Some gd_src /\ delta = 0 /\ gd_tgt = map_globdef kept gd_src;
   public_eq: Genv.genv_public ge = prog_public p /\ Genv.genv_public tge = prog_public tp;
 }.
 
-Lemma globals_symbols_inject:
-  forall j, meminj_preserves_globals j -> symbols_inject j ge tge.
+Lemma globals_symbols_inject invar:
+  forall j, meminj_preserves_globals invar j -> symbols_inject j ge tge.
 Proof.
   intros.
   assert (E1: Genv.genv_public ge = p.(prog_public)).
@@ -574,7 +621,7 @@ Proof.
     exploit symbols_inject_2; eauto.
     eapply kept_public; eauto.
     intros (b' & TFS' & INJ). congruence.
-  + eapply symbols_inject_1; eauto.
+  + ss. exploit symbols_inject_1; eauto. i; des. esplits; eauto.
   + simpl in *; unfold Genv.public_symbol in H0.
     destruct (Genv.find_symbol ge id) as [b|] eqn:FS; try discriminate.
     rewrite E1 in H0.
@@ -586,16 +633,18 @@ Proof.
     destruct (Genv.find_var_info ge b1) as [gv|] eqn:V1.
     rewrite Genv.find_var_info_iff in V1.
     exploit defs_inject; eauto. intros (A & B & C).
+    ss.
     rewrite <- Genv.find_var_info_iff in A. rewrite A; auto.
     destruct (Genv.find_var_info tge b2) as [gv|] eqn:V2; auto.
     rewrite Genv.find_var_info_iff in V2.
-    exploit defs_rev_inject; eauto. intros (A & B).
+    exploit defs_rev_inject; eauto. intros (gd_src & A & B & C).
+    unfold map_globdef in *. des_ifs.
     rewrite <- Genv.find_var_info_iff in A. congruence.
 Qed.
 
-Lemma symbol_address_inject:
+Lemma symbol_address_inject invar:
   forall j id ofs,
-  meminj_preserves_globals j -> kept id ->
+  meminj_preserves_globals invar j -> kept id ->
   Val.inject j (Genv.symbol_address ge id ofs) (Genv.symbol_address tge id ofs).
 Proof.
   intros. unfold Genv.symbol_address. destruct (Genv.find_symbol ge id) as [b|] eqn:FS; auto.
@@ -651,44 +700,47 @@ Proof.
   apply set_reg_inject; auto.
 Qed.
 
-Inductive match_stacks (j: meminj):
+Inductive match_stacks (invar: block -> Prop) (j: meminj):
         list stackframe -> list stackframe -> block -> block -> Prop :=
   | match_stacks_nil: forall bound tbound,
       forall (SYMBINJ: symbols_inject j se tse),
-      meminj_preserves_globals j ->
+      meminj_preserves_globals invar j ->
       Ple (Genv.genv_next ge) bound -> Ple (Genv.genv_next tge) tbound ->
-      match_stacks j nil nil bound tbound
+      match_stacks invar j nil nil bound tbound
   | match_stacks_cons: forall res f sp pc rs s tsp trs ts bound tbound
-         (STACKS: match_stacks j s ts sp tsp)
+         tf (TRANF: tf = (transf_function (fun _ i => filter_instr kept i) f))
+         (STACKS: match_stacks invar j s ts sp tsp)
          (KEPT: forall id, ref_function f id -> kept id)
          (SPINJ: j sp = Some(tsp, 0))
          (REGINJ: regset_inject j rs trs)
          (BELOW: Plt sp bound)
          (TBELOW: Plt tsp tbound),
-      match_stacks j (Stackframe res f (Vptr sp Ptrofs.zero) pc rs :: s)
-                     (Stackframe res f (Vptr tsp Ptrofs.zero) pc trs :: ts)
+      match_stacks invar j (Stackframe res f (Vptr sp Ptrofs.zero) pc rs :: s)
+                     (Stackframe res tf (Vptr tsp Ptrofs.zero) pc trs :: ts)
                      bound tbound.
 
-Lemma match_stacks_symbols_inject:
+Lemma match_stacks_symbols_inject invar:
   forall j s ts bound tbound,
-  match_stacks j s ts bound tbound ->
+  match_stacks invar j s ts bound tbound ->
   symbols_inject j se tse.
-Proof. induction 1; auto. Qed.
-
-Lemma match_stacks_preserves_globals:
-  forall j s ts bound tbound,
-  match_stacks j s ts bound tbound ->
-  meminj_preserves_globals j.
 Proof.
   induction 1; auto.
 Qed.
 
-Lemma match_stacks_incr:
+Lemma match_stacks_preserves_globals invar:
+  forall j s ts bound tbound,
+  match_stacks invar j s ts bound tbound ->
+  meminj_preserves_globals invar j.
+Proof.
+  induction 1; auto.
+Qed.
+
+Lemma match_stacks_incr invar:
   forall j j', inject_incr j j' ->
-  forall s ts bound tbound, match_stacks j s ts bound tbound ->
+  forall s ts bound tbound, match_stacks invar j s ts bound tbound ->
   (forall b1 b2 delta,
       j b1 = None -> j' b1 = Some(b2, delta) -> Ple bound b1 /\ Ple tbound b2) ->
-  match_stacks j' s ts bound tbound.
+  match_stacks invar j' s ts bound tbound.
 Proof.
   induction 2; intros.
 - assert (SAME: forall b b' delta, Plt b (Genv.genv_next ge) ->
@@ -715,6 +767,7 @@ Proof.
     exists b'; auto.
   + exploit symbols_inject_3; eauto. intros (b & A & B).
     exists b; auto.
+  + exploit symbols_inject_4; eauto.
   + eapply defs_inject; eauto. apply SAME; auto.
     eapply Genv.genv_defs_range; eauto.
   + eapply defs_rev_inject; eauto. apply SAME'; auto.
@@ -727,41 +780,45 @@ Proof.
   apply regset_inject_incr with j; auto.
 Qed.
 
-Lemma match_stacks_bound:
+Lemma match_stacks_bound invar:
   forall j s ts bound tbound bound' tbound',
-  match_stacks j s ts bound tbound ->
+  match_stacks invar j s ts bound tbound ->
   Ple bound bound' -> Ple tbound tbound' ->
-  match_stacks j s ts bound' tbound'.
+  match_stacks invar j s ts bound' tbound'.
 Proof.
   induction 1; intros.
 - constructor; auto. eapply Ple_trans; eauto. eapply Ple_trans; eauto.
 - econstructor; eauto. eapply Plt_Ple_trans; eauto. eapply Plt_Ple_trans; eauto.
 Qed.
 
-Inductive match_states: state -> state -> SimMemInj.t' -> Prop :=
+Inductive match_states: state -> state -> SimMemInjInv.t' -> Prop :=
   | match_states_regular: forall s f sp pc rs m ts tsp trs tm j
-         sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm j)
-         (MWF: SimMemInj.wf' sm0)
-         (STACKS: match_stacks j s ts sp tsp)
+         tf (TRANF: tf = (transf_function (fun _ i => filter_instr kept i) f))
+         sm0 (MCOMPAT: SimMemInjInv.mcompat sm0 m tm j)
+         invar (INV: sm0.(SimMemInjInv.mem_inv_src) = invar)
+         (MWF: SimMemInjInv.wf' SimMemInjInv.top_inv SimMemInjInv.top_inv sm0)
+         (STACKS: match_stacks invar j s ts sp tsp)
          (KEPT: forall id, ref_function f id -> kept id)
          (SPINJ: j sp = Some(tsp, 0))
          (REGINJ: regset_inject j rs trs)
          (MEMINJ: Mem.inject j m tm),
       match_states (State s f (Vptr sp Ptrofs.zero) pc rs m)
-                   (State ts f (Vptr tsp Ptrofs.zero) pc trs tm) sm0
+                   (State ts tf (Vptr tsp Ptrofs.zero) pc trs tm) sm0
   | match_states_call: forall s fptr sg args m ts tfptr targs tm j
-         sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm j)
-         (MWF: SimMemInj.wf' sm0)
-         (STACKS: match_stacks j s ts (Mem.nextblock m) (Mem.nextblock tm))
+         sm0 (MCOMPAT: SimMemInjInv.mcompat sm0 m tm j)
+         invar (INV: sm0.(SimMemInjInv.mem_inv_src) = invar)
+         (MWF: SimMemInjInv.wf' SimMemInjInv.top_inv SimMemInjInv.top_inv sm0)
+         (STACKS: match_stacks invar j s ts (Mem.nextblock m) (Mem.nextblock tm))
          (FPTR: Val.inject j fptr tfptr)
          (ARGINJ: Val.inject_list j args targs)
          (MEMINJ: Mem.inject j m tm),
       match_states (Callstate s fptr sg args m)
                    (Callstate ts tfptr sg targs tm) sm0
   | match_states_return: forall s res m ts tres tm j
-         sm0 (MCOMPAT: SimMemInj.mcompat sm0 m tm j)
-         (MWF: SimMemInj.wf' sm0)
-         (STACKS: match_stacks j s ts (Mem.nextblock m) (Mem.nextblock tm))
+         sm0 (MCOMPAT: SimMemInjInv.mcompat sm0 m tm j)
+         invar (INV: sm0.(SimMemInjInv.mem_inv_src) = invar)
+         (MWF: SimMemInjInv.wf' SimMemInjInv.top_inv SimMemInjInv.top_inv sm0)
+         (STACKS: match_stacks invar j s ts (Mem.nextblock m) (Mem.nextblock tm))
          (RESINJ: Val.inject j res tres)
          (MEMINJ: Mem.inject j m tm),
       match_states (Returnstate s res m)
@@ -784,9 +841,9 @@ Proof.
   intros. eapply external_call_mem_inject_gen; eauto.
 Qed.
 
-Lemma find_function_inject:
+Lemma find_function_inject invar:
   forall j ros rs fptr trs,
-  meminj_preserves_globals j ->
+  meminj_preserves_globals invar j ->
   find_function_ptr ge ros rs = fptr ->
   match ros with inl r => regset_inject j rs trs | inr id => kept id end ->
   exists tfptr, find_function_ptr tge ros trs = tfptr /\ Val.inject j fptr tfptr.
@@ -798,11 +855,11 @@ Proof.
   + destruct (Genv.find_symbol tge id); eauto.
 Qed.
 
-Lemma eval_builtin_arg_inject:
+Lemma eval_builtin_arg_inject invar:
   forall rs sp m j rs' sp' m' a v,
   eval_builtin_arg ge (fun r => rs#r) (Vptr sp Ptrofs.zero) m a v ->
   j sp = Some(sp', 0) ->
-  meminj_preserves_globals j ->
+  meminj_preserves_globals invar j ->
   regset_inject j rs rs' ->
   Mem.inject j m m' ->
   (forall id, In id (globals_of_builtin_arg a) -> kept id) ->
@@ -840,11 +897,11 @@ Proof.
   destruct Archi.ptr64; auto using Val.add_inject, Val.addl_inject.
 Qed.
 
-Lemma eval_builtin_args_inject:
+Lemma eval_builtin_args_inject invar:
   forall rs sp m j rs' sp' m' al vl,
   eval_builtin_args ge (fun r => rs#r) (Vptr sp Ptrofs.zero) m al vl ->
   j sp = Some(sp', 0) ->
-  meminj_preserves_globals j ->
+  meminj_preserves_globals invar j ->
   regset_inject j rs rs' ->
   Mem.inject j m m' ->
   (forall id, In id (globals_of_builtin_args al) -> kept id) ->
@@ -860,17 +917,28 @@ Proof.
   exists (v1' :: vl'); split; constructor; auto.
 Qed.
 
+Lemma transf_function_at:
+  forall f pc i,
+  f.(fn_code)!pc = Some i ->
+  (transf_function (fun _ i => filter_instr kept i) f).(fn_code)!pc = Some (filter_instr kept i).
+Proof.
+  intros.
+  unfold transf_function. ss. rewrite PTree.gmap. unfold option_map. des_ifs.
+Qed.
+
 Theorem step_simulation:
   forall S1 t S2, step se ge S1 t S2 ->
   forall S1' sm0 (MS: match_states S1 S1' sm0),
-  exists S2', step tse tge S1' t S2' /\ (exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInj.le' sm0 sm1>>).
+  exists S2', step tse tge S1' t S2' /\ (exists sm1, match_states S2 S2' sm1 /\ <<MLE: SimMemInjInv.le' sm0 sm1>>).
 Proof.
-  induction 1; intros; inv MS.
+  induction 1; intros; inv MS;
+    try (exploit transf_function_at; eauto; []; intro CODETGT).
 
 - (* nop *)
   econstructor; split.
   eapply exec_Inop; eauto.
-  SimMemInj.spl. econstructor; eauto.
+  SimMemInjInv.spl.
+  econstructor; eauto.
 
 - (* op *)
   assert (A: exists tv,
@@ -881,21 +949,22 @@ Proof.
     intros; eapply Mem.weak_valid_pointer_inject_val; eauto.
     intros; eapply Mem.weak_valid_pointer_inject_no_overflow; eauto.
     intros; eapply Mem.different_pointers_inject; eauto.
-    intros. apply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
+    intros. eapply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
     apply KEPT. red. exists pc, (Iop op args res pc'); auto.
     econstructor; eauto.
     apply regs_inject; auto.
     assumption. }
   destruct A as (tv & B & C).
   econstructor; split. eapply exec_Iop; eauto.
-  SimMemInj.spl. econstructor; eauto. apply set_reg_inject; auto.
+  SimMemInjInv.spl.
+  econstructor; eauto. apply set_reg_inject; auto.
 
 - (* load *)
   assert (A: exists ta,
                eval_addressing tge (Vptr tsp Ptrofs.zero) addr trs##args = Some ta
             /\ Val.inject j a ta).
   { apply eval_addressing_inj with (ge1 := ge) (sp1 := Vptr sp0 Ptrofs.zero) (vl1 := rs##args).
-    intros. apply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
+    intros. eapply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
     apply KEPT. red. exists pc, (Iload chunk addr args dst pc'); auto.
     econstructor; eauto.
     apply regs_inject; auto.
@@ -903,32 +972,122 @@ Proof.
   destruct A as (ta & B & C).
   exploit Mem.loadv_inject; eauto. intros (tv & D & E).
   econstructor; split. eapply exec_Iload; eauto.
-  SimMemInj.spl. econstructor; eauto. apply set_reg_inject; auto.
+  SimMemInjInv.spl.
+  econstructor; eauto. apply set_reg_inject; auto.
 
 - (* store *)
+  (* destruct (Classical_Prop.classic (forall id (IN: In id (globals_addressing addr)), kept id)); *)
+  (*   rename H2 into T; cycle 1. *)
+  set a as AAA.
+  dup H1. rename H2 into W.
+  unfold Mem.storev in W. des_ifs.
+  destruct (j b) eqn:V; cycle 1.
+  {
+    set addr as BBB.
+    assert(exists gid ofs, addr = Aglobal gid ofs /\ ~ kept gid).
+    { unfold eval_addressing, eval_addressing64 in *. des_ifs.
+      - unfold Val.addl in *. des_ifs. destruct args; ss. clarify. clear_tac.
+        hexploit (REGINJ r); eauto. intro INJ. inv INJ; ss; try congruence.
+      - unfold Val.addl in *. des_ifs.
+        + destruct args; ss. destruct args; ss. clarify. clear_tac.
+          hexploit (REGINJ r); eauto. intro INJ. inv INJ; ss; try congruence.
+          hexploit (REGINJ r0); eauto. intro INJ. inv INJ; ss; try congruence.
+        + destruct args; ss. destruct args; ss. clarify. clear_tac.
+          hexploit (REGINJ r); eauto. intro INJ. inv INJ; ss; try congruence.
+      - unfold Val.addl, Val.mull in *. des_ifs.
+      - unfold Val.addl, Val.mull in *. des_ifs.
+        destruct args; ss. clarify. clear_tac.
+        destruct args; ss. clarify. clear_tac.
+        hexploit (REGINJ r); eauto. intro INJ. inv INJ; ss; try congruence.
+      - unfold Genv.symbol_address in *. des_ifs. esplits; eauto.
+        ii.
+        exploit match_stacks_preserves_globals; eauto. intro GEINJ. inv GEINJ.
+        exploit symbols_inject_6; eauto. i; des. clarify.
+    }
+    replace (filter_instr kept (Istore chunk addr args src pc')) with (Inop pc') in CODETGT; cycle 1.
+    { ss. des_ifs. rewrite forallb_forall in *. des. clarify. ss. specialize (Heq gid). tauto. }
+  econstructor; split.
+  eapply exec_Inop; eauto.
+
+  des.
+  assert (INVAR: SimMemInjInv.mem_inv_src sm0 b).
+  { unfold eval_addressing in *. des_ifs. ss. des_ifs.
+    unfold Genv.symbol_address in *. des_ifs.
+    exploit match_stacks_preserves_globals; eauto. intros GEINJ. inv GEINJ.
+    exploit symbols_inject_8; eauto. }
+  set (sm1 := (SimMemInj.mk
+                 m' tm j
+                 (SimMemInj.src_external sm0.(SimMemInjInv.minj)) (SimMemInj.tgt_external sm0.(SimMemInjInv.minj))
+                 (SimMemInj.src_parent_nb sm0.(SimMemInjInv.minj)) (SimMemInj.tgt_parent_nb sm0.(SimMemInjInv.minj))
+                 (SimMemInj.src_ge_nb sm0.(SimMemInjInv.minj)) (SimMemInj.tgt_ge_nb sm0.(SimMemInjInv.minj)))).
+  assert (MWF1: SimMemInj.wf' sm1).
+  { inv MWF. inv WF. inv MCOMPAT. econs; ss; eauto.
+    - eapply Mem.store_unmapped_inject; eauto.
+    - etransitivity; eauto. unfold sm1, SimMemInj.src_private.
+      ss. ii. des. split; eauto. eapply Mem.store_valid_block_1; eauto.
+    - etransitivity; eauto. unfold sm1, SimMemInj.tgt_private, loc_out_of_reach.
+      ss. ii. des. split; eauto. ii. eapply PR; eauto.
+      eapply Mem.perm_store_2; eauto.
+    - eapply Mem.nextblock_store in H1. erewrite H1 in *. eauto. }
+  assert (MLE1: SimMemInj.le' sm0.(SimMemInjInv.minj) sm1).
+  { inv MCOMPAT. unfold sm1. econs; ss; eauto.
+    - eapply Mem.store_unchanged_on; eauto.
+      ii. inv MWF. exploit INVRANGESRC; eauto. i. des. eauto.
+    - eapply Mem.unchanged_on_refl.
+    - eapply SimMemInj.frozen_refl.
+    - eapply SimMemInj.frozen_refl.
+    - ii. eapply Mem.perm_store_2; eauto. }
+  SimMemInjInv.spl_exact2 sm1.
+  econs; ss; eauto.
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
+  { ss. inv MWF1. auto. }
+  { econs; ss; eauto. }
+  }
+  assert(T: (forall id (IN: In id (globals_addressing addr)), kept id)).
+  { i. destruct addr; ss. des; ss. clarify.
+    unfold eval_addressing, eval_addressing64 in *. des_ifs_safe.
+    destruct (kept id) eqn:U; ss.
+    exploit match_stacks_preserves_globals; eauto. intro GEINJ. inv GEINJ.
+    unfold Genv.symbol_address in *. des_ifs.
+    destruct p0; ss.
+    exploit (symbols_inject_5 id b); eauto. i; des. clarify.
+  }
+  replace (filter_instr kept (Istore chunk addr args src pc')) with (Istore chunk addr args src pc') in CODETGT; cycle 1.
+  { ss. des_ifs. destruct addr; ss. rewrite andb_false_iff in Heq. des; ss. specialize (T i0). exploit T; eauto.
+    i; des. congruence.
+  }
   assert (A: exists ta,
                eval_addressing tge (Vptr tsp Ptrofs.zero) addr trs##args = Some ta
-            /\ Val.inject j a ta).
+            /\ Val.inject j (Vptr b i) ta).
   { apply eval_addressing_inj with (ge1 := ge) (sp1 := Vptr sp0 Ptrofs.zero) (vl1 := rs##args).
-    intros. apply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
-    apply KEPT. red. exists pc, (Istore chunk addr args src pc'); auto.
+    intros. eapply symbol_address_inject. eapply match_stacks_preserves_globals; eauto.
+    eapply T; eauto.
     econstructor; eauto.
     apply regs_inject; auto.
     assumption. }
   destruct A as (ta & B & C).
   exploit Mem.storev_mapped_inject; eauto. intros (tm' & D & E).
   econstructor; split. eapply exec_Istore; eauto.
-  inv MCOMPAT. exploit SimMemInj.storev_mapped; eauto. i; des. SimMemInj.spl_exact sm1.
+  inv MCOMPAT.
+  exploit SimMemInj.storev_mapped; eauto.
+  { inv MWF. eauto. } i; des.
+  SimMemInjInv.spl_exact2 sm1.
   econstructor; eauto.
-  { SimMemInj.compat_tac. }
+  { SimMemInj.compat_tac. ss. clarify. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
+  { econs; eauto. }
 
 - (* call *)
-  inversion FPTR. exploit find_function_inject. 
+  inversion FPTR.
+  exploit find_function_inject.
   eapply match_stacks_preserves_globals; eauto. eauto.
   destruct ros as [r|id]. eauto. apply KEPT. red. econstructor; econstructor; split; eauto. simpl; auto.
   intros (tfptr & A & B).
   econstructor; split. eapply exec_Icall; eauto. constructor.
-  SimMemInj.spl. econstructor; eauto.
+  SimMemInjInv.spl.
+  econstructor; eauto.
   econstructor; eauto.
   change (Mem.valid_block m sp0). eapply Mem.valid_block_inject_1; eauto.
   change (Mem.valid_block tm tsp). eapply Mem.valid_block_inject_2; eauto.
@@ -936,22 +1095,30 @@ Proof.
   apply regs_inject; auto.
 
 - (* tailcall *)
-  inversion FPTR. exploit find_function_inject.
+  inversion FPTR.
+  exploit find_function_inject.
   eapply match_stacks_preserves_globals; eauto. eauto.
   destruct ros as [r|id]. eauto. apply KEPT. red. econstructor; econstructor; split; eauto. simpl; auto.
   intros (tfptr & A & B).
   exploit Mem.free_parallel_inject; eauto. rewrite ! Z.add_0_r. intros (tm' & C & D).
   econstructor; split.
   eapply exec_Itailcall; eauto. constructor.
-  inv MCOMPAT. exploit SimMemInj.free_parallel; eauto. i; des. SimMemInj.spl_exact sm1.
-  econstructor; eauto.
+  inv MCOMPAT. dup MWF. inv MWF.
+  exploit SimMemInj.free_parallel; eauto. i; des.
+  eexists (SimMemInjInv.mk sm1 _ _). split.
+  econstructor; ss; eauto.
   { SimMemInj.compat_tac. rewrite Z.add_0_r in FREETGT. rewrite C in FREETGT. clarify. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0).
+    instantiate (1:=SimMemInjInv.mem_inv_src sm0).
+    destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
   apply match_stacks_bound with stk tsp; auto.
   apply Plt_Ple.
   change (Mem.valid_block m' stk). eapply Mem.valid_block_inject_1; eauto.
   apply Plt_Ple.
   change (Mem.valid_block tm' tsp). eapply Mem.valid_block_inject_2; eauto.
   apply regs_inject; auto.
+  econs; eauto.
 
 - (* builtin *)
   exploit eval_builtin_args_inject; eauto.
@@ -963,49 +1130,64 @@ Proof.
   intros (j' & tv & tm' & A & B & C & D & E & F & G).
   econstructor; split.
   eapply exec_Ibuiltin; eauto.
-  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des. SimMemInj.spl_exact sm1.
+
+  dup MWF. inv MWF.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInjInv.spl_exact2 sm1.
   eapply match_states_regular with (j := j'); eauto.
   { SimMemInj.compat_tac. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0).
+    instantiate (1:=SimMemInjInv.mem_inv_src sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; ss; eauto. }
   apply match_stacks_incr with j; auto.
   intros. exploit G; eauto. intros [U V].
   assert (Mem.valid_block m sp0) by (eapply Mem.valid_block_inject_1; eauto).
   assert (Mem.valid_block tm tsp) by (eapply Mem.valid_block_inject_2; eauto).
   unfold Mem.valid_block in *; extlia.
   apply set_res_inject; auto. apply regset_inject_incr with j; auto.
+  econs; ss; eauto.
 
 - (* cond *)
   assert (C: eval_condition cond trs##args tm = Some b).
   { eapply eval_condition_inject; eauto. apply regs_inject; auto. }
   econstructor; split.
   eapply exec_Icond with (pc' := if b then ifso else ifnot); eauto.
-  SimMemInj.spl. econstructor; eauto.
+  SimMemInjInv.spl.
+  econstructor; eauto.
 
 - (* jumptbl *)
   generalize (REGINJ arg); rewrite H0; intros INJ; inv INJ.
   econstructor; split.
   eapply exec_Ijumptable; eauto.
-  SimMemInj.spl. econstructor; eauto.
+  SimMemInjInv.spl.
+  econstructor; eauto.
 
 - (* return *)
   exploit Mem.free_parallel_inject; eauto. rewrite ! Z.add_0_r. intros (tm' & C & D).
   econstructor; split.
   eapply exec_Ireturn; eauto.
-  inv MCOMPAT. exploit SimMemInj.free_parallel; eauto. i; des. SimMemInj.spl_exact sm1.
+  inv MCOMPAT. dup MWF. inv MWF.
+  exploit SimMemInj.free_parallel; eauto. i; des.
+  SimMemInjInv.spl_exact2 sm1.
   econstructor; eauto.
-  { SimMemInj.compat_tac. rewrite Z.add_0_r in FREETGT. congruence. }
+  { SimMemInjInv.compat_tac. rewrite Z.add_0_r in FREETGT. ss. congruence. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0).
+    instantiate (1:=SimMemInjInv.mem_inv_src sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
   apply match_stacks_bound with stk tsp; auto.
   apply Plt_Ple.
   change (Mem.valid_block m' stk). eapply Mem.valid_block_inject_1; eauto.
   apply Plt_Ple.
   change (Mem.valid_block tm' tsp). eapply Mem.valid_block_inject_2; eauto.
   destruct or; simpl; auto.
+  econs; ss; eauto.
 
 - (* internal function *)
   exploit Mem.alloc_parallel_inject. eauto. eauto. apply Z.le_refl. apply Z.le_refl.
   intros (j' & tm' & tstk & C & D & E & F & G).
   assert (STK: stk = Mem.nextblock m) by (eapply Mem.alloc_result; eauto).
   assert (TSTK: tstk = Mem.nextblock tm) by (eapply Mem.alloc_result; eauto).
-  assert (STACKS': match_stacks j' s ts stk tstk).
+  assert (STACKS': match_stacks (SimMemInjInv.mem_inv_src sm0) j' s ts stk tstk).
   { rewrite STK, TSTK.
     apply match_stacks_incr with j; auto.
     intros. destruct (eq_block b1 stk).
@@ -1018,15 +1200,19 @@ Proof.
   intros (I & J & K). clarify.
   assert (L: Ptrofs.add Ptrofs.zero (Ptrofs.repr 0) = Ptrofs.zero) by eauto.
   econstructor; split.
-  eapply exec_function_internal; eauto.
+  eapply exec_function_internal.
   { rewrite L. rewrite Genv.find_funct_find_funct_ptr. rewrite Genv.find_funct_ptr_iff. eauto. }
   { eauto. }
+  { eauto. }
+  ss. dup MWF. inv MWF.
   exploit SimMemInj.alloc_parallel; eauto; try apply Z.le_refl. { inv MCOMPAT; eauto. }
-  intro SM. desH SM. SimMemInj.spl_exact sm1.
+  intro SM. desH SM. SimMemInjInv.spl_exact2 sm1.
   eapply match_states_regular with (j := j'); eauto.
-  { inv MCOMPAT. SimMemInj.compat_tac. apply Axioms.functional_extensionality. i.
-    destruct (eq_block x (Mem.nextblock (SimMemInj.src sm0))); ss; try congruence. rewrite INJ0; ss. rewrite G; ss. }
+  { inv MCOMPAT. SimMemInj.compat_tac; ss. congruence. apply Axioms.functional_extensionality. i.
+    destruct (eq_block x (Mem.nextblock (SimMemInj.src sm0.(SimMemInjInv.minj)))); ss; try congruence. rewrite INJ0; ss. rewrite G; ss. }
+  { eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. econs; eauto. }
   apply init_regs_inject; auto. apply val_inject_list_incr with j; auto.
+  econs; ss; eauto.
 
 - (* external function *)
   exploit external_call_inject; eauto.
@@ -1042,22 +1228,27 @@ Proof.
   eapply exec_function_external; eauto.
   { rewrite L. rewrite Genv.find_funct_find_funct_ptr. rewrite Genv.find_funct_ptr_iff. eauto. }
   { eauto. }
-  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des. SimMemInj.spl_exact sm1.
+  dup MWF. inv MWF.
+  exploit SimMemInj.external_call; try by (inv MCOMPAT; eauto). i; des.
+  SimMemInjInv.spl_exact2 sm1.
   eapply match_states_return with (j := j'); eauto.
   { SimMemInj.compat_tac. }
+  { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0).
+    instantiate (1:=SimMemInjInv.mem_inv_src sm0). destruct sm0.
+    eapply SimMemInjInv.le_inj_wf_wf; eauto; ss. }
   apply match_stacks_bound with (Mem.nextblock m) (Mem.nextblock tm).
   apply match_stacks_incr with j; auto.
   intros. exploit G; eauto. intros [P Q].
   unfold Mem.valid_block in *; extlia.
   eapply external_call_nextblock; eauto.
   eapply external_call_nextblock; eauto.
+  econs; ss; eauto.
 
 - (* return *)
   inv STACKS. econstructor; split.
   eapply exec_return.
-  SimMemInj.spl. econstructor; eauto. apply set_reg_inject; auto.
-Unshelve.
-  all: by (try eapply SimMemInj.inject_separated_frozen; eauto).
+  esplits; eauto.
+  econstructor; eauto. apply set_reg_inject; auto. reflexivity.
 Qed.
 
 End CORELEMMA.
@@ -1076,8 +1267,11 @@ Proof.
   intros.
   assert (A: exists g, (prog_defmap p)!id = Some g).
   { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
-  destruct A as (g & P). apply Genv.find_symbol_exists with g. apply in_prog_defmap.
+  destruct A as (g & P).
+  apply Genv.find_symbol_exists with (map_globdef kept g).
+  apply in_prog_defmap.
   erewrite match_prog_def by eauto. r in H0. des_ifs.
+  unfold option_map. des_ifs.
 Qed.
 
 Lemma transform_find_symbol_2:
@@ -1087,8 +1281,12 @@ Proof.
   intros.
   assert (A: exists g, (prog_defmap tp)!id = Some g).
   { apply prog_defmap_dom. eapply Genv.find_symbol_inversion; eauto. }
-  destruct A as (g & P). erewrite match_prog_def in P by eauto. des_ifs.
-  split. ss. apply Genv.find_symbol_exists with g. apply in_prog_defmap. auto.
+  destruct A as (g & P).
+  erewrite match_prog_def in P by eauto. des_ifs.
+  split. ss.
+  unfold option_map in *. des_ifs.
+  apply Genv.find_symbol_exists with g0.
+  apply in_prog_defmap. auto.
 Qed.
 
 Definition init_meminj : meminj :=
@@ -1121,53 +1319,79 @@ Proof.
   split. auto. exists id. split. apply Genv.invert_find_symbol; auto. auto.
 Qed.
 
+Definition invar (b: block): Prop :=
+  match Genv.invert_symbol ge b with
+  | Some id =>
+    match Genv.find_symbol tge id with
+    | Some b' => False
+    | None => True
+    end
+  | None => False
+  end.
+
 Lemma init_meminj_preserves_globals:
-  meminj_preserves_globals ge tge init_meminj.
+  meminj_preserves_globals ge tge invar init_meminj.
 Proof.
   constructor; intros.
 - exploit init_meminj_invert; eauto. intros (A & id1 & B & C).
-  assert (id1 = id) by (eapply (Genv.genv_vars_inj ge); eauto). subst id1. auto.
-- exploit transform_find_symbol_1; eauto. intros (b' & F). exists b'; split; auto. eapply init_meminj_eq; eauto.
+  assert (id1 = id) by (eapply (Genv.genv_vars_inj ge); eauto). subst id1.
+  esplits; auto.
+  assert(GD0: exists gd_src, (prog_defmap p) ! id = Some gd_src).
+  { unfold ge in *. exploit Genv.find_symbol_inversion; eauto. intro T. eapply prog_defmap_dom; eauto. }
+  assert(GD1: exists gd_tgt, (prog_defmap tp) ! id = Some gd_tgt).
+  { unfold tge in *. exploit (Genv.find_symbol_inversion tp); eauto. intro T. eapply prog_defmap_dom; eauto. }
+  des.
+  inv TRANSF. specialize (match_prog_def0 id). rewrite GD0, GD1 in *. des_ifs.
+- exploit transform_find_symbol_1; eauto. intros (b' & F). exists b'; split; auto.
+  eapply init_meminj_eq; eauto.
 - exploit transform_find_symbol_2; eauto. intros (K & b & F).
   exists b; split; auto. eapply init_meminj_eq; eauto.
+- destruct (Genv.find_symbol tge id) eqn:FIND.
+  + eapply transform_find_symbol_2 in FIND. des. clarify.
+  + unfold invar. eapply Genv.find_invert_symbol in H0.
+    rewrite H0. rewrite FIND. auto.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C).
   assert (kept id) by (eapply transform_find_symbol_2; eauto).
   assert (pm!id = Some gd).
   { unfold pm; rewrite Genv.find_def_symbol. exists b; auto. }
-  assert ((prog_defmap tp)!id = Some gd).
-  { erewrite match_prog_def by eauto. des_ifs. }
+  assert ((prog_defmap tp)!id = Some (map_globdef kept gd)).
+  { erewrite match_prog_def by eauto. des_ifs. unfold option_map, map_globdef, pm in *. des_ifs. }
   rewrite Genv.find_def_symbol in H3. destruct H3 as (b1 & P & Q).
   fold tge in P. replace b' with b1 by congruence. split; auto. split; auto.
   intros. eapply kept_closed; eauto.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C).
-  assert ((prog_defmap tp)!id = Some gd).
+  assert ((prog_defmap tp)!id = Some gd_tgt).
   { rewrite Genv.find_def_symbol. exists b'; auto. }
-  erewrite match_prog_def in H1 by eauto. des_ifs.
+  erewrite match_prog_def in H1 by eauto.
+  des_ifs.
+  unfold option_map in *. des_ifs. rename Heq0 into H1.
   rewrite Genv.find_def_symbol in H1. destruct H1 as (b1 & P & Q).
-  fold ge in P. replace b with b1 by congruence. auto.
+  fold ge in P. replace b with b1 by congruence. eauto.
 - esplit; apply Genv.globalenv_public.
+Unshelve.
+  all: repeat (econs; eauto).
 Qed.
 
 (** Relating initial memory states *)
 
-(*
-Remark genv_find_def_exists:
-  forall (F V: Type) (p: AST.program F V) b,
-  Plt b (Genv.genv_next (Genv.globalenv p)) ->
-  exists gd, Genv.find_def (Genv.globalenv p) b = Some gd.
-Proof.
-  intros until b.
-  set (P := fun (g: Genv.t F V) =>
-        Plt b (Genv.genv_next g) -> exists gd, (Genv.genv_defs g)!b = Some gd).
-  assert (forall l g, P g -> P (Genv.add_globals g l)).
-  { induction l as [ | [id1 g1] l]; simpl; intros.
-  - auto.
-  - apply IHl. unfold Genv.add_global, P; simpl. intros LT. apply Plt_succ_inv in LT. destruct LT.
-  + rewrite PTree.gso. apply H; auto. apply Plt_ne; auto.
-  + rewrite H0. rewrite PTree.gss. exists g1; auto. }
-  apply H. red; simpl; intros. exfalso; extlia.
-Qed.
-*)
+(* *)
+(* Remark genv_find_def_exists: *)
+(*   forall (F V: Type) (p: AST.program F V) b, *)
+(*   Plt b (Genv.genv_next (Genv.globalenv p)) -> *)
+(*   exists gd, Genv.find_def (Genv.globalenv p) b = Some gd. *)
+(* Proof. *)
+(*   intros until b. *)
+(*   set (P := fun (g: Genv.t F V) => *)
+(*         Plt b (Genv.genv_next g) -> exists gd, (Genv.genv_defs g)!b = Some gd). *)
+(*   assert (forall l g, P g -> P (Genv.add_globals g l)). *)
+(*   { induction l as [ | [id1 g1] l]; simpl; intros. *)
+(*   - auto. *)
+(*   - apply IHl. unfold Genv.add_global, P; simpl. intros LT. apply Plt_succ_inv in LT. destruct LT. *)
+(*   + rewrite PTree.gso. apply H; auto. apply Plt_ne; auto. *)
+(*   + rewrite H0. rewrite PTree.gss. exists g1; auto. } *)
+(*   apply H. red; simpl; intros. exfalso; extlia. *)
+(* Qed. *)
+(* *)
 
 Lemma init_meminj_invert_strong:
   forall b b' delta,
@@ -1177,7 +1401,7 @@ Lemma init_meminj_invert_strong:
      Genv.find_symbol ge id = Some b
   /\ Genv.find_symbol tge id = Some b'
   /\ Genv.find_def ge b = Some gd
-  /\ Genv.find_def tge b' = Some gd
+  /\ Genv.find_def tge b' = Some (map_globdef kept gd)
   /\ (forall i, ref_def gd i -> kept i).
 Proof.
   intros. exploit init_meminj_invert; eauto. intros (A & id & B & C).
@@ -1228,7 +1452,7 @@ Proof.
 - simpl in H1. extlia.
 - inv H. rewrite Nat2Z.inj_succ in H1. destruct (zeq i p0).
 + congruence.
-+ apply IHn with (p0 + 1); auto. lia. lia.
++ apply IHn with (p0 + 1); auto. omega. omega.
 Qed.
 
 Lemma init_mem_inj_1:
@@ -1238,21 +1462,28 @@ Proof.
 - exploit init_meminj_invert_strong; eauto. intros (A & id & gd & B & C & D & E & F).
   exploit (Genv.init_mem_characterization_gen p); eauto.
   exploit (Genv.init_mem_characterization_gen tp); eauto.
-  destruct gd as [f|v].
-+ intros (P2 & Q2) (P1 & Q1).
+  destruct gd as [f|v]; ss.
++ destruct f; ss.
+  intros (P2 & Q2) (P1 & Q1).
+  apply Q1 in H0. destruct H0. subst.
+  apply Mem.perm_cur. auto.
+  intros (P2 & Q2) (P1 & Q1).
   apply Q1 in H0. destruct H0. subst.
   apply Mem.perm_cur. auto.
 + intros (P2 & Q2 & R2 & S2) (P1 & Q1 & R1 & S1).
   apply Q1 in H0. destruct H0. subst.
   apply Mem.perm_cur. eapply Mem.perm_implies; eauto.
-  apply P2. lia.
+  apply P2. omega.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C).
   subst delta. apply Z.divide_0_r.
 - exploit init_meminj_invert_strong; eauto. intros (A & id & gd & B & C & D & E & F).
   exploit (Genv.init_mem_characterization_gen p); eauto.
   exploit (Genv.init_mem_characterization_gen tp); eauto.
   destruct gd as [f|v].
-+ intros (P2 & Q2) (P1 & Q1).
++ destruct f; ss.
+  intros (P2 & Q2) (P1 & Q1).
+  apply Q1 in H0. destruct H0; discriminate.
+  intros (P2 & Q2) (P1 & Q1).
   apply Q1 in H0. destruct H0; discriminate.
 + intros (P2 & Q2 & R2 & S2) (P1 & Q1 & R1 & S1).
   apply Q1 in H0. destruct H0.
@@ -1264,8 +1495,8 @@ Local Transparent Mem.loadbytes.
   rewrite Z.add_0_r.
   apply Mem_getN_forall2 with (p := 0) (n := Z.to_nat (init_data_list_size (gvar_init v))).
   rewrite H3, H4. apply bytes_of_init_inject. auto.
-  lia.
-  rewrite Z2Nat.id by (apply Z.ge_le; apply init_data_list_size_pos). lia.
+  omega.
+  rewrite Z2Nat.id in *; try extlia.
 Qed.
 
 Lemma init_mem_inj_2:
@@ -1283,18 +1514,22 @@ Proof.
   exploit init_meminj_invert. eexact H1. intros (A2 & id2 & B2 & C2).
   destruct (ident_eq id1 id2). congruence. left; eapply Genv.global_addresses_distinct; eauto.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C). subst delta.
-  split. lia. generalize (Ptrofs.unsigned_range_2 ofs). lia.
+  split. omega. generalize (Ptrofs.unsigned_range_2 ofs). omega.
 - exploit init_meminj_invert_strong; eauto. intros (A & id & gd & B & C & D & E & F).
   exploit (Genv.init_mem_characterization_gen p); eauto.
   exploit (Genv.init_mem_characterization_gen tp); eauto.
   destruct gd as [f|v].
-+ intros (P2 & Q2) (P1 & Q1).
-  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by lia.
++ destruct f; ss.
+  intros (P2 & Q2) (P1 & Q1).
+  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by omega.
+  left; apply Mem.perm_cur; auto.
+  intros (P2 & Q2) (P1 & Q1).
+  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by omega.
   left; apply Mem.perm_cur; auto.
 + intros (P2 & Q2 & R2 & S2) (P1 & Q1 & R1 & S1).
   apply Q2 in H0. destruct H0. subst.
   left. apply Mem.perm_cur. eapply Mem.perm_implies; eauto.
-  apply P1. lia.
+  apply P1. omega.
 Qed.
 
 End INIT_MEM.
@@ -1308,6 +1543,7 @@ Proof.
   assert (P: (prog_defmap tp)!id = Some (Gvar v)).
   { eapply prog_defmap_norepet; eauto. eapply match_prog_unique; eauto. }
   rewrite (match_prog_def _ _ _ TRANSF) in P. des_ifs.
+  unfold option_map, map_globdef in *. des_ifs.
   exploit Genv.init_mem_inversion; eauto. apply in_prog_defmap; eauto. intros [AL FV].
   split. auto.
   intros. exploit FV; eauto. intros (b & FS).
@@ -1319,7 +1555,7 @@ Qed.
 Theorem init_mem_inject:
   forall m,
   Genv.init_mem p = Some m ->
-  exists f tm, Genv.init_mem tp = Some tm /\ Mem.inject f m tm /\ meminj_preserves_globals ge tge f.
+  exists f tm, Genv.init_mem tp = Some tm /\ Mem.inject f m tm /\ meminj_preserves_globals ge tge invar f.
 Proof.
   intros.
   exploit init_mem_exists; eauto. intros [tm INIT].
@@ -1337,12 +1573,21 @@ Proof.
   exists (Callstate nil (Vptr tb Ptrofs.zero) signature_main nil tm); split.
   econstructor; eauto.
   fold tge. erewrite match_prog_main by eauto. auto.
-  exists (SimMemInj.mk m0 tm j bot2 bot2 1%positive 1%positive 1%positive 1%positive).
+  exists (SimMemInjInv.mk (SimMemInj.mk m0 tm j bot2 bot2 (Mem.nextblock m0) (Mem.nextblock tm) 1%positive 1%positive) invar (fun _ => False)).
   econstructor; eauto.
-  { SimMemInj.compat_tac. }
-  { econs; ss; eauto; try extlia. }
-  exploit globals_symbols_inject; eauto. intro TTT.
-  constructor. auto. auto.
+  { SimMemInjInv.compat_tac. }
+  { econs; ss.
+    - econs; ss; eauto; try extlia.
+    - ii. unfold invar in *. des_ifs. splits; ss.
+      + eapply Genv.invert_find_symbol in Heq.
+        destruct (j blk) eqn:BLK; auto. destruct p0.
+        inv C. exploit symbols_inject_5; eauto. i. des. clarify.
+      + eapply Genv.invert_find_symbol in Heq.
+        eapply Genv.genv_symb_range in Heq.
+        erewrite <- Genv.init_mem_genv_next; eauto; ss. }
+  exploit globals_symbols_inject; eauto. intro T.
+  constructor. auto.
+  auto.
   erewrite <- Genv.init_mem_genv_next by eauto. apply Ple_refl.
   erewrite <- Genv.init_mem_genv_next by eauto. apply Ple_refl.
 Qed.
@@ -1372,7 +1617,7 @@ End SOUNDNESS.
 Theorem transf_program_correct:
   forall p tp, match_prog_weak p tp -> forward_simulation (semantics p) (semantics tp).
 Proof.
-  intros p tp (used & A & B).  apply transf_program_correct_1 with used; auto.
+  intros p tp (used & A & B & C).  apply transf_program_correct_1 with used; auto.
 Qed.
 
 (** * Commutation with linking *)
@@ -1425,7 +1670,8 @@ Remark used_not_defined_2:
   ~used id.
 Proof.
   intros. exploit used_not_defined; eauto. intros [A|A].
-  congruence. congruence.
+  congruence.
+  congruence.
 Qed.
 
 Lemma link_valid_used_set:
@@ -1476,14 +1722,165 @@ Proof.
   * apply Y with id; auto.
   * exists gd1; auto.
   * exists gd2; auto.
-  * eapply used_not_defined_2 in GD1; [ | eauto | congruence ].
-    eapply used_not_defined_2 in GD2; [ | eauto | congruence ].
+  * eapply used_not_defined_2 in GD1; eauto. eapply used_not_defined_2 in GD2; eauto.
     tauto.
+    congruence.
   }
   destruct E as [g LD].
   left. unfold prog_defs_names; simpl.
   change id with (fst (id, g)). apply in_map. apply PTree.elements_correct.
   rewrite PTree.gcombine; auto.
+Qed.
+
+Lemma PTree_map_extensionality
+      X Y
+      (f0 f1: X -> Y)
+      px
+      (EQ: forall id x (IN: px ! id = Some x), f0 x = f1 x)
+  :
+    PTree.map (fun _ => f0) px = PTree.map (fun _ => f1) px
+.
+Proof.
+  unfold PTree.map.
+  generalize (1%positive) at 1 2 as id.
+  ginduction px; intros; ss. des_ifs; ss; eauto.
+  - rename x into xxx. f_equal.
+    + eapply IHpx1; eauto. i. specialize (EQ (id0~0)%positive x). eapply EQ; eauto.
+    + specialize (EQ 1%positive xxx). erewrite EQ; eauto.
+    + eapply IHpx2; eauto. i. specialize (EQ (id0~1)%positive x). eapply EQ; eauto.
+  - f_equal.
+    + erewrite IHpx1; eauto. i. specialize (EQ (id0~0)%positive x). eapply EQ; eauto.
+    + erewrite IHpx2; eauto. i. specialize (EQ (id0~1)%positive x). eapply EQ; eauto.
+Qed.
+
+Ltac align_bool :=
+  (repeat match goal with
+          | [ H: true <> true |- _ ] => tauto
+          | [ H: false <> false |- _ ] => tauto
+          | [ H: true <> _ |- _ ] => symmetry in H
+          | [ H: false <> _ |- _ ] => symmetry in H
+          | [ H: _ <> true |- _ ] => apply not_true_is_false in H
+          | [ H: _ <> false |- _ ] => apply not_false_is_true in H
+          end)
+.
+Ltac simpl_bool := unfold Datatypes.is_true in *; unfold is_true in *; autorewrite with simpl_bool in *.
+Ltac bsimpl := simpl_bool.
+
+Lemma PTree_forallb_spec
+      X (px: PTree.t X) f
+  :
+    (<<FORALL: PTree_forallb f px = true>>)
+    <->
+    (<<FORALL: forall id x (IN: px ! id = Some x), f id x = true>>)
+.
+Proof.
+  unfold NW.
+  split; ii; des.
+  - rename H into FORALL.
+    unfold PTree_forallb in *. rewrite PTree.fold_spec in *.
+    i. exploit PTree.elements_correct; eauto. intro IN0.
+    clear - FORALL IN0. rewrite <- fold_left_rev_right in FORALL. rewrite in_rev in IN0.
+    abstr (rev (PTree.elements px)) xs. clear_tac.
+    ginduction xs; ii; ss.
+    bsimpl.
+    des; ss; clarify.
+    destruct a; ss. exploit IHxs; eauto.
+  - rename H into FORALL.
+    unfold PTree_forallb in *. rewrite PTree.fold_spec in *.
+    rewrite <- fold_left_rev_right.
+    assert(FORALL0: forall idx, In idx (rev (PTree.elements px)) -> f (fst idx) (snd idx) = true).
+    { i. exploit PTree.elements_complete; eauto. destruct idx; ss.
+      rewrite in_rev. ss.
+    }
+    clear FORALL.
+    abstr (rev (PTree.elements px)) xs. clear_tac.
+    ginduction xs; ii; ss.
+    destruct a; ss. bsimpl. exploit FORALL0; eauto.
+Qed.
+
+Lemma addressing_zero_one
+      a
+  :
+    ((globals_addressing a) = [] \/ exists id, (globals_addressing a) = [id])
+.
+Proof. destruct a; ss; eauto. Qed.
+
+Lemma filter_instr_same
+      p1 p2
+      used1 used2
+      (A1: valid_used_set p1 used1)
+      (A2: valid_used_set p2 used2)
+      (C2: check_program p2)
+      (U: prog_main p1 = prog_main p2)
+      (V: forall id gd1 gd2,
+          (prog_defmap p1) ! id = Some gd1 ->
+          (prog_defmap p2) ! id = Some gd2 ->
+          In id (prog_public p1) /\
+          In id (prog_public p2))
+      id f2
+      (GD2: (prog_defmap p2) ! id = Some (Gfun (Internal f2)))
+  :
+    forall id0 x (IN: (fn_code f2) ! id0 = Some x),
+      filter_instr used2 x = filter_instr (fun id1 : ident => used1 id1 || used2 id1) x
+.
+Proof.
+  i. unfold filter_instr. des_ifs.
+  { hexploit (addressing_zero_one a); eauto. intro T. des; rewrite T in *; ss.
+    repeat (bsimpl; des); try congruence. }
+  { hexploit (addressing_zero_one a); eauto. intro T. des; rewrite T in *; ss.
+    repeat (bsimpl; des); try congruence.
+    assert(PRIV2: ~ In id1 p2.(prog_public)).
+    { ii. inv A2. exploit used_public0; eauto. i; congruence. }
+    assert(IN2: In id1 (p2.(prog_main) :: (prog_defs_names p2))).
+    { unfold check_program in C2. rewrite forallb_forall in *.
+      specialize (C2 (id, (Gfun (Internal f2)))). exploit C2; eauto.
+      { eapply in_prog_defmap; eauto. }
+      intro TT. ss.
+      eapply PTree_forallb_spec in TT; eauto.
+      exploit TT; eauto. intro SPEC.
+      Local Opaque in_dec.
+      ss. rewrite forallb_forall in *. specialize (SPEC id1). rewrite T in *.
+      exploit SPEC; eauto.
+      { left; ss. }
+      intro UU. des_sumbool. ss.
+    }
+    inv A1. exploit (used_defined0 id1); eauto. intro UU.
+    ss. rewrite <- U in *.
+    destruct (peq p2.(prog_main) id1).
+    { inv A2. congruence. }
+    des; try congruence.
+    exploit prog_defmap_dom; try apply IN2; eauto. i; des.
+    exploit prog_defmap_dom; try apply UU; eauto. i; des.
+    exploit (V id1); eauto. i; des. ss.
+  }
+Qed.
+
+Lemma check_globdef_easier
+      defs0 defs1 gd
+      (INCL: incl defs0 defs1)
+      (CHECK: check_globdef defs0 gd = true)
+  :
+    <<CHECK: check_globdef defs1 gd = true>>
+.
+Proof.
+  unfold check_globdef in *. des_ifs.
+  eapply PTree_forallb_spec in CHECK.
+  eapply PTree_forallb_spec.
+  ii. exploit CHECK; eauto. i.
+  unfold check_instr in *. des_ifs. rewrite forallb_forall in *.
+  i. exploit H; eauto. i. des_sumbool. eauto.
+Qed.
+
+Lemma in_prog_defmap_exists
+      (p: program) id g
+      (IN: In (id, g) (prog_defs p))
+  :
+    exists g, (prog_defmap p) ! id = Some g
+.
+Proof.
+  unfold prog_defmap. abstr (prog_defs p) idgs. clear_tac.
+  eapply PTree_Properties.of_list_dom; eauto.
+  rewrite in_map_iff. esplits; eauto. ss.
 Qed.
 
 Theorem link_match_program:
@@ -1492,7 +1889,7 @@ Theorem link_match_program:
   match_prog_weak p1 tp1 -> match_prog_weak p2 tp2 ->
   exists tp, link tp1 tp2 = Some tp /\ match_prog_weak p tp.
 Proof.
-  intros. destruct H0 as (used1 & A1 & B1). destruct H1 as (used2 & A2 & B2).
+  intros. destruct H0 as (used1 & A1 & B1 & C1). destruct H1 as (used2 & A2 & B2 & C2).
   destruct (link_prog_inv _ _ _ H) as (U & V & W).
   econstructor; split.
 - apply link_prog_succeeds.
@@ -1502,11 +1899,12 @@ Proof.
   rewrite (match_prog_def _ _ _ B2) in H1.
   destruct (used1 id) eqn:U1; try discriminate.
   destruct (used2 id) eqn:U2; try discriminate.
+  unfold option_map, map_globdef in *. des_ifs_safe.
   edestruct V as (X & Y & gd & Z); eauto.
   split. rewrite (match_prog_public _ _ _ B1); auto.
   split. rewrite (match_prog_public _ _ _ B2); auto.
-  congruence.
-- exists (fun id => used1 id || used2 id); split.
+  des_ifs; ss; des_ifs; try congruence.
+- exists (fun id => used1 id || used2 id); split; [|split].
 + eapply link_valid_used_set; eauto.
 + rewrite W. constructor; simpl; intros.
 * eapply match_prog_main; eauto.
@@ -1521,20 +1919,149 @@ Proof.
   assert (EQ1: used1 id = true) by (eapply used_public; eauto).
   assert (EQ2: used2 id = true) by (eapply used_public; eauto).
   rewrite EQ1, EQ2; auto.
+  ss. unfold option_map, map_globdef.
+  destruct gd1, gd2; ss; try (by des_ifs).
+  destruct f, f0; ss; try (by des_ifs).
+  + des_ifs. do 3 f_equal. unfold transf_function. f_equal.
+    rename f2 into f1.
+    eapply PTree_map_extensionality; eauto.
+    i.
+    exploit filter_instr_same; try apply GD1; try apply PUB2; eauto.
+    { i. exploit V; eauto. i; des. esplits; eauto. }
+    i. rewrite H0. f_equal. apply Axioms.functional_extensionality. i. apply orb_comm.
+  + des_ifs. do 3 f_equal. unfold transf_function. f_equal.
+    rename f2 into f2.
+    eapply PTree_map_extensionality; eauto.
+    clear - V A1 A2 C2 GD2 U.
+    i.
+    exploit (filter_instr_same p1 p2 used1 used2 A1 A2); try apply GD2; eauto.
+    { i. exploit V; eauto. i; des. esplits; eauto. }
 - (* left defined *)
   exploit used_not_defined; try apply GD2; eauto. intros [A|A].
-  rewrite A, orb_false_r. destruct (used1 id); auto.
-  replace (used1 id) with true. destruct (used2 id); auto.
-  symmetry. rewrite A, <- U. eapply used_main; eauto.
+  + rewrite A, orb_false_r. destruct (used1 id); auto.
+    unfold option_map, map_globdef. ss.
+    des_ifs. do 3 f_equal. unfold transf_function. f_equal.
+    rename f0 into f1.
+    eapply PTree_map_extensionality; eauto.
+    i.
+    exploit filter_instr_same; try apply GD1; eauto.
+    { i. exploit V; eauto. i; des. esplits; eauto. }
+    i. rewrite H0. f_equal. apply Axioms.functional_extensionality. i. apply orb_comm.
+  + replace (used1 id) with true; cycle 1.
+    { symmetry. rewrite A, <- U. eapply used_main; eauto. }
+    ss. unfold map_globdef, transf_function. des_ifs; ss; try (do 4 f_equal).
+    * rename f0 into f1.
+      eapply PTree_map_extensionality; eauto.
+      i.
+      exploit filter_instr_same; try apply GD1; eauto.
+      { i. exploit V; eauto. i; des. esplits; eauto. }
+      i. rewrite H0. f_equal. apply Axioms.functional_extensionality. i. apply orb_comm.
+    * rename f0 into f1.
+      eapply PTree_map_extensionality; eauto.
+      i.
+      exploit filter_instr_same; try apply GD1; eauto.
+      { i. exploit V; eauto. i; des. esplits; eauto. }
+      i. rewrite H0. f_equal. apply Axioms.functional_extensionality. i. apply orb_comm.
 - (* right defined *)
   exploit used_not_defined. eexact A1. eauto. intros [A|A].
-  rewrite A, orb_false_l. destruct (used2 id); auto.
-  replace (used2 id) with true. destruct (used1 id); auto.
-  symmetry. rewrite A, U. eapply used_main; eauto.
+  + rewrite A, orb_false_l. destruct (used2 id); auto.
+    unfold option_map, map_globdef. ss.
+    des_ifs. do 3 f_equal. unfold transf_function. f_equal.
+    rename f0 into f1.
+    eapply PTree_map_extensionality; eauto.
+    i.
+    exploit (filter_instr_same p1 p2 used1 used2 A1 A2); try apply GD2; eauto.
+    { i. exploit V; eauto. i; des. esplits; eauto. }
+  + replace (used2 id) with true; cycle 1.
+    { symmetry. rewrite A, U. eapply used_main; eauto. }
+    ss. unfold map_globdef, transf_function. des_ifs; ss; try (do 4 f_equal).
+    * rename f0 into f2.
+      eapply PTree_map_extensionality; eauto.
+      i.
+      exploit (filter_instr_same p1 p2 used1 used2 A1 A2); try apply GD2; eauto.
+      { i. exploit V; eauto. i; des. esplits; eauto. }
+    * rename f0 into f2.
+      eapply PTree_map_extensionality; eauto.
+      i.
+      exploit (filter_instr_same p1 p2 used1 used2 A1 A2); try apply GD2; eauto.
+      { i. exploit V; eauto. i; des. esplits; eauto. }
 - (* none defined *)
   destruct (used1 id), (used2 id); auto.
 }
 * intros. apply PTree.elements_keys_norepet.
++ unfold check_program in *. unfold is_true in *. rewrite forallb_forall in *.
+  i. rewrite W in H0. ss. destruct x. apply PTree.elements_complete in H0.
+  rewrite PTree.gcombine in *; ss. unfold link_prog_merge in H0.
+  destruct ((prog_defmap p1) ! i) eqn:IN1.
+  * exploit C1; eauto. { eapply in_prog_defmap; eauto. } intro DEF1. ss.
+    destruct g; try (by ss).
+    destruct ((prog_defmap p2) ! i) eqn:IN2.
+    { Local Opaque check_globdef.
+      destruct g0; ss; des_ifs; ss.
+      destruct f0, f1; ss; des_ifs; ss.
+      - eapply check_globdef_easier; eauto. s. ii. ss. des; eauto. right.
+
+
+        clear - H0 V.
+        unfold prog_defs_names in *. ss. rewrite in_map_iff in *. des. clarify. destruct x; ss.
+        exploit in_prog_defmap_exists; eauto. i; des.
+        assert(exists gg, link_prog_merge (prog_defmap p1) ! i (prog_defmap p2) ! i = Some gg).
+        { rewrite H. ss. des_ifs; eauto. exploit V; eauto. i; des. esplits; eauto. }
+        des.
+        eexists (_, gg). ss. esplits; eauto.
+        eapply PTree.elements_correct; eauto.
+        rewrite PTree.gcombine; ss.
+
+
+      - exploit C2; eauto. { eapply in_prog_defmap; eauto. } intro DEF2. ss.
+        eapply check_globdef_easier; eauto. s. ii. ss. rewrite U in *. des; eauto. right.
+
+
+        clear - H0 V.
+        unfold prog_defs_names in *. ss. rewrite in_map_iff in *. des. clarify. destruct x; ss.
+        exploit in_prog_defmap_exists; eauto. i; des.
+        assert(exists gg, link_prog_merge (prog_defmap p1) ! i (prog_defmap p2) ! i = Some gg).
+        { rewrite H. destruct ((prog_defmap p1) ! i) eqn:T.
+          - ss. exploit V; eauto. i; des. esplits; eauto.
+          - ss. esplits; eauto. }
+        des.
+        eexists (_, gg). ss. esplits; eauto.
+        eapply PTree.elements_correct; eauto.
+        rewrite PTree.gcombine; ss.
+
+    }
+    clarify.
+    eapply check_globdef_easier; eauto. s. ii. ss. des; eauto. right.
+
+
+    clear - H0 V.
+    unfold prog_defs_names in *. ss. rewrite in_map_iff in *. des. clarify. destruct x; ss.
+    exploit in_prog_defmap_exists; eauto. i; des.
+    assert(exists gg, link_prog_merge (prog_defmap p1) ! i (prog_defmap p2) ! i = Some gg).
+    { rewrite H. ss. des_ifs; eauto. exploit V; eauto. i; des. esplits; eauto. }
+    des.
+    eexists (_, gg). ss. esplits; eauto.
+    eapply PTree.elements_correct; eauto.
+    rewrite PTree.gcombine; ss.
+
+
+  * exploit C2; eauto. { eapply in_prog_defmap; eauto. } intro DEF2. ss.
+    destruct g; try (by ss).
+    clarify. ss.
+    eapply check_globdef_easier; eauto. s. ii. ss. rewrite U in *. des; eauto. right.
+
+
+    clear - H1 V.
+    unfold prog_defs_names in *. ss. rewrite in_map_iff in *. des. clarify. destruct x; ss.
+    exploit in_prog_defmap_exists; eauto. i; des.
+    assert(exists gg, link_prog_merge (prog_defmap p1) ! i (prog_defmap p2) ! i = Some gg).
+    { rewrite H. destruct ((prog_defmap p1) ! i) eqn:T.
+      - ss. exploit V; eauto. i; des. esplits; eauto.
+      - ss. esplits; eauto. }
+    des.
+    eexists (_, gg). ss. esplits; eauto.
+    eapply PTree.elements_correct; eauto.
+    rewrite PTree.gcombine; ss.
 Qed.
 
 Instance TransfSelectionLink : TransfLink match_prog_weak := link_match_program.

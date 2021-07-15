@@ -28,7 +28,7 @@ else
 ARCHDIRS=$(ARCH)_$(BITSIZE) $(ARCH)
 endif
 
-DIRS := lib common $(ARCHDIRS) backend cfrontend driver exportclight cparser
+DIRS := lib common $(ARCHDIRS) backend cfrontend driver exportclight cparser demo
 
 COQINCLUDES := $(foreach d, $(DIRS), -R $(d) compcert.$(d))
 
@@ -90,14 +90,16 @@ endif
 VLIB=Axioms.v Coqlib.v Intv.v Maps.v Heaps.v Lattice.v Ordered.v \
   Iteration.v Zbits.v Integers.v Archi.v IEEE754_extra.v Floats.v \
   Parmov.v UnionFind.v Wfsimpl.v \
-  Postorder.v FSetAVLplus.v IntvSets.v Decidableplus.v BoolEqual.v
+  Postorder.v FSetAVLplus.v IntvSets.v Decidableplus.v BoolEqual.v \
+  sflib.v
 
 # Parts common to the front-ends and the back-end (in common/)
 
 COMMON=Errors.v AST.v Linking.v \
   Events.v Globalenvs.v Memdata.v Memtype.v Memory.v \
   Values.v Smallstep.v Behaviors.v Switch.v Determinism.v Unityping.v \
-  Separation.v Builtins0.v Builtins1.v Builtins.v
+  Separation.v Builtins0.v Builtins1.v Builtins.v \
+  Unreach.v SimMemInj.v SimMemInjInv.v
 
 # Back-end modules (in backend/, $(ARCH)/)
 
@@ -118,6 +120,7 @@ BACKEND=\
   CSEdomain.v CombineOp.v CSE.v CombineOpproof.v CSEproof.v \
   NeedDomain.v NeedOp.v Deadcode.v Deadcodeproof.v \
   Unusedglob.v Unusedglobproof.v \
+  Unreadglob.v Unreadglobproof.v \
   Machregs.v Locations.v Conventions1.v Conventions.v LTL.v \
   Allocation.v Allocproof.v \
   Tunneling.v Tunnelingproof.v \
@@ -136,7 +139,7 @@ CFRONTEND=Ctypes.v Cop.v Csyntax.v Csem.v Ctyping.v Cstrategy.v Cexec.v \
   SimplExpr.v SimplExprspec.v SimplExprproof.v \
   Clight.v ClightBigstep.v SimplLocals.v SimplLocalsproof.v \
   Cshmgen.v Cshmgenproof.v \
-  Csharpminor.v Cminorgen.v Cminorgenproof.v
+  Csharpminor.v Cminorgen.v Cminorgenproof.v Cstrategyproof.v
 
 # Parser
 
@@ -159,7 +162,7 @@ DRIVER=Compopts.v Compiler.v Complements.v
 # All source files
 
 FILES=$(VLIB) $(COMMON) $(BACKEND) $(CFRONTEND) $(DRIVER) $(FLOCQ) \
-  $(MENHIRLIB) $(PARSER)
+  $(MENHIRLIB) $(PARSER) exportclight/Clightdefs.v
 
 # Generated source files
 
@@ -169,7 +172,8 @@ GENERATED=\
   cparser/Parser.v
 
 all:
-	@test -f .depend || $(MAKE) depend
+	rm -f .depend
+	$(MAKE) depend
 	$(MAKE) proof
 	$(MAKE) extraction
 	$(MAKE) ccomp
@@ -184,6 +188,13 @@ ifeq ($(INSTALL_COQDEV),true)
 endif
 
 proof: $(FILES:.v=.vo)
+
+proof-quick-aux: $(FILES:.v=.vio)
+
+proof-quick:
+	rm -f .depend
+	$(MAKE) depend
+	$(MAKE) proof-quick-aux
 
 # Turn off some warnings for compiling Flocq
 flocq/%.vo: COQCOPTS+=-w -compatibility-notation
@@ -242,6 +253,11 @@ latexdoc:
 	@rm -f doc/$(*F).glob
 	@echo "COQC $*.v"
 	@$(COQC) -dump-glob doc/$(*F).glob $*.v
+
+%.vio: %.v
+	@rm -f doc/$(*F).glob
+	@echo "COQC $*.v"
+	@$(COQC) -quick -dump-glob doc/$(*F).glob $*.v
 
 %.v: %.vp tools/ndfun
 	@rm -f $*.v
@@ -321,6 +337,22 @@ ifeq ($(INSTALL_COQDEV),true)
 	@(echo "To use, pass the following to coq_makefile or add the following to _CoqProject:"; echo "-R $(COQDEVDIR) compcert") > $(DESTDIR)$(COQDEVDIR)/README
 endif
 
+
+NORMAL_BULID_DIR=.normal_build
+
+all-rsync:
+	rsync -av --copy-links --delete \
+	--exclude "$(NORMAL_BULID_DIR)" --exclude '.git/*' \
+	--include '*/' \
+	--filter=':- .gitignore' \
+	'./' "$(NORMAL_BULID_DIR)/"
+	cp Makefile.config "$(NORMAL_BULID_DIR)/Makefile.config"
+	$(MAKE) -C $(NORMAL_BULID_DIR)
+	$(MAKE) -C $(NORMAL_BULID_DIR)/compcomp-linking proof
+	rsync -av \
+	--include '*/' --include "ccomp" --include "compcert.ini" --include "*.ml" --include "*.mli" \
+	--exclude '*' \
+ "$(NORMAL_BULID_DIR)/" './'
 
 clean:
 	rm -f $(patsubst %, %/*.vo*, $(DIRS))

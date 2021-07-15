@@ -16,13 +16,217 @@
 
 (** Typing rules and type-checking for the Compcert C language *)
 
+Require Import SetoidList.
 Require Import String.
 Require Import Coqlib Maps Integers Floats Errors.
 Require Import AST Linking.
 Require Import Values Memory Globalenvs Builtins Events.
 Require Import Ctypes Cop Csyntax Csem.
+Require Import Classical.
+Require Import sflib.
 
 Local Open Scope error_monad_scope.
+
+
+
+Lemma InA_In_iff: forall X x xs, @InA X eq x xs <-> @In X x xs.
+Proof.
+  induction xs; split; ii; ss; try inv H; eauto.
+  all: right; eapply IHxs; eauto.
+Qed.
+
+Section WTTY.
+
+  Variable ce: composite_env.
+
+  Fixpoint wt_type (t: type) : bool :=
+    match t with
+    | Tarray t' _ _ => wt_type t'
+    | Tpointer t' _ => wt_type t'
+    | Tstruct id _ | Tunion id _ =>
+                     match ce!id with Some co => true | None => false end
+    | _ => true
+    end.
+
+  Lemma wt_type_sizeof_stable:
+    forall t ce'
+       (extends: forall id co, ce!id = Some co -> ce'!id = Some co), wt_type t = true -> sizeof ce t = sizeof ce' t.
+  Proof.
+    induction t; simpl; intros; auto.
+    - erewrite IHt; eauto.
+    - destruct (ce!i) as [co|] eqn:E; try discriminate.
+      erewrite extends by eauto. auto.
+    - destruct (ce!i) as [co|] eqn:E; try discriminate.
+      erewrite extends by eauto. auto.
+  Qed.
+
+  Lemma wt_type_alignof_stable:
+    forall t ce'
+       (extends: forall id co, ce!id = Some co -> ce'!id = Some co), wt_type t = true -> alignof ce t = alignof ce' t.
+  Proof.
+    induction t; simpl; intros; auto.
+    - erewrite IHt; eauto.
+    - destruct (ce!i) as [co|] eqn:E; try discriminate.
+      erewrite extends by eauto. auto.
+    - destruct (ce!i) as [co|] eqn:E; try discriminate.
+      erewrite extends by eauto. auto.
+  Qed.
+
+  Fixpoint types_of_expr (e: expr): list type :=
+    match e with
+    | Eval _ ty => [ty]
+    | Evar _ ty => [ty]
+    | Efield e0 _ ty => types_of_expr e0 ++ [ty]
+    | Evalof e0 ty => types_of_expr e0 ++ [ty]
+    | Ederef e0 ty => types_of_expr e0 ++ [ty]
+    | Eaddrof e0 ty => types_of_expr e0 ++ [ty]
+    | Eunop _ e0 ty => types_of_expr e0 ++ [ty]
+    | Ebinop _ e0 e1 ty => types_of_expr e0 ++ types_of_expr e1 ++ [ty]
+    | Ecast e0 ty => types_of_expr e0 ++ [ty]
+    | Eseqand e0 e1 ty => types_of_expr e0 ++ types_of_expr e1 ++ [ty]
+    | Eseqor e0 e1 ty => types_of_expr e0 ++ types_of_expr e1 ++ [ty]
+    | Econdition e0 e1 e2 ty => types_of_expr e0 ++ types_of_expr e1 ++ types_of_expr e2 ++ [ty]
+    | Esizeof ty0 ty1 => [ty0 ; ty1]
+    | Ealignof ty0 ty1 => [ty0 ; ty1]
+    | Eassign e0 e1 ty => types_of_expr e0 ++ types_of_expr e1 ++ [ty]
+    | Eassignop _ e0 e1 ty0 ty1 => types_of_expr e0 ++ types_of_expr e1 ++ [ty0 ; ty1]
+    | Epostincr _ e0 ty => types_of_expr e0 ++ [ty]
+    | Ecomma e0 e1 ty => types_of_expr e0 ++ types_of_expr e1 ++ [ty]
+    | Ecall e0 es ty => types_of_expr e0 ++ types_of_exprlist es ++ [ty]
+    | Ebuiltin _ tys es ty => typelist_to_listtype tys ++ types_of_exprlist es ++ [ty]
+    | Eloc _ _ ty => [ty]
+    | Eparen e0 ty0 ty1 => types_of_expr e0 ++ [ty0 ; ty1]
+    end
+  with
+  types_of_exprlist (es: exprlist): list type :=
+    match es with
+    | Enil => []
+    | Econs e es => types_of_expr e ++ types_of_exprlist es
+    end.
+
+  Fixpoint types_of_statement (stmt: statement): list type :=
+    match stmt with
+    | Sdo e0 => types_of_expr e0
+    | Ssequence stmt0 stmt1 => types_of_statement stmt0 ++ types_of_statement stmt1
+    | Sifthenelse e0 stmt0 stmt1 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_statement stmt1
+    | Swhile e0 stmt0 => types_of_expr e0 ++ types_of_statement stmt0
+    | Sdowhile e0 stmt0 => types_of_expr e0 ++ types_of_statement stmt0
+    | Sfor stmt0 e0 stmt1 stmt2 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_statement stmt1
+                                                 ++ types_of_statement stmt2
+    | Sreturn e0_ => match e0_ with
+                     | Some e0 => types_of_expr e0
+                     | _ => []
+                     end
+    | Sswitch e0 lstmt0 => types_of_expr e0 ++ types_of_labeled_statements lstmt0
+    | Slabel _ stmt0 => types_of_statement stmt0
+    | _ => []
+    end
+  with
+  types_of_labeled_statements (lstmt: labeled_statements): list type :=
+    match lstmt with
+    | LSnil => []
+    | LScons _ stmt lstmt => types_of_statement stmt ++ types_of_labeled_statements lstmt
+    end.
+
+  Fixpoint types_of_cont (k: cont): list type :=
+    match k with
+    | Kstop => []
+    | Kdo k0 => types_of_cont k0
+    | Kseq stmt0 k0 => types_of_statement stmt0 ++ types_of_cont k0
+    | Kifthenelse stmt0 stmt1 k0 => types_of_statement stmt0 ++ types_of_statement stmt1 ++ types_of_cont k0
+    | Kwhile1 e0 stmt0 k0 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_cont k0
+    | Kwhile2 e0 stmt0 k0 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_cont k0
+    | Kdowhile1 e0 stmt0 k0 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_cont k0
+    | Kdowhile2 e0 stmt0 k0 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_cont k0
+    | Kfor2 e0 stmt0 stmt1 k0 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_statement stmt1 ++ types_of_cont k0
+    | Kfor3 e0 stmt0 stmt1 k0 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_statement stmt1 ++ types_of_cont k0
+    | Kfor4 e0 stmt0 stmt1 k0 => types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_statement stmt1 ++ types_of_cont k0
+    | Kswitch1 lstmt0 k0 => types_of_labeled_statements lstmt0 ++ types_of_cont k0
+    | Kswitch2 k0 => types_of_cont k0
+    | Kreturn k0 => types_of_cont k0
+    | Kcall f e C ty k0  => types_of_statement f.(fn_body) ++ [ty] ++ types_of_cont k0
+    end.
+
+  Fixpoint wtype_cont (k: cont): Prop :=
+    match k with
+    | Kstop => True
+    | Kdo k0 => wtype_cont k0
+    | Kseq stmt0 k0 => wtype_cont k0 /\ forall ty (IN: In ty (types_of_statement stmt0)), wt_type ty
+    | Kifthenelse stmt0 stmt1 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_statement stmt0 ++ types_of_statement stmt1)), wt_type ty
+    | Kwhile1 e0 stmt0 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_expr e0 ++ types_of_statement stmt0)), wt_type ty
+    | Kwhile2 e0 stmt0 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_expr e0 ++ types_of_statement stmt0)), wt_type ty
+    | Kdowhile1 e0 stmt0 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_expr e0 ++ types_of_statement stmt0)), wt_type ty
+    | Kdowhile2 e0 stmt0 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_expr e0 ++ types_of_statement stmt0)), wt_type ty
+    | Kfor2 e0 stmt0 stmt1 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_statement stmt1)), wt_type ty
+    | Kfor3 e0 stmt0 stmt1 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_statement stmt1)), wt_type ty
+    | Kfor4 e0 stmt0 stmt1 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_expr e0 ++ types_of_statement stmt0 ++ types_of_statement stmt1)), wt_type ty
+    | Kswitch1 lstmt0 k0 =>
+      wtype_cont k0 /\ forall ty (IN: In ty (types_of_labeled_statements lstmt0)), wt_type ty
+    | Kswitch2 k0 => wtype_cont k0
+    | Kreturn k0 => wtype_cont k0
+    | Kcall f e C ty k0  =>
+      wtype_cont k0 /\
+      (forall e0, (forall ty (IN: In ty (types_of_expr e0)), wt_type ty) ->
+                 (forall ty (IN: In ty (types_of_expr (C e0))), wt_type ty)) /\
+      (forall ty (IN: In ty (types_of_statement f.(fn_body))), wt_type ty) /\
+      wt_type ty /\
+      (forall i blk ty, e ! i = Some (blk, ty) -> wt_type ty) /\
+      context RV RV C
+    end
+  .
+
+  (* Copied from Cstrategy *)
+  Scheme context_ind2 := Minimality for context Sort Prop
+    with contextlist_ind2 := Minimality for contextlist Sort Prop.
+  Combined Scheme context_contextlist_ind from context_ind2, contextlist_ind2.
+
+  Notation "a t= b" := (@equivlistA type eq a b) (at level 100).
+
+  Lemma types_of_context:
+      (forall k k0 C, context k k0 C -> exists tys, forall a, types_of_expr (C a) t= types_of_expr a ++ tys) /\
+      (forall k C, contextlist k C -> exists tys, forall a, types_of_exprlist (C a) t= types_of_expr a ++ tys).
+  Proof.
+    eapply context_contextlist_ind; i; des; ss;
+      try (by esplits; eauto; ii; erewrite H0; eauto; repeat (rewrite <-app_assoc; f_equal; eauto)).
+    - eexists nil. ii. rewrite app_nil_r. ss.
+    - exists (types_of_expr e1 ++ tys ++ [ty]). esplits; eauto. ii.
+      erewrite H0; eauto. repeat rewrite InA_app_iff. split; i; des; eauto.
+    - exists (types_of_expr e1 ++ tys ++ [ty]). esplits; eauto. ii.
+      erewrite H0; eauto. repeat rewrite InA_app_iff. split; i; des; eauto.
+    - exists (types_of_expr e1 ++ tys ++ [tyres ; ty]). esplits; eauto. ii.
+      erewrite H0; eauto. repeat rewrite InA_app_iff. split; i; des; eauto.
+    - exists (types_of_expr e1 ++ tys ++ [ty]). esplits; eauto. ii.
+      erewrite H0; eauto. repeat rewrite InA_app_iff. split; i; des; eauto.
+    - exists (typelist_to_listtype tyargs ++ tys ++ [ty]). esplits; eauto. ii.
+      erewrite H0; eauto. repeat rewrite InA_app_iff. split; i; des; eauto.
+    - exists (types_of_expr e1 ++ tys). esplits; eauto. ii.
+      erewrite H0; eauto. repeat rewrite InA_app_iff. split; i; des; eauto.
+  Qed.
+
+  Lemma types_of_context1
+        C k k0
+        (CTX: context k k0 C):
+      exists tys,
+        (forall a ty (IN: In ty (types_of_expr (C a))), In ty (types_of_expr a ++ tys)) /\
+        (forall a ty (IN: In ty (types_of_expr a ++ tys)), In ty (types_of_expr (C a))).
+  Proof.
+    generalize types_of_context. intro X. des.
+    exploit X; eauto. i; des.
+    exists tys.
+    split; ss; eauto.
+    - i. apply InA_In_iff. apply InA_In_iff in IN. erewrite H in IN. eauto.
+    - i. apply InA_In_iff. apply InA_In_iff in IN. erewrite H. eauto.
+  Qed.
+
+End WTTY.
 
 Definition strict := false.
 Opaque strict.
@@ -314,10 +518,16 @@ Inductive wt_val : val -> type -> Prop :=
   | wt_val_void: forall v,
       wt_val v Tvoid.
 
+Inductive wt_retval (v: val) (ty: type): Prop :=
+| wt_retval_intro
+    (WTV: wt_val v ty)
+    (NVOID: ty = Tvoid -> v = Vundef).
+
 Inductive wt_arguments: exprlist -> typelist -> Prop :=
   | wt_arg_nil:
       wt_arguments Enil Tnil
-  | wt_arg_cons: forall a al ty tyl,
+  | wt_arg_cons: forall a al ty tyl
+      (NVOID: ty <> Tvoid),
       wt_cast (typeof a) ty ->
       wt_arguments al tyl ->
       wt_arguments (Econs a al) (Tcons ty tyl)
@@ -479,9 +689,10 @@ Inductive wt_stmt: statement -> Prop :=
       wt_stmt Sbreak
   | wt_Scontinue:
       wt_stmt Scontinue
-  | wt_Sreturn_none:
+  | wt_Sreturn_none
+      (VOID: rt = Tvoid):
       wt_stmt (Sreturn None)
-  | wt_Sreturn_some: forall r,
+  | wt_Sreturn_some: forall r (NVOID: rt <> Tvoid),
       wt_rvalue r ->
       wt_cast (typeof r) rt ->
       wt_stmt (Sreturn (Some r))
@@ -512,6 +723,8 @@ Fixpoint bind_vars (e: typenv) (l: list (ident * type)) : typenv :=
 
 Inductive wt_function (ce: composite_env) (e: typenv) : function -> Prop :=
   | wt_function_intro: forall f,
+      forall (WT: Forall (wt_type ce) (map snd ((f.(fn_params)) ++ f.(fn_vars)))),
+      forall (WTYF: forall ty (IN: In ty (types_of_statement f.(fn_body))), wt_type ce ty),
       wt_stmt ce (bind_vars (bind_vars e f.(fn_params)) f.(fn_vars)) f.(fn_return) f.(fn_body) ->
       wt_function ce e f.
 
@@ -536,6 +749,8 @@ Inductive wt_program : program -> Prop :=
       (forall id fd,
          In (id, Gfun fd) p.(prog_defs) ->
          wt_fundef p.(prog_comp_env) e fd) ->
+      (forall id ef targs tres cc, In (id, Gfun (External ef targs tres cc)) p.(prog_defs) ->
+         signature_of_type targs tres cc = ef_sig ef) ->
       wt_program p.
 
 Global Hint Constructors wt_val wt_rvalue wt_lvalue wt_stmt wt_lblstmts: ty.
@@ -591,7 +806,7 @@ Fixpoint check_arguments (el: exprlist) (tyl: typelist) : res unit :=
   | Enil, Tnil => OK tt
   | Enil, _ => Error (msg "not enough arguments")
   | _, Tnil => if strict then Error (msg "too many arguments") else OK tt
-  | Econs e1 el, Tcons ty1 tyl => do x <- check_cast (typeof e1) ty1; check_arguments el tyl
+  | Econs e1 el, Tcons ty1 tyl => do x <- check_cast (typeof e1) ty1; assertion(negb (type_eq ty1 Tvoid)); check_arguments el tyl
   end.
 
 Definition check_rval (e: expr) : res unit :=
@@ -782,6 +997,7 @@ Definition sfor (s1: statement) (a: expr) (s2 s3: statement) : res statement :=
 
 Definition sreturn (rt: type) (a: expr) : res statement :=
   do x <- check_rval a; do y <- check_cast (typeof a) rt;
+  assertion(negb (type_eq rt Tvoid));
   OK (Sreturn (Some a)).
 
 Definition sswitch (a: expr) (sl: labeled_statements) : res statement :=
@@ -891,6 +1107,7 @@ Fixpoint retype_stmt (ce: composite_env) (e: typenv) (rt: type) (s: statement) :
   | Scontinue =>
       OK Scontinue
   | Sreturn None =>
+      assertion(type_eq rt Tvoid);
       OK (Sreturn None)
   | Sreturn (Some a) =>
       do a' <- retype_expr ce e a;
@@ -916,6 +1133,8 @@ with retype_lblstmts (ce: composite_env) (e: typenv) (rt: type) (sl: labeled_sta
 Definition retype_function (ce: composite_env) (e: typenv) (f: function) : res function :=
   let e := bind_vars (bind_vars e f.(fn_params)) f.(fn_vars) in
   do s <- retype_stmt ce e f.(fn_return) f.(fn_body);
+    assertion (forallb (wt_type ce) (map snd (fn_params f ++ fn_vars f)));
+    assertion (forallb (wt_type ce) (types_of_statement s));
   OK (mkfunction f.(fn_return)
                  f.(fn_callconv)
                  f.(fn_params)
@@ -926,7 +1145,8 @@ Definition retype_fundef (ce: composite_env) (e: typenv) (fd: fundef) : res fund
   match fd with
   | Internal f => do f' <- retype_function ce e f; OK (Internal f')
   | External ef args res cc =>
-      assertion (rettype_eq (ef_sig ef).(sig_res) (rettype_of_type res)); OK fd
+      assertion (signature_eq (signature_of_type args res cc) (ef_sig ef));
+      (* assertion (rettype_eq (ef_sig ef).(sig_res) (rettype_of_type res)); *) OK fd
   end.
 
 Definition typecheck_program (p: program) : res program :=
@@ -965,6 +1185,8 @@ Proof.
   induction tl; destruct el; simpl; intros; try discriminate.
   constructor.
   destruct strict eqn:S; try discriminate. constructor; auto.
+  destruct (type_eq t Tvoid); ss.
+  { des_ifs. }
   monadInv H. constructor; eauto with ty.
 Qed.
 
@@ -1021,7 +1243,7 @@ Proof.
 - subst i2; congruence.
 - destruct i2; congruence.
 Qed.
- 
+
 Lemma type_combine_cast:
   forall t1 t2 t,
   type_combine t1 t2 = OK t ->
@@ -1059,14 +1281,14 @@ Proof.
   destruct (typeconv t1) eqn:T1; try discriminate;
   destruct (typeconv t2) eqn:T2; inv H; eauto using D, binarith_type_cast.
 - split; apply typeconv_cast; unfold wt_cast.
-  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence. 
-  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence. 
+  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence.
+  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence.
 - split; apply typeconv_cast; unfold wt_cast.
-  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence. 
-  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence. 
+  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence.
+  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence.
 - split; apply typeconv_cast; unfold wt_cast.
-  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence. 
-  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence. 
+  rewrite T1; simpl; try congruence; destruct Archi.ptr64; congruence.
+  rewrite T2; simpl; try congruence; destruct Archi.ptr64; congruence.
 Qed.
 
 Section SOUNDNESS_CONSTRUCTORS.
@@ -1256,16 +1478,16 @@ Proof.
   econstructor; eauto. eapply check_arguments_sound; eauto.
 Qed.
 
-Lemma eselection_sound:
-  forall r1 r2 r3 a, eselection r1 r2 r3 = OK a ->
-  wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e r3 -> wt_expr ce e a.
-Proof.
-  intros. monadInv H. apply type_conditional_cast in EQ3. destruct EQ3.
-  eapply wt_Ebuiltin.
-  repeat (constructor; eauto with ty).
-  repeat (constructor; eauto with ty). apply wt_bool_cast; eauto with ty.
-  right; auto.
-Qed.
+(* Lemma eselection_sound: *)
+(*   forall r1 r2 r3 a, eselection r1 r2 r3 = OK a -> *)
+(*   wt_expr ce e r1 -> wt_expr ce e r2 -> wt_expr ce e r3 -> wt_expr ce e a. *)
+(* Proof. *)
+(*   intros. monadInv H. apply type_conditional_cast in EQ3. destruct EQ3. *)
+(*   eapply wt_Ebuiltin. *)
+(*   repeat (constructor; eauto with ty). *)
+(*   repeat (constructor; eauto with ty). ss. apply wt_bool_cast; eauto with ty. *)
+(*   right; auto. *)
+(* Qed. *)
 
 Lemma sdo_sound:
   forall a s, sdo a = OK s -> wt_expr ce e a -> wt_stmt ce e rt s.
@@ -1305,7 +1527,8 @@ Qed.
 Lemma sreturn_sound:
   forall a s, sreturn rt a = OK s -> wt_expr ce e a -> wt_stmt ce e rt s.
 Proof.
-  intros. monadInv H; eauto with ty.
+  intros. unfold sreturn in H. unfold bind in *. des_ifs; eauto with ty.
+  econs; eauto with ty. ii. rewrite H in *. ss.
 Qed.
 
 Lemma sswitch_sound:
@@ -1367,7 +1590,8 @@ Proof.
 + eapply sfor_sound; eauto using retype_expr_sound.
 + constructor.
 + constructor.
-+ destruct o; monadInv RT. eapply sreturn_sound; eauto using retype_expr_sound. constructor.
++ destruct o. monadInv RT. eapply sreturn_sound; eauto using retype_expr_sound.
+  clear - RT. des_ifs. constructor. reflexivity.
 + eapply sswitch_sound; eauto using retype_expr_sound.
 + constructor; eauto.
 + constructor.
@@ -1381,7 +1605,10 @@ End SOUNDNESS_CONSTRUCTORS.
 Lemma retype_function_sound:
   forall ce e f f', retype_function ce e f = OK f' -> wt_function ce e f'.
 Proof.
-  intros. monadInv H. constructor; simpl. eapply retype_stmt_sound; eauto.
+  intros. monadInv H. constructor; simpl.
+  { rewrite Forall_forall. rewrite forallb_forall in *. ss. }
+  { ii. rewrite forallb_forall in Heqb0. eapply Heqb0. eauto. }
+  eapply retype_stmt_sound; eauto.
 Qed.
 
 Lemma retype_fundef_sound:
@@ -1390,6 +1617,7 @@ Proof.
   intros. destruct fd; monadInv H.
 - constructor; eapply retype_function_sound; eauto.
 - constructor; auto.
+  destruct (ef_sig e0) eqn:T; ss. unfold signature_of_type, mksignature in *. clarify.
 Qed.
 
 Theorem typecheck_program_sound:
@@ -1419,6 +1647,11 @@ Proof.
   contradiction.
   destruct H0; auto. subst b1; inv H. simpl in H1. inv H1. 
   eapply retype_fundef_sound; eauto.
+  { hexploit (match_transform_partial_program _ _ _ EQ); eauto. intro M.
+    rr in M. des.  i. exploit list_forall2_in_right; eauto. intro MATCH; des. ss.
+    inv MATCH0. ss. clarify. inv H1. destruct x1; ss. clarify. unfold retype_fundef in H4. des_ifs.
+    monadInv H4.
+  }
 Qed.
 
 (** * Subject reduction *)
@@ -1438,7 +1671,7 @@ Qed.
 Lemma wt_val_casted:
   forall v ty, val_casted v ty -> wt_val v ty.
 Proof.
-  induction 1; constructor; auto. 
+  induction 1; constructor; auto.
 - rewrite <- H; apply pres_cast_int_int.
 Qed.
 
@@ -1614,7 +1847,7 @@ Lemma wt_load_result:
   access_mode ty = By_value chunk ->
   wt_val (Val.load_result chunk v) ty.
 Proof.
-  unfold access_mode, Val.load_result. remember Archi.ptr64 as ptr64. 
+  unfold access_mode, Val.load_result. remember Archi.ptr64 as ptr64.
   intros until v; intros AC. destruct ty; simpl in AC; try discriminate AC.
 - destruct i; [destruct s|destruct s|idtac|idtac]; inv AC; simpl.
   destruct v; auto with ty. constructor; red. apply Int.sign_ext_idem; lia.
@@ -1635,7 +1868,7 @@ Lemma wt_decode_val:
 Proof.
   intros until vl; intros ACC.
   assert (LR: forall v, wt_val (Val.load_result chunk v) ty) by (eauto using wt_load_result).
-  destruct ty; simpl in ACC; try discriminate. 
+  destruct ty; simpl in ACC; try discriminate.
 - destruct i; [destruct s|destruct s|idtac|idtac]; inv ACC; unfold decode_val.
   destruct (proj_bytes vl); auto with ty.
   constructor; red. apply Int.sign_ext_idem; lia.
@@ -1649,7 +1882,7 @@ Proof.
   destruct (proj_bytes vl); auto with ty.
   constructor; red. apply Int.zero_ext_idem; lia.
 - inv ACC. unfold decode_val. destruct (proj_bytes vl). auto with ty.
-  destruct Archi.ptr64 eqn:SF; auto with ty. 
+  destruct Archi.ptr64 eqn:SF; auto with ty.
 - destruct f; inv ACC; unfold decode_val; destruct (proj_bytes vl); auto with ty.
 - inv ACC. unfold decode_val. destruct (proj_bytes vl).
   unfold Mptr in *. destruct Archi.ptr64 eqn:SF; auto with ty.
@@ -1751,8 +1984,8 @@ Proof.
 Qed.
 
 Lemma wt_rred:
-  forall ge tenv a m t a' m',
-  rred ge a m t a' m' -> wt_rvalue ge tenv a -> wt_rvalue ge tenv a'.
+  forall se ge tenv a m t a' m',
+  rred se ge a m t a' m' -> wt_rvalue ge tenv a -> wt_rvalue ge tenv a'.
 Proof.
   induction 1; intros WT; inversion WT.
 - (* valof *) simpl in *. constructor. eapply wt_deref_loc; eauto.
@@ -1817,8 +2050,8 @@ Proof.
 Qed.
 
 Lemma rred_same_type:
-  forall ge a m t a' m',
-  rred ge a m t a' m' -> typeof a' = typeof a.
+  forall se ge a m t a' m',
+  rred se ge a m t a' m' -> typeof a' = typeof a.
 Proof.
   induction 1; auto.
 Qed.
@@ -1932,8 +2165,29 @@ Section PRESERVATION.
 
 Variable prog: program.
 Hypothesis WTPROG: wt_program prog.
-Let ge := globalenv prog.
+Variable se: Senv.t.
+Variable ge: genv.
+Hypothesis CECMPT: prog.(prog_comp_env) = ge.(genv_cenv).
+Hypothesis GECMPT: forall id blk gd
+    (SYMB: Genv.find_symbol ge id = Some blk)
+    (DEF: Genv.find_def ge blk = Some gd),
+    <<MAP: (prog_defmap prog) ! id = Some gd>>.
+
+Hypothesis GECMPTREV: forall id gd
+    (MAP: (prog_defmap prog) ! id = Some gd),
+    exists blk, (<<SYMB: Genv.find_symbol ge id = Some blk>>).
+
+Hypothesis GEWF: forall blk gd
+    (DEF: Genv.find_def ge blk = Some gd),
+    exists id, <<SYMB: Genv.find_symbol ge id = Some blk>>.
+
 Let gtenv := bind_globdef (PTree.empty _) prog.(prog_defs).
+
+Hypothesis WT_EXTERNAL:
+  forall id ef args res cc vargs m t vres m',
+  In (id, Gfun (External ef args res cc)) prog.(prog_defs) ->
+  external_call ef se vargs m t vres m' ->
+  wt_retval vres res.
 
 Inductive wt_expr_cont: typenv -> function -> cont -> Prop :=
   | wt_Kdo: forall te f k,
@@ -1960,7 +2214,8 @@ Inductive wt_expr_cont: typenv -> function -> cont -> Prop :=
       wt_stmt_cont te f k ->
       wt_lblstmts ge te f.(fn_return) ls ->
       wt_expr_cont te f (Kswitch1 ls k)
-  | wt_Kreturn: forall te f k,
+  | wt_Kreturn: forall te f k
+      (NVOID: f.(fn_return) <> Tvoid),
       wt_stmt_cont te f k ->
       wt_expr_cont te f (Kreturn k)
 
@@ -2001,8 +2256,10 @@ with wt_call_cont: cont -> type -> Prop :=
   | wt_Kstop: forall ty,
       wt_call_cont Kstop ty
   | wt_Kcall: forall te f e C ty k,
+      te = (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) ->
       wt_expr_cont te f k ->
       wt_stmt ge te f.(fn_return) f.(fn_body) ->
+      (forall i, In i (map fst (fn_params f ++ fn_vars f)) -> exists b t, e ! i = Some (b, t)) ->
       (forall v, wt_val v ty -> wt_rvalue ge te (C (Eval v ty))) ->
       wt_call_cont (Kcall f e C ty k) ty.
 
@@ -2039,32 +2296,99 @@ Definition fundef_return (fd: fundef) : type :=
   | External ef targs tres cc => tres
   end.
 
+Definition fundef_args (fd: fundef) : typelist :=
+  match fd with
+  | Internal f => type_of_params f.(fn_params)
+  | External ef targs tres cc => targs
+  end.
+
 Lemma wt_find_funct:
   forall v fd, Genv.find_funct ge v = Some fd -> wt_fundef ge gtenv fd.
 Proof.
-  intros. apply Genv.find_funct_prop with (p := prog) (v := v); auto.
-  intros. inv WTPROG. apply H1 with id; auto.
+  i. inv WTPROG. rewrite <- CECMPT. unfold Genv.find_funct, Genv.find_funct_ptr in *. des_ifs.
+  exploit GEWF; eauto. i; des.
+  exploit GECMPT; eauto. i; des.
+  eapply H0; eauto.
+  eapply PTree_Properties.in_of_list; eauto.
+Qed.
+
+Scheme wt_rvalue_ind2 := Minimality for wt_rvalue Sort Prop
+  with wt_lvalue_ind2 := Minimality for wt_lvalue Sort Prop
+  with wt_exprlist_ind2 := Minimality for wt_exprlist Sort Prop.
+Combined Scheme wt_expression_ind from wt_rvalue_ind2, wt_lvalue_ind2, wt_exprlist_ind2.
+
+Lemma wt_expr_wt_expr
+      co te k1 k2 C e
+      (CTX: context k1 k2 C)
+      (WT: wt_expr co te (C e)):
+    wt_expr co te e.
+Proof.
+  generalize dependent e.
+  revert co te.
+  revert CTX. revert k1 k2 C.
+  eapply (context_ind2
+            (fun k k' C => forall co te e,
+                 wt_expr co te (C e) -> wt_expr co te e)
+            (fun k C => forall co te e,
+                 wt_exprlist co te (C e) -> wt_expr co te e)); ss; i;
+    try (inv H1; eapply H0; eauto); remember (C e) as e'; destruct e'; clarify;
+      try (by inv H4); try (by inv H3); try (by inv H5); try (by inv H6); try inv H7; inv H8.
+  Qed.
+
+Lemma wt_rvalue_wt_expr
+      co te C e
+      (CTX: context LV RV C)
+      (WT: wt_rvalue co te (C e)):
+    wt_expr co te e.
+Proof.
+  eapply wt_expr_wt_expr; eauto.
+  unfold wt_expr in *. des_ifs.
+  destruct (C e); clarify; inv WT.
 Qed.
 
 Inductive wt_state: state -> Prop :=
   | wt_stmt_state: forall f s k e m te
+        (WTYK: wtype_cont ge k)
+        (WTYB: forall ty (IN: In ty (types_of_statement f.(fn_body))), wt_type ge ty)
+        (WTYS: forall ty (IN: In ty (types_of_statement s)), wt_type ge ty)
+        (WTENV: forall i blk ty, e ! i = Some (blk, ty) -> wt_type ge ty)
+        (WFENV: forall i, In i (map fst (fn_params f ++ fn_vars f)) -> exists b t, e ! i = Some (b, t))
+        (TENV: te = (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)))
+        (WTTENV: forall i ty, te ! i = Some ty -> (exists blk ty, e ! i = Some (blk, ty)) \/ exists blk, Genv.find_symbol ge i = Some blk)
         (WTK: wt_stmt_cont te f k)
         (WTB: wt_stmt ge te f.(fn_return) f.(fn_body))
         (WTS: wt_stmt ge te f.(fn_return) s),
       wt_state (State f s k e m)
   | wt_expr_state: forall f r k e m te
+        (WTYK: wtype_cont ge k)
+        (WTYB: forall ty (IN: In ty (types_of_statement f.(fn_body))), wt_type ge ty)
+        (WTYE: forall ty (IN: In ty (types_of_expr r)), wt_type ge ty)
+        (WTENV: forall i blk ty, e ! i = Some (blk, ty) -> wt_type ge ty)
+        (WFENV: forall i, In i (map fst (fn_params f ++ fn_vars f)) -> exists b t, e ! i = Some (b, t))
+        (TENV: te = (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)))
+        (WTTENV: forall i ty, te ! i = Some ty -> (exists blk ty, e ! i = Some (blk, ty)) \/ exists blk, Genv.find_symbol ge i = Some blk)
         (WTK: wt_expr_cont te f k)
         (WTB: wt_stmt ge te f.(fn_return) f.(fn_body))
         (WTE: wt_rvalue ge te r),
       wt_state (ExprState f r k e m)
-  | wt_call_state: forall b fd vargs k m
-        (WTK: wt_call_cont k (fundef_return fd))
-        (WTFD: wt_fundef ge gtenv fd)
-        (FIND: Genv.find_funct ge b = Some fd),
-      wt_state (Callstate fd vargs k m)
+  | wt_call_state: forall vf tyf tyargs tyres cc vargs k m
+        (WTY: wt_type ge tyf)
+        (WTYK: wtype_cont ge k)
+        (WTK: wt_call_cont k tyres)
+        (CLASSIFY: classify_fun_strong tyf = fun_case_f tyargs tyres cc)
+        (WTLOCAL: forall f
+            (INTERNAL: Genv.find_funct ge vf = Some (Internal f)),
+            Forall (fun t : type => wt_type ge t) (map snd (fn_params f ++ fn_vars f)))
+        (WTKS: forall
+            (EXT: forall f, Genv.find_funct ge vf <> Some (Internal f)),
+            exists _f _e _C _k, k = Kcall _f _e _C tyres _k)
+        (WTARGS: Forall2 val_casted vargs (typelist_to_listtype tyargs))
+        (NVOID: Forall (fun ty => ty <> Tvoid) (typelist_to_listtype tyargs)),
+      wt_state (Callstate vf tyf vargs k m)
   | wt_return_state: forall v k m ty
+        (WTYK: wtype_cont ge k)
         (WTK: wt_call_cont k ty)
-        (VAL: wt_val v ty),
+        (VAL: wt_retval v ty),
       wt_state (Returnstate v k m)
   | wt_stuck_state:
       wt_state Stuckstate.
@@ -2116,100 +2440,296 @@ Qed.
 
 End WT_FIND_LABEL.
 
+Ltac wtype_tac :=
+  ss; try (esplits; eauto);
+  i; ss; repeat rewrite in_app_iff in *; des; eauto;
+  repeat multimatch goal with
+  | [H: context[wt_type _ _] |- _ ] => eapply H; repeat rewrite in_app_iff in *; eauto; fail
+  end
+.
+
 Lemma preservation_estep:
-  forall S t S', estep ge S t S' -> wt_state S -> wt_state S'.
+  forall S t S', estep se ge S t S' -> wt_state S -> wt_state S'.
 Proof.
   induction 1; intros WT; inv WT.
 - (* lred *)
-  econstructor; eauto. change (wt_expr_kind ge te RV (C a')).
+  econstructor; eauto.
+  { ii. eapply WTYE; eauto.
+    exploit types_of_context1; eauto. intro X; des. specialize (X a' ty). specialize (X0 a ty).
+    inv H; ss; eauto.
+  }
+  change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV (C a')).
   eapply wt_context with (a := a); eauto.
   eapply lred_same_type; eauto.
-  eapply wt_lred; eauto. change (wt_expr_kind ge te LV a). eapply wt_subexpr; eauto.
+  eapply wt_lred; eauto. change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) LV a). eapply wt_subexpr; eauto.
 - (* rred *)
-  econstructor; eauto. change (wt_expr_kind ge te RV (C a')).
+  econstructor; eauto.
+  { ii. clear - H H0 IN WTYE.
+    pose a' as TT.
+    exploit types_of_context1; eauto. intro X; des. specialize (X a' ty). specialize (X0 a ty).
+    apply X in IN.
+    exploit types_of_context1; eauto. intros [tys0 [A B]].
+    inv H; ss; try rewrite ! in_app_iff in *; ss; des; des_ifs; clarify; eauto; try (by eapply WTYE; eauto; eapply X0; eauto 10).
+    - inv H1; ss; unfold access_mode in *; des_ifs; ss.
+      { exploit (WTYE (Tpointer t a)); ss. eapply B; ss; auto. }
+      { exploit (WTYE (Tpointer t0 a)); ss. eapply B; ss; auto. }
+      { exploit (WTYE (Tarray t z a)); ss. eapply B; ss; auto. }
+    - inv H1; ss; unfold access_mode in *; des_ifs; ss.
+      { exploit (WTYE (Tpointer t a)); ss. eapply B; ss; auto. }
+      { exploit (WTYE (Tpointer t0 a)); ss. eapply B; ss; auto. }
+      { exploit (WTYE (Tarray t z a)); ss. eapply B; ss; auto. }
+  }
+  change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV (C a')).
   eapply wt_context with (a := a); eauto.
   eapply rred_same_type; eauto.
-  eapply wt_rred; eauto. change (wt_expr_kind ge te RV a). eapply wt_subexpr; eauto.
+  eapply wt_rred; eauto. change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV a). eapply wt_subexpr; eauto.
 - (* call *)
-  assert (A: wt_expr_kind ge te RV a) by (eapply wt_subexpr; eauto).
+  assert (A: wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV a) by (eapply wt_subexpr; eauto).
   simpl in A. inv H. inv A. simpl in H9; rewrite H4 in H9; inv H9.
-  assert (fundef_return fd = ty).
-  { destruct fd; simpl in *.
-    unfold type_of_function in H3. congruence.
-    congruence. }
   econstructor.
-  rewrite H. econstructor; eauto.
-  intros. change (wt_expr_kind ge te RV (C (Eval v ty))).
-  eapply wt_context with (a := Ecall (Eval vf tyf) el ty); eauto.
+  { ss. }
+  { ii. ss. esplits; eauto.
+    - wtype_tac.
+      exploit types_of_context1; eauto. intro X; des. eapply X in IN. wtype_tac.
+      exploit X0; eauto. wtype_tac.
+    - eapply WTYE; eauto.
+      exploit types_of_context1; eauto. intro X; des. eapply X0. ss. wtype_tac. right. left. right. ss. eauto.
+  }
+  {
+  econstructor; eauto.
+  intros. change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV (C (Eval v ty))).
+  eapply wt_context with (a := (Ecall (Eval fptr tyf0) el ty)); eauto.
   red; constructor; auto.
-  eapply wt_find_funct; eauto.
-  eauto.
+  }
+  { rr. ss. }
+  { inv WTPROG. i. unfold Genv.find_funct in *. des_ifs. rewrite Genv.find_funct_ptr_iff in *.
+    exploit GEWF; eauto. i. des. exploit GECMPT; eauto. i. rr in H6. exploit in_prog_defmap; eauto. i.
+    exploit H; eauto. i. inv H11. rewrite CECMPT in *. inv H13. ss. }
+  { ii. esplits; eauto. }
+  { simpl. eauto. clear - H2 H10. ginduction vargs; ii; ss; inv H2; inv H10; ss. econs; eauto. eapply cast_val_is_casted; eauto. }
+  clear - H10. ginduction tyargs0; ii; ss. inv H10. econs; eauto.
+
 - (* stuck *)
   constructor.
 Qed.
 
-Lemma preservation_sstep:
-  forall S t S', sstep ge S t S' -> wt_state S -> wt_state S'.
+Lemma wtype_cont_call_cont k
+      (WTY: wtype_cont ge k)
+  : <<WTY: wtype_cont ge (call_cont k)>>.
+Proof. clear - k WTY. unfold NW. induction k; ii; ss; wtype_tac. Qed.
+
+Lemma types_of_call_cont k
+  : <<INCL: incl (types_of_cont (call_cont k)) (types_of_cont k)>>.
+Proof. clear - k. ii. ginduction k; ii; ss; wtype_tac. Qed.
+
+Lemma types_of_labeled_statements_seq ty0 sl (IN: In ty0 (types_of_statement (seq_of_labeled_statement sl)))
+  : <<IN: In ty0 (types_of_labeled_statements sl)>>.
+Proof. clear - IN. r. ginduction sl; ii; ss. rewrite in_app_iff in *; eauto. des; eauto. Qed.
+
+Lemma types_of_labeled_statements_switch ty0 n sl (IN: In ty0 (types_of_labeled_statements (select_switch n sl)))
+  : <<IN: In ty0 (types_of_labeled_statements sl)>>.
 Proof.
-  induction 1; intros WT; inv WT.
-- inv WTS; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTS; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTS; eauto with ty.
-- inv WTK; destruct b; eauto with ty.
-- inv WTS; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTS; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTS; eauto with ty.
-- inv WTS; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- econstructor. eapply call_cont_wt; eauto. constructor.
-- inv WTS. eauto with ty.
-- inv WTK. econstructor. eapply call_cont_wt; eauto.
-  inv WTE. eapply pres_sem_cast; eauto.
-- econstructor. eapply is_wt_call_cont; eauto. constructor.
-- inv WTS; eauto with ty.
-- inv WTK. econstructor; eauto with ty.
+  clear - IN. r. ginduction sl; ii; ss. rewrite in_app_iff in *; eauto.
+  unfold select_switch in IN. ss. des_ifs; ss; try rewrite in_app_iff in *; des; eauto.
+  - exploit IHsl; eauto. unfold select_switch. rewrite Heq. ss.
+  - exploit IHsl; eauto. unfold select_switch. rewrite Heq. ss.
+  - exploit IHsl; eauto. unfold select_switch. rewrite Heq. ss.
+Qed.
+
+Scheme statement_ind2 := Induction for statement Sort Prop
+  with labeled_statements_ind2 := Induction for labeled_statements Sort Prop.
+Combined Scheme statement_labeled_statements_ind from statement_ind2, labeled_statements_ind2.
+
+Let find_label_prop0 (stmt: statement) :=
+  (forall lbl k s' k' (FIND: find_label lbl stmt k = Some (s', k')),
+    <<INCL: wtype_cont ge k -> (forall ty (IN: In ty (types_of_statement stmt)), wt_type ge ty) -> wtype_cont ge k'>>).
+Let find_label_ls_prop0 (lstmts: labeled_statements) :=
+  (forall lbl k s' k' (FIND: find_label_ls lbl lstmts k = Some (s', k')),
+    <<INCL: wtype_cont ge k -> (forall ty (IN: In ty (types_of_labeled_statements lstmts)), wt_type ge ty) -> wtype_cont ge k'>>).
+
+Let find_label_prop1 (stmt: statement) :=
+  (forall lbl k s' k' (FIND: find_label lbl stmt k = Some (s', k')),
+    <<INCL: incl (types_of_statement s') ((types_of_statement stmt))>>).
+
+Let find_label_ls_prop1 (lstmts: labeled_statements) :=
+  (forall lbl k s' k' (FIND: find_label_ls lbl lstmts k = Some (s', k')),
+    <<INCL: incl (types_of_statement s') ((types_of_labeled_statements lstmts))>>).
+
+Lemma types_of_find_label0:
+  (forall stmt, find_label_prop0 stmt)
+  /\ (forall lstmts, find_label_ls_prop0 lstmts).
+Proof.
+  clear - prog. clear prog.
+  eapply statement_labeled_statements_ind; eauto;
+    unfold find_label_prop0, find_label_ls_prop0 in *; ii; ss; des_ifs;
+      try rewrite ! in_app_iff in *; eauto;
+      try (by (exploit H; eauto; i; des; wtype_tac));
+      try (by (exploit H0; eauto; i; des; wtype_tac));
+      try (by (exploit H1; eauto; i; des; wtype_tac));
+      try (by (exploit H2; eauto; i; des; wtype_tac)).
+  - exploit H; eauto. { ss. wtype_tac. exploit types_of_labeled_statements_seq; eauto. wtype_tac. } wtype_tac.
+Qed.
+
+Lemma types_of_find_label1:
+  (forall stmt, find_label_prop1 stmt)
+  /\ (forall lstmts, find_label_ls_prop1 lstmts).
+Proof.
+  clear - prog. clear prog.
+  eapply statement_labeled_statements_ind; eauto;
+    unfold find_label_prop1, find_label_ls_prop1 in *; ii; ss; des_ifs;
+      try rewrite ! in_app_iff in *; eauto;
+      try (by (exploit H; eauto; i; des; wtype_tac));
+      try (by (exploit H0; eauto; i; des; wtype_tac));
+      try (by (exploit H1; eauto; i; des; wtype_tac));
+      try (by (exploit H2; eauto; i; des; wtype_tac)).
+Qed.
+
+Lemma alloc_variables_environment
+      e m l e' m' i
+      (ALLOC: alloc_variables ge e m l e' m')
+      (IN: In i (map fst l)):
+    exists blk ty, e' ! i = Some (blk, ty).
+Proof.
+  clear - IN ALLOC. ginduction l; ss. i. destruct a; ss; des; subst.
+  - inv ALLOC. ss.
+    assert (exists a, (PTree.set i (b1, t) e) ! i = Some a).
+    { erewrite PTree.gss. eauto. }
+    remember (PTree.set i (b1, t) e) as e1. clear -H7 H.
+    { ginduction l; ss.
+      - i. inv H7. des. rewrite H. destruct a. eauto.
+      - i. inv H7. des. destruct a. destruct (classic (i = id)).
+        + subst. exploit IHl; eauto. erewrite PTree.gss; eauto.
+        + exploit IHl; eauto. erewrite PTree.gso; eauto.
+    }
+  - inv ALLOC. ss. exploit IHl; eauto.
+Qed.
+
+Lemma bind_vars_none
+      te l i ty
+      (TENV: (bind_vars te l) ! i = Some ty)
+      (NOTIN: ~ In i (map fst l)):
+    te ! i = Some ty.
+Proof.
+  clear -TENV NOTIN. ginduction l; ss. i. destruct a. ss.
+  eapply not_or_and in NOTIN. des.
+  exploit IHl; eauto. i.
+  erewrite PTree.gso in H; eauto.
+Qed.
+
+Lemma preservation_sstep:
+  forall S t S', sstep se ge S t S' -> wt_state S -> wt_state S'.
+Proof.
+  induction 1; intros WT; inversion WT; subst;
+    try (by inv WTK; econs; eauto with ty; wtype_tac);
+    try (by inv WTS; econs; eauto with ty; wtype_tac).
+- inv WTK; destruct b; econs; eauto with ty; wtype_tac.
+- econstructor. { eapply wtype_cont_call_cont; eauto. } eapply call_cont_wt; eauto. split. constructor. intro. reflexivity.
+- inv WTK. econstructor. { eapply wtype_cont_call_cont; eauto. } eapply call_cont_wt; eauto.
+  inv WTE. split. eapply pres_sem_cast; eauto.
+  { i. clarify. }
+- econstructor. { wtype_tac. } eapply is_wt_call_cont; eauto. split. constructor.
+  intro. reflexivity.
+- inv WTK. econs; eauto with ty; wtype_tac.
+  { eapply WTYK0. clear - IN.
+    eapply types_of_labeled_statements_seq in IN; eauto. ss. eapply types_of_labeled_statements_switch; eauto.
+  }
   apply wt_seq_of_ls. apply wt_select_switch; auto.
-- inv WTK; eauto with ty.
-- inv WTK; eauto with ty.
-- inv WTS; eauto with ty.
 - exploit wt_find_label. eexact WTB. eauto. eapply call_cont_wt'; eauto.
-  intros [A B]. eauto with ty.
-- inv WTFD. inv H3. econstructor; eauto. apply wt_call_cont_stmt_cont; auto.
-- inv WTFD. econstructor; eauto.
-  apply has_rettype_wt_val. simpl; rewrite <- H1.
-  eapply external_call_well_typed_gen; eauto.
-- inv WTK. eauto with ty.
+  intros [A B]. econs; eauto with ty; wtype_tac.
+  { eapply types_of_find_label0 in H. eapply H; eauto. eapply wtype_cont_call_cont; eauto. }
+  { eapply types_of_find_label1 in H. eapply H in IN. wtype_tac. }
+- assert(WTFD: wt_fundef ge gtenv (Internal f)).
+  { eapply wt_find_funct; eauto. }
+  inv WTFD. inv H3. econstructor; eauto.
+  { clear - H0 WT0.
+    assert (EMPTY:forall (i : positive) (blk : block) (ty : type), empty_env ! i = Some (blk, ty) -> wt_type ge ty).
+    { ii. erewrite PTree.gempty in H. clarify. }
+    remember (fn_params f ++ fn_vars f) as l. remember empty_env as ev.
+    clear Heqev Heql. ginduction l; i; ss; inv H0.
+    - eapply EMPTY; eauto.
+    - exploit IHl; eauto.
+      { inv WT0; eauto. }
+      i. rewrite PTree.gsspec in *. des_ifs.
+      + inv WT0. eauto.
+      + eapply EMPTY; eauto. }
+  { i. clear -H0 H3.
+    exploit alloc_variables_environment; eauto. }
+  { i. unfold gtenv in *. ss.
+    destruct (classic (In i (map fst (fn_params f)) \/ In i (map fst (fn_vars f)))) as [A | A].
+    { clear -H0 A. left.
+      assert (In i (map fst (fn_params f ++ fn_vars f))).
+      { rewrite map_app. eapply in_or_app; eauto. }
+      exploit alloc_variables_environment; eauto. }
+    eapply not_or_and in A.
+    assert (In i (prog_defs_names prog)).
+    { remember (fn_params f) as l1. remember (fn_vars f) as l2. clear - H3 A. des.
+      do 2 (eapply bind_vars_none in H3; eauto).
+      unfold prog_defs_names. ss. remember (prog_defs prog) as l.
+      assert ((PTree.empty type) ! i = None).
+      { rewrite PTree.gempty in *. clarify. }
+      remember (PTree.empty type) as pe. clear - H3 H. ginduction l; ss.
+      - i. clarify.
+      - i. destruct a. ss. destruct (classic (i0 = i)); eauto. right. des_ifs.
+        + eapply IHl in H3; eauto. erewrite PTree.gso; eauto.
+        + eapply IHl in H3; eauto. erewrite PTree.gso; eauto. }
+    exploit prog_defmap_dom; eauto. i. des.
+    exploit GECMPTREV; eauto. }
+  apply wt_call_cont_stmt_cont; auto.
+  inv CLASSIFY. eauto.
+- assert(WTFD: wt_fundef ge gtenv (External ef targs tres cc)).
+  { eapply wt_find_funct; eauto. }
+  unfold Genv.find_funct, Genv.find_funct_ptr in *. des_ifs. exploit GEWF; eauto. i; des. exploit GECMPT; eauto. i; des.
+  exploit WT_EXTERNAL; eauto.
+  { eapply PTree_Properties.in_of_list; eauto. }
+  inv CLASSIFY.
+  econstructor; eauto.
+- inv WTK. inv VAL. econs; eauto with ty; wtype_tac.
+  { exploit types_of_context1; eauto. intro Y; des. eapply Y in IN. rewrite in_app_iff in *. des.
+    - exploit Y0; eauto. { rewrite in_app_iff. left; eauto. } intro Z.
+      exploit (WTYK0 (Eval v ty0)); eauto. i. ss. des; ss. clarify.
+    - rename ty into tyy.
+      hexploit (Y0 (Eval v ty0) tyy); eauto. { wtype_tac. } intro Z.
+      exploit WTYK0; eauto. i. ss. des; ss. clarify.
+  }
+  { i. unfold gtenv in *. ss.
+    destruct (classic (In i (map fst (fn_params f)) \/ In i (map fst (fn_vars f)))) as [A | A].
+    { left.
+      assert (In i (map fst (fn_params f ++ fn_vars f))).
+      { rewrite map_app. eapply in_or_app; eauto. }
+      inv WT. inv WTK. ss. eapply H14; eauto. }
+    eapply not_or_and in A.
+    assert (In i (prog_defs_names prog)).
+    { remember (fn_params f) as l1. remember (fn_vars f) as l2. clear -H A. des.
+      do 2 (eapply bind_vars_none in H; eauto).
+      unfold prog_defs_names. ss. remember (prog_defs prog) as l.
+      assert ((PTree.empty type) ! i = None).
+      { rewrite PTree.gempty in *. clarify. }
+      remember (PTree.empty type) as pe. clear - H0 H. ginduction l; ss.
+      - i. clarify.
+      - i. destruct a. ss. destruct (classic (i0 = i)); eauto. right. des_ifs; eapply IHl in H; eauto; erewrite PTree.gso; eauto.
+    }
+    exploit prog_defmap_dom; eauto. i. des.
+    exploit GECMPTREV; eauto. }
+  Unshelve. all: auto.
 Qed.
 
 Theorem preservation:
-  forall S t S', step ge S t S' -> wt_state S -> wt_state S'.
+  forall S t S', step se ge S t S' -> wt_state S -> wt_state S'.
 Proof.
   intros. destruct H. eapply preservation_estep; eauto. eapply preservation_sstep; eauto.
 Qed.
 
 Theorem wt_initial_state:
-  forall S, initial_state prog S -> wt_state S.
+  forall vf tyf vargs k m,
+    initial_state prog (Callstate vf tyf vargs k m) ->
+    (exists fd, Genv.find_funct ge vf = Some (Internal fd)) ->
+    wt_state (Callstate vf tyf vargs k m).
 Proof.
-  intros. inv H. econstructor. constructor.
-  apply Genv.find_funct_ptr_prop with (p := prog) (b := b); auto.
-  intros. inv WTPROG. apply H4 with id; auto.
-  instantiate (1 := (Vptr b Ptrofs.zero)). rewrite Genv.find_funct_find_funct_ptr. auto.
+  intros. inv H. econstructor; ss; try by (econstructor; eauto).
+  { inv WTPROG. i. unfold Genv.find_funct in *. des_ifs. rewrite Genv.find_funct_ptr_iff in *.
+    exploit GEWF; eauto. i. des. exploit GECMPT; eauto. i. rr in H2. exploit in_prog_defmap; eauto. i.
+    exploit H; eauto. i. inv H4. rewrite CECMPT in *. inv H10. ss. }
+  { ii. exfalso. des. eapply EXT; eauto. }
 Qed.
 
 End PRESERVATION.

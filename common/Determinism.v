@@ -516,7 +516,7 @@ Local Open Scope pair_scope.
 Definition world_sem : semantics := @Semantics_gen
   (state L * world)%type
   (genvtype L)
-  (fun ge s t s' => step L ge s#1 t s'#1 /\ possible_trace s#2 t s'#2)
+  (fun se ge s t s' => step L se ge s#1 t s'#1 /\ possible_trace s#2 t s'#2)
   (fun s => initial_state L s#1 /\ s#2 = initial_world)
   (fun s r => final_state L s#1 r)
   (globalenv L)

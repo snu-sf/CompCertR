@@ -759,6 +759,12 @@ Fixpoint typlist_of_typelist (tl: typelist) : list AST.typ :=
   | Tcons hd tl => typ_of_type hd :: typlist_of_typelist tl
   end.
 
+Fixpoint typelist_to_listtype (tys: typelist): list type :=
+  match tys with
+  | Tnil => nil
+  | Tcons hd tl => hd :: typelist_to_listtype tl
+  end.
+
 Definition signature_of_type (args: typelist) (res: type) (cc: calling_convention): signature :=
   mksignature (typlist_of_typelist args) (rettype_of_type res) cc.
 

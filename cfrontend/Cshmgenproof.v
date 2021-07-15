@@ -17,6 +17,7 @@ Require Import AST Linking.
 Require Import Values Events Memory Globalenvs Smallstep.
 Require Import Ctypes Ctyping Cop Clight Cminor Csharpminor.
 Require Import Cshmgen.
+Require Import sflib.
 
 (** * Relational specification of the transformation *)
 
@@ -63,7 +64,7 @@ Lemma transl_fundef_sig1:
 Proof.
   intros. inv H.
 - monadInv H1. simpl. inversion H0.
-  unfold signature_of_function, signature_of_type.
+  unfold signature_of_function, signature_of_type. unfold mksignature.
   f_equal. apply transl_params_types.
 - simpl in H0. unfold funsig. congruence.
 Qed.
@@ -215,6 +216,7 @@ Section CONSTRUCTORS.
 
 Variables cunit prog: Clight.program.
 Hypothesis LINK: linkorder cunit prog.
+Variable se: Senv.t.
 Variable ge: genv.
 
 Lemma make_intconst_correct:
@@ -964,7 +966,7 @@ Lemma make_memcpy_correct:
   assign_loc prog.(prog_comp_env) ty m b ofs v m' ->
   access_mode ty = By_copy ->
   make_memcpy cunit.(prog_comp_env) dst src ty = OK s ->
-  step ge (State f s k e le m) E0 (State f Sskip k e le m').
+  step se ge (State f s k e le m) E0 (State f Sskip k e le m').
 Proof.
   intros. inv H1; try congruence.
   monadInv H3.
@@ -984,7 +986,7 @@ Lemma make_store_correct:
   eval_expr ge e le m addr (Vptr b ofs) ->
   eval_expr ge e le m rhs v ->
   assign_loc prog.(prog_comp_env) ty m b ofs v m' ->
-  step ge (State f code k e le m) E0 (State f Sskip k e le m').
+  step se ge (State f code k e le m) E0 (State f Sskip k e le m').
 Proof.
   unfold make_store. intros until k; intros MKSTORE EV1 EV2 ASSIGN.
   inversion ASSIGN; subst.
@@ -1026,28 +1028,36 @@ Variable prog: Clight.program.
 Variable tprog: Csharpminor.program.
 Hypothesis TRANSL: match_prog prog tprog.
 
-Let ge := globalenv prog.
-Let tge := Genv.globalenv tprog.
+Section CORELEMMA.
+
+Variable se tse: Senv.t.
+Hypothesis (MATCH_SENV: Senv.equiv se tse).
+Variable ge: Clight.genv.
+Variable tge : Csharpminor.genv.
+
+Hypothesis GENV_COMPAT: prog.(prog_comp_env) = ge.(genv_cenv).
+
+Hypothesis (MATCH_GENV: Genv.match_genvs (match_globdef match_fundef match_varinfo prog) ge tge).
 
 Lemma symbols_preserved:
   forall s, Genv.find_symbol tge s = Genv.find_symbol ge s.
-Proof (Genv.find_symbol_match TRANSL).
+Proof (Genv.find_symbol_match_genv MATCH_GENV).
 
 Lemma senv_preserved:
   Senv.equiv ge tge.
-Proof (Genv.senv_match TRANSL).
+Proof (Genv.senv_match_genv MATCH_GENV).
 
 Lemma function_ptr_translated:
   forall v f,
   Genv.find_funct_ptr ge v = Some f ->
   exists cu tf, Genv.find_funct_ptr tge v = Some tf /\ match_fundef cu f tf /\ linkorder cu prog.
-Proof (Genv.find_funct_ptr_match TRANSL).
+Proof (Genv.find_funct_ptr_match_genv MATCH_GENV).
 
 Lemma functions_translated:
   forall v f,
   Genv.find_funct ge v = Some f ->
   exists cu tf, Genv.find_funct tge v = Some tf /\ match_fundef cu f tf /\ linkorder cu prog.
-Proof (Genv.find_funct_match TRANSL).
+Proof (Genv.find_funct_match_genv MATCH_GENV).
 
 (** * Matching between environments *)
 
@@ -1147,7 +1157,7 @@ Proof.
     intros until sz. repeat rewrite PTree.gsspec.
     destruct (peq id0 id); intros. exists ty; congruence. eapply me_local_inv; eauto.
   intros [te2 [ALLOC MENV]].
-  exists te2; split. econstructor; eauto. auto.
+  exists te2; split. econstructor; rewrite GENV_COMPAT; eauto. auto.
 Qed.
 
 Lemma create_undef_temps_match:
@@ -1238,13 +1248,13 @@ Proof.
 - (* unop *)
   eapply transl_unop_correct; eauto.
 - (* binop *)
-  eapply transl_binop_correct; eauto.
+  eapply transl_binop_correct; eauto. rewrite GENV_COMPAT; auto.
 - (* cast *)
   eapply make_cast_correct; eauto.
 - (* sizeof *)
-  rewrite (transl_sizeof _ _ _ _ LINK EQ). apply make_ptrofsconst_correct.
+  rewrite (transl_sizeof _ _ _ _ LINK EQ). rewrite GENV_COMPAT. apply make_ptrofsconst_correct.
 - (* alignof *)
-  rewrite (transl_alignof _ _ _ _ LINK EQ). apply make_ptrofsconst_correct.
+  rewrite (transl_alignof _ _ _ _ LINK EQ). rewrite GENV_COMPAT. apply make_ptrofsconst_correct.
 - (* rvalue out of lvalue *)
   exploit transl_expr_lvalue; eauto. intros [tb [TRLVAL MKLOAD]].
   eapply make_load_correct; eauto.
@@ -1262,7 +1272,7 @@ Proof.
   destruct (prog_comp_env cunit)!id as [co'|] eqn:CO; monadInv EQ0.
   exploit field_offset_stable. eexact LINK. eauto. instantiate (1 := i). intros [A B].
   rewrite <- B in EQ1.
-  assert (x0 = delta) by (unfold ge in *; simpl in *; congruence).
+  assert (x0 = delta) by (simpl in *; congruence).
   subst x0.
   destruct Archi.ptr64 eqn:SF.
 + eapply eval_Ebinop; eauto using make_longconst_correct.
@@ -1338,7 +1348,7 @@ Inductive match_transl: stmt -> cont -> stmt -> cont -> Prop :=
 Lemma match_transl_step:
   forall ts tk ts' tk' f te le m,
   match_transl (Sblock ts) tk ts' tk' ->
-  star step tge (State f ts' tk' te le m) E0 (State f ts (Kblock tk) te le m).
+  star step tse tge (State f ts' tk' te le m) E0 (State f ts (Kblock tk) te le m).
 Proof.
   intros. inv H.
   apply star_one. constructor.
@@ -1403,14 +1413,12 @@ Inductive match_states: Clight.state -> Csharpminor.state -> Prop :=
       match_states (Clight.State f s k e le m)
                    (State tf ts' tk' te le m)
   | match_callstate:
-      forall fd args k m tfd tk targs tres cconv cu ce
-          (LINK: linkorder cu prog)
-          (TR: match_fundef cu fd tfd)
+      forall fptr ty args k m tk targs tres cconv ce
           (MK: match_cont ce tres 0%nat 0%nat k tk)
           (ISCC: Clight.is_call_cont k)
-          (TY: type_of_fundef fd = Tfunction targs tres cconv),
-      match_states (Clight.Callstate fd args k m)
-                   (Callstate tfd args tk m)
+          (TYP: ty = (Tfunction targs tres cconv)),
+      match_states (Clight.Callstate fptr ty args k m)
+                   (Callstate fptr (signature_of_type targs tres cconv) args tk m)
   | match_returnstate:
       forall res tres k m tk ce
           (MK: match_cont ce tres 0%nat 0%nat k tk)
@@ -1554,12 +1562,21 @@ Proof.
   split; auto; eapply match_Kcall_normalize; eauto.
 Qed.
 
+Lemma function_type_implies_sig
+      f targs tres cconv
+      (TYP: type_of_function f = Tfunction targs tres cconv):
+    <<SIG: signature_of_function f = signature_of_type targs tres cconv>>.
+Proof.
+  red. unfold signature_of_type, signature_of_function, type_of_function in *. clarify.
+  f_equal. rewrite transl_params_types. ss.
+Qed.
+
 (** The simulation proof *)
 
 Lemma transl_step:
-  forall S1 t S2, Clight.step2 ge S1 t S2 ->
+  forall S1 t S2, Clight.step2 se ge S1 t S2 ->
   forall T1, match_states S1 T1 ->
-  exists T2, plus step tge T1 t T2 /\ match_states S2 T2.
+  exists T2, plus step tse tge T1 t T2 /\ match_states S2 T2.
 Proof.
   induction 1; intros T1 MST; inv MST.
 
@@ -1573,7 +1590,7 @@ Proof.
   econstructor; split.
   apply plus_one. eapply make_store_correct; eauto.
   eapply transl_lvalue_correct; eauto. eapply make_cast_correct; eauto.
-  eapply transl_expr_correct; eauto.
+  eapply transl_expr_correct; eauto. rewrite GENV_COMPAT; eauto.
   eapply match_states_skip; eauto.
 
 - (* set *)
@@ -1583,51 +1600,22 @@ Proof.
 
 - (* call *)
   revert TR. simpl. case_eq (classify_fun (typeof a)); try congruence.
-  intros targs tres cc CF TR. monadInv TR.
-  exploit functions_translated; eauto. intros (cu' & tfd & FIND & TFD & LINK').
+  intros targs tres cc CF TR. monadInv TR. inv MTR.
   rewrite H in CF. simpl in CF. inv CF.
-  set (sg := {| sig_args := typlist_of_arglist al targs;
-                sig_res := rettype_of_type tres;
-                sig_cc := cc |}) in *.
-  assert (SIG: funsig tfd = sg).
-  { unfold sg; erewrite typlist_of_arglist_eq by eauto.
-    eapply transl_fundef_sig1; eauto. rewrite H3; auto. }
-  assert (EITHER: tk' = tk /\ ts' = Scall optid sg x x0
-               \/ exists id, optid = Some id /\
-                  tk' = tk /\ ts' = Sseq (Scall optid sg x x0)
-                                         (Sset id (make_normalization tres (Evar id)))).
-  { unfold make_funcall in MTR.
-    destruct optid. destruct Conventions1.return_value_needs_normalization.
-    inv MTR. right; exists i; auto.
-    inv MTR; auto.
-    inv MTR; auto. }
-  destruct EITHER as [(EK & ES) | (id & EI & EK & ES)]; rewrite EK, ES.
-  + (* without normalization of return value *)
-    econstructor; split.
-    apply plus_one. eapply step_call; eauto.
-    eapply transl_expr_correct with (cunit := cu); eauto.
-    eapply transl_arglist_correct with (cunit := cu); eauto.
-    econstructor; eauto.
-    eapply match_Kcall with (ce := prog_comp_env cu') (cu := cu); eauto.
-    exact I.
-  + (* with normalization of return value *)
-    subst optid.
-    econstructor; split.
-    eapply plus_two. apply step_seq. eapply step_call; eauto. 
-    eapply transl_expr_correct with (cunit := cu); eauto.
-    eapply transl_arglist_correct with (cunit := cu); eauto.
-    traceEq.
-    econstructor; eauto.
-    eapply match_Kcall_normalize  with (ce := prog_comp_env cu') (cu := cu); eauto.
-    intros. eapply make_normalization_correct; eauto. constructor; eauto.
-    exact I.
+  econstructor; split.
+  apply plus_one. econstructor; eauto.
+  eapply transl_expr_correct with (cunit := cu); eauto.
+  eapply transl_arglist_correct with (cunit := cu); eauto.
+  erewrite typlist_of_arglist_eq by eauto.
+  econstructor; eauto.
+  eapply match_Kcall with (ce := prog_comp_env cu) (cu := cu); eauto.
 
 - (* builtin *)
   monadInv TR. inv MTR.
   econstructor; split.
   apply plus_one. econstructor.
   eapply transl_arglist_correct; eauto.
-  eapply external_call_symbols_preserved with (ge1 := ge). apply senv_preserved. eauto.
+  eapply external_call_symbols_preserved with (ge1 := se); eauto.
   eapply match_states_skip; eauto.
 
 - (* seq *)
@@ -1785,13 +1773,22 @@ Proof.
   econstructor; eauto. constructor.
 
 - (* internal function *)
-  inv H. inv TR. monadInv H5.
+  inv H.
+  assert(exists cu (tf: function),
+            <<LINK: linkorder cu prog>> /\
+            transl_function (prog_comp_env cu) f = OK tf /\
+            <<FPTR: Genv.find_funct tge fptr = Some (AST.Internal tf)>>).
+  { exploit functions_translated; eauto. i; des. inv H5. esplits; eauto.
+  } i; des.
+  monadInv H5.
   exploit match_cont_is_call_cont; eauto. intros [A B].
   exploit match_env_alloc_variables; eauto.
   apply match_env_empty.
   intros [te1 [C D]].
   econstructor; split.
   apply plus_one. eapply step_internal_function.
+  { eauto. }
+  { eapply function_type_implies_sig; eauto. }
   simpl. erewrite transl_vars_names by eauto. assumption.
   simpl. assumption.
   simpl. assumption.
@@ -1801,19 +1798,26 @@ Proof.
   unfold transl_function. rewrite EQ; simpl. rewrite EQ1; simpl. auto.
   constructor.
   replace (fn_return f) with tres. eassumption.
-  simpl in TY. unfold type_of_function in TY. congruence. 
+  simpl in TYP. unfold type_of_function in TYP. congruence. 
 
 - (* external function *)
-  inv TR.
+  assert(exists cu,
+            <<LINK: linkorder cu prog>> /\
+            (* transl_fundef (prog_comp_env cu) (External ef targs tres cconv) = OK tf /\ *)
+            ef_sig ef = signature_of_type targs tres cconv /\
+            <<FPTR: Genv.find_funct tge fptr = Some (AST.External ef)>>).
+  {
+    exploit functions_translated; eauto. i; des. inv H1. esplits; eauto.
+  } i; des.
   exploit match_cont_is_call_cont; eauto. intros [A B].
   econstructor; split.
-  apply plus_one. constructor.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
+  apply plus_one. econstructor; eauto. { ss. clarify. }
+  eapply external_call_symbols_preserved; eauto.
   eapply match_returnstate with (ce := ce); eauto.
   apply has_rettype_wt_val. 
   replace (rettype_of_type tres0) with (sig_res (ef_sig ef)).
   eapply external_call_well_typed_gen; eauto.
-  rewrite H5. simpl. simpl in TY. congruence.
+  rewrite H1. simpl. simpl in TYP. congruence.
 
 - (* returnstate *)
   inv MK.
@@ -1829,24 +1833,35 @@ Proof.
     simpl. rewrite PTree.set2. econstructor; eauto. simpl; reflexivity. constructor.
 Qed.
 
+End CORELEMMA.
+
+Section WHOLE.
+
+Let ge := globalenv prog.
+Let tge := Genv.globalenv tprog.
+
+Let GENV_COMPAT: prog.(prog_comp_env) = ge.(genv_cenv).
+Proof. ss. Qed.
+
+Let MATCH_GENV: Genv.match_genvs (match_globdef match_fundef match_varinfo prog) ge tge.
+Proof. apply Genv.globalenvs_match; eauto. Qed.
+
 Lemma transl_initial_states:
   forall S, Clight.initial_state prog S ->
-  exists R, initial_state tprog R /\ match_states S R.
+  exists R, initial_state tprog R /\ match_states ge tge S R.
 Proof.
   intros. inv H.
-  exploit function_ptr_translated; eauto. intros (cu & tf & A & B & C).
   assert (D: Genv.find_symbol tge (AST.prog_main tprog) = Some b).
-  { destruct TRANSL as (P & Q & R). rewrite Q. rewrite symbols_preserved. auto. }
-  assert (E: funsig tf = signature_of_type Tnil type_int32s cc_default).
-  { eapply transl_fundef_sig2; eauto. }
+  { destruct TRANSL as (P & Q & R). rewrite Q. erewrite symbols_preserved; eauto. auto. }
   econstructor; split.
   econstructor; eauto. apply (Genv.init_mem_match TRANSL). eauto.
-  econstructor; eauto. instantiate (1 := prog_comp_env cu). constructor; auto. exact I.
+  unshelve rpapply match_callstate; eauto.
+  econstructor; eauto. econstructor; eauto.
 Qed.
 
 Lemma transl_final_states:
   forall S R r,
-  match_states S R -> Clight.final_state S r -> final_state R r.
+  match_states ge tge S R -> Clight.final_state S r -> final_state R r.
 Proof.
   intros. inv H0. inv H. inv MK. constructor.
 Qed.
@@ -1855,11 +1870,13 @@ Theorem transl_program_correct:
   forward_simulation (Clight.semantics2 prog) (Csharpminor.semantics tprog).
 Proof.
   eapply forward_simulation_plus.
-  apply senv_preserved.
+  apply senv_preserved; auto.
   eexact transl_initial_states.
   eexact transl_final_states.
-  eexact transl_step.
+  apply transl_step; auto. eapply (Genv.senv_match TRANSL); eauto.
 Qed.
+
+End WHOLE.
 
 End CORRECTNESS.
 
@@ -1884,10 +1901,7 @@ Local Transparent Linker_fundef Linking.Linker_fundef.
 + discriminate.
 + destruct ef; inv H2. econstructor; split. simpl; eauto. left; constructor; auto.
 + destruct ef; inv H2. econstructor; split. simpl; eauto. right; constructor; auto.
-+ destruct (external_function_eq ef ef0 && typelist_eq args args0 &&
-         type_eq res res0 && calling_convention_eq cc cc0) eqn:E'; inv H2.
-  InvBooleans. subst ef0. econstructor; split.
-  simpl; rewrite dec_eq_true; eauto.
++ des_ifs; eauto. InvBooleans. clarify. esplits; ss; des_ifs; eauto.
   left; constructor. congruence.
 - intros. exists tt. auto.
 - replace (program_of_program p) with pp. auto. inv E; destruct pp; auto.
