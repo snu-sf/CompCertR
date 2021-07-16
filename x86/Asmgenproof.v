@@ -899,20 +899,10 @@ Transparent destroyed_at_function_entry.
   apply agree_undef_caller_save_regs; auto. 
 
 - (* return *)
-<<<<<<< HEAD
-  inv STACKS. simpl in *.
-  right. split. lia. split. auto.
-  econstructor; eauto. rewrite ATPC; eauto. congruence.
-||||||| 4b042d57
-  inv STACKS. simpl in *.
-  right. split. omega. split. auto.
-  econstructor; eauto. rewrite ATPC; eauto. congruence.
-=======
   inv STACKS; simpl in *. { right. esplits; eauto. econs. auto. }
   right. split. omega. split. auto.
   econstructor; eauto. replace (rs0 PC) with ra; eauto.
   { inv H5. inv ATPC. auto. } congruence.
->>>>>>> v3.6_stable
 Qed.
 
 End CORELEMMA.

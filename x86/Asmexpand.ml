@@ -544,7 +544,7 @@ let expand_instruction instr =
        if is_current_function_variadic() then
          (* Save parameters passed in registers in reserved stack area *)
          emit (Pcall_s (intern_string "__compcert_va_saveregs",
-                        {sig_args = []; sig_res = Tvoid; sig_cc = cc_default}));
+                        {sig_args = []; sig_res = Tvoid; sig_cc = cc_default; sig_cstyle = true}));
        (* Allocate frame *)
        let sz' = Z.of_uint sz in
        emit (Psubl_ri (RSP, sz'));
@@ -565,13 +565,7 @@ let expand_instruction instr =
          (* Save the registers *)
          emit (Pleaq (R10, linear_addr RSP (Z.of_uint save_regs)));
          emit (Pcall_s (intern_string "__compcert_va_saveregs",
-<<<<<<< HEAD
-                        {sig_args = []; sig_res = Tvoid; sig_cc = cc_default}))
-||||||| 4b042d57
-                        {sig_args = []; sig_res = None; sig_cc = cc_default}))
-=======
-                        {sig_args = []; sig_res = None; sig_cc = cc_default; sig_cstyle = true}))
->>>>>>> v3.6_stable
+                        {sig_args = []; sig_res = Tvoid; sig_cc = cc_default; sig_cstyle = true}))
        end;
        (* Stack chaining *)
        let fullsz = sz + 8 in

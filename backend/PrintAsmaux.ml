@@ -99,13 +99,7 @@ let exists_constants () =
 
 let current_function_stacksize = ref 0l
 let current_function_sig =
-<<<<<<< HEAD
-  ref { sig_args = []; sig_res = Tvoid; sig_cc = cc_default }
-||||||| 4b042d57
-  ref { sig_args = []; sig_res = None; sig_cc = cc_default }
-=======
-  ref { sig_args = []; sig_res = None; sig_cc = cc_default; sig_cstyle = true }
->>>>>>> v3.6_stable
+  ref { sig_args = []; sig_res = Tvoid; sig_cc = cc_default; sig_cstyle = true }
 
 (* Functions for printing of symbol names *)
 let elf_symbol oc symb =

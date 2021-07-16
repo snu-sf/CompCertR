@@ -1099,7 +1099,7 @@ Proof.
   apply UNCH1; auto. intros; red. unfold inj_of_bc; rewrite H0; auto.
 - econs; eauto.
   + i. eapply external_call_max_perm; try apply EC; eauto.
-  + i. eapply external_call_readonly; eauto.
+  + i. eapply external_call_readonly; try apply LB; eauto.
   + eapply Mem.unchanged_on_implies; try apply UNCH1; eauto.
     unfold Basics.flip. s. ii. rr in H. rr. unfold inj_of_bc. unfold bc2su in *. des_sumbool. des_ifs.
 Qed.
@@ -1260,19 +1260,9 @@ Lemma sound_stack_new_bound:
   sound_stack su bc stk m bound'.
 Proof.
   intros. inv H.
-<<<<<<< HEAD
-- constructor.
-- eapply sound_stack_public_call with (bound' := bound'0); eauto. extlia.
-- eapply sound_stack_private_call with (bound' := bound'0); eauto. extlia.
-||||||| 4b042d57
-- constructor.
-- eapply sound_stack_public_call with (bound' := bound'0); eauto. extlia.
-- eapply sound_stack_private_call with (bound' := bound'0); eauto. extlia.
-=======
 - constructor; ss. extlia.
 - eapply sound_stack_public_call with (bound' := bound'0); eauto. extlia.
 - eapply sound_stack_private_call with (bound' := bound'0); eauto. extlia.
->>>>>>> v3.6_stable
 Qed.
 
 Lemma sound_stack_exten:
@@ -1387,7 +1377,7 @@ Proof.
     apply H3. apply in_map; auto.
     auto with va.
   * { hexploit sound_stack_unreach; eauto. i; des.
-      eapply Unreach.hle_update; try eassumption; ss; try extlia. i. try (des_ifs; try extlia; []). rewrite C; try extlia; ss. ii. clarify. extlia. }
+      eapply Unreach.hle_update; try eassumption; ss; try extlia. i. try (des_ifs; try extlia; []). rewrite C; try extlia; ss. }
 + (* public call *)
   exploit analyze_successor; eauto. simpl; eauto. rewrite TR. intros SUCC.
   exploit anonymize_stack; eauto. intros (bc' & A & B & C & D & E & F & G).
@@ -1399,7 +1389,7 @@ Proof.
   * intros. exploit list_in_map_inv; eauto. intros (r & P & Q). subst v.
     apply D with (areg ae r). auto with va.
   * { hexploit sound_stack_unreach; eauto. i; des.
-      eapply Unreach.hle_update; try eassumption; ss; try extlia. i. try (des_ifs; try extlia; []). rewrite C; try extlia; ss. ii. clarify. extlia. }
+      eapply Unreach.hle_update; try eassumption; ss; try extlia. i. try (des_ifs; try extlia; []). rewrite C; try extlia; ss. }
 - (* tailcall *)
   spl.
   { eapply Unreach.free_mle; eauto.
@@ -1418,7 +1408,7 @@ Proof.
   eapply romatch_free; eauto.
   eapply mmatch_free; eauto.
   { hexploit sound_stack_unreach; eauto. i; des. erewrite Mem.nextblock_free; eauto.
-    eapply Unreach.hle_update; try eassumption; ss; try extlia. i. try (des_ifs; try extlia; []). rewrite C; try extlia; ss. ii. clarify. extlia. }
+    eapply Unreach.hle_update; try eassumption; ss; try extlia. i. try (des_ifs; try extlia; []). rewrite C; try extlia; ss. }
 
 - (* builtin *)
   assert (SPVALID: Plt sp0 (Mem.nextblock m)) by (eapply mmatch_below; eauto with va).
@@ -1591,7 +1581,7 @@ Proof.
   eapply romatch_free; eauto.
   eapply mmatch_free; eauto.
   { hexploit sound_stack_unreach; eauto. i; des. erewrite Mem.nextblock_free; eauto.
-    eapply Unreach.hle_update; try eassumption; ss; try extlia. i. try (des_ifs; try extlia; []). rewrite C; ss; try extlia. ii; clarify. extlia. }
+    eapply Unreach.hle_update; try eassumption; ss; try extlia. i. try (des_ifs; try extlia; []). rewrite C; ss; try extlia. }
 
 - (* internal function *)
   exploit allocate_stack; eauto.

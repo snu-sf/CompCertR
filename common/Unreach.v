@@ -107,7 +107,11 @@ Inductive mle (su: t) (m0 m1: Memory.mem): Prop :=
     (PERM: forall blk ofs
         (VALID: (Mem.valid_block m0) blk),
         (Mem.perm m1) blk ofs Max <1= (Mem.perm m0) blk ofs Max)
-    (RO: Mem.unchanged_on (loc_not_writable m0) m0 m1)
+    (RO: forall b ofs n bytes
+                (RO: forall i, ofs <= i < ofs + n -> ~ Mem.perm m0 b i Max Writable)
+                (VALID: Mem.valid_block m0 b)
+                (LB: Mem.loadbytes m1 b ofs n = Some bytes),
+        (<<LB: Mem.loadbytes m0 b ofs n = Some bytes>>))
     (PRIV: Mem.unchanged_on (Basics.flip (fun _ => su)) m0 m1).
 
 Global Program Instance mle_PreOrder su: PreOrder (mle su).
@@ -116,12 +120,10 @@ Next Obligation.
 Qed.
 Next Obligation.
   ii. inv H. inv H0. econs; ss; eauto.
-  - ii. eapply PERM; eauto. eapply PERM0; eauto. unfold Mem.valid_block in *. inv RO. extlia.
-  - eapply Mem.unchanged_on_implies with (P:= fun blk ofs => loc_not_writable x blk ofs /\ Mem.valid_block x blk); ss.
-    eapply Mem.unchanged_on_trans.
-    + eapply Mem.unchanged_on_implies; try apply RO. i. des. ss.
-    + eapply Mem.unchanged_on_implies; try apply RO0; eauto.
-      ii. des. rr in H. eapply H; eauto.
+  - ii. eapply PERM; eauto. eapply PERM0; eauto. unfold Mem.valid_block in *. inv PRIV. extlia.
+  - i. exploit RO; eauto. exploit RO0; eauto.
+    + ii. eapply RO1; eauto.
+    + eapply Mem.valid_block_unchanged_on; eauto.
   - eapply Mem.unchanged_on_trans; eauto.
 Qed.
 
@@ -134,10 +136,12 @@ Proof.
   econs; eauto.
   - ii. eauto with mem.
   - (* Copied from Events.volatile_store_readonly *)
+    i. eapply unchanged_on_readonly; eauto.
     eapply Mem.store_unchanged_on; eauto.
     exploit Mem.store_valid_access_3; eauto. intros [P Q].
     intros. unfold loc_not_writable. red; intros. elim H0.
     apply Mem.perm_cur_max. apply P. auto.
+    
   - eapply Mem.store_unchanged_on; eauto.
 Qed.
 
@@ -150,6 +154,7 @@ Proof.
   econs; eauto.
   - ii. eauto with mem.
   - (* Copied from Events.extcall_free_ok *)
+    i. eapply unchanged_on_readonly; eauto.
     inv FREE. eapply Mem.free_unchanged_on; eauto.
     intros. red; intros. elim H1.
     apply Mem.perm_cur_max. apply Mem.perm_implies with Freeable; auto with mem.
@@ -166,6 +171,7 @@ Proof.
   econs; eauto.
   - ii. eauto with mem.
   - (* Copied from Events.volatile_store_readonly *)
+    i. eapply unchanged_on_readonly; eauto.
     inv STR. eapply Mem.storebytes_unchanged_on; eauto.
     intros. red; intros. elim H1.
     apply Mem.perm_cur_max.
@@ -180,7 +186,7 @@ Lemma alloc_mle
 Proof.
   econs; eauto.
   - ii. eauto with mem.
-  - eapply Mem.alloc_unchanged_on; eauto.
+  - i. erewrite <- Mem.loadbytes_alloc_unchanged; eauto.
   - eapply Mem.alloc_unchanged_on; eauto.
 Qed.
 
