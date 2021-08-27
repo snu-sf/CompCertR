@@ -521,7 +521,11 @@ Inductive wt_val : val -> type -> Prop :=
 Inductive wt_retval (v: val) (ty: type): Prop :=
 | wt_retval_intro
     (WTV: wt_val v ty)
-    (NVOID: ty = Tvoid -> v = Vundef).
+    (NVOID: match ty with 
+            | Tvoid | Tarray _ _ _ | Tfunction _ _ _ | Tstruct _ _ | Tunion _ _ => v = Vundef
+            | _ => True
+            end
+    ).
 
 Inductive wt_arguments: exprlist -> typelist -> Prop :=
   | wt_arg_nil:
@@ -692,7 +696,11 @@ Inductive wt_stmt: statement -> Prop :=
   | wt_Sreturn_none
       (VOID: rt = Tvoid):
       wt_stmt (Sreturn None)
-  | wt_Sreturn_some: forall r (NVOID: rt <> Tvoid),
+  | wt_Sreturn_some: forall r (NVOID: match rt with
+                                 | Tvoid | Tarray _ _ _ | Tfunction _ _ _
+                                 | Tstruct _ _ | Tunion _ _ => False
+                                 | _ => True
+                                 end),
       wt_rvalue r ->
       wt_cast (typeof r) rt ->
       wt_stmt (Sreturn (Some r))
@@ -997,7 +1005,10 @@ Definition sfor (s1: statement) (a: expr) (s2 s3: statement) : res statement :=
 
 Definition sreturn (rt: type) (a: expr) : res statement :=
   do x <- check_rval a; do y <- check_cast (typeof a) rt;
-  assertion(negb (type_eq rt Tvoid));
+  assertion(match rt with
+            | Tvoid | Tarray _ _ _ | Tfunction _ _ _ | Tstruct _ _ | Tunion _ _ => false
+            | _ => true
+            end);
   OK (Sreturn (Some a)).
 
 Definition sswitch (a: expr) (sl: labeled_statements) : res statement :=
@@ -1528,7 +1539,6 @@ Lemma sreturn_sound:
   forall a s, sreturn rt a = OK s -> wt_expr ce e a -> wt_stmt ce e rt s.
 Proof.
   intros. unfold sreturn in H. unfold bind in *. des_ifs; eauto with ty.
-  econs; eauto with ty. ii. rewrite H in *. ss.
 Qed.
 
 Lemma sswitch_sound:
@@ -2215,7 +2225,10 @@ Inductive wt_expr_cont: typenv -> function -> cont -> Prop :=
       wt_lblstmts ge te f.(fn_return) ls ->
       wt_expr_cont te f (Kswitch1 ls k)
   | wt_Kreturn: forall te f k
-      (NVOID: f.(fn_return) <> Tvoid),
+      (NVOID: match f.(fn_return) with
+              | Tvoid | Tarray _ _ _ | Tfunction _ _ _ | Tstruct _ _ | Tunion _ _ => False
+              | _ => True
+              end),
       wt_stmt_cont te f k ->
       wt_expr_cont te f (Kreturn k)
 
@@ -2623,12 +2636,12 @@ Proof.
     try (by inv WTK; econs; eauto with ty; wtype_tac);
     try (by inv WTS; econs; eauto with ty; wtype_tac).
 - inv WTK; destruct b; econs; eauto with ty; wtype_tac.
-- econstructor. { eapply wtype_cont_call_cont; eauto. } eapply call_cont_wt; eauto. split. constructor. intro. reflexivity.
+- econstructor. { eapply wtype_cont_call_cont; eauto. } eapply call_cont_wt; eauto. split. constructor. destruct (fn_return f); eauto.
 - inv WTK. econstructor. { eapply wtype_cont_call_cont; eauto. } eapply call_cont_wt; eauto.
   inv WTE. split. eapply pres_sem_cast; eauto.
-  { i. clarify. }
+  { destruct (fn_return f); inv H; ss. }
 - econstructor. { wtype_tac. } eapply is_wt_call_cont; eauto. split. constructor.
-  intro. reflexivity.
+  destruct (fn_return f); eauto.
 - inv WTK. econs; eauto with ty; wtype_tac.
   { eapply WTYK0. clear - IN.
     eapply types_of_labeled_statements_seq in IN; eauto. ss. eapply types_of_labeled_statements_switch; eauto.
