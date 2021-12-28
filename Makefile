@@ -30,7 +30,7 @@ endif
 
 DIRS := lib common $(ARCHDIRS) backend cfrontend driver exportclight cparser demo
 
-COQINCLUDES := $(foreach d, $(DIRS), -R $(d) compcert.$(d))
+COQINCLUDES := $(foreach d, $(DIRS), -R $(d) compcertr.$(d))
 
 ifeq ($(LIBRARY_FLOCQ),local)
 DIRS += flocq/Core flocq/Prop flocq/Calc flocq/IEEE754
