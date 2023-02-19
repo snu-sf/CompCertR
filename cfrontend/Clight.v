@@ -205,7 +205,7 @@ Definition temp_env := PTree.t val.
   memory load is performed.  If the type [ty] indicates an access by
   reference or by copy, the pointer [Vptr b ofs] is returned. *)
 
-Inductive deref_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs) : 
+Inductive deref_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs) :
                                              bitfield -> val -> Prop :=
   | deref_loc_value: forall chunk v,
       access_mode ty = By_value chunk ->
@@ -805,26 +805,32 @@ Definition assign_loc_size (ce: composite_env) (ty: type) : Z :=
   | By_cypy => sizeof ce ty
   end.
 
-Lemma assign_loc_perm: forall ce ty m b ofs v m' b' i k p,
-    assign_loc ce ty m b ofs v m' -> Mem.perm m' b' i k p -> Mem.perm m b' i k p.
+Lemma assign_loc_perm: forall ce ty m b ofs bf v m' b' i k p,
+    assign_loc ce ty m b ofs bf v m' -> Mem.perm m' b' i k p -> Mem.perm m b' i k p.
 Proof.
   ii. inv H.
   - inv H2. eapply Mem.perm_store_2; eauto.
   - eapply Mem.perm_storebytes_2; eauto.
+  - inv H1. eapply Mem.perm_store_2; eauto.
 Qed.
 
-Lemma assign_loc_perm2: forall ce ty m b ofs v m',
-    assign_loc ce ty m b ofs v m' ->
+Lemma assign_loc_perm2: forall ce ty m b ofs bf v m',
+    assign_loc ce ty m b ofs bf v m' ->
     Mem.range_perm m b (Ptrofs.unsigned ofs) (Ptrofs.unsigned ofs + (assign_loc_size ce ty)) Cur Writable.
 Proof.
-  clear. ii. unfold assign_loc_size in *. inv H; rewrite H1 in H0.
-  - unfold Mem.storev in *. eapply Mem.store_valid_access_3; eauto.
-  - hexploit (sizeof_pos ce ty). i. eapply Mem.storebytes_range_perm; eauto.
+  clear. ii. unfold assign_loc_size in *.
+  inv H.
+  - rewrite H1 in H0.
+    unfold Mem.storev in *. eapply Mem.store_valid_access_3; eauto.
+  - rewrite H1 in H0.
+    hexploit (sizeof_pos ce ty). i. eapply Mem.storebytes_range_perm; eauto.
     erewrite Mem.loadbytes_length; eauto. rewrite Z2Nat.id; eauto. extlia.
+  - inv H1. cbn in H0.
+    destruct sz; desf; unfold Mem.storev in *; eapply Mem.store_valid_access_3; eauto.
 Qed.
 
-Lemma assign_loc_unchanged_on: forall ce ty m b ofs v m' P,
-    assign_loc ce ty m b ofs v m' ->
+Lemma assign_loc_unchanged_on: forall ce ty m b ofs bf v m' P,
+    assign_loc ce ty m b ofs bf v m' ->
     (forall i : Z, Ptrofs.unsigned ofs <= i < Ptrofs.unsigned ofs + assign_loc_size ce ty -> ~ P b i) ->
     Mem.unchanged_on P m m'.
 Proof.
@@ -832,6 +838,9 @@ Proof.
   - inv H0. eapply Mem.store_unchanged_on. eauto. rewrite H in H1. auto.
   - eapply Mem.storebytes_unchanged_on; eauto. rewrite H in H5.
     erewrite Mem.loadbytes_length; eauto. rewrite Z2Nat.id; eauto. generalize (sizeof_pos ce ty); i. extlia.
+  - inv H. eapply Mem.store_unchanged_on. eauto.
+    unfold chunk_for_carrier in *.
+    destruct sz; cbn in H0; desf.
 Qed.
 
 Lemma bind_parameters_perm: forall ge e m l vargs m' b i k p,
@@ -844,4 +853,3 @@ Qed.
 Lemma Forall_cont_ext_call_cont: forall k ext,
     Forall_cont_ext k ext -> Forall_cont_ext (call_cont k) ext.
 Proof. induction k; simpl; auto. Qed.
-

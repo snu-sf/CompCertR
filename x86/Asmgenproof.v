@@ -670,7 +670,7 @@ Opaque loadind.
   econstructor; eauto.
   apply agree_set_other; auto. apply agree_nextinstr. apply agree_set_other; auto.
   eapply agree_change_sp; eauto. eapply parent_sp_def; eauto.
-  cbn. rewrite <- H. Simplifs. rewrite Pregmap.gso; auto. 
+  cbn. rewrite <- H. Simplifs. rewrite Pregmap.gso; auto.
   generalize (preg_of_not_SP rf). rewrite (ireg_of_eq _ _ EQ1). congruence.
 + (* Direct call *)
   generalize (code_tail_next_int _ _ _ _ NOOV H8). intro CT1.
@@ -896,11 +896,11 @@ Transparent destroyed_at_function_entry.
   econstructor; eauto.
   unfold loc_external_result. apply agree_set_other; auto. apply agree_set_pair; auto.
   rewrite regset_after_external_eq.
-  apply agree_undef_caller_save_regs; auto. 
+  apply agree_undef_caller_save_regs; auto.
 
 - (* return *)
   inv STACKS; simpl in *. { right. esplits; eauto. econs. auto. }
-  right. split. omega. split. auto.
+  right. split. lia. split. auto.
   econstructor; eauto. replace (rs0 PC) with ra; eauto.
   { inv H5. inv ATPC. auto. } congruence.
 Qed.

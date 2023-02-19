@@ -477,10 +477,8 @@ Proof.
   i. unfold PTree_Properties.of_list. rewrite PTree.gmap. unfold option_map.
   rewrite <- ! fold_left_rev_right.
   rewrite <- map_rev.
-  (* unfold PTree.elt, ident. *)
   abstr (rev xs) ixs. clear_tac.
   induction ixs; ii; ss.
-  { rewrite ! PTree.gempty. ss. }
   rewrite ! PTree.gsspec in *.
   des_ifs; ss.
 Qed.
@@ -1452,7 +1450,7 @@ Proof.
 - simpl in H1. extlia.
 - inv H. rewrite Nat2Z.inj_succ in H1. destruct (zeq i p0).
 + congruence.
-+ apply IHn with (p0 + 1); auto. omega. omega.
++ apply IHn with (p0 + 1); auto. lia. lia.
 Qed.
 
 Lemma init_mem_inj_1:
@@ -1473,7 +1471,7 @@ Proof.
 + intros (P2 & Q2 & R2 & S2) (P1 & Q1 & R1 & S1).
   apply Q1 in H0. destruct H0. subst.
   apply Mem.perm_cur. eapply Mem.perm_implies; eauto.
-  apply P2. omega.
+  apply P2. lia.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C).
   subst delta. apply Z.divide_0_r.
 - exploit init_meminj_invert_strong; eauto. intros (A & id & gd & B & C & D & E & F).
@@ -1495,7 +1493,7 @@ Local Transparent Mem.loadbytes.
   rewrite Z.add_0_r.
   apply Mem_getN_forall2 with (p := 0) (n := Z.to_nat (init_data_list_size (gvar_init v))).
   rewrite H3, H4. apply bytes_of_init_inject. auto.
-  omega.
+  lia.
   rewrite Z2Nat.id in *; try extlia.
 Qed.
 
@@ -1514,22 +1512,22 @@ Proof.
   exploit init_meminj_invert. eexact H1. intros (A2 & id2 & B2 & C2).
   destruct (ident_eq id1 id2). congruence. left; eapply Genv.global_addresses_distinct; eauto.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C). subst delta.
-  split. omega. generalize (Ptrofs.unsigned_range_2 ofs). omega.
+  split. lia. generalize (Ptrofs.unsigned_range_2 ofs). lia.
 - exploit init_meminj_invert_strong; eauto. intros (A & id & gd & B & C & D & E & F).
   exploit (Genv.init_mem_characterization_gen p); eauto.
   exploit (Genv.init_mem_characterization_gen tp); eauto.
   destruct gd as [f|v].
 + destruct f; ss.
   intros (P2 & Q2) (P1 & Q1).
-  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by omega.
+  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by lia.
   left; apply Mem.perm_cur; auto.
   intros (P2 & Q2) (P1 & Q1).
-  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by omega.
+  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by lia.
   left; apply Mem.perm_cur; auto.
 + intros (P2 & Q2 & R2 & S2) (P1 & Q1 & R1 & S1).
   apply Q2 in H0. destruct H0. subst.
   left. apply Mem.perm_cur. eapply Mem.perm_implies; eauto.
-  apply P1. omega.
+  apply P1. lia.
 Qed.
 
 End INIT_MEM.
@@ -1732,6 +1730,9 @@ Proof.
   rewrite PTree.gcombine; auto.
 Qed.
 
+Lemma PTree_Nodes_injective: forall A (a b: PTree.tree' A), PTree.Nodes a = PTree.Nodes b -> a = b.
+Proof. intros ? ? ? Heq. inv Heq. auto. Qed.
+
 Lemma PTree_map_extensionality
       X Y
       (f0 f1: X -> Y)
@@ -1743,14 +1744,33 @@ Lemma PTree_map_extensionality
 Proof.
   unfold PTree.map.
   generalize (1%positive) at 1 2 as id.
-  ginduction px; intros; ss. des_ifs; ss; eauto.
-  - rename x into xxx. f_equal.
-    + eapply IHpx1; eauto. i. specialize (EQ (id0~0)%positive x). eapply EQ; eauto.
-    + specialize (EQ 1%positive xxx). erewrite EQ; eauto.
-    + eapply IHpx2; eauto. i. specialize (EQ (id0~1)%positive x). eapply EQ; eauto.
-  - f_equal.
-    + erewrite IHpx1; eauto. i. specialize (EQ (id0~0)%positive x). eapply EQ; eauto.
-    + erewrite IHpx2; eauto. i. specialize (EQ (id0~1)%positive x). eapply EQ; eauto.
+  ginduction px; intros; ss.
+  des_ifs; ss.
+  - des_ifs. cbn. specialize (EQ 1%positive x). unfold PTree.get in EQ. cbn in EQ. rewrite EQ; auto.
+  - des_ifs.
+    + cbn. f_equal. f_equal.
+      * apply PTree_Nodes_injective. apply IHpx1. intros. specialize (EQ (id0~0)%positive x0). auto.
+      * specialize (EQ 1%positive x). unfold PTree.get in EQ. cbn in EQ. rewrite EQ; auto.
+    + cbn. f_equal. f_equal.
+      apply PTree_Nodes_injective. apply IHpx1. intros. specialize (EQ (id0~0)%positive x). auto.
+  - des_ifs.
+    + cbn. f_equal. f_equal.
+      * specialize (EQ 1%positive x). unfold PTree.get in EQ. cbn in EQ. auto.
+      * apply PTree_Nodes_injective. apply IHpx2. intros. specialize (EQ (id0~1)%positive x0). auto.
+    + cbn. f_equal. f_equal.
+      apply PTree_Nodes_injective. apply IHpx2. intros. specialize (EQ (id0~1)%positive x). auto.
+  - des_ifs.
+    + cbn. f_equal. f_equal.
+      * eapply PTree_Nodes_injective. eapply IHpx1. intros.
+        specialize (EQ (id0~0)%positive). apply EQ. unfold PTree.get in *. cbn. auto.
+      * specialize (EQ 1%positive x). unfold PTree.get in EQ. cbn in EQ. auto.
+      * eapply PTree_Nodes_injective. eapply IHpx2. intros.
+        specialize (EQ (id0~1)%positive). apply EQ. unfold PTree.get in *. cbn. auto.
+    + cbn. f_equal. f_equal.
+      * eapply PTree_Nodes_injective. eapply IHpx1. intros.
+        specialize (EQ (id0~0)%positive). apply EQ. unfold PTree.get in *. cbn. auto.
+      * eapply PTree_Nodes_injective. eapply IHpx2. intros.
+        specialize (EQ (id0~1)%positive). apply EQ. unfold PTree.get in *. cbn. auto.
 Qed.
 
 Ltac align_bool :=

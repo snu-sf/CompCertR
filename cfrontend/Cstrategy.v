@@ -123,11 +123,7 @@ with eval_simple_rvalue: expr -> val -> Prop :=
   | esr_rvalof: forall b ofs bf l ty v,
       eval_simple_lvalue l b ofs bf ->
       ty = typeof l -> type_is_volatile ty = false ->
-(* <<<<<<< HEAD *)
-(*       deref_loc se ty m b ofs E0 v -> *)
-(* ======= *)
       deref_loc se ty m b ofs bf E0 v ->
-(* >>>>>>> v3.11 *)
       eval_simple_rvalue (Evalof l ty) v
   | esr_addrof: forall b ofs l ty,
       eval_simple_lvalue l b ofs Full ->
@@ -252,13 +248,8 @@ Inductive estep: state -> trace -> state -> Prop :=
 
   | step_rvalof_volatile: forall f C l ty k e m b ofs bf t v,
       leftcontext RV RV C ->
-(* <<<<<<< HEAD *)
-(*       eval_simple_lvalue e m l b ofs -> *)
-(*       deref_loc se ty m b ofs t v -> *)
-(* ======= *)
       eval_simple_lvalue e m l b ofs bf ->
       deref_loc se ty m b ofs bf t v ->
-(* >>>>>>> v3.11 *)
       ty = typeof l -> type_is_volatile ty = true ->
       estep (ExprState f (C (Evalof l ty)) k e m)
           t (ExprState f (C (Eval v ty)) k e m)
@@ -308,13 +299,8 @@ Inductive estep: state -> trace -> state -> Prop :=
 
   | step_assignop: forall f C op l r tyres ty k e m b ofs bf v1 v2 v3 v4 t1 t2 m' v' t,
       leftcontext RV RV C ->
-(* <<<<<<< HEAD *)
-(*       eval_simple_lvalue e m l b ofs -> *)
-(*       deref_loc se (typeof l) m b ofs t1 v1 -> *)
-(* ======= *)
       eval_simple_lvalue e m l b ofs bf ->
       deref_loc se (typeof l) m b ofs bf t1 v1 ->
-(* >>>>>>> v3.11 *)
       eval_simple_rvalue e m r v2 ->
       sem_binary_operation ge op v1 (typeof l) v2 (typeof r) m = Some v3 ->
       sem_cast v3 tyres (typeof l) m = Some v4 ->
@@ -326,13 +312,8 @@ Inductive estep: state -> trace -> state -> Prop :=
 
   | step_assignop_stuck: forall f C op l r tyres ty k e m b ofs bf v1 v2 t,
       leftcontext RV RV C ->
-(* <<<<<<< HEAD *)
-(*       eval_simple_lvalue e m l b ofs -> *)
-(*       deref_loc se (typeof l) m b ofs t v1 -> *)
-(* ======= *)
       eval_simple_lvalue e m l b ofs bf ->
       deref_loc se (typeof l) m b ofs bf t v1 ->
-(* >>>>>>> v3.11 *)
       eval_simple_rvalue e m r v2 ->
       match sem_binary_operation ge op v1 (typeof l) v2 (typeof r) m with
       | None => True
@@ -348,13 +329,8 @@ Inductive estep: state -> trace -> state -> Prop :=
 
   | step_postincr: forall f C id l ty k e m b ofs bf v1 v2 v3 t1 t2 m' v' t,
       leftcontext RV RV C ->
-(* <<<<<<< HEAD *)
-(*       eval_simple_lvalue e m l b ofs -> *)
-(*       deref_loc se ty m b ofs t1 v1 -> *)
-(* ======= *)
       eval_simple_lvalue e m l b ofs bf ->
       deref_loc se ty m b ofs bf t1 v1 ->
-(* >>>>>>> v3.11 *)
       sem_incrdecr ge id v1 ty m = Some v2 ->
       sem_cast v2 (incrdecr_type ty) ty m = Some v3 ->
       assign_loc ge ty m b ofs bf v3 t2 m' v' ->
@@ -365,13 +341,8 @@ Inductive estep: state -> trace -> state -> Prop :=
 
   | step_postincr_stuck: forall f C id l ty k e m b ofs bf v1 t,
       leftcontext RV RV C ->
-(* <<<<<<< HEAD *)
-(*       eval_simple_lvalue e m l b ofs -> *)
-(*       deref_loc se ty m b ofs t v1 -> *)
-(* ======= *)
       eval_simple_lvalue e m l b ofs bf ->
       deref_loc se ty m b ofs bf t v1 ->
-(* >>>>>>> v3.11 *)
       match sem_incrdecr ge id v1 ty m with
       | None => True
       | Some v2 =>
@@ -637,28 +608,17 @@ Proof.
 Qed.
 
 Remark assign_loc_trace:
-(* <<<<<<< HEAD *)
-(*   forall se ge ty m b ofs t v m', *)
-(*   assign_loc se ge ty m b ofs v t m' -> *)
-(* ======= *)
   forall se ge ty m b ofs bf t v m' v',
   assign_loc se ge ty m b ofs bf v t m' v' ->
-(* >>>>>>> v3.11 *)
   match t with nil => True | ev :: nil => output_event ev | _ => False end.
 Proof.
   intros. inv H; simpl; auto. inv H2; simpl; auto.
 Qed.
 
 Remark assign_loc_receptive:
-(* <<<<<<< HEAD *)
-(*   forall se ge ty m b ofs ev1 t1 v m' ev2, *)
-(*   assign_loc se ge ty m b ofs v (ev1 :: t1) m' -> *)
-(*   match_traces se (ev1 :: nil) (ev2 :: nil) -> *)
-(* ======= *)
   forall se ge ty m b ofs bf ev1 t1 v m' v' ev2,
   assign_loc se ge ty m b ofs bf v (ev1 :: t1) m' v' ->
   match_traces se (ev1 :: nil) (ev2 :: nil) ->
-(* >>>>>>> v3.11 *)
   ev1 :: t1 = ev2 :: nil.
 Proof.
   intros.
@@ -687,13 +647,8 @@ Proof.
   inv H10. exploit deref_loc_receptive; eauto. intros [EQ [v1' A]]. subst t0.
   destruct (sem_binary_operation ge op v1' (typeof l) v2 (typeof r) m) as [v3'|] eqn:?.
   destruct (sem_cast v3' tyres (typeof l) m) as [v4'|] eqn:?.
-(* <<<<<<< HEAD *)
-(*   destruct (classic (exists t2', exists m'', assign_loc ge ge (typeof l) m b ofs v4' t2' m'')). *)
-(*   destruct H1 as [t2' [m'' P]]. *)
-(* ======= *)
   destruct (classic (exists t2' m'' v'', assign_loc ge ge (typeof l) m b ofs bf v4' t2' m'' v'')).
   destruct H1 as [t2' [m'' [v'' P]]].
-(* >>>>>>> v3.11 *)
   econstructor; econstructor. left; eapply step_assignop with (v1 := v1'); eauto. simpl; reflexivity.
   econstructor; econstructor. left; eapply step_assignop_stuck with (v1 := v1'); eauto.
   rewrite Heqo; rewrite Heqo0. intros; red; intros; elim H1. exists t0, m'0, v'0; auto.
@@ -705,13 +660,8 @@ Proof.
   exploit deref_loc_receptive; eauto. intros [EQ [v1' A]]. subst t1.
   destruct (sem_binary_operation ge op v1' (typeof l) v2 (typeof r) m) as [v3'|] eqn:?.
   destruct (sem_cast v3' tyres (typeof l) m) as [v4'|] eqn:?.
-(* <<<<<<< HEAD *)
-(*   destruct (classic (exists t2', exists m'', assign_loc ge ge (typeof l) m b ofs v4' t2' m'')). *)
-(*   destruct H1 as [t2' [m'' P]]. *)
-(* ======= *)
   destruct (classic (exists t2' m'' v'', assign_loc ge ge (typeof l) m b ofs bf v4' t2' m'' v'')).
   destruct H1 as [t2' [m'' [v'' P]]].
-(* >>>>>>> v3.11 *)
   econstructor; econstructor. left; eapply step_assignop with (v1 := v1'); eauto. simpl; reflexivity.
   econstructor; econstructor. left; eapply step_assignop_stuck with (v1 := v1'); eauto.
   rewrite Heqo; rewrite Heqo0. intros; red; intros; elim H1. exists t2, m', v'; auto.
@@ -726,13 +676,8 @@ Proof.
   inv H9. exploit deref_loc_receptive; eauto. intros [EQ [v1' A]]. subst t0.
   destruct (sem_incrdecr ge id v1' (typeof l) m) as [v2'|] eqn:?.
   destruct (sem_cast v2' (incrdecr_type (typeof l)) (typeof l) m) as [v3'|] eqn:?.
-(* <<<<<<< HEAD *)
-(*   destruct (classic (exists t2', exists m'', assign_loc ge ge (typeof l) m b ofs v3' t2' m'')). *)
-(*   destruct H1 as [t2' [m'' P]]. *)
-(* ======= *)
   destruct (classic (exists t2' m'' v'', assign_loc ge ge (typeof l) m b ofs bf v3' t2' m'' v'')).
   destruct H1 as [t2' [m'' [v'' P]]].
-(* >>>>>>> v3.11 *)
   econstructor; econstructor. left; eapply step_postincr with (v1 := v1'); eauto. simpl; reflexivity.
   econstructor; econstructor. left; eapply step_postincr_stuck with (v1 := v1'); eauto.
   rewrite Heqo; rewrite Heqo0. intros; red; intros; elim H1. exists t0, m'0, v'0; auto.
@@ -744,13 +689,8 @@ Proof.
   exploit deref_loc_receptive; eauto. intros [EQ [v1' A]]. subst t1.
   destruct (sem_incrdecr ge id v1' (typeof l) m) as [v2'|] eqn:?.
   destruct (sem_cast v2' (incrdecr_type (typeof l)) (typeof l) m) as [v3'|] eqn:?.
-(* <<<<<<< HEAD *)
-(*   destruct (classic (exists t2', exists m'', assign_loc ge ge (typeof l) m b ofs v3' t2' m'')). *)
-(*   destruct H1 as [t2' [m'' P]]. *)
-(* ======= *)
   destruct (classic (exists t2' m'' v'', assign_loc ge ge (typeof l) m b ofs bf v3' t2' m'' v'')).
   destruct H1 as [t2' [m'' [v'' P]]].
-(* >>>>>>> v3.11 *)
   econstructor; econstructor. left; eapply step_postincr with (v1 := v1'); eauto. simpl; reflexivity.
   econstructor; econstructor. left; eapply step_postincr_stuck with (v1 := v1'); eauto.
   rewrite Heqo; rewrite Heqo0. intros; red; intros; elim H1. exists t2, m', v'; auto.
@@ -867,13 +807,8 @@ with eval_expr: env -> mem -> kind -> expr -> trace -> mem -> expr -> Prop :=
   | eval_valof_volatile: forall e m a t1 m' a' ty b ofs bf t2 v,
       type_is_volatile (typeof a) = true ->
       eval_expr e m LV a t1 m' a' ->
-(* <<<<<<< HEAD *)
-(*       eval_simple_lvalue ge e m' a' b ofs -> *)
-(*       deref_loc se (typeof a) m' b ofs t2 v -> *)
-(* ======= *)
       eval_simple_lvalue ge e m' a' b ofs bf ->
       deref_loc se (typeof a) m' b ofs bf t2 v ->
-(* >>>>>>> v3.11 *)
       ty = typeof a ->
       eval_expr e m RV (Evalof a ty) (t1 ** t2) m' (Eval v ty)
   | eval_deref: forall e m a t m' a' ty,
@@ -932,13 +867,8 @@ with eval_expr: env -> mem -> kind -> expr -> trace -> mem -> expr -> Prop :=
   | eval_assignop: forall e m op l r tyres ty t1 m1 l' t2 m2 r' b ofs bf
                           v1 v2 v3 v4 v' t3 t4 m3,
       eval_expr e m LV l t1 m1 l' -> eval_expr e m1 RV r t2 m2 r' ->
-(* <<<<<<< HEAD *)
-(*       eval_simple_lvalue ge e m2 l' b ofs -> *)
-(*       deref_loc se (typeof l) m2 b ofs t3 v1 -> *)
-(* ======= *)
       eval_simple_lvalue ge e m2 l' b ofs bf ->
       deref_loc se (typeof l) m2 b ofs bf t3 v1 ->
-(* >>>>>>> v3.11 *)
       eval_simple_rvalue ge e m2 r' v2 ->
       sem_binary_operation ge op v1 (typeof l) v2 (typeof r) m2 = Some v3 ->
       sem_cast v3 tyres (typeof l) m2 = Some v4 ->
@@ -947,13 +877,8 @@ with eval_expr: env -> mem -> kind -> expr -> trace -> mem -> expr -> Prop :=
       eval_expr e m RV (Eassignop op l r tyres ty) (t1**t2**t3**t4) m3 (Eval v' ty)
   | eval_postincr: forall e m id l ty t1 m1 l' b ofs bf v1 v2 v3 v' m2 t2 t3,
       eval_expr e m LV l t1 m1 l' ->
-(* <<<<<<< HEAD *)
-(*       eval_simple_lvalue ge e m1 l' b ofs -> *)
-(*       deref_loc se ty m1 b ofs t2 v1 -> *)
-(* ======= *)
       eval_simple_lvalue ge e m1 l' b ofs bf ->
       deref_loc se ty m1 b ofs bf t2 v1 ->
-(* >>>>>>> v3.11 *)
       sem_incrdecr ge id v1 ty m1 = Some v2 ->
       sem_cast v2 (incrdecr_type ty) ty m1 = Some v3 ->
       assign_loc ge ty m1 b ofs bf v3 t3 m2 v' ->

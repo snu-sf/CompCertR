@@ -352,7 +352,7 @@ Proof.
     rewrite Ptrofs.unsigned_repr; [|eapply Ptrofs.unsigned_range_2]. rewrite Ptrofs.unsigned_repr; eauto.
     eapply Mem.mi_representable; eauto.
     left. eapply Mem.perm_store_1; eauto. eapply Mem.perm_implies; [|eauto with mem]. eapply Mem.perm_cur_max.
-    eapply Mem.store_valid_access_3 in STRSRC. destruct STRSRC. eapply H1. omega.
+    eapply Mem.store_valid_access_3 in STRSRC. destruct STRSRC. eapply H1. lia.
   }
   rewrite <- H1. eauto.
 Qed.
@@ -436,7 +436,7 @@ Lemma free_right
 Proof.
   exploit Mem.free_right_inject; try apply MWF; eauto.
   { ii. eapply PRIVTGT in H1. red in H1. des. red in H1. eapply H1; eauto.
-    replace (ofs + delta - delta) with ofs by omega. eauto with mem.
+    replace (ofs + delta - delta) with ofs by lia. eauto with mem.
   }
   i; des. inv MWF.
   eexists (mk _ _ _ _ _ _ _ _ _). esplits; ss; eauto; cycle 1.
@@ -561,7 +561,7 @@ Proof.
     + eapply Mem.free_list_unchanged_on; eauto.
     + eapply frozen_refl. + eapply frozen_refl.
     + ii. eapply Mem.perm_free_list; eauto.
-    + ii. eapply Mem.perm_free_list; eauto.      
+    + ii. eapply Mem.perm_free_list; eauto.
   - econs; ss; eauto.
     + etransitivity; eauto. unfold src_private. ii. ss. des. esplits; eauto.
       red. red. erewrite Mem.free_list_nextblock; eauto.
@@ -575,7 +575,7 @@ Qed.
 
 Lemma same_inj_le_wf
       sm0 sm1
-      (MWF : wf' sm0)    
+      (MWF : wf' sm0)
       (MLE: le' sm0 sm1)
       (PUBLIC: Mem.inject sm1.(inj) sm1.(src) sm1.(tgt))
       (INJ: sm1.(inj) = sm0.(inj)):

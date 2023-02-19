@@ -1537,8 +1537,4 @@ Proof.
 * intros. apply PTree.elements_keys_norepet.
 Qed.
 
-(* <<<<<<< HEAD *)
 Global Instance TransfSelectionLink : TransfLink match_prog_weak := link_match_program.
-(* ======= *)
-(* Global Instance TransfSelectionLink : TransfLink match_prog := link_match_program. *)
-(* >>>>>>> v3.11 *)

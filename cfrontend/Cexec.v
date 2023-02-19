@@ -396,15 +396,9 @@ Proof.
 Qed.
 
 Lemma do_assign_loc_sound:
-(* <<<<<<< HEAD *)
-(*   forall w ty m b ofs v w' t m', *)
-(*   do_assign_loc w ty m b ofs v = Some(w', t, m') -> *)
-(*   assign_loc ge ge ty m b ofs v t m' /\ possible_trace w t w'. *)
-(* ======= *)
   forall w ty m b ofs bf v w' t m' v',
   do_assign_loc w ty m b ofs bf v = Some(w', t, m', v') ->
   assign_loc ge ge ty m b ofs bf v t m' v' /\ possible_trace w t w'.
-(* >>>>>>> v3.11 *)
 Proof.
   unfold do_assign_loc; intros until v'.
   destruct bf.
@@ -419,15 +413,9 @@ Proof.
 Qed.
 
 Lemma do_assign_loc_complete:
-(* <<<<<<< HEAD *)
-(*   forall w ty m b ofs v w' t m', *)
-(*   assign_loc ge ge ty m b ofs v t m' -> possible_trace w t w' -> *)
-(*   do_assign_loc w ty m b ofs v = Some(w', t, m'). *)
-(* ======= *)
   forall w ty m b ofs bf v w' t m' v',
   assign_loc ge ge ty m b ofs bf v t m' v' -> possible_trace w t w' ->
   do_assign_loc w ty m b ofs bf v = Some(w', t, m', v').
-(* >>>>>>> v3.11 *)
 Proof.
   unfold do_assign_loc; intros. inv H.
 - inv H0. rewrite H1; rewrite H2; rewrite H3; auto.
@@ -1060,17 +1048,10 @@ Definition invert_expr_prop (a: expr) (m: mem) : Prop :=
       exists b, bool_val v1 ty1 m = Some b
   | Econdition (Eval v1 ty1) r1 r2 ty =>
       exists b, bool_val v1 ty1 m = Some b
-(* <<<<<<< HEAD *)
-(*   | Eassign (Eloc b ofs ty1) (Eval v2 ty2) ty => *)
-(*       exists v, exists m', exists t, exists w', *)
-(*       ty = ty1 /\ sem_cast v2 ty2 ty1 m = Some v /\ assign_loc ge ge ty1 m b ofs v t m' /\ possible_trace w t w' *)
-(*   | Eassignop op (Eloc b ofs ty1) (Eval v2 ty2) tyres ty => *)
-(* ======= *)
   | Eassign (Eloc b ofs bf ty1) (Eval v2 ty2) ty =>
       exists v, exists m', exists v', exists t, exists w',
       ty = ty1 /\ sem_cast v2 ty2 ty1 m = Some v /\ assign_loc ge ge ty1 m b ofs bf v t m' v' /\ possible_trace w t w'
   | Eassignop op (Eloc b ofs bf ty1) (Eval v2 ty2) tyres ty =>
-(* >>>>>>> v3.11 *)
       exists t, exists v1, exists w',
       ty = ty1 /\ deref_loc ge ty1 m b ofs bf t v1 /\ possible_trace w t w'
   | Epostincr id (Eloc b ofs bf ty1) ty =>

@@ -839,7 +839,7 @@ Proof.
   constructor; auto. inv VI.
   destruct (D _ _ _ H4) as [|[]]. congruence.
   exfalso. eapply H2. eapply Mem.load_valid_access in H0. destruct H0. eapply H0.
-  split. reflexivity. set (size_chunk_pos chunk). omega.
+  split. reflexivity. set (size_chunk_pos chunk). lia.
 Qed.
 
 Lemma volatile_load_receptive:
@@ -1000,7 +1000,7 @@ Proof.
 + constructor; auto. destruct (S _ _ _ H4) as [|[]].
   rewrite H2. auto.
   exfalso. eapply H3. eapply Mem.store_valid_access_3 in H1.
-  destruct H1. eapply H1. split. reflexivity. set (size_chunk_pos chunk). omega.
+  destruct H1. eapply H1. split. reflexivity. set (size_chunk_pos chunk). lia.
 + eapply Mem.store_unchanged_on; eauto.
   unfold loc_unmapped; intros. inv AI; congruence.
 + eapply Mem.store_unchanged_on; eauto.
@@ -1096,7 +1096,7 @@ Proof.
   rewrite dec_eq_false. auto.
   apply Mem.valid_not_valid_diff with m1; eauto with mem.
 (* readonly *)
-- inv H. eapply unchanged_on_readonly; eauto. 
+- inv H. eapply unchanged_on_readonly; eauto.
 (* mem extends *)
 - inv H. inv H1. inv H7.
   assert (SZ: v2 = Vptrofs sz).
@@ -1278,7 +1278,7 @@ Proof.
 - (* perms *)
   intros. inv H. eapply Mem.perm_storebytes_2; eauto.
 - (* readonly *)
-  intros. inv H. eapply unchanged_on_readonly; eauto. 
+  intros. inv H. eapply unchanged_on_readonly; eauto.
   eapply Mem.storebytes_unchanged_on; eauto.
   intros; red; intros. elim H11.
   apply Mem.perm_cur_max. eapply Mem.storebytes_range_perm; eauto.
@@ -1546,10 +1546,10 @@ Proof.
 (* trace length *)
 - inv H; simpl; lia.
 (* receptive *)
-- inv H; inv H0. exists vres1, m1; constructor; auto. 
+- inv H; inv H0. exists vres1, m1; constructor; auto.
 (* determ *)
 - inv H; inv H0.
-  split. constructor. intuition congruence. 
+  split. constructor. intuition congruence.
 Qed.
 
 (** ** Semantics of external functions. *)
@@ -1584,7 +1584,7 @@ Definition builtin_or_external_sem name sg :=
 Lemma builtin_or_external_sem_ok: forall name sg,
   extcall_properties (builtin_or_external_sem name sg) sg.
 Proof.
-  unfold builtin_or_external_sem; intros. 
+  unfold builtin_or_external_sem; intros.
   destruct (lookup_builtin_function name sg) as [bf|] eqn:L.
 - exploit lookup_builtin_function_sig; eauto. intros EQ; subst sg.
   apply known_builtin_ok.

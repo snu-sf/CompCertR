@@ -989,7 +989,7 @@ Lemma make_store_bitfield_correct:
   eval_expr ge e le m src v ->
   assign_loc prog.(prog_comp_env) ty m b ofs (Bits sz sg pos width) v m' ->
   make_store_bitfield sz sg pos width dst src = OK s ->
-  step ge (State f s k e le m) E0 (State f Sskip k e le m').
+  step se ge (State f s k e le m) E0 (State f Sskip k e le m').
 Proof.
   intros until s; intros DST SRC ASG MK.
   inv ASG. inv H5. unfold make_store_bitfield in MK.
@@ -1028,13 +1028,8 @@ Lemma make_store_correct:
   make_store cunit.(prog_comp_env) addr ty bf rhs = OK code ->
   eval_expr ge e le m addr (Vptr b ofs) ->
   eval_expr ge e le m rhs v ->
-(* <<<<<<< HEAD *)
-(*   assign_loc prog.(prog_comp_env) ty m b ofs v m' -> *)
-(*   step se ge (State f code k e le m) E0 (State f Sskip k e le m'). *)
-(* ======= *)
   assign_loc prog.(prog_comp_env) ty m b ofs bf v m' ->
   step se ge (State f code k e le m) E0 (State f Sskip k e le m').
-(* >>>>>>> v3.11 *)
 Proof.
   unfold make_store. intros until k; intros MKSTORE EV1 EV2 ASSIGN.
   inversion ASSIGN; subst.
@@ -1358,16 +1353,10 @@ Proof.
   unfold make_field_access in EQ0. rewrite H1 in EQ0.
   destruct (prog_comp_env cunit)!id as [co'|] eqn:CO; try discriminate; monadInv EQ0.
   exploit field_offset_stable. eexact LINK. eauto. instantiate (1 := i). intros [A B].
-(* <<<<<<< HEAD *)
-(*   rewrite <- B in EQ1. *)
-(*   assert (x0 = delta) by (simpl in *; congruence). *)
-(*   subst x0. *)
-(* ======= *)
   rewrite <- B in EQ1.
-  assert (x0 = delta) by (unfold ge in *; simpl in *; congruence).
-  assert (bf' = bf) by (unfold ge in *; simpl in *; congruence).
+  assert (x0 = delta) by (simpl in *; congruence).
+  assert (bf' = bf) by (simpl in *; congruence).
   subst x0 bf'. split; auto.
-(* >>>>>>> v3.11 *)
   destruct Archi.ptr64 eqn:SF.
 + eapply eval_Ebinop; eauto using make_longconst_correct.
   simpl. rewrite SF. apply f_equal. apply f_equal. apply f_equal. auto with ptrofs.
@@ -1378,8 +1367,8 @@ Proof.
   destruct (prog_comp_env cunit)!id as [co'|] eqn:CO; try discriminate; monadInv EQ0.
   exploit union_field_offset_stable. eexact LINK. eauto. instantiate (1 := i). intros [A B].
   rewrite <- B in EQ1.
-  assert (x0 = delta) by (unfold ge in *; simpl in *; congruence).
-  assert (bf' = bf) by (unfold ge in *; simpl in *; congruence).
+  assert (x0 = delta) by (simpl in *; congruence).
+  assert (bf' = bf) by (simpl in *; congruence).
   subst x0 bf'. split; auto.
   destruct Archi.ptr64 eqn:SF.
 + eapply eval_Ebinop; eauto using make_longconst_correct.
@@ -1703,13 +1692,8 @@ Proof.
   exploit transl_lvalue_correct; eauto. intros [A B]; subst x0.
   econstructor; split.
   apply plus_one. eapply make_store_correct; eauto.
-(* <<<<<<< HEAD *)
-(*   eapply transl_lvalue_correct; eauto. eapply make_cast_correct; eauto. *)
-(*   eapply transl_expr_correct; eauto. rewrite GENV_COMPAT; eauto. *)
-(* ======= *)
   eapply make_cast_correct; eauto.
-  eapply transl_expr_correct; eauto.
-(* >>>>>>> v3.11 *)
+  eapply transl_expr_correct; eauto. rewrite GENV_COMPAT; eauto.
   eapply match_states_skip; eauto.
 
 - (* set *)

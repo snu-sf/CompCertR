@@ -65,13 +65,8 @@ Inductive deref_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs) :
       deref_loc ty m b ofs Full E0 v
   | deref_loc_volatile: forall chunk t v,
       access_mode ty = By_value chunk -> type_is_volatile ty = true ->
-(* <<<<<<< HEAD *)
-(*       volatile_load se chunk m b ofs t v -> *)
-(*       deref_loc ty m b ofs t v *)
-(* ======= *)
       volatile_load se chunk m b ofs t v ->
       deref_loc ty m b ofs Full t v
-(* >>>>>>> v3.11 *)
   | deref_loc_reference:
       access_mode ty = By_reference ->
       deref_loc ty m b ofs Full E0 (Vptr b ofs)
@@ -103,13 +98,8 @@ Inductive assign_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs):
       assign_loc ty m b ofs Full v E0 m' v
   | assign_loc_volatile: forall v chunk t m',
       access_mode ty = By_value chunk -> type_is_volatile ty = true ->
-(* <<<<<<< HEAD *)
-(*       volatile_store se chunk m b ofs v t m' -> *)
-(*       assign_loc ty m b ofs v t m' *)
-(* ======= *)
       volatile_store se chunk m b ofs v t m' ->
       assign_loc ty m b ofs Full v t m' v
-(* >>>>>>> v3.11 *)
   | assign_loc_copy: forall b' ofs' bytes m',
       access_mode ty = By_copy ->
       (alignof_blockcopy ge ty | Ptrofs.unsigned ofs') ->
@@ -875,17 +865,10 @@ Lemma semantics_single_events:
 Proof.
   unfold semantics; intros; red; simpl; intros.
   set (ge := globalenv p) in *.
-(* <<<<<<< HEAD *)
-(*   assert (DEREF: forall chunk m b ofs t v, deref_loc ge chunk m b ofs t v -> (length t <= 1)%nat). *)
-(*     intros. inv H0; simpl; try lia. inv H3; simpl; try lia. *)
-(*   assert (ASSIGN: forall chunk m b ofs t v m', assign_loc ge ge chunk m b ofs v t m' -> (length t <= 1)%nat). *)
-(*     intros. inv H0; simpl; try lia. inv H3; simpl; try lia. *)
-(* ======= *)
   assert (DEREF: forall chunk m b ofs bf t v, deref_loc ge chunk m b ofs bf t v -> (length t <= 1)%nat).
   { intros. inv H0; simpl; try lia. inv H3; simpl; try lia. }
   assert (ASSIGN: forall chunk m b ofs bf t v m' v', assign_loc ge ge chunk m b ofs bf v t m' v' -> (length t <= 1)%nat).
   { intros. inv H0; simpl; try lia. inv H3; simpl; try lia. }
-(* >>>>>>> v3.11 *)
   destruct H.
   inv H; simpl; try lia. inv H0; eauto; simpl; try lia.
   eapply external_call_trace_length; eauto.

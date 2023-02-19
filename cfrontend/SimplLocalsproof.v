@@ -1204,14 +1204,10 @@ Local Opaque Conventions1.parameter_needs_normalization.
   reflexivity. reflexivity.
   eexact U.
   traceEq.
-(* <<<<<<< HEAD *)
-(*   rewrite (assign_loc_nextblock _ _ _ _ _ _ _ A) in Z. esplits; auto. *)
-(*   - eapply Mem.unchanged_on_trans; eauto. eapply assign_loc_unchanged_on; eauto. *)
-(*   - ii. eapply assign_loc_perm; eauto. eapply MAX; eauto. *)
-(*     unfold Mem.valid_block in *. erewrite assign_loc_nextblock; eauto. *)
-(* ======= *)
-  rewrite (assign_loc_nextblock _ _ _ _ _ _ _ _ A) in Z. auto.
-(* >>>>>>> v3.11 *)
+  rewrite (assign_loc_nextblock _ _ _ _ _ _ _ _ A) in Z. auto. esplits; auto.
+  - eapply Mem.unchanged_on_trans; eauto. eapply assign_loc_unchanged_on; eauto.
+  - ii. eapply assign_loc_perm; eauto. eapply MAX; eauto.
+    unfold Mem.valid_block in *. erewrite assign_loc_nextblock; eauto.
 Qed.
 
 Lemma bind_parameters_nextblock:

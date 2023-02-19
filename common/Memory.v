@@ -346,20 +346,7 @@ Qed.
 Program Definition empty: mem :=
   mkmem (PMap.init (ZMap.init Undef))
         (PMap.init (fun ofs k => None))
-(* <<<<<<< HEAD *)
         2%positive _ _ _.
-Next Obligation.
-  repeat rewrite PMap.gi. red; auto.
-Qed.
-Next Obligation.
-  rewrite PMap.gi. auto.
-Qed.
-Next Obligation.
-  rewrite PMap.gi. auto.
-Qed.
-(* ======= *)
-(*         1%positive _ _ _. *)
-(* >>>>>>> v3.11 *)
 
 (** Allocation of a fresh block with the given bounds.  Return an updated
   memory state and the address of the fresh block, which initially contains

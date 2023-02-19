@@ -325,13 +325,13 @@ Proof.
   intros. destruct H. unfold Mach.undef_caller_save_regs, Asm.undef_caller_save_regs; split.
 - unfold proj_sumbool; rewrite dec_eq_true. auto.
 - auto.
-- intros. unfold proj_sumbool. rewrite dec_eq_false by (apply preg_of_not_SP). 
+- intros. unfold proj_sumbool. rewrite dec_eq_false by (apply preg_of_not_SP).
   destruct (in_dec preg_eq (preg_of r) (List.map preg_of (List.filter is_callee_save all_mregs))); simpl.
-+ apply list_in_map_inv in i. destruct i as (mr & A & B). 
++ apply list_in_map_inv in i. destruct i as (mr & A & B).
   assert (r = mr) by (apply preg_of_injective; auto). subst mr; clear A.
   apply List.filter_In in B. destruct B as [C D]. rewrite D. auto.
 + destruct (is_callee_save r) eqn:CS; auto.
-  elim n. apply List.in_map. apply List.filter_In. auto using all_mregs_complete. 
+  elim n. apply List.in_map. apply List.filter_In. auto using all_mregs_complete.
 Qed.
 
 Lemma agree_change_sp:
@@ -654,7 +654,7 @@ Opaque transl_instr.
   exploit is_tail_code_tail. eexact TL3. intros [ofs CT].
   exists (Ptrofs.repr ofs). econs; eauto.
   rewrite Ptrofs.unsigned_repr. esplits; eauto.
-  exploit code_tail_bounds_1; eauto. omega.
+  exploit code_tail_bounds_1; eauto. lia.
 Qed.
 
 End RETADDR_EXISTS.
@@ -912,7 +912,7 @@ Lemma exec_straight_opt_left:
   exec_straight_opt c2 rs2 m2 c3 rs3 m3 ->
   exec_straight c1 rs1 m1 c3 rs3 m3.
 Proof.
-  destruct 2; intros. auto. eapply exec_straight_trans; eauto. 
+  destruct 2; intros. auto. eapply exec_straight_trans; eauto.
 Qed.
 
 Lemma exec_straight_opt_right:
@@ -921,7 +921,7 @@ Lemma exec_straight_opt_right:
   exec_straight c2 rs2 m2 c3 rs3 m3 ->
   exec_straight c1 rs1 m1 c3 rs3 m3.
 Proof.
-  destruct 1; intros. auto. eapply exec_straight_trans; eauto. 
+  destruct 1; intros. auto. eapply exec_straight_trans; eauto.
 Qed.
 
 Lemma exec_straight_opt_step:
@@ -931,7 +931,7 @@ Lemma exec_straight_opt_step:
   exec_straight_opt c rs2 m2 c' rs3 m3 ->
   exec_straight (i :: c) rs1 m1 c' rs3 m3.
 Proof.
-  intros. inv H1. 
+  intros. inv H1.
 - apply exec_straight_one; auto.
 - eapply exec_straight_step; eauto.
 Qed.
@@ -986,4 +986,3 @@ Proof.
 Qed.
 
 End MATCH_STACK.
-

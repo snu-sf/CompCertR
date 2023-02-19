@@ -94,11 +94,7 @@ with eval_simple_rvalue: expr -> val -> Prop :=
   | esr_rvalof: forall b ofs bf l ty v,
       eval_simple_lvalue l b ofs bf ->
       ty = typeof l ->
-(* <<<<<<< HEAD *)
-(*       deref_loc se ty m b ofs E0 v -> *)
-(* ======= *)
       deref_loc se ty m b ofs bf E0 v ->
-(* >>>>>>> v3.11 *)
       eval_simple_rvalue (Evalof l ty) v
   | esr_addrof: forall b ofs l ty,
       eval_simple_lvalue l b ofs Full ->
@@ -1210,15 +1206,9 @@ Fixpoint initialized_fields_of_struct (ms: members) (pos: Z) : res (list (Z * bi
         OK ((ofs_bf, type_member m) :: l)
   end.
 
-(* <<<<<<< HEAD *)
-(* Inductive exec_init: mem -> block -> Z -> type -> initializer -> mem -> Prop := *)
-(*   | exec_init_single: forall m b ofs ty a v1 ty1 chunk m' v m'', *)
-(*       star step se ge (ExprState dummy_function a Kstop empty_env m) *)
-(* ======= *)
 Inductive exec_init: mem -> block -> Z -> bitfield -> type -> initializer -> mem -> Prop :=
   | exec_init_single_: forall m b ofs bf ty a v1 ty1 m' v m'',
       star step se ge (ExprState dummy_function a Kstop empty_env m)
-(* >>>>>>> v3.11 *)
                 E0 (ExprState dummy_function (Eval v1 ty1) Kstop empty_env m') ->
       sem_cast v1 ty1 ty m' = Some v ->
       exec_assign m' b ofs bf ty v m'' ->
@@ -1331,16 +1321,11 @@ Qed.
 End SOUNDNESS.
 
 Theorem transl_init_sound:
-(* <<<<<<< HEAD *)
-(*   forall p m b ty i m' data, *)
-(*   exec_init (globalenv p) (globalenv p) m b 0 ty i m' -> *)
-(* ======= *)
   forall p m b ty i m1 data,
   let sz := sizeof (prog_comp_env p) ty in
   Mem.range_perm m b 0 sz Cur Writable ->
   reads_as_zeros m b 0 sz ->
   exec_init (globalenv p) (globalenv p) m b 0 Full ty i m1 ->
-(* >>>>>>> v3.11 *)
   transl_init (prog_comp_env p) ty i = OK data ->
   exists m2,
      Genv.store_init_data_list (globalenv p) m b 0 data = Some m2
@@ -1348,12 +1333,6 @@ Theorem transl_init_sound:
 Proof.
   intros.
   set (ge := globalenv p) in *.
-(* <<<<<<< HEAD *)
-(*   change (prog_comp_env p) with (genv_cenv ge) in H0. *)
-(*   destruct (tr_init_sound ge ge) as (A & B & C). *)
-(*   eapply build_composite_env_consistent. apply prog_comp_env_eq. *)
-(*   eapply A; eauto. apply transl_init_spec; auto. *)
-(* ======= *)
   change (prog_comp_env p) with (genv_cenv ge) in *.
   unfold transl_init in H2; monadInv H2.
   fold sz in EQ. set (s0 := initial_state sz) in *.
@@ -1365,9 +1344,8 @@ Proof.
   - assumption.
   }
   assert (match_state ge x m1 b).
-  { eapply (proj1 (transl_init_rec_sound ge)); eauto. }
+  { eapply (proj1 (transl_init_rec_sound ge ge)); eauto. }
   assert (total_size x = sz).
   { change sz with s0.(total_size). eapply total_size_transl_init_rec; eauto. }
   rewrite <- H4. eapply init_data_list_of_state_correct; eauto; rewrite H4; auto.
-(* >>>>>>> v3.11 *)
 Qed.

@@ -31,14 +31,9 @@ Lemma transf_program_match:
 Proof.
   unfold transl_program; intros. monadInv H. split; auto.
   unfold program_of_program; simpl. destruct x; simpl.
-(* <<<<<<< HEAD *)
-(*   eapply match_transform_partial_program_contextual. eexact EQ. *)
-(*   intros. apply transl_fundef_spec; auto. *)
-(* ======= *)
   eapply match_transform_partial_program2; eauto.
 - intros. apply transl_fundef_spec; auto.
 - intros. inv H. auto.
-(* >>>>>>> v3.11 *)
 Qed.
 
 (** ** Semantic preservation *)
@@ -58,11 +53,12 @@ Variable tge : Clight.genv.
 Hypothesis SECOMPATSRC: senv_genv_compat se ge.
 Hypothesis SECOMPATTGT: senv_genv_compat tse tge.
 
+Hypothesis CENV_INCL: (forall (id : positive) (co : composite), (prog.(prog_comp_env)) ! id = Some co -> (Csem.genv_cenv ge) ! id = Some co).
+
 (** Invariance properties. *)
 
 Hypothesis (MATCH_CGENV:
-              Genv.match_genvs (match_globdef (fun (ctx : AST.program Csyntax.fundef type) f tf =>
-                                                 tr_fundef f tf) eq prog) ge tge /\
+              Genv.match_genvs (match_globdef tr_fundef eq prog) ge tge /\
               genv_cenv tge = Csem.genv_cenv ge).
 
 Lemma comp_env_preserved:
@@ -82,34 +78,22 @@ Proof (Genv.senv_match_genv (proj1 MATCH_CGENV)).
 Lemma function_ptr_translated:
   forall b f,
   Genv.find_funct_ptr ge b = Some f ->
-(* <<<<<<< HEAD *)
-(*   exists tf, *)
-(*   Genv.find_funct_ptr tge b = Some tf /\ tr_fundef f tf. *)
-(* Proof. *)
-(*   intros. *)
-(*   edestruct (Genv.find_funct_ptr_match_genv (proj1 MATCH_CGENV)) as (ctx & tf & A & B & C); eauto. *)
-(* Qed. *)
-(* ======= *)
   exists cu tf,
   Genv.find_funct_ptr tge b = Some tf /\ tr_fundef cu f tf /\ linkorder cu prog.
-Proof (Genv.find_funct_ptr_match (proj1 TRANSL)).
-(* >>>>>>> v3.11 *)
+Proof.
+  intros.
+  edestruct (Genv.find_funct_ptr_match_genv (proj1 MATCH_CGENV)) as (ctx & tf & A & B & C); eauto.
+Qed.
 
 Lemma functions_translated:
   forall v f,
   Genv.find_funct ge v = Some f ->
-(* <<<<<<< HEAD *)
-(*   exists tf, *)
-(*   Genv.find_funct tge v = Some tf /\ tr_fundef f tf. *)
-(* Proof. *)
-(*   intros. *)
-(*   edestruct (Genv.find_funct_match_genv (proj1 MATCH_CGENV)) as (ctx & tf & A & B & C); eauto. *)
-(* Qed. *)
-(* ======= *)
   exists cu tf,
   Genv.find_funct tge v = Some tf /\ tr_fundef cu f tf /\ linkorder cu prog.
-Proof (Genv.find_funct_match (proj1 TRANSL)).
-(* >>>>>>> v3.11 *)
+Proof.
+  intros.
+  edestruct (Genv.find_funct_match_genv (proj1 MATCH_CGENV)) as (ctx & tf & A & B & C); eauto.
+Qed.
 
 Lemma type_of_fundef_preserved:
   forall cu f tf, tr_fundef cu f tf ->
@@ -240,33 +224,19 @@ Proof (proj2 tr_simple_nil).
 (** Translation of [deref_loc] and [assign_loc] operations. *)
 
 Remark deref_loc_translated:
-(* <<<<<<< HEAD *)
-(*   forall ty m b ofs t v, *)
-(*   Csem.deref_loc se ty m b ofs t v -> *)
-(*   match chunk_for_volatile_type ty with *)
-(*   | None => t = E0 /\ Clight.deref_loc ty m b ofs v *)
-(*   | Some chunk => volatile_load tse chunk m b ofs t v *)
-(* ======= *)
   forall ty m b ofs bf t v,
   Csem.deref_loc se ty m b ofs bf t v ->
   match chunk_for_volatile_type ty bf with
   | None => t = E0 /\ Clight.deref_loc ty m b ofs bf v
   | Some chunk => bf = Full /\ volatile_load tse chunk m b ofs t v
-(* >>>>>>> v3.11 *)
   end.
 Proof.
   intros. unfold chunk_for_volatile_type. inv H.
 - (* By_value, not volatile *)
   rewrite H1. split; auto. eapply deref_loc_value; eauto.
-(* <<<<<<< HEAD *)
-(*   (* By_value, volatile *) *)
-(*   rewrite H0; rewrite H1. eapply volatile_load_preserved with (ge1 := se); auto. *)
-(*   (* By reference *) *)
-(* ======= *)
 - (* By_value, volatile *)
-  rewrite H0, H1. split; auto. eapply volatile_load_preserved with (ge1 := se); auto. apply senv_preserved.
+  rewrite H0, H1. split; auto. eapply volatile_load_preserved with (ge1 := se); auto.
 - (* By reference *)
-(* >>>>>>> v3.11 *)
   rewrite H0. destruct (type_is_volatile ty); split; auto; eapply deref_loc_reference; eauto.
 - (* By copy *)
   rewrite H0. destruct (type_is_volatile ty); split; auto; eapply deref_loc_copy; eauto.
@@ -275,33 +245,19 @@ Proof.
 Qed.
 
 Remark assign_loc_translated:
-(* <<<<<<< HEAD *)
-(*   forall ty m b ofs v t m', *)
-(*   Csem.assign_loc se ge ty m b ofs v t m' -> *)
-(*   match chunk_for_volatile_type ty with *)
-(*   | None => t = E0 /\ Clight.assign_loc tge ty m b ofs v m' *)
-(*   | Some chunk => volatile_store tse chunk m b ofs v t m' *)
-(* ======= *)
   forall ty m b ofs bf v t m' v',
   Csem.assign_loc se ge ty m b ofs bf v t m' v' ->
   match chunk_for_volatile_type ty bf with
   | None => t = E0 /\ Clight.assign_loc tge ty m b ofs bf v m'
   | Some chunk => bf = Full /\ volatile_store tse chunk m b ofs v t m'
-(* >>>>>>> v3.11 *)
   end.
 Proof.
   intros. unfold chunk_for_volatile_type. inv H.
 - (* By_value, not volatile *)
   rewrite H1. split; auto. eapply assign_loc_value; eauto.
-(* <<<<<<< HEAD *)
-(*   (* By_value, volatile *) *)
-(*   rewrite H0; rewrite H1. eapply volatile_store_preserved with (ge1 := se); auto. *)
-(*   (* By copy *) *)
-(* ======= *)
 - (* By_value, volatile *)
-  rewrite H0, H1. split; auto. eapply volatile_store_preserved with (ge1 := se); auto. apply senv_preserved.
+  rewrite H0, H1. split; auto. eapply volatile_store_preserved with (ge1 := se); auto.
 - (* By copy *)
-(* >>>>>>> v3.11 *)
   rewrite H0. rewrite <- comp_env_preserved in *.
   destruct (type_is_volatile ty); split; auto; eapply assign_loc_copy; eauto.
 - (* Bitfield *)
@@ -319,7 +275,8 @@ Proof.
              tge.(genv_cenv)!id = Some co -> ce!id = Some co' ->
              co' = co /\ complete_members ce (co_members co) = true).
   { intros. rewrite comp_env_preserved in H.
-    assert (ge.(Csem.genv_cenv) ! id = Some co') by (apply LINKORDER; auto).
+    assert (ge.(Csem.genv_cenv) ! id = Some co').
+    { apply CENV_INCL. apply LINKORDER. auto. }
     replace co' with co in * by congruence.
     split; auto. apply co_consistent_complete.
     eapply build_composite_env_consistent. eapply prog_comp_env_eq. eauto.
@@ -328,18 +285,20 @@ Proof.
 - rewrite H0. intros (co' & delta' & E1 & E2). rewrite comp_env_preserved in H2.
   exploit A; eauto. intros (E3 & E4). subst co'.
   assert (field_offset ge i (co_members co) = field_offset ce i (co_members co)).
-  { apply field_offset_stable. apply LINKORDER. auto. }
+  { apply field_offset_stable; auto.
+    intros. apply CENV_INCL. apply LINKORDER. auto. }
   congruence.
 - rewrite H0. intros (co' & delta' & E1 & E2). rewrite comp_env_preserved in H2.
   exploit A; eauto. intros (E3 & E4). subst co'.
   assert (union_field_offset ge i (co_members co) = union_field_offset ce i (co_members co)).
-  { apply union_field_offset_stable. apply LINKORDER. auto. }
+  { apply union_field_offset_stable; auto.
+    intros. apply CENV_INCL. apply LINKORDER. auto. }
   congruence.
 Qed.
 
 Lemma make_assign_value_sound:
   forall ty m b ofs bf v t m' v',
-  Csem.assign_loc ge ty m b ofs bf v t m' v' ->
+  Csem.assign_loc se ge ty m b ofs bf v t m' v' ->
   forall tge e le m'' r,
   typeof r = ty ->
   eval_expr tge e le m'' r v ->
@@ -373,13 +332,8 @@ Lemma tr_simple:
              /\ eval_expr tge e le m b v
   end)
 /\
-(* <<<<<<< HEAD *)
-(*  (forall l b ofs, *)
-(*   eval_simple_lvalue se ge e m l b ofs -> *)
-(* ======= *)
  (forall l b ofs bf,
   eval_simple_lvalue se ge e m l b ofs bf ->
-(* >>>>>>> v3.11 *)
   forall le sl a tmps,
   tr_expr ce le For_val l sl a tmps ->
   sl = nil /\ Csyntax.typeof l = typeof a /\ eval_lvalue tge e le m a b ofs bf).
@@ -473,13 +427,8 @@ Proof.
 Qed.
 
 Lemma tr_simple_lvalue:
-(* <<<<<<< HEAD *)
-(*   forall e m l b ofs, *)
-(*   eval_simple_lvalue se ge e m l b ofs -> *)
-(* ======= *)
   forall e m l b ofs bf,
   eval_simple_lvalue se ge e m l b ofs bf ->
-(* >>>>>>> v3.11 *)
   forall le sl a tmps,
   tr_expr ce le For_val l sl a tmps ->
   sl = nil /\ Csyntax.typeof l = typeof a /\ eval_lvalue tge e le m a b ofs bf.
@@ -965,12 +914,6 @@ Qed.
 Lemma static_bool_val_sound:
   forall v t m b, bool_val v t Mem.empty = Some b -> bool_val v t m = Some b.
 Proof.
-(* <<<<<<< HEAD *)
-(*   assert (A: forall b ofs, Mem.weak_valid_pointer Mem.empty b ofs = false). *)
-(*   { unfold Mem.weak_valid_pointer, Mem.valid_pointer, proj_sumbool; intros. *)
-(*     rewrite ! pred_dec_false by (apply Mem.perm_empty). auto. } *)
-(* ======= *)
-(* >>>>>>> v3.11 *)
   intros until b; unfold bool_val.
   destruct (classify_bool t); destruct v; destruct Archi.ptr64 eqn:SF; auto;
   simpl; congruence.
@@ -995,19 +938,11 @@ Proof.
 Qed.
 
 Lemma step_make_set:
-(* <<<<<<< HEAD *)
-(*   forall id a ty m b ofs t v e le f k, *)
-(*   Csem.deref_loc se ty m b ofs t v -> *)
-(*   eval_lvalue tge e le m a b ofs -> *)
-(*   typeof a = ty -> *)
-(*   step1 tse tge (State f (make_set id a) k e le m) *)
-(* ======= *)
   forall id a ty m b ofs bf t v e le f k,
   Csem.deref_loc se ty m b ofs bf t v ->
   eval_lvalue tge e le m a b ofs bf ->
   typeof a = ty ->
   step1 tse tge (State f (make_set bf id a) k e le m)
-(* >>>>>>> v3.11 *)
           t (State f Sskip k e (PTree.set id v le) m).
 Proof.
   intros. exploit deref_loc_translated; eauto. rewrite <- H1.
@@ -1023,15 +958,6 @@ Proof.
 Qed.
 
 Lemma step_make_assign:
-(* <<<<<<< HEAD *)
-(*   forall a1 a2 ty m b ofs t v m' v2 e le f k, *)
-(*   Csem.assign_loc se ge ty m b ofs v t m' -> *)
-(*   eval_lvalue tge e le m a1 b ofs -> *)
-(*   eval_expr tge e le m a2 v2 -> *)
-(*   sem_cast v2 (typeof a2) ty m = Some v -> *)
-(*   typeof a1 = ty -> *)
-(*   step1 tse tge (State f (make_assign a1 a2) k e le m) *)
-(* ======= *)
   forall a1 a2 ty m b ofs bf t v m' v' v2 e le f k,
   Csem.assign_loc se ge ty m b ofs bf v t m' v' ->
   eval_lvalue tge e le m a1 b ofs bf ->
@@ -1039,7 +965,6 @@ Lemma step_make_assign:
   sem_cast v2 (typeof a2) ty m = Some v ->
   typeof a1 = ty ->
   step1 tse tge (State f (make_assign bf a1 a2) k e le m)
-(* >>>>>>> v3.11 *)
           t (State f Sskip k e le m').
 Proof.
   intros. exploit assign_loc_translated; eauto. rewrite <- H3.
@@ -1079,17 +1004,10 @@ Proof.
 Qed.
 
 Lemma step_tr_rvalof:
-(* <<<<<<< HEAD *)
-(*   forall ty m b ofs t v e le a sl a' tmp f k, *)
-(*   Csem.deref_loc se ty m b ofs t v -> *)
-(*   eval_lvalue tge e le m a b ofs -> *)
-(*   tr_rvalof ty a sl a' tmp -> *)
-(* ======= *)
   forall ty m b ofs bf t v e le a sl a' tmp f k,
   Csem.deref_loc se ty m b ofs bf t v ->
   eval_lvalue tge e le m a b ofs bf ->
   tr_rvalof ce ty a sl a' tmp ->
-(* >>>>>>> v3.11 *)
   typeof a = ty ->
   exists le',
     star step1 tse tge (State f Sskip (Kseqlist sl k) e le m)
@@ -1241,25 +1159,14 @@ Inductive match_states: Csem.state -> state -> Prop :=
       (MK: match_cont cu.(prog_comp_env) k tk),
       match_states (Csem.State f s k e m)
                    (State tf ts tk e le m)
-(* <<<<<<< HEAD *)
-(*   | match_callstates: forall fptr ty args k m tk, *)
-(*       DUMMY_PROP -> *)
-(*       match_cont k tk -> *)
-(*       match_states (Csem.Callstate fptr ty args k m) *)
-(*                    (Callstate fptr ty args tk m) *)
-(*   | match_returnstates: forall res k m tk, *)
-(*       match_cont k tk -> *)
-(* ======= *)
-  | match_callstates: forall fptr ty args k m tk cu
-      (LINK: linkorder cu prog)
-      (* (TR: tr_fundef cu fd tfd) *)
+  | match_callstates: forall fptr ty args k m tk
+      (_: DUMMY_PROP)
       (_: DUMMY_PROP)
       (MK: forall ce, match_cont ce k tk),
       match_states (Csem.Callstate fptr ty args k m)
-                   (Callstate tptr ty args tk m)
+                   (Callstate fptr ty args tk m)
   | match_returnstates: forall res k m tk
       (MK: forall ce, match_cont ce k tk),
-(* >>>>>>> v3.11 *)
       match_states (Csem.Returnstate res k m)
                    (Returnstate res tk m)
   | match_stuckstate: forall S,
@@ -2135,30 +2042,22 @@ Ltac NOTIN :=
   exploit tr_simple_rvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit tr_simple_exprlist; eauto. intros [SL2 EV2].
   subst. simpl Kseqlist.
-(* <<<<<<< HEAD *)
-(* ======= *)
-  (* exploit functions_translated; eauto. intros (cu' & tfd & J & K & L). *)
-(* >>>>>>> v3.11 *)
   econstructor; split.
   left. eapply plus_left. constructor.  apply star_one.
   econstructor; eauto. rewrite <- TY1; eauto.
   traceEq.
-  econstructor. eexact L. eauto. econstructor. eexact LINK. auto. auto.
+  econstructor. auto. auto. econstructor. eexact LINK. auto. auto.
   intros. change sl2 with (nil ++ sl2). apply S.
-  constructor. auto. auto. auto.
+  constructor. eauto. auto. auto.
 + (* for value *)
   exploit tr_simple_rvalue; eauto. intros [SL1 [TY1 EV1]].
   exploit tr_simple_exprlist; eauto. intros [SL2 EV2].
   subst. simpl Kseqlist.
-(* <<<<<<< HEAD *)
-(* ======= *)
-(*   exploit functions_translated; eauto. intros (cu' & tfd & J & K & L). *)
-(* >>>>>>> v3.11 *)
   econstructor; split.
   left. eapply plus_left. constructor.  apply star_one.
   econstructor; eauto. rewrite <- TY1; eauto.
   traceEq.
-  econstructor. eexact L. eauto. econstructor. eexact LINK. auto. auto.
+  econstructor. auto. eauto. econstructor. eexact LINK. auto. auto.
   intros. apply S.
   destruct dst'; constructor.
   auto. intros. constructor. rewrite H5; auto. apply PTree.gss.
@@ -2479,14 +2378,9 @@ Proof.
   left. apply plus_one. econstructor; eauto.
   econstructor; eauto.
 
-(* <<<<<<< HEAD *)
-(* (* internal function *) *)
-(*   exploit functions_translated; eauto. intros [tfd [J K]]. *)
-(*   inv K. inversion H3; subst. *)
-(* ======= *)
 - (* internal function *)
-  inv TR. inversion H3; subst.
-(* >>>>>>> v3.11 *)
+  exploit functions_translated; eauto. intros [tfd [J [L [K M]]]].
+  inv K. inversion H3; subst.
   econstructor; split.
   left; apply plus_one. eapply step_internal_function; eauto.
   erewrite type_of_fundef_preserved; eauto. econstructor. econstructor; eauto. econstructor.
@@ -2496,21 +2390,13 @@ Proof.
   eauto.
   econstructor; eauto.
 
-(* <<<<<<< HEAD *)
-(* (* external function *) *)
-(*   exploit functions_translated; eauto. intros [tfd [J K]]. inv K. *)
-(*   econstructor; split. *)
-(*   left; apply plus_one. econstructor; eauto. *)
-(*   eapply external_call_symbols_preserved; eauto. *)
-(*   constructor; auto. *)
-(* ======= *)
+
 - (* external function *)
-  inv TR.
+  exploit functions_translated; eauto. intros [tfd [J [L [K M]]]]. inv K.
   econstructor; split.
   left; apply plus_one. econstructor; eauto.
-  eapply external_call_symbols_preserved; eauto. apply senv_preserved.
-  econstructor; eauto.
-(* >>>>>>> v3.11 *)
+  eapply external_call_symbols_preserved; eauto.
+  constructor; auto.
 
 - (* return *)
   specialize (MK (PTree.empty _)). inv MK.
@@ -2542,8 +2428,7 @@ Let ge := Csem.globalenv prog.
 Let tge := globalenv tprog.
 
 Let MATCH_CGENV:
-  Genv.match_genvs (match_globdef (fun (ctx : AST.program Csyntax.fundef type) f tf =>
-                                     tr_fundef f tf) eq prog) ge tge /\
+  Genv.match_genvs (match_globdef tr_fundef eq prog) ge tge /\
   genv_cenv tge = Csem.genv_cenv ge.
 Proof.
   intros. constructor.
@@ -2557,26 +2442,14 @@ Lemma transl_initial_states:
   exists S', Clight.initial_state tprog S' /\ match_states tge S S'.
 Proof.
   intros. inv H.
-(* <<<<<<< HEAD *)
-(* ======= *)
-  exploit function_ptr_translated; eauto. intros (cu & tf & FIND & TR & L).
-(* >>>>>>> v3.11 *)
   econstructor; split.
   econstructor; eauto.
   eapply (Genv.init_mem_match (proj1 TRANSL)); eauto.
   replace (prog_main tprog) with (prog_main prog).
-(* <<<<<<< HEAD *)
-(*   assert (Genv.globalenv tprog = tge.(genv_genv)) by auto. rewrite H. *)
-(*   erewrite symbols_preserved; eauto. *)
-(*   destruct TRANSL. destruct H as (A & B & C). simpl in B. auto. *)
-(*   constructor. auto. constructor. *)
-(* ======= *)
-  rewrite symbols_preserved. eauto.
+  assert (Genv.globalenv tprog = tge.(genv_genv)) by auto. rewrite H.
+  erewrite symbols_preserved; eauto.
   destruct TRANSL. destruct H as (A & B & C). simpl in B. auto.
-  eexact FIND.
-  rewrite <- H3. eapply type_of_fundef_preserved; eauto.
-  econstructor; eauto. intros; constructor.
-(* >>>>>>> v3.11 *)
+  econstructor. auto. auto. constructor.
 Qed.
 
 Lemma transl_final_states:
@@ -2605,11 +2478,7 @@ End PRESERVATION.
 
 Global Instance TransfSimplExprLink : TransfLink match_prog.
 Proof.
-(* <<<<<<< HEAD *)
-(*   red; intros. eapply Ctypes.link_match_program; eauto. *)
-(* ======= *)
   red; intros. eapply Ctypes.link_match_program_gen; eauto.
-(* >>>>>>> v3.11 *)
 - intros.
 Local Transparent Linker_fundef.
   simpl in *; unfold link_fundef in *. inv H3; inv H4; try discriminate.
