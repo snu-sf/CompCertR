@@ -17,6 +17,7 @@ graph.png
 .*.aux
 *.cmti
 *.cmt
+.coq-native
 # Emacs saves
 *~
 # Executables and configuration
@@ -78,7 +79,8 @@ graph.png
 # MacOS metadata
 .DS_Store
 # Test generated data
-/test/clightgen/*.v
+/test/export/clight/*.v
+/test/export/csyntax/*.v
 # Coq caches
 .lia.cache
 .nia.cache

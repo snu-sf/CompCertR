@@ -346,6 +346,7 @@ Qed.
 Program Definition empty: mem :=
   mkmem (PMap.init (ZMap.init Undef))
         (PMap.init (fun ofs k => None))
+(* <<<<<<< HEAD *)
         2%positive _ _ _.
 Next Obligation.
   repeat rewrite PMap.gi. red; auto.
@@ -356,6 +357,9 @@ Qed.
 Next Obligation.
   rewrite PMap.gi. auto.
 Qed.
+(* ======= *)
+(*         1%positive _ _ _. *)
+(* >>>>>>> v3.11 *)
 
 (** Allocation of a fresh block with the given bounds.  Return an updated
   memory state and the address of the fresh block, which initially contains
@@ -612,11 +616,11 @@ Next Obligation.
   apply access_max.
 Qed.
 Next Obligation.
-  specialize (nextblock_noaccess m b0 ofs k H0). intros.
+  exploit (nextblock_noaccess m b0 ofs k). auto. intros NOACC.
   rewrite PMap.gsspec. destruct (peq b0 b). subst b0.
   destruct (zle lo ofs). destruct (zlt ofs hi).
-  assert (perm m b ofs k Freeable). apply perm_cur. apply H; auto.
-  unfold perm in H2. rewrite H1 in H2. contradiction.
+  assert (P: perm m b ofs k Freeable) by auto using perm_cur.
+  unfold perm in P. rewrite NOACC in P. contradiction.
   auto. auto. auto.
 Qed.
 Next Obligation.
@@ -632,7 +636,7 @@ Proof. reflexivity. Qed.
 
 Theorem perm_empty: forall b ofs k p, ~perm empty b ofs k p.
 Proof.
-  intros. unfold perm, empty; simpl. rewrite PMap.gi. simpl. tauto.
+  intros. unfold perm, empty; simpl. tauto.
 Qed.
 
 Theorem valid_access_empty: forall chunk b ofs p, ~valid_access empty chunk b ofs p.
