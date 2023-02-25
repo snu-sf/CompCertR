@@ -1109,7 +1109,7 @@ Proof.
   eapply agree_val_regs; eauto.
 + (* inlined *)
   exploit find_inlined_function; eauto. intro FFPTR.
-  right; split. simpl; omega. split. auto.
+  right; split. simpl; lia. split. auto.
   SimMemInj.spl. inversion FPTR. econstructor; eauto.
   eapply match_stacks_inside_inlined; eauto; try (by inv MS0; ss).
   red; intros. apply PRIV. inv H13. destruct H16. extlia.
@@ -1171,7 +1171,7 @@ Proof.
   eapply Mem.free_left_inject; eauto.
 + (* inlined *)
   exploit find_inlined_function; eauto. intro FFPTR.
-  right; split. simpl; omega. split. auto.
+  right; split. simpl; lia. split. auto.
   inv MCOMPAT. exploit SimMemInj.free_left; eauto. i; des. SimMemInj.spl_exact sm1.
   econstructor; eauto.
   { instantiate (1:= sm0.(SimMemInj.inj)). SimMemInj.compat_tac. }
@@ -1264,12 +1264,12 @@ Proof.
   eapply Mem.free_right_inject; eauto. eapply Mem.free_left_inject; eauto.
   (* show that no valid location points into the stack block being freed *)
   intros. inversion FB; subst.
-  rewrite DSTK in PRIV'. exploit (PRIV' (ofs + delta)). omega. intros [A B].
-  eelim B; eauto. replace (ofs + delta - delta) with ofs by omega.
+  rewrite DSTK in PRIV'. exploit (PRIV' (ofs + delta)). lia. intros [A B].
+  eelim B; eauto. replace (ofs + delta - delta) with ofs by lia.
   apply Mem.perm_max with k. apply Mem.perm_implies with p; auto with mem.
 
 + (* inlined *)
-  right. split. simpl. omega. split. auto.
+  right. split. simpl. lia. split. auto.
   inv MCOMPAT. exploit SimMemInj.free_left; eauto. i; des.
   SimMemInj.spl_exact sm1. econstructor; eauto.
   { instantiate (1:= sm0.(SimMemInj.inj)). SimMemInj.compat_tac. }
@@ -1335,7 +1335,7 @@ Proof.
   auto.
   intros. exploit Mem.perm_alloc_inv; eauto.
   { erewrite SimMemInj.mcompat_tgt in ALCTGT; eauto. rewrite ALCTGT in *. clarify. eauto. }
-  rewrite dec_eq_true. omega.
+  rewrite dec_eq_true. lia.
 
 - (* internal function, inlined *)
   assert(TMP: exists cunit fd', <<LINK: linkorder cunit prog>> /\ <<FD: transf_fundef (funenv_program cunit) (Internal f) = OK fd'>>).

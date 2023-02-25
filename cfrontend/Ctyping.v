@@ -94,7 +94,7 @@ Section WTTY.
     | Ecomma e0 e1 ty => types_of_expr e0 ++ types_of_expr e1 ++ [ty]
     | Ecall e0 es ty => types_of_expr e0 ++ types_of_exprlist es ++ [ty]
     | Ebuiltin _ tys es ty => typelist_to_listtype tys ++ types_of_exprlist es ++ [ty]
-    | Eloc _ _ ty => [ty]
+    | Eloc _ _ _ ty => [ty]
     | Eparen e0 ty0 ty1 => types_of_expr e0 ++ [ty0 ; ty1]
     end
   with
@@ -521,7 +521,7 @@ Inductive wt_val : val -> type -> Prop :=
 Inductive wt_retval (v: val) (ty: type): Prop :=
 | wt_retval_intro
     (WTV: wt_val v ty)
-    (NVOID: match ty with 
+    (NVOID: match ty with
             | Tvoid | Tarray _ _ _ | Tfunction _ _ _ | Tstruct _ _ | Tunion _ _ => v = Vundef
             | _ => True
             end
@@ -624,8 +624,8 @@ Inductive wt_rvalue : expr -> Prop :=
       wt_rvalue (Eparen r tycast ty)
 
 with wt_lvalue : expr -> Prop :=
-  | wt_Eloc: forall b ofs ty,
-      wt_lvalue (Eloc b ofs ty)
+  | wt_Eloc: forall b ofs bf ty,
+      wt_lvalue (Eloc b ofs bf ty)
   | wt_Evar: forall x ty,
       e!x = Some ty ->
       wt_lvalue (Evar x ty)
@@ -654,7 +654,7 @@ Definition wt_expr_kind (k: kind) (a: expr) :=
 
 Definition expr_kind (a: expr) : kind :=
   match a with
-  | Eloc _ _ _ => LV
+  | Eloc _ _ _ _ => LV
   | Evar _ _ => LV
   | Ederef _ _ => LV
   | Efield _ _ _ => LV
@@ -819,7 +819,7 @@ Fixpoint check_arguments (el: exprlist) (tyl: typelist) : res unit :=
 
 Definition check_rval (e: expr) : res unit :=
   match e with
-  | Eloc _ _ _ | Evar _ _ | Ederef _ _ | Efield _ _ _ =>
+  | Eloc _ _ _ _ | Evar _ _ | Ederef _ _ | Efield _ _ _ =>
       Error (msg "not a r-value")
   | _ =>
       OK tt
@@ -827,7 +827,7 @@ Definition check_rval (e: expr) : res unit :=
 
 Definition check_lval (e: expr) : res unit :=
   match e with
-  | Eloc _ _ _ | Evar _ _ | Ederef _ _ | Efield _ _ _ =>
+  | Eloc _ _ _ _ | Evar _ _ | Ederef _ _ | Efield _ _ _ =>
       OK tt
   | _ =>
       Error (msg "not a l-value")
@@ -1073,7 +1073,7 @@ Fixpoint retype_expr (ce: composite_env) (e: typenv) (a: expr) : res expr :=
       do r1' <- retype_expr ce e r1; do rl' <- retype_exprlist ce e rl; ecall r1' rl'
   | Ebuiltin ef tyargs rl tyres =>
       do rl' <- retype_exprlist ce e rl; ebuiltin ef tyargs rl' tyres
-  | Eloc _ _ _ =>
+  | Eloc _ _ _ _ =>
       Error (msg "Eloc in source")
   | Eparen _ _ _ =>
       Error (msg "Eparen in source")
@@ -1217,6 +1217,7 @@ Lemma binarith_type_cast:
   forall t1 t2 m t,
   binarith_type t1 t2 m = OK t -> wt_cast t1 t /\ wt_cast t2 t.
 Proof.
+Local Transparent Ctypes.intsize_eq.
   unfold wt_cast, binarith_type, classify_binarith; intros; DestructCases;
   simpl; split; try congruence;
   try (destruct Archi.ptr64; congruence).
@@ -1655,7 +1656,7 @@ Proof.
   intros id fd. revert MATCH; generalize (prog_defs p) (AST.prog_defs tp).
   induction 1; simpl; intros.
   contradiction.
-  destruct H0; auto. subst b1; inv H. simpl in H1. inv H1. 
+  destruct H0; auto. subst b1; inv H. simpl in H1. inv H1.
   eapply retype_fundef_sound; eauto.
   { hexploit (match_transform_partial_program _ _ _ EQ); eauto. intro M.
     rr in M. des.  i. exploit list_forall2_in_right; eauto. intro MATCH; des. ss.
@@ -1888,7 +1889,7 @@ Proof.
   constructor; red. apply Int.sign_ext_idem; lia.
   destruct (proj_bytes vl); auto with ty.
   constructor; red. apply Int.zero_ext_idem; lia.
-  destruct (proj_bytes vl). auto with ty. destruct Archi.ptr64 eqn:SF; auto with ty. 
+  destruct (proj_bytes vl). auto with ty. destruct Archi.ptr64 eqn:SF; auto with ty.
   destruct (proj_bytes vl); auto with ty.
   constructor; red. apply Int.zero_ext_idem; lia.
 - inv ACC. unfold decode_val. destruct (proj_bytes vl). auto with ty.
@@ -1899,9 +1900,31 @@ Proof.
   unfold Mptr in *. destruct Archi.ptr64 eqn:SF; auto with ty.
 Qed.
 
+Remark wt_bitfield_normalize: forall sz sg width sg1 n,
+  0 < width <= bitsize_intsize sz ->
+  sg1 = (if zlt width (bitsize_intsize sz) then Signed else sg) ->
+  wt_int (bitfield_normalize sz sg width n) sz sg1.
+Proof.
+  intros. destruct sz; cbn in *.
+  + destruct sg.
+    * replace sg1 with Signed by (destruct zlt; auto).
+      apply Int.sign_ext_widen; lia.
+    * subst sg1; destruct zlt.
+      ** apply Int.sign_zero_ext_widen; lia.
+      ** apply Int.zero_ext_widen; lia.
+  + destruct sg.
+    * replace sg1 with Signed by (destruct zlt; auto).
+      apply Int.sign_ext_widen; lia.
+    * subst sg1; destruct zlt.
+      ** apply Int.sign_zero_ext_widen; lia.
+      ** apply Int.zero_ext_widen; lia.
+  + auto.
+  + apply Int.zero_ext_widen; lia.
+Qed.
+
 Lemma wt_deref_loc:
-  forall ge ty m b ofs t v,
-  deref_loc ge ty m b ofs t v ->
+  forall ge ty m b ofs bf t v,
+  deref_loc ge ty m b ofs bf t v ->
   wt_val v ty.
 Proof.
   induction 1.
@@ -1923,6 +1946,19 @@ Proof.
   destruct ty; simpl in H; try discriminate; auto with ty.
   destruct i; destruct s; discriminate.
   destruct f; discriminate.
+- (* bitfield *)
+  inv H. constructor.
+  apply wt_bitfield_normalize. lia. auto.
+Qed.
+
+Lemma wt_assign_loc:
+  forall se ge ty m b ofs bf v t m' v',
+  assign_loc se ge ty m b ofs bf v t m' v' ->
+  wt_val v ty -> wt_val v' ty.
+Proof.
+  induction 1; intros; auto.
+- inv H. constructor.
+  apply wt_bitfield_normalize. lia. auto.
 Qed.
 
 Lemma wt_cast_self:
@@ -2013,7 +2049,7 @@ Proof.
 - (* condition *) constructor. destruct b; auto. destruct b; auto. red; auto.
 - (* sizeof *)  unfold size_t, Vptrofs; destruct Archi.ptr64; constructor; auto with ty.
 - (* alignof *)  unfold size_t, Vptrofs; destruct Archi.ptr64; constructor; auto with ty.
-- (* assign *) inversion H5. constructor. eapply pres_sem_cast; eauto.
+- (* assign *) inversion H5. constructor. eapply wt_assign_loc; eauto. eapply pres_sem_cast; eauto.
 - (* assignop *) subst tyres l r. constructor. auto.
   constructor. constructor. eapply wt_deref_loc; eauto.
   auto. auto. auto.
@@ -2031,15 +2067,15 @@ Proof.
 - (* paren *) inv H3. constructor. apply H5. eapply pres_sem_cast; eauto.
 - (* builtin *) subst. destruct H7 as [(A & B) | (A & B)].
 + subst ty. auto with ty.
-+ simpl in B. set (T := typ_of_type ty) in *. 
++ simpl in B. set (T := typ_of_type ty) in *.
   set (sg := mksignature (AST.Tint :: T :: T :: nil) T cc_default) in *.
   assert (LK: lookup_builtin_function "__builtin_sel"%string sg = Some (BI_standard (BI_select T))).
   { unfold sg, T; destruct ty as   [ | ? ? ? | ? | [] ? | ? ? | ? ? ? | ? ? ? | ? ? | ? ? ];
     simpl; unfold Tptr; destruct Archi.ptr64; reflexivity. }
-  subst ef. red in H0. red in H0. rewrite LK in H0. inv H0. 
+  subst ef. red in H0. red in H0. rewrite LK in H0. inv H0.
   inv H. inv H8. inv H9. inv H10. simpl in H1.
   assert (A: val_casted v1 type_bool) by (eapply cast_val_is_casted; eauto).
-  inv A. 
+  inv A.
   set (v' := if Int.eq n Int.zero then v4 else v2) in *.
   constructor.
   destruct (type_eq ty Tvoid).
@@ -2421,12 +2457,12 @@ Lemma wt_find_label:
   wt_stmt ge e f.(fn_return) s' /\ wt_stmt_cont e f k'.
 Proof.
   intros lbl e f s0 WTS0. pattern s0.
-  apply (wt_stmt_ind2 ge e f.(fn_return)) with
-    (P0 := fun ls => wt_lblstmts ge e f.(fn_return) ls ->
+  apply (wt_stmt_ind2 ge e f.(fn_return) _
+    (fun ls => wt_lblstmts ge e f.(fn_return) ls ->
            forall k s' k',
            find_label_ls lbl ls k = Some (s', k') ->
            wt_stmt_cont e f k ->
-           wt_stmt ge e f.(fn_return) s' /\ wt_stmt_cont e f k');
+           wt_stmt ge e f.(fn_return) s' /\ wt_stmt_cont e f k'));
   simpl; intros; try discriminate.
   + destruct (find_label lbl s1 (Kseq s2 k)) as [[sx kx] | ] eqn:F.
     inv H3. eauto with ty.
@@ -2487,10 +2523,12 @@ Proof.
       { exploit (WTYE (Tpointer t a)); ss. eapply B; ss; auto. }
       { exploit (WTYE (Tpointer t0 a)); ss. eapply B; ss; auto. }
       { exploit (WTYE (Tarray t z a)); ss. eapply B; ss; auto. }
+      { inv H. desf; unfold incrdecr_type; cbn; desf. }
     - inv H1; ss; unfold access_mode in *; des_ifs; ss.
       { exploit (WTYE (Tpointer t a)); ss. eapply B; ss; auto. }
       { exploit (WTYE (Tpointer t0 a)); ss. eapply B; ss; auto. }
       { exploit (WTYE (Tarray t z a)); ss. eapply B; ss; auto. }
+      { inv H. desf; unfold incrdecr_type; cbn; desf. }
   }
   change (wt_expr_kind ge (bind_vars (bind_vars gtenv (fn_params f)) (fn_vars f)) RV (C a')).
   eapply wt_context with (a := a); eauto.

@@ -923,7 +923,7 @@ Proof.
   { SimMemInj.compat_tac. }
 
 - (* call *)
-  inversion FPTR. exploit find_function_inject. 
+  inversion FPTR. exploit find_function_inject.
   eapply match_stacks_preserves_globals; eauto. eauto.
   destruct ros as [r|id]. eauto. apply KEPT. red. econstructor; econstructor; split; eauto. simpl; auto.
   intros (tfptr & A & B).
@@ -1537,4 +1537,4 @@ Proof.
 * intros. apply PTree.elements_keys_norepet.
 Qed.
 
-Instance TransfSelectionLink : TransfLink match_prog_weak := link_match_program.
+Global Instance TransfSelectionLink : TransfLink match_prog_weak := link_match_program.

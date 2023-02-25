@@ -198,36 +198,42 @@ Definition empty_env: env := (PTree.empty (block * type)).
 
 Definition temp_env := PTree.t val.
 
-(** [deref_loc ty m b ofs v] computes the value of a datum
-  of type [ty] residing in memory [m] at block [b], offset [ofs].
+(** [deref_loc ty m b ofs bf v] computes the value of a datum
+  of type [ty] residing in memory [m] at block [b], offset [ofs],
+  and bitfield designation [bf].
   If the type [ty] indicates an access by value, the corresponding
   memory load is performed.  If the type [ty] indicates an access by
   reference or by copy, the pointer [Vptr b ofs] is returned. *)
 
-Inductive deref_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs) : val -> Prop :=
+Inductive deref_loc (ty: type) (m: mem) (b: block) (ofs: ptrofs) :
+                                             bitfield -> val -> Prop :=
   | deref_loc_value: forall chunk v,
       access_mode ty = By_value chunk ->
       Mem.loadv chunk m (Vptr b ofs) = Some v ->
-      deref_loc ty m b ofs v
+      deref_loc ty m b ofs Full v
   | deref_loc_reference:
       access_mode ty = By_reference ->
-      deref_loc ty m b ofs (Vptr b ofs)
+      deref_loc ty m b ofs Full (Vptr b ofs)
   | deref_loc_copy:
       access_mode ty = By_copy ->
-      deref_loc ty m b ofs (Vptr b ofs).
+      deref_loc ty m b ofs Full (Vptr b ofs)
+  | deref_loc_bitfield: forall sz sg pos width v,
+      load_bitfield ty sz sg pos width m (Vptr b ofs) v ->
+      deref_loc ty m b ofs (Bits sz sg pos width) v.
 
-(** Symmetrically, [assign_loc ty m b ofs v m'] returns the
+(** Symmetrically, [assign_loc ty m b ofs bf v m'] returns the
   memory state after storing the value [v] in the datum
-  of type [ty] residing in memory [m] at block [b], offset [ofs].
+  of type [ty] residing in memory [m] at block [b], offset [ofs],
+  bitfield designation [bf].
   This is allowed only if [ty] indicates an access by value or by copy.
   [m'] is the updated memory state. *)
 
 Inductive assign_loc (ce: composite_env) (ty: type) (m: mem) (b: block) (ofs: ptrofs):
-                                            val -> mem -> Prop :=
+                                            bitfield -> val -> mem -> Prop :=
   | assign_loc_value: forall v chunk m',
       access_mode ty = By_value chunk ->
       Mem.storev chunk m (Vptr b ofs) v = Some m' ->
-      assign_loc ce ty m b ofs v m'
+      assign_loc ce ty m b ofs Full v m'
   | assign_loc_copy: forall b' ofs' bytes m',
       access_mode ty = By_copy ->
       (sizeof ce ty > 0 -> (alignof_blockcopy ce ty | Ptrofs.unsigned ofs')) ->
@@ -237,7 +243,10 @@ Inductive assign_loc (ce: composite_env) (ty: type) (m: mem) (b: block) (ofs: pt
               \/ Ptrofs.unsigned ofs + sizeof ce ty <= Ptrofs.unsigned ofs' ->
       Mem.loadbytes m b' (Ptrofs.unsigned ofs') (sizeof ce ty) = Some bytes ->
       Mem.storebytes m b (Ptrofs.unsigned ofs) bytes = Some m' ->
-      assign_loc ce ty m b ofs (Vptr b' ofs') m'.
+      assign_loc ce ty m b ofs Full (Vptr b' ofs') m'
+  | assign_loc_bitfield: forall sz sg pos width v m' v',
+      store_bitfield ty sz sg pos width m (Vptr b ofs) v m' v' ->
+      assign_loc ce ty m b ofs (Bits sz sg pos width) v m'.
 
 Section SEMANTICS.
 
@@ -277,7 +286,7 @@ Inductive bind_parameters (e: env):
   | bind_parameters_cons:
       forall m id ty params v1 vl b m1 m2,
       PTree.get id e = Some(b, ty) ->
-      assign_loc ge ty m b Ptrofs.zero v1 m1 ->
+      assign_loc ge ty m b Ptrofs.zero Full v1 m1 ->
       bind_parameters e m1 params vl m2 ->
       bind_parameters e m ((id, ty) :: params) (v1 :: vl) m2.
 
@@ -379,7 +388,7 @@ Inductive eval_expr: expr -> val -> Prop :=
       le!id = Some v ->
       eval_expr (Etempvar id ty) v
   | eval_Eaddrof: forall a ty loc ofs,
-      eval_lvalue a loc ofs ->
+      eval_lvalue a loc ofs Full ->
       eval_expr (Eaddrof a ty) (Vptr loc ofs)
   | eval_Eunop:  forall op a ty v1 v,
       eval_expr a v1 ->
@@ -398,37 +407,39 @@ Inductive eval_expr: expr -> val -> Prop :=
       eval_expr (Esizeof ty1 ty) (Vptrofs (Ptrofs.repr (sizeof ge ty1)))
   | eval_Ealignof: forall ty1 ty,
       eval_expr (Ealignof ty1 ty) (Vptrofs (Ptrofs.repr (alignof ge ty1)))
-  | eval_Elvalue: forall a loc ofs v,
-      eval_lvalue a loc ofs ->
-      deref_loc (typeof a) m loc ofs v ->
+  | eval_Elvalue: forall a loc ofs bf v,
+      eval_lvalue a loc ofs bf ->
+      deref_loc (typeof a) m loc ofs bf v ->
       eval_expr a v
 
 (** [eval_lvalue ge e m a b ofs] defines the evaluation of expression [a]
   in l-value position.  The result is the memory location [b, ofs]
-  that contains the value of the expression [a]. *)
+  that contains the value of the expression [a], and the bitfield [bf]
+  designation. *)
 
-with eval_lvalue: expr -> block -> ptrofs -> Prop :=
+with eval_lvalue: expr -> block -> ptrofs -> bitfield -> Prop :=
   | eval_Evar_local:   forall id l ty,
       e!id = Some(l, ty) ->
-      eval_lvalue (Evar id ty) l Ptrofs.zero
+      eval_lvalue (Evar id ty) l Ptrofs.zero Full
   | eval_Evar_global: forall id l ty,
       e!id = None ->
       Genv.find_symbol ge id = Some l ->
-      eval_lvalue (Evar id ty) l Ptrofs.zero
+      eval_lvalue (Evar id ty) l Ptrofs.zero Full
   | eval_Ederef: forall a ty l ofs,
       eval_expr a (Vptr l ofs) ->
-      eval_lvalue (Ederef a ty) l ofs
- | eval_Efield_struct:   forall a i ty l ofs id co att delta,
+      eval_lvalue (Ederef a ty) l ofs Full
+ | eval_Efield_struct:   forall a i ty l ofs id co att delta bf,
       eval_expr a (Vptr l ofs) ->
       typeof a = Tstruct id att ->
       ge.(genv_cenv)!id = Some co ->
-      field_offset ge i (co_members co) = OK delta ->
-      eval_lvalue (Efield a i ty) l (Ptrofs.add ofs (Ptrofs.repr delta))
- | eval_Efield_union:   forall a i ty l ofs id co att,
+      field_offset ge i (co_members co) = OK (delta, bf) ->
+      eval_lvalue (Efield a i ty) l (Ptrofs.add ofs (Ptrofs.repr delta)) bf
+ | eval_Efield_union:   forall a i ty l ofs id co att delta bf,
       eval_expr a (Vptr l ofs) ->
       typeof a = Tunion id att ->
       ge.(genv_cenv)!id = Some co ->
-      eval_lvalue (Efield a i ty) l ofs.
+      union_field_offset ge i (co_members co) = OK (delta, bf) ->
+      eval_lvalue (Efield a i ty) l (Ptrofs.add ofs (Ptrofs.repr delta)) bf.
 
 Scheme eval_expr_ind2 := Minimality for eval_expr Sort Prop
   with eval_lvalue_ind2 := Minimality for eval_lvalue Sort Prop.
@@ -458,7 +469,7 @@ Inductive cont: Type :=
   | Kstop: cont
   | Kseq: statement -> cont -> cont       (**r [Kseq s2 k] = after [s1] in [s1;s2] *)
   | Kloop1: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s1] in [Sloop s1 s2] *)
-  | Kloop2: statement -> statement -> cont -> cont (**r [Kloop1 s1 s2 k] = after [s2] in [Sloop s1 s2] *)
+  | Kloop2: statement -> statement -> cont -> cont (**r [Kloop2 s1 s2 k] = after [s2] in [Sloop s1 s2] *)
   | Kswitch: cont -> cont       (**r catches [break] statements arising out of [switch] *)
   | Kcall: option ident ->                  (**r where to store result *)
            function ->                      (**r calling function *)
@@ -569,11 +580,11 @@ Variable function_entry: function -> list val -> mem -> env -> temp_env -> mem -
 
 Inductive step: state -> trace -> state -> Prop :=
 
-  | step_assign:   forall f a1 a2 k e le m loc ofs v2 v m',
-      eval_lvalue e le m a1 loc ofs ->
+  | step_assign:   forall f a1 a2 k e le m loc ofs bf v2 v m',
+      eval_lvalue e le m a1 loc ofs bf ->
       eval_expr e le m a2 v2 ->
       sem_cast v2 (typeof a2) (typeof a1) m = Some v ->
-      assign_loc ge (typeof a1) m loc ofs v m' ->
+      assign_loc ge (typeof a1) m loc ofs bf v m' ->
       step (State f (Sassign a1 a2) k e le m)
         E0 (State f Sskip k e le m')
 
@@ -794,26 +805,32 @@ Definition assign_loc_size (ce: composite_env) (ty: type) : Z :=
   | By_cypy => sizeof ce ty
   end.
 
-Lemma assign_loc_perm: forall ce ty m b ofs v m' b' i k p,
-    assign_loc ce ty m b ofs v m' -> Mem.perm m' b' i k p -> Mem.perm m b' i k p.
+Lemma assign_loc_perm: forall ce ty m b ofs bf v m' b' i k p,
+    assign_loc ce ty m b ofs bf v m' -> Mem.perm m' b' i k p -> Mem.perm m b' i k p.
 Proof.
   ii. inv H.
   - inv H2. eapply Mem.perm_store_2; eauto.
   - eapply Mem.perm_storebytes_2; eauto.
+  - inv H1. eapply Mem.perm_store_2; eauto.
 Qed.
 
-Lemma assign_loc_perm2: forall ce ty m b ofs v m',
-    assign_loc ce ty m b ofs v m' ->
+Lemma assign_loc_perm2: forall ce ty m b ofs bf v m',
+    assign_loc ce ty m b ofs bf v m' ->
     Mem.range_perm m b (Ptrofs.unsigned ofs) (Ptrofs.unsigned ofs + (assign_loc_size ce ty)) Cur Writable.
 Proof.
-  clear. ii. unfold assign_loc_size in *. inv H; rewrite H1 in H0.
-  - unfold Mem.storev in *. eapply Mem.store_valid_access_3; eauto.
-  - hexploit (sizeof_pos ce ty). i. eapply Mem.storebytes_range_perm; eauto.
+  clear. ii. unfold assign_loc_size in *.
+  inv H.
+  - rewrite H1 in H0.
+    unfold Mem.storev in *. eapply Mem.store_valid_access_3; eauto.
+  - rewrite H1 in H0.
+    hexploit (sizeof_pos ce ty). i. eapply Mem.storebytes_range_perm; eauto.
     erewrite Mem.loadbytes_length; eauto. rewrite Z2Nat.id; eauto. extlia.
+  - inv H1. cbn in H0.
+    destruct sz; desf; unfold Mem.storev in *; eapply Mem.store_valid_access_3; eauto.
 Qed.
 
-Lemma assign_loc_unchanged_on: forall ce ty m b ofs v m' P,
-    assign_loc ce ty m b ofs v m' ->
+Lemma assign_loc_unchanged_on: forall ce ty m b ofs bf v m' P,
+    assign_loc ce ty m b ofs bf v m' ->
     (forall i : Z, Ptrofs.unsigned ofs <= i < Ptrofs.unsigned ofs + assign_loc_size ce ty -> ~ P b i) ->
     Mem.unchanged_on P m m'.
 Proof.
@@ -821,6 +838,9 @@ Proof.
   - inv H0. eapply Mem.store_unchanged_on. eauto. rewrite H in H1. auto.
   - eapply Mem.storebytes_unchanged_on; eauto. rewrite H in H5.
     erewrite Mem.loadbytes_length; eauto. rewrite Z2Nat.id; eauto. generalize (sizeof_pos ce ty); i. extlia.
+  - inv H. eapply Mem.store_unchanged_on. eauto.
+    unfold chunk_for_carrier in *.
+    destruct sz; cbn in H0; desf.
 Qed.
 
 Lemma bind_parameters_perm: forall ge e m l vargs m' b i k p,
@@ -833,4 +853,3 @@ Qed.
 Lemma Forall_cont_ext_call_cont: forall k ext,
     Forall_cont_ext k ext -> Forall_cont_ext (call_cont k) ext.
 Proof. induction k; simpl; auto. Qed.
-
