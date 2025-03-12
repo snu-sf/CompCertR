@@ -186,7 +186,7 @@ Qed.
 
 CoFixpoint build_traceinf' (s1: state L) (t1: trace) (ST: Star L s0 t1 s1) : traceinf' :=
   match reacts' ST with
-  | existT s2 (exist t2 (conj A B)) =>
+  | existT _ s2 (exist _ t2 (conj A B)) =>
       Econsinf' t2
                 (build_traceinf' (star_trans ST A (eq_refl _)))
                 B

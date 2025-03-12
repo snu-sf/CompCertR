@@ -20,6 +20,8 @@ Require Import Axioms.
 Require Import Coqlib.
 Require Import Wfsimpl.
 
+Set Asymmetric Patterns.
+
 (** This modules defines several Coq encodings of a general "while" loop.
   The loop is presented in functional style as the iteration
   of a [step] function of type [A -> B + A]:
@@ -202,7 +204,6 @@ End PrimIter.
 
 Require Import Classical.
 Require Import ClassicalDescription.
-Require Import Max.
 
 Module GenIter.
 
@@ -238,7 +239,7 @@ Lemma iter_monot:
 Proof.
   induction p; intros.
   simpl. red; intros; red; auto.
-  destruct q. elimtype False; lia.
+  destruct q. exfalso; lia.
   simpl. apply F_iter_monot. apply IHp. lia.
 Qed.
 
@@ -278,7 +279,7 @@ Lemma converges_to_unique:
 Proof.
   intros a b [n C] b' [n' C'].
   rewrite <- (C (max n n')). rewrite <- (C' (max n n')). auto.
-  apply le_max_r. apply le_max_l.
+  apply Nat.le_max_r. apply Nat.le_max_l.
 Qed.
 
 Lemma converges_to_exists_uniquely:

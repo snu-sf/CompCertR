@@ -1,6 +1,6 @@
 (**
 This file is part of the Flocq formalization of floating-point
-arithmetic in Coq: http://flocq.gforge.inria.fr/
+arithmetic in Coq: https://flocq.gitlabpages.inria.fr/
 
 Copyright (C) 2009-2018 Sylvie Boldo
 #<br />#
@@ -18,7 +18,10 @@ COPYING file for more details.
 *)
 
 (** * Basic definitions: float and rounding property *)
-Require Import Raux.
+
+From Coq Require Import ZArith Reals.
+
+Require Import Raux Zaux.
 
 Section Def.
 

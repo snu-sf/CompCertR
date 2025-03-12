@@ -1,6 +1,6 @@
 (**
 This file is part of the Flocq formalization of floating-point
-arithmetic in Coq: http://flocq.gforge.inria.fr/
+arithmetic in Coq: https://flocq.gitlabpages.inria.fr/
 
 Copyright (C) 2010-2018 Sylvie Boldo
 #<br />#
@@ -19,8 +19,9 @@ COPYING file for more details.
 
 (** * Helper function for computing the rounded value of a real number. *)
 
-From Coq Require Import Lia.
-Require Import Core Digits Float_prop Bracket.
+From Coq Require Import ZArith Reals Lia.
+
+Require Import Core Digits Float_prop Bracket Zaux.
 
 Section Fcalc_round.
 
@@ -112,6 +113,12 @@ now rewrite scaled_mantissa_mult_bpow.
 Qed.
 
 Definition cond_incr (b : bool) m := if b then (m + 1)%Z else m.
+
+Lemma le_cond_incr_le :
+  forall b m, (m <= cond_incr b m <= m + 1)%Z.
+Proof.
+unfold cond_incr; intros b; case b; lia.
+Qed.
 
 Theorem inbetween_float_round_sign :
   forall rnd choice,
@@ -587,6 +594,16 @@ rewrite Zle_bool_true with (1 := Hm).
 rewrite Zle_bool_false.
 now case Rlt_bool.
 lia.
+Qed.
+
+Theorem inbetween_float_NA_sign :
+  forall x m l,
+  let e := cexp beta fexp x in
+  inbetween_float beta m e (Rabs x) l ->
+  round beta fexp ZnearestA x = F2R (Float beta (cond_Zopp (Rlt_bool x 0) (cond_incr (round_N true l) m)) e).
+Proof.
+apply inbetween_float_round_sign with (choice := fun s m l => cond_incr (round_N true l) m).
+exact inbetween_int_NA_sign.
 Qed.
 
 Definition truncate_aux t k :=

@@ -612,11 +612,11 @@ Next Obligation.
   apply access_max.
 Qed.
 Next Obligation.
-  specialize (nextblock_noaccess m b0 ofs k H0). intros.
+  specialize (nextblock_noaccess m b0 ofs k H). intros.
   rewrite PMap.gsspec. destruct (peq b0 b). subst b0.
   destruct (zle lo ofs). destruct (zlt ofs hi).
-  assert (perm m b ofs k Freeable). apply perm_cur. apply H; auto.
-  unfold perm in H2. rewrite H1 in H2. contradiction.
+  assert (perm m b ofs k Freeable). apply perm_cur. apply r; auto.
+  unfold perm in H1. rewrite H0 in H1. contradiction.
   auto. auto. auto.
 Qed.
 Next Obligation.
@@ -1816,7 +1816,7 @@ Proof.
   intros. unfold load.
   destruct (valid_access_dec m2 chunk b' ofs Readable).
   exploit valid_access_alloc_inv; eauto. destruct (eq_block b' b); intros.
-  subst b'. elimtype False. eauto with mem.
+  subst b'. exfalso. eauto with mem.
   rewrite pred_dec_true; auto.
   injection ALLOC; intros. rewrite <- H2; simpl.
   rewrite PMap.gso. auto. rewrite H1. apply not_eq_sym; eauto with mem.
@@ -1950,7 +1950,7 @@ Proof.
   rewrite PMap.gsspec. destruct (peq b bf). subst b.
   destruct (zle lo ofs); simpl.
   destruct (zlt ofs hi); simpl.
-  elimtype False; intuition.
+  exfalso; intuition.
   auto. auto.
   auto.
 Qed.

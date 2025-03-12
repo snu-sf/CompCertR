@@ -1,6 +1,6 @@
 (**
 This file is part of the Flocq formalization of floating-point
-arithmetic in Coq: http://flocq.gforge.inria.fr/
+arithmetic in Coq: https://flocq.gitlabpages.inria.fr/
 
 Copyright (C) 2010-2018 Sylvie Boldo
 #<br />#
@@ -19,8 +19,9 @@ COPYING file for more details.
 
 (** * Helper functions and theorems for computing the rounded square root of a floating-point number. *)
 
-From Coq Require Import Lia.
-Require Import Raux Defs Digits Generic_fmt Float_prop Bracket.
+From Coq Require Import ZArith Reals Lia.
+
+Require Import Zaux Raux Defs Digits Generic_fmt Float_prop Bracket.
 
 Set Implicit Arguments.
 Set Strongly Strict Implicit.

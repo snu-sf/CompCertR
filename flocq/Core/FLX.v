@@ -1,6 +1,6 @@
 (**
 This file is part of the Flocq formalization of floating-point
-arithmetic in Coq: http://flocq.gforge.inria.fr/
+arithmetic in Coq: https://flocq.gitlabpages.inria.fr/
 
 Copyright (C) 2009-2018 Sylvie Boldo
 #<br />#
@@ -18,9 +18,10 @@ COPYING file for more details.
 *)
 
 (** * Floating-point format without underflow *)
-Require Import Raux Defs Round_pred Generic_fmt Float_prop.
-Require Import FIX Ulp Round_NE.
-Require Import Psatz.
+
+From Coq Require Import ZArith Reals Psatz.
+
+Require Import Zaux Raux Defs Round_pred Generic_fmt Float_prop FIX Ulp Round_NE.
 
 Section RND_FLX.
 

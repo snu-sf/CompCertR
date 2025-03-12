@@ -1,6 +1,6 @@
 (**
 This file is part of the Flocq formalization of floating-point
-arithmetic in Coq: http://flocq.gforge.inria.fr/
+arithmetic in Coq: https://flocq.gitlabpages.inria.fr/
 
 Copyright (C) 2010-2018 Sylvie Boldo
 #<br />#
@@ -18,8 +18,10 @@ COPYING file for more details.
 *)
 
 (** * Relative error of the roundings *)
+
+From Coq Require Import ZArith Reals Psatz.
+
 Require Import Core.
-Require Import Psatz.  (* for lra *)
 
 Section Fprop_relative.
 

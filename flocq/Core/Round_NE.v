@@ -1,6 +1,6 @@
 (**
 This file is part of the Flocq formalization of floating-point
-arithmetic in Coq: http://flocq.gforge.inria.fr/
+arithmetic in Coq: https://flocq.gitlabpages.inria.fr/
 
 Copyright (C) 2009-2018 Sylvie Boldo
 #<br />#
@@ -19,8 +19,9 @@ COPYING file for more details.
 
 (** * Rounding to nearest, ties to even: existence, unicity... *)
 
-From Coq Require Import Lia.
-Require Import Raux Defs Round_pred Generic_fmt Float_prop Ulp.
+From Coq Require Import ZArith Reals Lia.
+
+Require Import Zaux Raux Defs Round_pred Generic_fmt Float_prop Ulp.
 
 Notation ZnearestE := (Znearest (fun x => negb (Z.even x))).
 

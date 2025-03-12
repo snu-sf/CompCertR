@@ -196,10 +196,10 @@ Program Definition split_traceinf' (t: trace) (T: traceinf') (NE: t <> E0): even
   | e :: t' => (e, Econsinf' t' T _)
   end.
 Next Obligation.
-  elimtype False. elim NE. auto.
+  exfalso. elim NE. auto.
 Qed.
 Next Obligation.
-  red; intro. elim (H e). rewrite H0. auto.
+  red; intro. elim (n e). rewrite H. auto.
 Qed.
 
 CoFixpoint traceinf_of_traceinf' (T': traceinf') : traceinf :=
@@ -839,7 +839,7 @@ Proof.
   constructor; auto. inv VI.
   destruct (D _ _ _ H4) as [|[]]. congruence.
   exfalso. eapply H2. eapply Mem.load_valid_access in H0. destruct H0. eapply H0.
-  split. reflexivity. set (size_chunk_pos chunk). omega.
+  split. reflexivity. set (size_chunk_pos chunk). lia.
 Qed.
 
 Lemma volatile_load_receptive:
@@ -1000,7 +1000,7 @@ Proof.
 + constructor; auto. destruct (S _ _ _ H4) as [|[]].
   rewrite H2. auto.
   exfalso. eapply H3. eapply Mem.store_valid_access_3 in H1.
-  destruct H1. eapply H1. split. reflexivity. set (size_chunk_pos chunk). omega.
+  destruct H1. eapply H1. split. reflexivity. set (size_chunk_pos chunk). lia.
 + eapply Mem.store_unchanged_on; eauto.
   unfold loc_unmapped; intros. inv AI; congruence.
 + eapply Mem.store_unchanged_on; eauto.

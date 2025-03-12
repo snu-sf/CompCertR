@@ -177,7 +177,7 @@ Ltac autos   := clarsimp; auto with sflib.
 Definition  NW A (P: () -> A) : A := P ().
 
 (* Notation "<< x : t >>" := (NW (fun x => (t):Prop)) (at level 80, x ident, no associativity). *)
-Notation "<< x : t >>" := (NW (fun x => (t))) (at level 80, x ident, no associativity).
+Notation "<< x : t >>" := (NW (fun x => (t))) (at level 80, x name, no associativity).
 Notation "<< t >>" := (NW (fun _ => t)) (at level 79, no associativity).
 Notation "<< t >>" := (NW (fun _ => (t):Prop)) (at level 79, no associativity).
 
@@ -725,7 +725,7 @@ Tactic Notation "extensionalities" ident(a) ident(b) ident(c) ident(d) ident(e) 
 
 (* short for common tactics *)
 
-Tactic Notation "inst" := instantiate.
+(* Tactic Notation "inst" := instantiate. *)
 Tactic Notation "econs" := econstructor.
 Tactic Notation "econs" int_or_var(x) := econstructor x.
 Tactic Notation "i" := intros.
@@ -789,13 +789,13 @@ Ltac clear_upto H :=
 
 Definition _Evar_sflib_ (A:Type) (x:A) := x.
 
-Tactic Notation "hide_evar" int_or_var(n) := let QQ := fresh "QQ" in
-  hget_evar n; intro;
-  lazymatch goal with [ H := ?X |- _] => 
-    set (QQ := X) in *; fold (_Evar_sflib_ X) in QQ; clear H 
-  end.
+(* Tactic Notation "hide_evar" int_or_var(n) := let QQ := fresh "QQ" in *)
+(*   hget_evar n; intro; *)
+(*   lazymatch goal with [ H := ?X |- _] =>  *)
+(*     set (QQ := X) in *; fold (_Evar_sflib_ X) in QQ; clear H  *)
+(*   end. *)
 
-Ltac hide_evars := repeat (hide_evar 1).
+(* Ltac hide_evars := repeat (hide_evar 1). *)
 
 Ltac show_evars := repeat (match goal with [ H := @_Evar_sflib_ _ _ |- _ ] => unfold
  _Evar_sflib_ in H; unfold H in *; clear H end).
@@ -813,8 +813,6 @@ Tactic Notation "greflgen" constr(t) "as" ident(g)  :=
   generalize (eq_refl t); generalize t at -2 as g
   ; intros ? EQ ?; revert EQ.
 
-Ltac eadmit :=
-  exfalso; clear; admit.
 
 Ltac special H :=
   (* eapply mp; refine (H _). *)
@@ -954,7 +952,6 @@ Tactic Notation "econsby" tactic(tac) :=
   ].
 
 
-(* Youngju's Tactics *)
 
 Lemma f_equal6 (A1 A2 A3 A4 A5 A6 B: Type) (f: A1 -> A2 -> A3 -> A4 -> A5 -> A6 -> B)
       (x1 y1: A1) (EQ1: x1 = y1)
@@ -1255,8 +1252,6 @@ Ltac des_safe_aux TAC :=
 Tactic Notation "des_safe" := des_safe_aux clarify.
 Tactic Notation "des_safe" tactic(TAC) := des_safe_aux TAC.
 
-Definition admit (excuse: String.string) {T: Type} : T.  Admitted.
-Tactic Notation "admit" constr(excuse) := idtac excuse; exact (admit excuse).
 
 (* Copied from SoftwareFoundations - LibTactics.v *)
 (* ---------------------------------------------------------------------- *)
@@ -1372,3 +1367,16 @@ Ltac des_sumbool :=
      | [ |- false = proj_sumbool ?x ] => symmetry; apply proj_sumbool_is_false
      end)
 .
+
+
+Lemma forallb_false_forall {A} f (l: list A) :
+  forallb f l = false <-> ~ (forall x, In x l -> f x = true).
+Proof.
+  split; ii.
+  - clear - H H0. ginduction l; ss; i. rewrite andb_false_iff in H. des.
+    { exploit H0; eauto. i. clarify. }
+    exploit IHl; eauto.
+  - destruct (forallb f l) eqn:FA; auto.
+    rewrite forallb_forall in FA. clarify.
+Qed.
+

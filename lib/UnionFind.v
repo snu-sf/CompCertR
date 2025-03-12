@@ -167,7 +167,7 @@ Variable uf: t.
 
 Definition F_repr (a: elt) (rec: forall b, order uf.(m) b a -> elt) : elt :=
   match getlink uf.(m) a with
-  | inleft (exist a' P) => rec a' P
+  | inleft (exist _ a' P) => rec a' P
   | inright _ => a
   end.
 
@@ -489,7 +489,7 @@ Variable uf: t.
 
 Definition F_pathlen (a: elt) (rec: forall b, order uf.(m) b a -> nat) : nat :=
   match getlink uf.(m) a with
-  | inleft (exist a' P) => S (rec a' P)
+  | inleft (exist _ a' P) => S (rec a' P)
   | inright _ => O
   end.
 
@@ -711,4 +711,3 @@ Qed.
 End FIND.
 
 End UF.
-

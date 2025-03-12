@@ -2134,6 +2134,7 @@ Proof.
     - eapply Mem.unchanged_on_refl.
     - eapply SimMemInj.frozen_refl. - eapply SimMemInj.frozen_refl.
     - ii. eapply Mem.perm_store_2; eauto.
+
   }
   des. SimMemInj.spl_exact sm1.
   inversion MWF. inversion MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *.
@@ -2518,7 +2519,7 @@ End PRESERVATION.
 
 (** ** Commutation with linking *)
 
-Instance TransfSimplLocalsLink : TransfLink match_prog.
+Global Instance TransfSimplLocalsLink : TransfLink match_prog.
 Proof.
   red; intros. eapply Ctypes.link_match_program; eauto. 
 - intros.

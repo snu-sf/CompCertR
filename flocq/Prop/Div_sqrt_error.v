@@ -1,6 +1,6 @@
 (**
 This file is part of the Flocq formalization of floating-point
-arithmetic in Coq: http://flocq.gforge.inria.fr/
+arithmetic in Coq: https://flocq.gitlabpages.inria.fr/
 
 Copyright (C) 2010-2018 Sylvie Boldo
 #<br />#
@@ -19,7 +19,8 @@ COPYING file for more details.
 
 (** * Remainder of the division and square root are in the FLX format *)
 
-Require Import Psatz.
+From Coq Require Import ZArith Reals Psatz.
+
 Require Import Core Operations Relative Sterbenz Mult_error.
 
 Section Fprop_divsqrt_error.

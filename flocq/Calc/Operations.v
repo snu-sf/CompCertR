@@ -1,6 +1,6 @@
 (**
 This file is part of the Flocq formalization of floating-point
-arithmetic in Coq: http://flocq.gforge.inria.fr/
+arithmetic in Coq: https://flocq.gitlabpages.inria.fr/
 
 Copyright (C) 2009-2018 Sylvie Boldo
 #<br />#
@@ -19,8 +19,9 @@ COPYING file for more details.
 
 (** * Basic operations on floats: alignment, addition, multiplication *)
 
-From Coq Require Import Lia.
-Require Import Raux Defs Float_prop.
+From Coq Require Import ZArith Reals Lia.
+
+Require Import Zaux Raux Defs Float_prop.
 
 Set Implicit Arguments.
 Set Strongly Strict Implicit.

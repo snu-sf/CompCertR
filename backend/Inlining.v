@@ -372,16 +372,16 @@ Definition expand_instr (ctx: context) (pc: node) (i: instruction): mon unit :=
                 (Istore chunk (saddr ctx addr) (sregs ctx args) (sreg ctx src) (spc ctx s))
   | Icall sg ros args res s =>
       match can_inline ros with
-      | Cannot_inline =>
+      | Cannot_inline _ =>
           set_instr (spc ctx pc)
                     (Icall sg (sros ctx ros) (sregs ctx args) (sreg ctx res) (spc ctx s))
-      | Can_inline id f P Q =>
+      | Can_inline _ id f P Q =>
           do n <- inline_function ctx id f Q args s res;
           set_instr (spc ctx pc) (Inop n)
       end
   | Itailcall sg ros args =>
       match can_inline ros with
-      | Cannot_inline =>
+      | Cannot_inline _ =>
           match ctx.(retinfo) with
           | None =>
               set_instr (spc ctx pc)
@@ -390,7 +390,7 @@ Definition expand_instr (ctx: context) (pc: node) (i: instruction): mon unit :=
               set_instr (spc ctx pc)
                         (Icall sg (sros ctx ros) (sregs ctx args) rreg rpc)
           end
-      | Can_inline id f P Q =>
+      | Can_inline _ id f P Q =>
           do n <- inline_tail_function ctx id f Q args;
           set_instr (spc ctx pc) (Inop n)
       end

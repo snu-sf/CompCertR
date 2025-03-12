@@ -20,6 +20,9 @@ Require Import Eqdep_dec Zquot Zwf.
 Require Import Coqlib Zbits.
 Require Archi.
 
+(** Backwards compatibility for Hint Rewrite locality attributes. *)
+Set Warnings "-unsupported-attributes".
+
 (** * Comparisons *)
 
 Inductive comparison : Type :=
@@ -118,7 +121,7 @@ Proof (Z_mod_two_p_range wordsize).
 Lemma Z_mod_modulus_range':
   forall x, -1 < Z_mod_modulus x < modulus.
 Proof.
-  intros. generalize (Z_mod_modulus_range x); intuition.
+  intros. generalize (Z_mod_modulus_range x); intuition auto with zarith.
 Qed.
 
 Lemma Z_mod_modulus_eq:
@@ -1177,6 +1180,7 @@ Proof.
   intros. unfold mone. rewrite testbit_repr; auto. apply Ztestbit_m1. lia.
 Qed.
 
+#[global]
 Hint Rewrite bits_zero bits_mone : ints.
 
 Ltac bit_solve :=
@@ -1253,6 +1257,7 @@ Proof.
   intros. unfold not. rewrite bits_xor; auto. rewrite bits_mone; auto.
 Qed.
 
+#[global]
 Hint Rewrite bits_and bits_or bits_xor bits_not: ints.
 
 Theorem and_commut: forall x y, and x y = and y x.
@@ -1267,7 +1272,7 @@ Qed.
 
 Theorem and_zero: forall x, and x zero = zero.
 Proof.
-  bit_solve. apply andb_b_false.
+  bit_solve; apply andb_b_false.
 Qed.
 
 Corollary and_zero_l: forall x, and zero x = zero.
@@ -1277,7 +1282,7 @@ Qed.
 
 Theorem and_mone: forall x, and x mone = x.
 Proof.
-  bit_solve. apply andb_b_true.
+  bit_solve; apply andb_b_true.
 Qed.
 
 Corollary and_mone_l: forall x, and mone x = x.
@@ -1661,6 +1666,7 @@ Proof.
   lia.
 Qed.
 
+#[global]
 Hint Rewrite bits_shl bits_shru bits_shr: ints.
 
 Theorem shl_zero: forall x, shl x zero = x.
@@ -1989,6 +1995,7 @@ Proof.
     lia. lia. lia. lia.
 Qed.
 
+#[global]
 Hint Rewrite bits_rol bits_ror: ints.
 
 Theorem shl_rolm:
@@ -2520,6 +2527,44 @@ Proof.
   unfold lt in H. rewrite signed_zero in H. destruct (zlt (signed y) 0). congruence. auto.
 Qed.
 
+(** ** Properties of [mulhu] (upper bits of unsigned multiplication) *)
+
+Lemma mulhu_zero:
+  forall x, mulhu x zero = zero.
+Proof.
+  intros. unfold mulhu. rewrite unsigned_zero. rewrite Z.mul_0_r.
+  reflexivity.
+Qed.
+
+Lemma mulhu_one:
+  forall x, mulhu x one = zero.
+Proof.
+  intros. unfold mulhu. rewrite unsigned_one. rewrite Z.mul_1_r.
+  rewrite Zdiv_small. reflexivity. apply unsigned_range.
+Qed.
+
+Lemma mulhu_commut:
+  forall x y, mulhu x y = mulhu y x.
+Proof.
+  intros. unfold mulhu. rewrite Z.mul_comm. reflexivity.
+Qed.
+
+(** ** Properties of [mulhs] (upper bits of signed multiplication) *)
+
+Lemma mulhs_zero:
+  forall x, mulhs x zero = zero.
+Proof.
+  intros. unfold mulhs. rewrite signed_zero. rewrite Z.mul_0_r.
+  reflexivity.
+Qed.
+
+Lemma mulhs_commut:
+  forall x y, mulhs x y = mulhs y x.
+Proof.
+  intros. unfold mulhs. rewrite Z.mul_comm. reflexivity.
+Qed.
+
+
 (** ** Properties of integer zero extension and sign extension. *)
 
 Lemma bits_zero_ext:
@@ -2539,6 +2584,7 @@ Proof.
   rewrite testbit_repr; auto. apply Zsign_ext_spec. lia. 
 Qed.
 
+#[global]
 Hint Rewrite bits_zero_ext bits_sign_ext: ints.
 
 Theorem zero_ext_above:
@@ -2775,7 +2821,7 @@ Qed.
 
 Corollary sign_ext_shr_shl:
   forall n x,
-  0 < n < zwordsize ->
+  0 < n <= zwordsize ->
   let y := repr (zwordsize - n) in
   sign_ext n x = shr (shl x y) y.
 Proof.
@@ -2810,7 +2856,7 @@ Qed.
 Lemma sign_ext_range:
   forall n x, 0 < n < zwordsize -> -two_p (n-1) <= signed (sign_ext n x) < two_p (n-1).
 Proof.
-  intros. rewrite sign_ext_shr_shl; auto.
+  intros. rewrite sign_ext_shr_shl by lia.
   set (X := shl x (repr (zwordsize - n))).
   assert (two_p (n - 1) > 0) by (apply two_p_gt_ZERO; lia).
   assert (unsigned (repr (zwordsize - n)) = zwordsize - n).
@@ -3336,7 +3382,7 @@ Proof.
   rewrite andb_false_iff.
   generalize (bits_size_2 a i).
   generalize (bits_size_2 b i).
-  zify; intuition.
+  zify; intuition auto with zarith.
 Qed.
 
 Corollary and_interval:
@@ -3396,6 +3442,118 @@ Proof.
   apply two_p_monotone. split. generalize (size_range (xor a b)); lia.
   apply size_xor.
   lia.
+Qed.
+
+(** ** Accessing bit fields *)
+
+Definition unsigned_bitfield_extract (pos width: Z) (n: int) : int :=
+  zero_ext width (shru n (repr pos)).
+
+Definition signed_bitfield_extract (pos width: Z) (n: int) : int :=
+  sign_ext width (shru n (repr pos)).
+
+Definition bitfield_insert (pos width: Z) (n p: int) : int :=
+  let mask := shl (repr (two_p width - 1)) (repr pos) in
+  or (shl (zero_ext width p) (repr pos))
+     (and n (not mask)).
+
+Lemma bits_unsigned_bitfield_extract:
+  forall pos width n i,
+  0 <= pos -> 0 < width -> pos + width <= zwordsize ->
+  0 <= i < zwordsize ->
+  testbit (unsigned_bitfield_extract pos width n) i =
+  if zlt i width then testbit n (i + pos) else false.
+Proof.
+  intros. unfold unsigned_bitfield_extract. rewrite bits_zero_ext by lia.
+  destruct (zlt i width); auto.
+  rewrite bits_shru by auto. rewrite unsigned_repr, zlt_true. auto.
+  lia.
+  generalize wordsize_max_unsigned; lia.
+Qed.
+
+Lemma bits_signed_bitfield_extract:
+  forall pos width n i,
+  0 <= pos -> 0 < width -> pos + width <= zwordsize ->
+  0 <= i < zwordsize ->
+  testbit (signed_bitfield_extract pos width n) i =
+  testbit n (if zlt i width then i + pos else width - 1 + pos).
+Proof.
+  intros. unfold signed_bitfield_extract. rewrite bits_sign_ext by lia.
+  rewrite bits_shru, unsigned_repr, zlt_true.
+  destruct (zlt i width); auto.
+  destruct (zlt i width); lia.
+  generalize wordsize_max_unsigned; lia.
+  destruct (zlt i width); lia.
+Qed.
+
+Lemma bits_bitfield_insert:
+  forall pos width n p i,
+  0 <= pos -> 0 < width -> pos + width <= zwordsize ->
+  0 <= i < zwordsize ->
+  testbit (bitfield_insert pos width n p) i =
+  if zle pos i && zlt i (pos + width) then testbit p (i - pos) else testbit n i.
+Proof.
+  intros. unfold bitfield_insert.
+  assert (P: unsigned (repr pos) = pos).
+  { apply unsigned_repr. generalize wordsize_max_unsigned; lia. }
+  rewrite bits_or, bits_and, bits_not, ! bits_shl, ! P by auto.
+  destruct (zlt i pos).
+- unfold proj_sumbool; rewrite zle_false by lia. cbn. apply andb_true_r.
+- unfold proj_sumbool; rewrite zle_true by lia; cbn.
+  rewrite bits_zero_ext, testbit_repr, Ztestbit_two_p_m1 by lia.
+  destruct (zlt (i - pos) width); cbn.
++ rewrite zlt_true by lia. rewrite andb_false_r, orb_false_r. auto.
++ rewrite zlt_false by lia. apply andb_true_r.
+Qed.
+
+Lemma unsigned_bitfield_extract_by_shifts:
+  forall pos width n,
+  0 <= pos -> 0 < width -> pos + width <= zwordsize ->
+  unsigned_bitfield_extract pos width n =
+  shru (shl n (repr (zwordsize - pos - width))) (repr (zwordsize - width)).
+Proof.
+  intros. apply same_bits_eq; intros.
+  rewrite bits_unsigned_bitfield_extract by lia.
+  rewrite bits_shru by auto.
+  rewrite unsigned_repr by (generalize wordsize_max_unsigned; lia).
+  destruct (zlt i width).
+- rewrite bits_shl by lia.
+  rewrite unsigned_repr by (generalize wordsize_max_unsigned; lia).
+  rewrite zlt_true by lia. rewrite zlt_false by lia. f_equal; lia.
+- rewrite zlt_false by lia. auto.
+Qed.
+
+Lemma signed_bitfield_extract_by_shifts:
+  forall pos width n,
+  0 <= pos -> 0 < width -> pos + width <= zwordsize ->
+  signed_bitfield_extract pos width n =
+  shr (shl n (repr (zwordsize - pos - width))) (repr (zwordsize - width)).
+Proof.
+  intros. apply same_bits_eq; intros.
+  rewrite bits_signed_bitfield_extract by lia.
+  rewrite bits_shr by auto.
+  rewrite unsigned_repr by (generalize wordsize_max_unsigned; lia).
+  rewrite bits_shl.
+  rewrite unsigned_repr by (generalize wordsize_max_unsigned; lia).
+  symmetry. rewrite zlt_false. f_equal.
+  destruct (zlt i width); [rewrite zlt_true | rewrite zlt_false]; lia.
+  destruct zlt; lia.
+  destruct zlt; lia.
+Qed.
+
+Lemma bitfield_insert_alternative:
+  forall pos width n p,
+  0 <= width ->
+  bitfield_insert pos width n p =
+  let mask := shl (repr (two_p width - 1)) (repr pos) in
+  or (and (shl p (repr pos)) mask)
+     (and n (not mask)).
+Proof.
+  intros. unfold bitfield_insert. 
+  set (m1 := repr (two_p width - 1)).
+  set (m2 := shl m1 (repr pos)).
+  f_equal.
+  rewrite zero_ext_and by lia. fold m1. unfold m2. rewrite <- and_shl. auto.
 Qed.
 
 End Make.
@@ -4846,4 +5004,3 @@ Global Hint Resolve
   Ptrofs.eqm_unsigned_repr Ptrofs.eqm_unsigned_repr_l Ptrofs.eqm_unsigned_repr_r
   Ptrofs.unsigned_range Ptrofs.unsigned_range_2
   Ptrofs.repr_unsigned Ptrofs.repr_signed Ptrofs.unsigned_repr : ints.
-
