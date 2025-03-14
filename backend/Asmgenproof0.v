@@ -654,7 +654,7 @@ Opaque transl_instr.
   exploit is_tail_code_tail. eexact TL3. intros [ofs CT].
   exists (Ptrofs.repr ofs). econs; eauto.
   rewrite Ptrofs.unsigned_repr. esplits; eauto.
-  exploit code_tail_bounds_1; eauto. omega.
+  exploit code_tail_bounds_1; eauto. lia.
 Qed.
 
 End RETADDR_EXISTS.

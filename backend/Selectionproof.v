@@ -1312,7 +1312,7 @@ Proof.
   erewrite (Genv.symbol_address_match_genv MATCH_GENV); eauto.
 + (* turned into Sbuiltin *)
   exploit sel_builtin_args_correct; eauto. intros [vargs' [C D]].
-  right. left. split. simpl. omega. split. auto.
+  right. left. split. simpl. lia. split. auto.
   econstructor; eauto.
 - (* Stailcall *)
   clear H2. exploit Mem.free_parallel_extends; eauto. intros [m2' [P Q]].
@@ -1437,7 +1437,7 @@ Proof.
   apply plus_one; econstructor.
   econstructor; eauto. destruct optid; simpl; auto. apply set_var_lessdef; auto.
 - (* return of an external call turned into a Sbuiltin *)
-  right; left; split. simpl; omega. split. auto. econstructor; eauto.
+  right; left; split. simpl; lia. split. auto. econstructor; eauto.
 Unshelve.
   all: ss.
   all: econs.
@@ -1507,7 +1507,7 @@ End PRESERVATION.
 
 (** ** Commutation with linking *)
 
-Instance TransfSelectionLink : TransfLink match_prog.
+Global Instance TransfSelectionLink : TransfLink match_prog.
 Proof.
   red; intros. destruct (link_linkorder _ _ _ H) as [LO1 LO2].
   eapply link_match_program; eauto.

@@ -1036,7 +1036,8 @@ Proof.
     - eapply Mem.unchanged_on_refl.
     - eapply SimMemInj.frozen_refl.
     - eapply SimMemInj.frozen_refl.
-    - ii. eapply Mem.perm_store_2; eauto. }
+    - ii. eapply Mem.perm_store_2; eauto.
+    - ii. ss. }
   SimMemInjInv.spl_exact2 sm1.
   econs; ss; eauto.
   { instantiate (1:=SimMemInjInv.mem_inv_tgt sm0). destruct sm0.
@@ -1452,7 +1453,7 @@ Proof.
 - simpl in H1. extlia.
 - inv H. rewrite Nat2Z.inj_succ in H1. destruct (zeq i p0).
 + congruence.
-+ apply IHn with (p0 + 1); auto. omega. omega.
++ apply IHn with (p0 + 1); auto. lia. lia.
 Qed.
 
 Lemma init_mem_inj_1:
@@ -1473,7 +1474,7 @@ Proof.
 + intros (P2 & Q2 & R2 & S2) (P1 & Q1 & R1 & S1).
   apply Q1 in H0. destruct H0. subst.
   apply Mem.perm_cur. eapply Mem.perm_implies; eauto.
-  apply P2. omega.
+  apply P2. lia.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C).
   subst delta. apply Z.divide_0_r.
 - exploit init_meminj_invert_strong; eauto. intros (A & id & gd & B & C & D & E & F).
@@ -1495,7 +1496,7 @@ Local Transparent Mem.loadbytes.
   rewrite Z.add_0_r.
   apply Mem_getN_forall2 with (p := 0) (n := Z.to_nat (init_data_list_size (gvar_init v))).
   rewrite H3, H4. apply bytes_of_init_inject. auto.
-  omega.
+  lia.
   rewrite Z2Nat.id in *; try extlia.
 Qed.
 
@@ -1514,22 +1515,22 @@ Proof.
   exploit init_meminj_invert. eexact H1. intros (A2 & id2 & B2 & C2).
   destruct (ident_eq id1 id2). congruence. left; eapply Genv.global_addresses_distinct; eauto.
 - exploit init_meminj_invert; eauto. intros (A & id & B & C). subst delta.
-  split. omega. generalize (Ptrofs.unsigned_range_2 ofs). omega.
+  split. lia. generalize (Ptrofs.unsigned_range_2 ofs). lia.
 - exploit init_meminj_invert_strong; eauto. intros (A & id & gd & B & C & D & E & F).
   exploit (Genv.init_mem_characterization_gen p); eauto.
   exploit (Genv.init_mem_characterization_gen tp); eauto.
   destruct gd as [f|v].
 + destruct f; ss.
   intros (P2 & Q2) (P1 & Q1).
-  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by omega.
+  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by lia.
   left; apply Mem.perm_cur; auto.
   intros (P2 & Q2) (P1 & Q1).
-  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by omega.
+  apply Q2 in H0. destruct H0. subst. replace ofs with 0 by lia.
   left; apply Mem.perm_cur; auto.
 + intros (P2 & Q2 & R2 & S2) (P1 & Q1 & R1 & S1).
   apply Q2 in H0. destruct H0. subst.
   left. apply Mem.perm_cur. eapply Mem.perm_implies; eauto.
-  apply P1. omega.
+  apply P1. lia.
 Qed.
 
 End INIT_MEM.
@@ -2064,4 +2065,4 @@ Proof.
     rewrite PTree.gcombine; ss.
 Qed.
 
-Instance TransfSelectionLink : TransfLink match_prog_weak := link_match_program.
+Global Instance TransfSelectionLink : TransfLink match_prog_weak := link_match_program.

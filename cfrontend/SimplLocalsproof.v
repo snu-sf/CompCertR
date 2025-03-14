@@ -2129,12 +2129,12 @@ Proof.
   assert(exists sm1, (<<MLE: SimMemInj.le' sm0 sm1>>) /\ (<<MCOMPAT':SimMemInj.mcompat sm1 m' tm j>>)).
   { SimMemInj.spl_approx sm0; cycle 1. SimMemInj.compat_tac.
     inv MV; try congruence. inv H2; try congruence. unfold Mem.storev in H3.
-    inv MCOMPAT. inv MWF. econs; ss; eauto.
+    inv MCOMPAT. inv MWF. econs; ii; ss; eauto.
     - eapply Mem.store_unchanged_on; eauto.
     - eapply Mem.unchanged_on_refl.
-    - eapply SimMemInj.frozen_refl. - eapply SimMemInj.frozen_refl.
+    - eapply SimMemInj.frozen_refl.
+    - eapply SimMemInj.frozen_refl.
     - ii. eapply Mem.perm_store_2; eauto.
-
   }
   des. SimMemInj.spl_exact sm1.
   inversion MWF. inversion MLE. rewrite SRCPARENTEQ in *. rewrite TGTPARENTEQ in *.

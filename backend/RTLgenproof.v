@@ -55,11 +55,11 @@ Proof.
   intros until r0. repeat rewrite PTree.gsspec.
   destruct (peq id1 name); destruct (peq id2 name).
   congruence.
-  intros. inv H. elimtype False.
+  intros. inv H. exfalso.
   apply valid_fresh_absurd with r0 s1.
   apply H1. left; exists id2; auto.
   eauto with rtlg.
-  intros. inv H2. elimtype False.
+  intros. inv H2. exfalso.
   apply valid_fresh_absurd with r0 s1.
   apply H1. left; exists id1; auto.
   eauto with rtlg.
@@ -1004,7 +1004,7 @@ Lemma invert_eval_builtin_arg:
   /\ Events.eval_builtin_arg ge (fun v => v) sp m (fst (convert_builtin_arg a vl)) v
   /\ (forall vl', convert_builtin_arg a (vl ++ vl') = (fst (convert_builtin_arg a vl), vl')).
 Proof.
-  induction 1; simpl; try (econstructor; intuition eauto with evalexpr barg; fail).
+  induction 1; simpl. 2-8:try (econstructor; intuition eauto with evalexpr barg; fail).
 - econstructor; split; eauto with evalexpr. split. constructor. auto. 
 - econstructor; split; eauto with evalexpr. split. constructor. auto. 
 - econstructor; split; eauto with evalexpr. split. repeat constructor. auto. 

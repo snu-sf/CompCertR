@@ -993,7 +993,7 @@ Local Opaque mreg_type.
   apply range_contains in SEP; auto.
   exploit (contains_set_stack (fun v' => Val.inject j (ls (R r)) v') (rs r)).
   eexact SEP.
-  apply load_result_inject; auto. apply wt_ls.
+  apply load_result_inject; auto. (* apply wt_ls. *)
   clear SEP; intros (m1 & STORE & SEP).
   set (rs1 := undef_regs (destroyed_by_setstack ty) rs).
   assert (AG1: agree_regs j ls rs1).
@@ -2123,6 +2123,7 @@ Proof.
       eapply Mem.store_unchanged_on; eauto. des. eauto.
     - eapply SimMemInj.frozen_refl.
     - eapply SimMemInj.frozen_refl.
+    - ii. ss.
     - ii. ss. unfold store_stack, Mem.storev in *. ss. eapply Mem.perm_store_2; eauto.
   }
   SimMemInj.spl_approx sm0. econstructor.
